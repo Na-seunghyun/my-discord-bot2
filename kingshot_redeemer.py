@@ -42,12 +42,6 @@ class KingShotRedeemer:
         gift_code: str,
         progress_callback: ProgressCallback | None = None,
     ) -> list[RedeemResult]:
-        results: list[RedeemResult | None] = [None] * len(kingshot_ids)
-        total = len(kingshot_ids)
-        completed = 0
-        completed_lock = asyncio.Lock()
-        semaphore = asyncio.Semaphore(self.max_concurrency)
-
         async with async_playwright() as playwright:
             browser = await playwright.chromium.launch(
                 headless=self.headless,
@@ -60,30 +54,91 @@ class KingShotRedeemer:
                 ],
             )
 
-            async def run_one(index: int, kingshot_id: str) -> None:
-                nonlocal completed
-                await asyncio.sleep(index * self.delay_seconds)
-
-                async with semaphore:
-                    result = await self._redeem_one(browser, kingshot_id, gift_code)
-
-                results[index] = result
-
-                async with completed_lock:
-                    completed += 1
-                    current_completed = completed
-
-                if progress_callback:
-                    await progress_callback(current_completed, total, result)
-
             try:
-                tasks = [
-                    asyncio.create_task(run_one(index, kingshot_id))
-                    for index, kingshot_id in enumerate(kingshot_ids)
+                results = await self._run_batch(
+                    browser,
+                    kingshot_ids,
+                    gift_code,
+                    progress_callback,
+                    progress_offset=0,
+                    progress_total=len(kingshot_ids),
+                )
+
+                retry_indexes = [
+                    index
+                    for index, result in enumerate(results)
+                    if self._should_retry(result)
                 ]
-                await asyncio.gather(*tasks)
+
+                if retry_indexes:
+                    await asyncio.sleep(3)
+
+                    retry_ids = [results[index].kingshot_id for index in retry_indexes]
+                    retry_results = await self._run_batch(
+                        browser,
+                        retry_ids,
+                        gift_code,
+                        progress_callback=None,
+                        progress_offset=0,
+                        progress_total=len(retry_ids),
+                    )
+
+                    for original_index, retry_result in zip(retry_indexes, retry_results):
+                        message = retry_result.message
+                        if retry_result.ok:
+                            message = f"{message} Retried after temporary failure."
+                        elif retry_result.message != results[original_index].message:
+                            message = f"{message} Retried after temporary failure."
+
+                        results[original_index] = RedeemResult(
+                            kingshot_id=retry_result.kingshot_id,
+                            ok=retry_result.ok,
+                            status=retry_result.status,
+                            account_info=retry_result.account_info,
+                            message=message,
+                        )
+
+                return results
+
             finally:
                 await browser.close()
+
+    async def _run_batch(
+        self,
+        browser,
+        kingshot_ids: list[str],
+        gift_code: str,
+        progress_callback: ProgressCallback | None,
+        progress_offset: int,
+        progress_total: int,
+    ) -> list[RedeemResult]:
+        results: list[RedeemResult | None] = [None] * len(kingshot_ids)
+        completed = 0
+        completed_lock = asyncio.Lock()
+        semaphore = asyncio.Semaphore(self.max_concurrency)
+
+        async def run_one(index: int, kingshot_id: str) -> None:
+            nonlocal completed
+
+            await asyncio.sleep(index * self.delay_seconds)
+
+            async with semaphore:
+                result = await self._redeem_one(browser, kingshot_id, gift_code)
+
+            results[index] = result
+
+            async with completed_lock:
+                completed += 1
+                current_completed = progress_offset + completed
+
+            if progress_callback:
+                await progress_callback(current_completed, progress_total, result)
+
+        tasks = [
+            asyncio.create_task(run_one(index, kingshot_id))
+            for index, kingshot_id in enumerate(kingshot_ids)
+        ]
+        await asyncio.gather(*tasks)
 
         return [result for result in results if result is not None]
 
@@ -250,6 +305,7 @@ class KingShotRedeemer:
             data.get("bodyText", ""),
             data.get("imageSources", []),
         )
+
     async def _read_feedback(self, page) -> str:
         try:
             await page.wait_for_function(
@@ -307,26 +363,26 @@ class KingShotRedeemer:
         state = "State Unknown"
 
         for line in raw_lines:
-            match = re.search(r"^State\s*:?\s*(\d+)$", line, re.IGNORECASE)
+            match = re.search(r"^State\\s*:?\\s*(\\d+)$", line, re.IGNORECASE)
             if match:
                 state = f"State {match.group(1)}"
                 break
 
         if state == "State Unknown":
-            state_match = re.search(r"State\s*:?\s*(\d+)", cleaned, re.IGNORECASE)
+            state_match = re.search(r"State\\s*:?\\s*(\\d+)", cleaned, re.IGNORECASE)
             if state_match:
                 state = f"State {state_match.group(1)}"
 
         town_center = "TC Unknown"
 
         sources = " ".join(image_sources or [])
-        tg_match = re.search(r"stove_lv_(10|[1-9])\.png", sources, re.IGNORECASE)
+        tg_match = re.search(r"stove_lv_(10|[1-9])\\.png", sources, re.IGNORECASE)
         if tg_match:
             town_center = f"TG{tg_match.group(1)}"
         else:
             for index, line in enumerate(raw_lines):
-                if re.search(r"Town\s*Center\s*Level", line, re.IGNORECASE):
-                    same_line_match = re.search(r"Town\s*Center\s*Level\s*:?\s*(\d{1,2})", line, re.IGNORECASE)
+                if re.search(r"Town\\s*Center\\s*Level", line, re.IGNORECASE):
+                    same_line_match = re.search(r"Town\\s*Center\\s*Level\\s*:?\\s*(\\d{1,2})", line, re.IGNORECASE)
                     if same_line_match:
                         level = int(same_line_match.group(1))
                         if 1 <= level <= 30:
@@ -335,7 +391,7 @@ class KingShotRedeemer:
 
                     if index + 1 < len(raw_lines):
                         next_line = raw_lines[index + 1]
-                        next_line_match = re.search(r"^(\d{1,2})$", next_line)
+                        next_line_match = re.search(r"^(\\d{1,2})$", next_line)
                         if next_line_match:
                             level = int(next_line_match.group(1))
                             if 1 <= level <= 30:
@@ -344,7 +400,7 @@ class KingShotRedeemer:
 
             if town_center == "TC Unknown":
                 tc_match = re.search(
-                    r"Town\s*Center\s*Level\s*:?\s*(\d{1,2})",
+                    r"Town\\s*Center\\s*Level\\s*:?\\s*(\\d{1,2})",
                     cleaned,
                     re.IGNORECASE,
                 )
@@ -421,6 +477,43 @@ class KingShotRedeemer:
             or "login" in lowered
         )
 
+    def _should_retry(self, result: RedeemResult) -> bool:
+        if result.ok:
+            return False
+
+        message = (result.message or "").lower()
+
+        permanent_failures = [
+            "already claimed",
+            "unable to claim again",
+            "gift code not found",
+            "case-sensitive",
+            "expired",
+            "already been used",
+            "invalid gift code",
+        ]
+
+        if any(item in message for item in permanent_failures):
+            return False
+
+        retryable_failures = [
+            "timed out",
+            "timeout",
+            "could not find",
+            "net::",
+            "err_",
+            "server",
+            "connection",
+            "navigation",
+            "target closed",
+            "page closed",
+            "503",
+            "502",
+            "504",
+        ]
+
+        return any(item in message for item in retryable_failures)
+
     def _clean_feedback(self, text: str) -> str:
         if not text:
             return ""
@@ -428,7 +521,7 @@ class KingShotRedeemer:
         cleaned = " ".join(text.split())
 
         feedback_patterns = [
-            r"Already claimed, unable to claim again\\.",
+            r"Already claimed, unable to claim again\\.?",
             r"Gift Code not found, this is case-sensitive!",
             r"This gift code has expired[^.]*\\.?",
             r"This gift code has already been used[^.]*\\.?",
@@ -437,44 +530,3 @@ class KingShotRedeemer:
             r"Redeemed successfully[^.]*\\.?",
             r"Success[^.]*\\.?",
         ]
-
-        for pattern in feedback_patterns:
-            match = re.search(pattern, cleaned, re.IGNORECASE)
-            if match:
-                return match.group(0).strip()
-
-        return cleaned[:500]
-
-    def _looks_successful(self, message: str) -> bool:
-        lowered = message.lower()
-
-        failure_words = [
-            "already",
-            "cannot",
-            "error",
-            "expired",
-            "fail",
-            "invalid",
-            "not exist",
-            "not found",
-            "used",
-            "wrong",
-            "unable to claim",
-        ]
-
-        success_words = [
-            "success",
-            "successful",
-            "sent",
-            "reward",
-            "claimed",
-            "redeemed",
-        ]
-
-        if any(word in lowered for word in failure_words):
-            return False
-
-        if any(word in lowered for word in success_words):
-            return True
-
-        return False
