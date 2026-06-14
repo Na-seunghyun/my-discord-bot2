@@ -158,6 +158,34 @@ class KingShotRedeemer:
 
         raise RuntimeError(f"Could not find a usable page element. Last error: {last_error}")
 
+    def _clean_feedback(self, text: str) -> str:
+        if not text:
+            return ""
+
+        cleaned = " ".join(text.split())
+
+        removable_suffixes = [
+            " Confirm",
+            " Redeem",
+            " Login",
+            " Log in",
+        ]
+
+        changed = True
+        while changed:
+            changed = False
+            for suffix in removable_suffixes:
+                if cleaned.endswith(suffix):
+                    cleaned = cleaned[: -len(suffix)].strip()
+                    changed = True
+
+        return cleaned[:500]
+
+
+
+
+
+    
     async def _read_account_info(self, page) -> str:
         text = await self._read_text_from_candidates(
             page,
@@ -195,7 +223,7 @@ class KingShotRedeemer:
             max_length=500,
         )
 
-        return text or "Submitted, but no response text was detected."
+        return self._clean_feedback(text) or "Submitted, but no response text was detected."
 
     async def _read_text_from_candidates(self, page, selectors: list[str], max_length: int) -> str:
         for selector in selectors:
