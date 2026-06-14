@@ -28,8 +28,8 @@ class KingShotRedeemer:
         *,
         headless: bool = True,
         delay_seconds: float = 0.05,
-        timeout_seconds: float = 10.0,
-        max_concurrency: int = 3,
+        timeout_seconds: float = 12.0,
+        max_concurrency: int = 2,
     ):
         self.headless = headless
         self.delay_seconds = delay_seconds
@@ -62,7 +62,6 @@ class KingShotRedeemer:
 
             async def run_one(index: int, kingshot_id: str) -> None:
                 nonlocal completed
-
                 await asyncio.sleep(index * self.delay_seconds)
 
                 async with semaphore:
@@ -212,15 +211,17 @@ class KingShotRedeemer:
                 """
                 () => {
                     const text = document.body.innerText || "";
-                    const hasAccountText = /Town\\s*Center\\s*Level|State\\s*:?\\s*\\d+/i.test(text);
+                    const hasTownCenter = /Town\\s*Center\\s*Level/i.test(text);
+                    const hasState = /State\\s*:?\\s*\\d+/i.test(text);
                     const hasLevelIcon = !!document.querySelector("img.level_icon");
-                    return hasAccountText || hasLevelIcon;
+                    const stillLogin = /Check your Player ID|Login/i.test(text) && !hasTownCenter && !hasState;
+                    return !stillLogin && (hasTownCenter || hasState || hasLevelIcon);
                 }
                 """,
-                timeout=3000,
+                timeout=4000,
             )
         except Exception:
-            await page.wait_for_timeout(300)
+            await page.wait_for_timeout(700)
 
     async def _read_account_info(self, page) -> str:
         data = await page.evaluate(
@@ -294,6 +295,9 @@ class KingShotRedeemer:
     def _clean_account_info(self, body_text: str, level_src: str) -> str:
         cleaned = " ".join((body_text or "").split())
 
+        if not cleaned or "check your player id" in cleaned.lower():
+            return "Unknown Player | TC Unknown | State Unknown"
+
         state = "State Unknown"
         state_match = re.search(r"State\\s*:?\\s*(\\d+)", cleaned, re.IGNORECASE)
         if state_match:
@@ -320,17 +324,6 @@ class KingShotRedeemer:
         return " | ".join([name, town_center, state])
 
     def _extract_player_name(self, cleaned: str) -> str:
-        bad_markers = [
-            "*Check your Player ID",
-            "Login",
-            "Gift Code not found",
-            "Please enter",
-        ]
-
-        for marker in bad_markers:
-            if marker.lower() in cleaned.lower() and "Town Center Level" not in cleaned:
-                return "Unknown Player"
-
         patterns = [
             r"Gift\\s*Code\\s*Center\\s+(.+?)\\s+Town\\s*Center\\s*Level",
             r"Center\\s+(.+?)\\s+Town\\s*Center\\s*Level",
@@ -358,6 +351,17 @@ class KingShotRedeemer:
             return "Unknown Player"
 
         return name[:60]
+
+    def _is_unknown_account_info(self, account_info: str) -> bool:
+        lowered = (account_info or "").lower()
+        return (
+            not account_info
+            or "unknown player" in lowered
+            or "tc unknown" in lowered
+            or "state unknown" in lowered
+            or "check your player id" in lowered
+            or "login" in lowered
+        )
 
     def _clean_feedback(self, text: str) -> str:
         if not text:
