@@ -91,7 +91,7 @@ class KingShotRedeemer:
         page = await browser.new_page()
         page.set_default_timeout(self.timeout_ms)
 
-        await self._block_unneeded_resources(page)
+        # await self._block_unneeded_resources(page)
 
         account_info = "Unknown Player | TC Unknown | State Unknown"
 
@@ -173,22 +173,7 @@ class KingShotRedeemer:
         finally:
             await page.close()
 
-    async def _block_unneeded_resources(self, page) -> None:
-        async def route_handler(route):
-            resource_type = route.request.resource_type
-            url = route.request.url.lower()
 
-            if resource_type in {"font", "media"}:
-                await route.abort()
-                return
-
-            if resource_type == "image" and "stove_lv_" not in url:
-                await route.abort()
-                return
-
-            await route.continue_()
-
-        await page.route("**/*", route_handler)
 
     async def _first_visible(self, page, selectors: list[str], timeout_ms: int = 3000):
         last_error: Exception | None = None
