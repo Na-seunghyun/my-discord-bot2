@@ -1,5 +1,12 @@
 import sqlite3
+from dataclasses import dataclass
 from pathlib import Path
+
+
+@dataclass(frozen=True)
+class PlayerRecord:
+    kingshot_id: str
+    account_info: str
 
 
 class KingShotStore:
@@ -17,10 +24,14 @@ class KingShotStore:
                 """
                 CREATE TABLE IF NOT EXISTS player_ids (
                     kingshot_id TEXT PRIMARY KEY,
+                    account_info TEXT NOT NULL DEFAULT '',
+                    updated_at TEXT,
                     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
                 )
                 """
             )
+            self._ensure_column(db, "player_ids", "account_info", "TEXT NOT NULL DEFAULT ''")
+            self._ensure_column(db, "player_ids", "updated_at", "TEXT")
             db.execute(
                 """
                 CREATE TABLE IF NOT EXISTS redeemed_codes (
@@ -29,6 +40,12 @@ class KingShotStore:
                 )
                 """
             )
+
+    def _ensure_column(self, db: sqlite3.Connection, table: str, column: str, definition: str) -> None:
+        rows = db.execute(f"PRAGMA table_info({table})").fetchall()
+        existing_columns = {row[1] for row in rows}
+        if column not in existing_columns:
+            db.execute(f"ALTER TABLE {table} ADD COLUMN {column} {definition}")
 
     def add_id(self, kingshot_id: str) -> bool:
         kingshot_id = kingshot_id.strip()
@@ -69,6 +86,31 @@ class KingShotStore:
             ).fetchall()
         return [row[0] for row in rows]
 
+    def list_players(self) -> list[PlayerRecord]:
+        with self._connect() as db:
+            rows = db.execute(
+                """
+                SELECT kingshot_id, account_info
+                FROM player_ids
+                ORDER BY created_at, kingshot_id
+                """
+            ).fetchall()
+        return [PlayerRecord(kingshot_id=row[0], account_info=row[1] or "") for row in rows]
+
+    def update_account_info(self, kingshot_id: str, account_info: str) -> None:
+        account_info = account_info.strip()
+        if not account_info or account_info == "Account info not detected.":
+            return
+        with self._connect() as db:
+            db.execute(
+                """
+                UPDATE player_ids
+                SET account_info = ?, updated_at = CURRENT_TIMESTAMP
+                WHERE kingshot_id = ?
+                """,
+                (account_info, kingshot_id.strip()),
+            )
+
     def mark_code_seen(self, gift_code: str) -> bool:
         with self._connect() as db:
             cursor = db.execute(
@@ -76,4 +118,3 @@ class KingShotStore:
                 (gift_code.strip().upper(),),
             )
             return cursor.rowcount > 0
-
