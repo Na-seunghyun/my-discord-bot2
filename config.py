@@ -40,6 +40,7 @@ class Settings:
     discord_token: str
     watch_channel_id: int
     admin_role_ids: set[int]
+    id_manager_role_ids: set[int]
     discord_guild_id: int | None
     database_path: Path
     redeem_headless: bool
@@ -56,10 +57,10 @@ def load_settings() -> Settings:
         discord_token=token,
         watch_channel_id=_get_int("WATCH_CHANNEL_ID", 1422359547393347685),
         admin_role_ids=_get_int_set("ADMIN_ROLE_IDS"),
+        id_manager_role_ids=_get_int_set("ID_MANAGER_ROLE_IDS"),
         discord_guild_id=_get_int("DISCORD_GUILD_ID"),
         database_path=Path(os.getenv("DATABASE_PATH", "data/kingshot.sqlite3")),
         redeem_headless=_get_bool("REDEEM_HEADLESS", True),
         redeem_delay_seconds=_get_float("REDEEM_DELAY_SECONDS", 2.5),
         redeem_timeout_seconds=_get_float("REDEEM_TIMEOUT_SECONDS", 45.0),
     )
-
