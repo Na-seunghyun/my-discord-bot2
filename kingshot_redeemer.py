@@ -62,6 +62,7 @@ class KingShotRedeemer:
 
             async def run_one(index: int, kingshot_id: str) -> None:
                 nonlocal completed
+
                 await asyncio.sleep(index * self.delay_seconds)
 
                 async with semaphore:
@@ -90,9 +91,6 @@ class KingShotRedeemer:
     async def _redeem_one(self, browser, kingshot_id: str, gift_code: str) -> RedeemResult:
         page = await browser.new_page()
         page.set_default_timeout(self.timeout_ms)
-
-        # await self._block_unneeded_resources(page)
-
         account_info = "Unknown Player | TC Unknown | State Unknown"
 
         try:
@@ -173,8 +171,6 @@ class KingShotRedeemer:
         finally:
             await page.close()
 
-
-
     async def _first_visible(self, page, selectors: list[str], timeout_ms: int = 3000):
         last_error: Exception | None = None
 
@@ -219,14 +215,13 @@ class KingShotRedeemer:
                     const hasTownCenter = /Town\\s*Center\\s*Level/i.test(text);
                     const hasState = /State\\s*:?\\s*\\d+/i.test(text);
                     const hasLevelIcon = !!document.querySelector("img.level_icon");
-                    const stillLogin = /Check your Player ID|Login/i.test(text) && !hasTownCenter && !hasState;
-                    return !stillLogin && (hasTownCenter || hasState || hasLevelIcon);
+                    return hasTownCenter || hasState || hasLevelIcon;
                 }
                 """,
                 timeout=4000,
             )
         except Exception:
-            await page.wait_for_timeout(700)
+            await page.wait_for_timeout(800)
 
     async def _read_account_info(self, page) -> str:
         data = await page.evaluate(
@@ -298,7 +293,8 @@ class KingShotRedeemer:
         return ""
 
     def _clean_account_info(self, body_text: str, level_src: str) -> str:
-        cleaned = " ".join((body_text or "").split())
+        raw_text = body_text or ""
+        cleaned = " ".join(raw_text.split())
 
         if not cleaned:
             return "Unknown Player | TC Unknown | State Unknown"
@@ -331,12 +327,12 @@ class KingShotRedeemer:
                 if 1 <= level <= 30:
                     town_center = f"TC {level}"
 
-        name = self._extract_player_name(cleaned)
+        name = self._extract_player_name(raw_text, cleaned)
 
         return " | ".join([name, town_center, state])
 
-    def _extract_player_name(self, cleaned: str) -> str:
-        lines = [line.strip() for line in re.split(r"\\s{2,}|\\n", cleaned) if line.strip()]
+    def _extract_player_name(self, raw_text: str, cleaned: str) -> str:
+        raw_lines = [line.strip() for line in (raw_text or "").splitlines() if line.strip()]
 
         bad_words = [
             "english",
@@ -352,9 +348,7 @@ class KingShotRedeemer:
             "redeem",
         ]
 
-        candidates = []
-
-        for line in lines:
+        for line in raw_lines:
             lowered = line.lower()
 
             if any(word in lowered for word in bad_words):
@@ -363,23 +357,19 @@ class KingShotRedeemer:
             if re.fullmatch(r"\\d+", line):
                 continue
 
-            if len(line) < 2 or len(line) > 40:
-                continue
+            if 2 <= len(line) <= 40:
+                return self._clean_player_name(line)
 
-            candidates.append(line)
+        patterns = [
+            r"Gift\\s*Code\\s*Center\\s+(.+?)\\s+Town\\s*Center\\s*Level",
+            r"Center\\s+(.+?)\\s+Town\\s*Center\\s*Level",
+            r"^(.+?)\\s+Town\\s*Center\\s*Level",
+        ]
 
-        if candidates:
-            return self._clean_player_name(candidates[0])
-
-        match = re.search(
-            r"(?:Gift\\s*Code\\s*Center\\s*)?(.{2,60}?)\\s*Town\\s*Center\\s*Level",
-            cleaned,
-            re.IGNORECASE,
-        )
-        if match:
-            candidate = match.group(1)
-            candidate = re.sub(r"^(English|Login)\\s+", "", candidate, flags=re.IGNORECASE).strip()
-            return self._clean_player_name(candidate)
+        for pattern in patterns:
+            match = re.search(pattern, cleaned, re.IGNORECASE)
+            if match:
+                return self._clean_player_name(match.group(1))
 
         return "Unknown Player"
 
