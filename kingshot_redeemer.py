@@ -26,12 +26,14 @@ class KingShotRedeemer:
         self,
         *,
         headless: bool = True,
-        delay_seconds: float = 2.5,
-        timeout_seconds: float = 45.0,
+        delay_seconds: float = 0.2,
+        timeout_seconds: float = 20.0,
+        max_concurrency: int = 3,
     ):
         self.headless = headless
         self.delay_seconds = delay_seconds
         self.timeout_ms = int(timeout_seconds * 1000)
+        self.max_concurrency = max(1, max_concurrency)
 
     async def redeem_many(
         self,
@@ -39,29 +41,46 @@ class KingShotRedeemer:
         gift_code: str,
         progress_callback: ProgressCallback | None = None,
     ) -> list[RedeemResult]:
-        results: list[RedeemResult] = []
+        results: list[RedeemResult | None] = [None] * len(kingshot_ids)
         total = len(kingshot_ids)
+        completed = 0
+        completed_lock = asyncio.Lock()
+        semaphore = asyncio.Semaphore(self.max_concurrency)
 
         async with async_playwright() as playwright:
             browser = await playwright.chromium.launch(headless=self.headless)
-            try:
-                for index, kingshot_id in enumerate(kingshot_ids, start=1):
+
+            async def run_one(index: int, kingshot_id: str) -> None:
+                nonlocal completed
+
+                await asyncio.sleep(index * self.delay_seconds)
+
+                async with semaphore:
                     result = await self._redeem_one(browser, kingshot_id, gift_code)
-                    results.append(result)
 
-                    if progress_callback:
-                        await progress_callback(index, total, result)
+                results[index] = result
 
-                    await asyncio.sleep(self.delay_seconds)
+                async with completed_lock:
+                    completed += 1
+                    current_completed = completed
+
+                if progress_callback:
+                    await progress_callback(current_completed, total, result)
+
+            try:
+                tasks = [
+                    asyncio.create_task(run_one(index, kingshot_id))
+                    for index, kingshot_id in enumerate(kingshot_ids)
+                ]
+                await asyncio.gather(*tasks)
             finally:
                 await browser.close()
 
-        return results
+        return [result for result in results if result is not None]
 
     async def _redeem_one(self, browser, kingshot_id: str, gift_code: str) -> RedeemResult:
         page = await browser.new_page()
         page.set_default_timeout(self.timeout_ms)
-
         account_info = "Account info not detected."
 
         try:
@@ -151,41 +170,13 @@ class KingShotRedeemer:
         for selector in selectors:
             try:
                 locator = page.locator(selector).first
-                await locator.wait_for(state="visible", timeout=7000)
+                await locator.wait_for(state="visible", timeout=5000)
                 return locator
             except Exception as exc:
                 last_error = exc
 
         raise RuntimeError(f"Could not find a usable page element. Last error: {last_error}")
 
-    def _clean_feedback(self, text: str) -> str:
-        if not text:
-            return ""
-
-        cleaned = " ".join(text.split())
-
-        removable_suffixes = [
-            " Confirm",
-            " Redeem",
-            " Login",
-            " Log in",
-        ]
-
-        changed = True
-        while changed:
-            changed = False
-            for suffix in removable_suffixes:
-                if cleaned.endswith(suffix):
-                    cleaned = cleaned[: -len(suffix)].strip()
-                    changed = True
-
-        return cleaned[:500]
-
-
-
-
-
-    
     async def _read_account_info(self, page) -> str:
         text = await self._read_text_from_candidates(
             page,
@@ -228,7 +219,7 @@ class KingShotRedeemer:
     async def _read_text_from_candidates(self, page, selectors: list[str], max_length: int) -> str:
         for selector in selectors:
             try:
-                text = await page.locator(selector).first.inner_text(timeout=1500)
+                text = await page.locator(selector).first.inner_text(timeout=1000)
                 text = " ".join(text.strip().split())
 
                 if text:
@@ -260,6 +251,29 @@ class KingShotRedeemer:
             return " / ".join(useful[:4])[:300]
 
         return text[:300]
+
+    def _clean_feedback(self, text: str) -> str:
+        if not text:
+            return ""
+
+        cleaned = " ".join(text.split())
+
+        removable_suffixes = [
+            " Confirm",
+            " Redeem",
+            " Login",
+            " Log in",
+        ]
+
+        changed = True
+        while changed:
+            changed = False
+            for suffix in removable_suffixes:
+                if cleaned.endswith(suffix):
+                    cleaned = cleaned[: -len(suffix)].strip()
+                    changed = True
+
+        return cleaned[:500]
 
     def _looks_successful(self, message: str) -> bool:
         lowered = message.lower()
