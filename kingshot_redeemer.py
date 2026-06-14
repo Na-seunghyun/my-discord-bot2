@@ -229,14 +229,18 @@ class KingShotRedeemer:
             """
             () => {
                 const bodyText = document.body.innerText || "";
-                const levelIcon = document.querySelector("img.level_icon");
-                const levelSrc = levelIcon
-                    ? (levelIcon.currentSrc || levelIcon.src || levelIcon.getAttribute("src") || "")
-                    : "";
+                const imageSources = [];
+
+                for (const img of document.querySelectorAll("img")) {
+                    if (img.currentSrc) imageSources.push(img.currentSrc);
+                    if (img.src) imageSources.push(img.src);
+                    const attrSrc = img.getAttribute("src");
+                    if (attrSrc) imageSources.push(attrSrc);
+                }
 
                 return {
                     bodyText,
-                    levelSrc
+                    imageSources
                 };
             }
             """
@@ -244,9 +248,8 @@ class KingShotRedeemer:
 
         return self._clean_account_info(
             data.get("bodyText", ""),
-            data.get("levelSrc", ""),
+            data.get("imageSources", []),
         )
-
     async def _read_feedback(self, page) -> str:
         try:
             await page.wait_for_function(
@@ -293,33 +296,62 @@ class KingShotRedeemer:
 
         return ""
 
-    def _clean_account_info(self, body_text: str, level_src: str) -> str:
+    def _clean_account_info(self, body_text: str, image_sources: list[str]) -> str:
         raw_text = body_text or ""
         cleaned = " ".join(raw_text.split())
+        raw_lines = [line.strip() for line in raw_text.splitlines() if line.strip()]
 
         if not cleaned:
             return "Unknown Player | TC Unknown | State Unknown"
 
         state = "State Unknown"
-        state_match = re.search(r"State\\s*:?\\s*(\\d+)", cleaned, re.IGNORECASE)
-        if state_match:
-            state = f"State {state_match.group(1)}"
+
+        for line in raw_lines:
+            match = re.search(r"^State\s*:?\s*(\d+)$", line, re.IGNORECASE)
+            if match:
+                state = f"State {match.group(1)}"
+                break
+
+        if state == "State Unknown":
+            state_match = re.search(r"State\s*:?\s*(\d+)", cleaned, re.IGNORECASE)
+            if state_match:
+                state = f"State {state_match.group(1)}"
 
         town_center = "TC Unknown"
 
-        tg_match = re.search(r"stove_lv_(10|[1-9])\\.png", level_src or "", re.IGNORECASE)
+        sources = " ".join(image_sources or [])
+        tg_match = re.search(r"stove_lv_(10|[1-9])\.png", sources, re.IGNORECASE)
         if tg_match:
             town_center = f"TG{tg_match.group(1)}"
         else:
-            tc_match = re.search(
-                r"Town\\s*Center\\s*Level\\s*:?\\s*(\\d{1,2})",
-                cleaned,
-                re.IGNORECASE,
-            )
-            if tc_match:
-                level = int(tc_match.group(1))
-                if 1 <= level <= 30:
-                    town_center = f"TC {level}"
+            for index, line in enumerate(raw_lines):
+                if re.search(r"Town\s*Center\s*Level", line, re.IGNORECASE):
+                    same_line_match = re.search(r"Town\s*Center\s*Level\s*:?\s*(\d{1,2})", line, re.IGNORECASE)
+                    if same_line_match:
+                        level = int(same_line_match.group(1))
+                        if 1 <= level <= 30:
+                            town_center = f"TC {level}"
+                            break
+
+                    if index + 1 < len(raw_lines):
+                        next_line = raw_lines[index + 1]
+                        next_line_match = re.search(r"^(\d{1,2})$", next_line)
+                        if next_line_match:
+                            level = int(next_line_match.group(1))
+                            if 1 <= level <= 30:
+                                town_center = f"TC {level}"
+                                break
+
+            if town_center == "TC Unknown":
+                tc_match = re.search(
+                    r"Town\s*Center\s*Level\s*:?\s*(\d{1,2})",
+                    cleaned,
+                    re.IGNORECASE,
+                )
+                if tc_match:
+                    level = int(tc_match.group(1))
+                    if 1 <= level <= 30:
+                        town_center = f"TC {level}"
 
         name = self._extract_player_name(raw_text, cleaned)
 
