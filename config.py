@@ -47,6 +47,7 @@ class Settings:
     redeem_headless: bool
     redeem_delay_seconds: float
     redeem_timeout_seconds: float
+    redeem_max_concurrency: int
 
 
 def load_settings() -> Settings:
@@ -63,6 +64,7 @@ def load_settings() -> Settings:
         discord_guild_id=_get_int("DISCORD_GUILD_ID"),
         database_path=Path(os.getenv("DATABASE_PATH", "data/kingshot.sqlite3")),
         redeem_headless=_get_bool("REDEEM_HEADLESS", True),
-        redeem_delay_seconds=_get_float("REDEEM_DELAY_SECONDS", 2.5),
-        redeem_timeout_seconds=_get_float("REDEEM_TIMEOUT_SECONDS", 45.0),
+        redeem_delay_seconds=_get_float("REDEEM_DELAY_SECONDS", 0.2),
+        redeem_timeout_seconds=_get_float("REDEEM_TIMEOUT_SECONDS", 20.0),
+        redeem_max_concurrency=_get_int("REDEEM_MAX_CONCURRENCY", 3),
     )
