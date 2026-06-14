@@ -337,6 +337,19 @@ class KingShotRedeemer:
     def _extract_player_name(self, raw_text: str, cleaned: str) -> str:
         raw_lines = [line.strip() for line in (raw_text or "").splitlines() if line.strip()]
 
+        for index, line in enumerate(raw_lines):
+            if line.lower() == "gift code center":
+                for next_line in raw_lines[index + 1:]:
+                    lowered = next_line.lower()
+
+                    if lowered in {"town center level:", "town center level"}:
+                        break
+
+                    if self._is_bad_name_line(next_line):
+                        continue
+
+                    return self._clean_player_name(next_line)
+
         bad_words = [
             "english",
             "login",
@@ -349,6 +362,8 @@ class KingShotRedeemer:
             "avatar",
             "settings",
             "redeem",
+            "rewards will be",
+            "gift code not found",
         ]
 
         for line in raw_lines:
@@ -357,16 +372,16 @@ class KingShotRedeemer:
             if any(word in lowered for word in bad_words):
                 continue
 
-            if re.fullmatch(r"\\d+", line):
+            if re.fullmatch(r"\d+", line):
                 continue
 
             if 2 <= len(line) <= 40:
                 return self._clean_player_name(line)
 
         patterns = [
-            r"Gift\\s*Code\\s*Center\\s+(.+?)\\s+Town\\s*Center\\s*Level",
-            r"Center\\s+(.+?)\\s+Town\\s*Center\\s*Level",
-            r"^(.+?)\\s+Town\\s*Center\\s*Level",
+            r"Gift\s*Code\s*Center\s+(.+?)\s+Town\s*Center\s*Level",
+            r"Center\s+(.+?)\s+Town\s*Center\s*Level",
+            r"^(.+?)\s+Town\s*Center\s*Level",
         ]
 
         for pattern in patterns:
