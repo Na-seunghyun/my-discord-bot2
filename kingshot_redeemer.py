@@ -1,4 +1,5 @@
 import asyncio
+import re
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
@@ -178,19 +179,45 @@ class KingShotRedeemer:
         raise RuntimeError(f"Could not find a usable page element. Last error: {last_error}")
 
     async def _read_account_info(self, page) -> str:
-        text = await self._read_text_from_candidates(
-            page,
-            [
-                ".user-info",
-                ".player-info",
-                ".role-info",
-                ".account-info",
-                "[class*='user' i]",
-                "[class*='player' i]",
-                "[class*='role' i]",
-                "body",
-            ],
-            max_length=300,
+        text = await page.evaluate(
+            """
+            () => {
+                const values = [];
+
+                function add(value) {
+                    if (!value) return;
+                    const cleaned = String(value).replace(/\\s+/g, " ").trim();
+                    if (cleaned && !values.includes(cleaned)) values.push(cleaned);
+                }
+
+                add(document.body.innerText);
+
+                for (const el of document.querySelectorAll("*")) {
+                    const rect = el.getBoundingClientRect();
+                    const visible = rect.width > 0 && rect.height > 0;
+                    if (!visible) continue;
+
+                    add(el.innerText);
+                    add(el.className);
+                    add(el.id);
+                    add(el.getAttribute("aria-label"));
+                    add(el.getAttribute("title"));
+                    add(el.getAttribute("alt"));
+                    add(el.getAttribute("src"));
+                    add(el.getAttribute("data-src"));
+                    add(el.getAttribute("style"));
+                    add(el.getAttribute("data-level"));
+                    add(el.getAttribute("data-value"));
+
+                    if (el.currentSrc) add(el.currentSrc);
+
+                    const style = window.getComputedStyle(el);
+                    add(style.backgroundImage);
+                }
+
+                return values.join("\\n");
+            }
+            """
         )
 
         return self._clean_account_info(text)
@@ -232,25 +259,74 @@ class KingShotRedeemer:
 
     def _clean_account_info(self, text: str) -> str:
         if not text:
-            return "Account info not detected."
+            return "Unknown Player | TC Unknown"
 
-        ignored = {
-            "login",
-            "log in",
-            "confirm",
-            "redeem",
-            "gift code",
-            "player id",
-            "character id",
-        }
+        cleaned = " ".join(text.split())
 
-        parts = [part.strip() for part in text.replace("|", "\n").split("\n") if part.strip()]
-        useful = [part for part in parts if part.lower() not in ignored]
+        state_match = re.search(r"State\\s*:?\\s*(\\d+)", cleaned, re.IGNORECASE)
+        state = f"State {state_match.group(1)}" if state_match else "State Unknown"
 
-        if useful:
-            return " / ".join(useful[:4])[:300]
+        town_center = "TC Unknown"
 
-        return text[:300]
+        normal_tc_match = re.search(
+            r"Town\\s*Center\\s*Level\\s*:?\\s*(\\d{1,2})",
+            cleaned,
+            re.IGNORECASE,
+        )
+        if normal_tc_match:
+            level = int(normal_tc_match.group(1))
+            if 1 <= level <= 30:
+                town_center = f"TC {level}"
+
+        tg_patterns = [
+            r"stove_lv_(10|[1-9])\\.png",
+            r"\\bTG\\s*(10|[1-9])\\b",
+            r"\\btg[-_ ]?(10|[1-9])\\b",
+            r"\\btown[-_ ]?guard[-_ ]?(10|[1-9])\\b",
+            r"\\btranscendence[-_ ]?(10|[1-9])\\b",
+        ]
+
+        for pattern in tg_patterns:
+            match = re.search(pattern, cleaned, re.IGNORECASE)
+            if match:
+                town_center = f"TG{match.group(1)}"
+                break
+
+        name = "Unknown Player"
+
+        name_match = re.search(
+            r"^(.+?)\\s+Town\\s*Center\\s*Level",
+            cleaned,
+            re.IGNORECASE,
+        )
+        if name_match:
+            name = name_match.group(1).strip()[:60]
+        else:
+            before_state = cleaned.split(" State ")[0].strip()
+            before_state = re.sub(
+                r"Town\\s*Center\\s*Level\\s*:?\\s*(\\d{1,2})?",
+                "",
+                before_state,
+                flags=re.IGNORECASE,
+            ).strip()
+
+            before_state = re.sub(
+                r"https?://\\S+",
+                "",
+                before_state,
+                flags=re.IGNORECASE,
+            ).strip()
+
+            if before_state:
+                name = before_state[:60]
+
+        extra = "Retreat" if "retreat" in cleaned.lower() else ""
+
+        pieces = [name, town_center, state]
+        if extra:
+            pieces.append(extra)
+
+        return " | ".join(pieces)
 
     def _clean_feedback(self, text: str) -> str:
         if not text:
