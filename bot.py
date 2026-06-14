@@ -1,6 +1,4 @@
 import asyncio
-import csv
-import io
 import logging
 import re
 
@@ -38,11 +36,13 @@ def short_result_report(results: list[RedeemResult], gift_code: str) -> str:
         f"Total: {len(results)} / Success: {success_count} / Failed: {fail_count}",
         "",
     ]
+
     for index, result in enumerate(results, start=1):
         account = result.account_info or "Account info not detected."
         lines.append(
             f"{index}. `{result.kingshot_id}` | {result.status} | {account} | {result.message}"
         )
+
     return "\n".join(lines)
 
 
@@ -56,13 +56,16 @@ def split_discord_message(text: str, limit: int = 1900) -> list[str]:
 
     for line in text.splitlines():
         line_length = len(line) + 1
+
         if line_length > limit:
             if current:
                 chunks.append("\n".join(current))
                 current = []
                 current_length = 0
+
             for start in range(0, len(line), limit):
                 chunks.append(line[start : start + limit])
+
             continue
 
         if current and current_length + line_length > limit:
@@ -75,32 +78,14 @@ def split_discord_message(text: str, limit: int = 1900) -> list[str]:
 
     if current:
         chunks.append("\n".join(current))
+
     return chunks
 
 
-async def send_chunked_message(target, text: str, **kwargs) -> None:
+async def send_chunked_message(target, text: str) -> None:
     chunks = split_discord_message(text)
-    for index, chunk in enumerate(chunks):
-        await target.send(chunk, **kwargs if index == 0 else {})
-
-
-def make_result_csv(results: list[RedeemResult], gift_code: str) -> discord.File:
-    text_buffer = io.StringIO()
-    writer = csv.writer(text_buffer)
-    writer.writerow(["gift_code", "kingshot_id", "status", "account_info", "reason"])
-    for result in results:
-        writer.writerow(
-            [
-                gift_code,
-                result.kingshot_id,
-                result.status,
-                result.account_info,
-                result.message,
-            ]
-        )
-
-    bytes_buffer = io.BytesIO(text_buffer.getvalue().encode("utf-8-sig"))
-    return discord.File(bytes_buffer, filename=f"redeem-results-{gift_code}.csv")
+    for chunk in chunks:
+        await target.send(chunk)
 
 
 class KingShotBot(discord.Client):
@@ -123,6 +108,7 @@ class KingShotBot(discord.Client):
 
     async def setup_hook(self) -> None:
         register_commands(self)
+
         if self.settings.discord_guild_id:
             guild = discord.Object(id=self.settings.discord_guild_id)
             self.tree.copy_global_to(guild=guild)
@@ -140,14 +126,17 @@ class KingShotBot(discord.Client):
     async def on_message(self, message: discord.Message) -> None:
         if message.author.bot and message.webhook_id is None:
             return
+
         if message.channel.id != self.settings.watch_channel_id:
             return
 
         codes = extract_gift_codes_from_message(message)
+
         for code in codes:
             if not self.store.mark_code_seen(code):
                 logging.info("Gift code %s was already handled; skipping", code)
                 continue
+
             result_channel = self.get_result_channel() or message.channel
             await result_channel.send(f"Detected gift code `{code}`. Starting auto redeem.")
             asyncio.create_task(self.redeem_code_to_channel(result_channel, code))
@@ -161,25 +150,28 @@ class KingShotBot(discord.Client):
     async def redeem_code_to_channel(self, channel: discord.abc.Messageable, gift_code: str) -> None:
         async with self.redeem_lock:
             ids = self.store.list_ids()
+
             if not ids:
                 await channel.send("No KingShot IDs are registered. Skipping redeem.")
                 return
 
             await channel.send(f"Redeeming `{gift_code}` for {len(ids)} registered IDs.")
+
             last_progress_message = 0
 
             async def progress(index: int, total: int, result: RedeemResult) -> None:
                 nonlocal last_progress_message
+
                 if index == total or index - last_progress_message >= 10:
                     last_progress_message = index
                     await channel.send(f"Progress: {index}/{total} processed.")
 
             results = await self.redeemer.redeem_many(ids, gift_code, progress)
             self.store_account_info(results)
+
             await send_chunked_message(
                 channel,
                 short_result_report(results, gift_code),
-                file=make_result_csv(results, gift_code),
             )
 
     def store_account_info(self, results: list[RedeemResult]) -> None:
@@ -189,19 +181,25 @@ class KingShotBot(discord.Client):
 
 def can_manage(interaction: discord.Interaction) -> bool:
     settings = interaction.client.settings
+
     if not interaction.guild or not isinstance(interaction.user, discord.Member):
         return False
+
     if settings.admin_role_ids:
         return any(role.id in settings.admin_role_ids for role in interaction.user.roles)
+
     return interaction.user.guild_permissions.administrator
 
 
 def can_manage_ids(interaction: discord.Interaction) -> bool:
     settings = interaction.client.settings
+
     if not interaction.guild or not isinstance(interaction.user, discord.Member):
         return False
+
     if settings.id_manager_role_ids:
         return any(role.id in settings.id_manager_role_ids for role in interaction.user.roles)
+
     return can_manage(interaction)
 
 
@@ -209,6 +207,7 @@ def require_manager():
     async def predicate(interaction: discord.Interaction) -> bool:
         if can_manage(interaction):
             return True
+
         raise app_commands.CheckFailure("You need manager permission to use this command.")
 
     return app_commands.check(predicate)
@@ -218,6 +217,7 @@ def require_id_manager():
     async def predicate(interaction: discord.Interaction) -> bool:
         if can_manage_ids(interaction):
             return True
+
         raise app_commands.CheckFailure("You need an ID manager role to use this command.")
 
     return app_commands.check(predicate)
@@ -227,10 +227,12 @@ def register_commands(bot: KingShotBot) -> None:
     @bot.tree.error
     async def on_app_command_error(interaction: discord.Interaction, error: app_commands.AppCommandError):
         message = "Command failed."
+
         if isinstance(error, app_commands.CheckFailure):
             message = str(error)
         elif error.__cause__:
             message = str(error.__cause__)
+
         if interaction.response.is_done():
             await interaction.followup.send(message, ephemeral=True)
         else:
@@ -240,9 +242,11 @@ def register_commands(bot: KingShotBot) -> None:
     @require_id_manager()
     async def add_id(interaction: discord.Interaction, kingshot_id: str):
         ids = parse_ids(kingshot_id)
+
         if len(ids) != 1:
             await interaction.response.send_message("Please enter exactly one numeric KingShot ID.", ephemeral=True)
             return
+
         inserted = bot.store.add_id(ids[0])
         status = "registered." if inserted else "is already registered."
         await interaction.response.send_message(f"`{ids[0]}` {status}", ephemeral=True)
@@ -251,9 +255,11 @@ def register_commands(bot: KingShotBot) -> None:
     @require_id_manager()
     async def bulk_add(interaction: discord.Interaction, ids: str):
         parsed_ids = parse_ids(ids)
+
         if not parsed_ids:
             await interaction.response.send_message("No numeric KingShot IDs were found.", ephemeral=True)
             return
+
         inserted, duplicates = bot.store.add_ids(parsed_ids)
         await interaction.response.send_message(
             f"Bulk add complete: {inserted} new, {duplicates} duplicate.",
@@ -264,9 +270,11 @@ def register_commands(bot: KingShotBot) -> None:
     @require_id_manager()
     async def delete_id(interaction: discord.Interaction, kingshot_id: str):
         ids = parse_ids(kingshot_id)
+
         if len(ids) != 1:
             await interaction.response.send_message("Please enter exactly one numeric KingShot ID.", ephemeral=True)
             return
+
         deleted = bot.store.delete_id(ids[0])
         status = "deleted." if deleted else "was not registered."
         await interaction.response.send_message(f"`{ids[0]}` {status}", ephemeral=True)
@@ -275,15 +283,21 @@ def register_commands(bot: KingShotBot) -> None:
     @require_manager()
     async def list_ids(interaction: discord.Interaction):
         players = bot.store.list_players()
+
         if not players:
             await interaction.response.send_message("No IDs are registered.", ephemeral=True)
             return
+
         lines = [f"Registered IDs: {len(players)}", ""]
+
         for index, player in enumerate(players, start=1):
             account = player.account_info or "Unknown account info until first redeem/login."
             lines.append(f"{index}. `{player.kingshot_id}` | {account}")
+
         chunks = split_discord_message("\n".join(lines))
+
         await interaction.response.send_message(chunks[0], ephemeral=True)
+
         for chunk in chunks[1:]:
             await interaction.followup.send(chunk, ephemeral=True)
 
@@ -292,11 +306,13 @@ def register_commands(bot: KingShotBot) -> None:
     async def redeem(interaction: discord.Interaction, gift_code: str):
         gift_code = gift_code.strip().upper()
         ids = bot.store.list_ids()
+
         if not ids:
             await interaction.response.send_message("No IDs are registered.", ephemeral=True)
             return
 
         result_channel = bot.get_result_channel()
+
         if result_channel is None:
             await interaction.response.send_message(
                 "Result channel was not found. Check RESULT_CHANNEL_ID.",
@@ -308,6 +324,7 @@ def register_commands(bot: KingShotBot) -> None:
             f"Started redeeming `{gift_code}` for {len(ids)} IDs. Results will be posted in <#{bot.settings.result_channel_id}>.",
             ephemeral=True,
         )
+
         await result_channel.send(
             f"{interaction.user.mention} started redeeming `{gift_code}` for {len(ids)} registered IDs."
         )
@@ -316,18 +333,21 @@ def register_commands(bot: KingShotBot) -> None:
 
         async def progress(index: int, total: int, result: RedeemResult) -> None:
             nonlocal last_progress_message
+
             if index == total or index - last_progress_message >= 10:
                 last_progress_message = index
                 await result_channel.send(f"Progress: {index}/{total} processed.")
 
         async with bot.redeem_lock:
             results = await bot.redeemer.redeem_many(ids, gift_code, progress)
+
         bot.store_account_info(results)
+
         await send_chunked_message(
             result_channel,
             short_result_report(results, gift_code),
-            file=make_result_csv(results, gift_code),
         )
+
         await interaction.followup.send(
             f"Redeem finished. Public results were posted in <#{bot.settings.result_channel_id}>.",
             ephemeral=True,
