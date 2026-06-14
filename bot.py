@@ -317,7 +317,7 @@ def register_commands(bot: KingShotBot) -> None:
     @bot.tree.command(name="redeem", description="Redeem a gift code for all registered KingShot IDs.")
     @require_manager()
     async def redeem(interaction: discord.Interaction, gift_code: str):
-        gift_code = gift_code.strip().upper()
+        gift_code = gift_code.strip()
         ids = bot.store.list_ids()
 
         if not ids:
