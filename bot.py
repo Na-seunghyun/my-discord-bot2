@@ -288,19 +288,30 @@ def register_commands(bot: KingShotBot) -> None:
             await interaction.response.send_message("No IDs are registered.", ephemeral=True)
             return
 
+        result_channel = bot.get_result_channel()
+
+        if result_channel is None:
+            await interaction.response.send_message(
+                "Result channel was not found. Check RESULT_CHANNEL_ID.",
+                ephemeral=True,
+            )
+            return
+
         lines = [f"Registered IDs: {len(players)}", ""]
 
         for index, player in enumerate(players, start=1):
             account = player.account_info or "Unknown account info until first redeem/login."
             lines.append(f"{index}. `{player.kingshot_id}` | {account}")
 
-        chunks = split_discord_message("\n".join(lines))
+        await interaction.response.send_message(
+            f"Registered ID list will be posted in <#{bot.settings.result_channel_id}>.",
+            ephemeral=True,
+        )
 
-        await interaction.response.send_message(chunks[0], ephemeral=True)
-
-        for chunk in chunks[1:]:
-            await interaction.followup.send(chunk, ephemeral=True)
-
+        await send_chunked_message(
+            result_channel,
+            "\n".join(lines),
+        )
     @bot.tree.command(name="redeem", description="Redeem a gift code for all registered KingShot IDs.")
     @require_manager()
     async def redeem(interaction: discord.Interaction, gift_code: str):
