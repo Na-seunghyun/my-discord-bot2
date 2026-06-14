@@ -241,9 +241,7 @@ class KingShotRedeemer:
             """
         )
 
-        print("DEBUG_ACCOUNT_BODY:", data.get("bodyText", "")[:1000])
-        print("DEBUG_LEVEL_SRC:", data.get("levelSrc", ""))
-        
+
         return self._clean_account_info(
             data.get("bodyText", ""),
             data.get("levelSrc", ""),
@@ -390,6 +388,35 @@ class KingShotRedeemer:
                 return self._clean_player_name(match.group(1))
 
         return "Unknown Player"
+
+
+    def _is_bad_name_line(self, line: str) -> bool:
+        lowered = (line or "").strip().lower()
+        if not lowered:
+            return True
+
+        bad_words = [
+            "english",
+            "login",
+            "gift code center",
+            "gift code",
+            "town center level",
+            "state:",
+            "confirm",
+            "check your player id",
+            "avatar",
+            "settings",
+            "redeem",
+            "rewards will be",
+            "gift code not found",
+            "case-sensitive",
+            "retreat",
+        ]
+
+        return any(word in lowered for word in bad_words)
+
+
+    
 
     def _clean_player_name(self, name: str) -> str:
         name = " ".join((name or "").split())
