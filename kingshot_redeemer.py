@@ -139,6 +139,9 @@ class KingShotRedeemer:
             message = await self._read_feedback(page)
             ok = self._looks_successful(message)
 
+            if self._is_unknown_account_info(account_info):
+                account_info = await self._read_account_info(page)
+
             return RedeemResult(
                 kingshot_id=kingshot_id,
                 ok=ok,
