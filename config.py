@@ -39,6 +39,7 @@ def _get_int_set(name: str) -> set[int]:
 class Settings:
     discord_token: str
     watch_channel_id: int
+    result_channel_id: int
     admin_role_ids: set[int]
     id_manager_role_ids: set[int]
     discord_guild_id: int | None
@@ -56,6 +57,7 @@ def load_settings() -> Settings:
     return Settings(
         discord_token=token,
         watch_channel_id=_get_int("WATCH_CHANNEL_ID", 1422359547393347685),
+        result_channel_id=_get_int("RESULT_CHANNEL_ID", 1465122735511568529),
         admin_role_ids=_get_int_set("ADMIN_ROLE_IDS"),
         id_manager_role_ids=_get_int_set("ID_MANAGER_ROLE_IDS"),
         discord_guild_id=_get_int("DISCORD_GUILD_ID"),
