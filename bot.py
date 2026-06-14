@@ -63,7 +63,12 @@ class KingShotBot(discord.Client):
         if self.settings.discord_guild_id:
             guild = discord.Object(id=self.settings.discord_guild_id)
             self.tree.copy_global_to(guild=guild)
+
+            # Remove global commands so only this server gets the current slash commands.
+            self.tree.clear_commands(guild=None)
+
             await self.tree.sync(guild=guild)
+            await self.tree.sync()
             logging.info("Synced commands to guild %s", self.settings.discord_guild_id)
         else:
             await self.tree.sync()
