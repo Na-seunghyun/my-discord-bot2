@@ -53,7 +53,6 @@ class KingShotRedeemer:
 
             async def run_one(index: int, kingshot_id: str) -> None:
                 nonlocal completed
-
                 await asyncio.sleep(index * self.delay_seconds)
 
                 async with semaphore:
@@ -82,7 +81,7 @@ class KingShotRedeemer:
     async def _redeem_one(self, browser, kingshot_id: str, gift_code: str) -> RedeemResult:
         page = await browser.new_page()
         page.set_default_timeout(self.timeout_ms)
-        account_info = "Account info not detected."
+        account_info = "Unknown Player | TC Unknown | State Unknown"
 
         try:
             await page.goto(GIFT_CODE_URL, wait_until="domcontentloaded")
@@ -108,7 +107,7 @@ class KingShotRedeemer:
             )
             await login_button.click()
 
-            await page.wait_for_timeout(500)
+            await page.wait_for_timeout(700)
             account_info = await self._read_account_info(page)
 
             code_input = await self._first_visible(
@@ -179,48 +178,27 @@ class KingShotRedeemer:
         raise RuntimeError(f"Could not find a usable page element. Last error: {last_error}")
 
     async def _read_account_info(self, page) -> str:
-        text = await page.evaluate(
+        data = await page.evaluate(
             """
             () => {
-                const values = [];
-
-                function add(value) {
-                    if (!value) return;
-                    const cleaned = String(value).replace(/\\s+/g, " ").trim();
-                    if (cleaned && !values.includes(cleaned)) values.push(cleaned);
+                const imgSources = [];
+                for (const img of document.querySelectorAll("img")) {
+                    if (img.src) imgSources.push(img.src);
+                    if (img.currentSrc) imgSources.push(img.currentSrc);
+                    if (img.getAttribute("src")) imgSources.push(img.getAttribute("src"));
                 }
 
-                add(document.body.innerText);
-
-                for (const el of document.querySelectorAll("*")) {
-                    const rect = el.getBoundingClientRect();
-                    const visible = rect.width > 0 && rect.height > 0;
-                    if (!visible) continue;
-
-                    add(el.innerText);
-                    add(el.className);
-                    add(el.id);
-                    add(el.getAttribute("aria-label"));
-                    add(el.getAttribute("title"));
-                    add(el.getAttribute("alt"));
-                    add(el.getAttribute("src"));
-                    add(el.getAttribute("data-src"));
-                    add(el.getAttribute("style"));
-                    add(el.getAttribute("data-level"));
-                    add(el.getAttribute("data-value"));
-
-                    if (el.currentSrc) add(el.currentSrc);
-
-                    const style = window.getComputedStyle(el);
-                    add(style.backgroundImage);
-                }
-
-                return values.join("\\n");
+                return {
+                    text: document.body.innerText || "",
+                    imgSources
+                };
             }
             """
         )
 
-        return self._clean_account_info(text)
+        body_text = data.get("text", "")
+        img_sources = data.get("imgSources", [])
+        return self._clean_account_info(body_text, img_sources)
 
     async def _read_feedback(self, page) -> str:
         await page.wait_for_timeout(700)
@@ -257,76 +235,63 @@ class KingShotRedeemer:
 
         return ""
 
-    def _clean_account_info(self, text: str) -> str:
-        if not text:
-            return "Unknown Player | TC Unknown"
+    def _clean_account_info(self, body_text: str, img_sources: list[str]) -> str:
+        cleaned = " ".join((body_text or "").split())
+        sources = " ".join(img_sources or [])
 
-        cleaned = " ".join(text.split())
-
-        state_match = re.search(r"State\\s*:?\\s*(\\d+)", cleaned, re.IGNORECASE)
-        state = f"State {state_match.group(1)}" if state_match else "State Unknown"
+        state = "State Unknown"
+        state_match = re.search(r"State\s*:?\s*(\d+)", cleaned, re.IGNORECASE)
+        if state_match:
+            state = f"State {state_match.group(1)}"
 
         town_center = "TC Unknown"
 
-        normal_tc_match = re.search(
-            r"Town\\s*Center\\s*Level\\s*:?\\s*(\\d{1,2})",
-            cleaned,
-            re.IGNORECASE,
-        )
-        if normal_tc_match:
-            level = int(normal_tc_match.group(1))
-            if 1 <= level <= 30:
-                town_center = f"TC {level}"
-
-        tg_patterns = [
-            r"stove_lv_(10|[1-9])\\.png",
-            r"\\bTG\\s*(10|[1-9])\\b",
-            r"\\btg[-_ ]?(10|[1-9])\\b",
-            r"\\btown[-_ ]?guard[-_ ]?(10|[1-9])\\b",
-            r"\\btranscendence[-_ ]?(10|[1-9])\\b",
-        ]
-
-        for pattern in tg_patterns:
-            match = re.search(pattern, cleaned, re.IGNORECASE)
-            if match:
-                town_center = f"TG{match.group(1)}"
-                break
+        tg_match = re.search(r"stove_lv_(10|[1-9])\.png", sources, re.IGNORECASE)
+        if tg_match:
+            town_center = f"TG{tg_match.group(1)}"
+        else:
+            tc_match = re.search(
+                r"Town\s*Center\s*Level\s*:?\s*(\d{1,2})",
+                cleaned,
+                re.IGNORECASE,
+            )
+            if tc_match:
+                level = int(tc_match.group(1))
+                if 1 <= level <= 30:
+                    town_center = f"TC {level}"
 
         name = "Unknown Player"
 
         name_match = re.search(
-            r"^(.+?)\\s+Town\\s*Center\\s*Level",
+            r"Gift\s*Code\s*Center\s+(.+?)\s+Town\s*Center\s*Level",
             cleaned,
             re.IGNORECASE,
         )
         if name_match:
-            name = name_match.group(1).strip()[:60]
+            name = name_match.group(1).strip()
         else:
-            before_state = cleaned.split(" State ")[0].strip()
-            before_state = re.sub(
-                r"Town\\s*Center\\s*Level\\s*:?\\s*(\\d{1,2})?",
-                "",
-                before_state,
-                flags=re.IGNORECASE,
-            ).strip()
+            fallback = re.sub(r"^.*?Gift\s*Code\s*Center\s+", "", cleaned, flags=re.IGNORECASE)
+            fallback = re.sub(r"\s+Town\s*Center\s*Level.*$", "", fallback, flags=re.IGNORECASE)
+            if fallback and not fallback.startswith("*"):
+                name = fallback.strip()
 
-            before_state = re.sub(
-                r"https?://\\S+",
-                "",
-                before_state,
-                flags=re.IGNORECASE,
-            ).strip()
-
-            if before_state:
-                name = before_state[:60]
-
-        extra = "Retreat" if "retreat" in cleaned.lower() else ""
+        name = self._clean_player_name(name)
 
         pieces = [name, town_center, state]
-        if extra:
-            pieces.append(extra)
+        if "retreat" in cleaned.lower():
+            pieces.append("Retreat")
 
         return " | ".join(pieces)
+
+    def _clean_player_name(self, name: str) -> str:
+        name = " ".join((name or "").split())
+        name = re.sub(r"^(English|Korean|Japanese|Chinese|Deutsch|French|Spanish)\s+", "", name, flags=re.IGNORECASE)
+        name = name.replace("Gift Code Center", "").strip()
+
+        if not name or name.startswith("*"):
+            return "Unknown Player"
+
+        return name[:60]
 
     def _clean_feedback(self, text: str) -> str:
         if not text:
