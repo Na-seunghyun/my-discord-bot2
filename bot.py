@@ -103,6 +103,7 @@ class KingShotBot(discord.Client):
             headless=settings.redeem_headless,
             delay_seconds=settings.redeem_delay_seconds,
             timeout_seconds=settings.redeem_timeout_seconds,
+            max_concurrency=settings.redeem_max_concurrency,
         )
         self.redeem_lock = asyncio.Lock()
 
@@ -312,6 +313,7 @@ def register_commands(bot: KingShotBot) -> None:
             result_channel,
             "\n".join(lines),
         )
+
     @bot.tree.command(name="redeem", description="Redeem a gift code for all registered KingShot IDs.")
     @require_manager()
     async def redeem(interaction: discord.Interaction, gift_code: str):
