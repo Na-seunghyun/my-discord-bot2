@@ -88,7 +88,7 @@ class KingShotRedeemer:
             )
             await login_button.click()
 
-            await page.wait_for_timeout(1200)
+            await page.wait_for_timeout(500)
             account_info = await self._read_account_info(page)
 
             code_input = await self._first_visible(
@@ -205,7 +205,7 @@ class KingShotRedeemer:
         return self._clean_account_info(text)
 
     async def _read_feedback(self, page) -> str:
-        await page.wait_for_timeout(1800)
+        await page.wait_for_timeout(700)
 
         text = await self._read_text_from_candidates(
             page,
