@@ -27,8 +27,8 @@ class KingShotRedeemer:
         self,
         *,
         headless: bool = True,
-        delay_seconds: float = 0.2,
-        timeout_seconds: float = 20.0,
+        delay_seconds: float = 0.1,
+        timeout_seconds: float = 15.0,
         max_concurrency: int = 3,
     ):
         self.headless = headless
@@ -49,10 +49,20 @@ class KingShotRedeemer:
         semaphore = asyncio.Semaphore(self.max_concurrency)
 
         async with async_playwright() as playwright:
-            browser = await playwright.chromium.launch(headless=self.headless)
+            browser = await playwright.chromium.launch(
+                headless=self.headless,
+                args=[
+                    "--disable-dev-shm-usage",
+                    "--disable-gpu",
+                    "--no-sandbox",
+                    "--disable-extensions",
+                    "--disable-background-networking",
+                ],
+            )
 
             async def run_one(index: int, kingshot_id: str) -> None:
                 nonlocal completed
+
                 await asyncio.sleep(index * self.delay_seconds)
 
                 async with semaphore:
@@ -94,6 +104,7 @@ class KingShotRedeemer:
                     "input[type='text']",
                     "input:not([type])",
                 ],
+                timeout_ms=4000,
             )
             await id_input.fill(kingshot_id)
 
@@ -104,11 +115,9 @@ class KingShotRedeemer:
                     "button:has-text('Log in')",
                     "text=/^\\s*Login\\s*$/i",
                 ],
+                timeout_ms=4000,
             )
             await login_button.click()
-
-            await page.wait_for_timeout(700)
-            account_info = await self._read_account_info(page)
 
             code_input = await self._first_visible(
                 page,
@@ -119,7 +128,11 @@ class KingShotRedeemer:
                     "input[type='text']",
                     "input:not([type])",
                 ],
+                timeout_ms=5000,
             )
+
+            account_info = await self._read_account_info(page)
+
             await code_input.fill(gift_code)
 
             confirm_button = await self._first_visible(
@@ -129,6 +142,7 @@ class KingShotRedeemer:
                     "button:has-text('Redeem')",
                     "text=/^\\s*Confirm\\s*$/i",
                 ],
+                timeout_ms=4000,
             )
             await confirm_button.click()
 
@@ -164,13 +178,13 @@ class KingShotRedeemer:
         finally:
             await page.close()
 
-    async def _first_visible(self, page, selectors: list[str]):
+    async def _first_visible(self, page, selectors: list[str], timeout_ms: int = 4000):
         last_error: Exception | None = None
 
         for selector in selectors:
             try:
                 locator = page.locator(selector).first
-                await locator.wait_for(state="visible", timeout=5000)
+                await locator.wait_for(state="visible", timeout=timeout_ms)
                 return locator
             except Exception as exc:
                 last_error = exc
@@ -181,27 +195,27 @@ class KingShotRedeemer:
         data = await page.evaluate(
             """
             () => {
-                const imgSources = [];
-                for (const img of document.querySelectorAll("img")) {
-                    if (img.src) imgSources.push(img.src);
-                    if (img.currentSrc) imgSources.push(img.currentSrc);
-                    if (img.getAttribute("src")) imgSources.push(img.getAttribute("src"));
-                }
+                const bodyText = document.body.innerText || "";
+                const levelIcon = document.querySelector("img.level_icon");
+                const levelSrc = levelIcon
+                    ? (levelIcon.currentSrc || levelIcon.src || levelIcon.getAttribute("src") || "")
+                    : "";
 
                 return {
-                    text: document.body.innerText || "",
-                    imgSources
+                    bodyText,
+                    levelSrc
                 };
             }
             """
         )
 
-        body_text = data.get("text", "")
-        img_sources = data.get("imgSources", [])
-        return self._clean_account_info(body_text, img_sources)
+        return self._clean_account_info(
+            data.get("bodyText", ""),
+            data.get("levelSrc", ""),
+        )
 
     async def _read_feedback(self, page) -> str:
-        await page.wait_for_timeout(700)
+        await page.wait_for_timeout(500)
 
         text = await self._read_text_from_candidates(
             page,
@@ -224,7 +238,7 @@ class KingShotRedeemer:
     async def _read_text_from_candidates(self, page, selectors: list[str], max_length: int) -> str:
         for selector in selectors:
             try:
-                text = await page.locator(selector).first.inner_text(timeout=1000)
+                text = await page.locator(selector).first.inner_text(timeout=700)
                 text = " ".join(text.strip().split())
 
                 if text:
@@ -235,23 +249,22 @@ class KingShotRedeemer:
 
         return ""
 
-    def _clean_account_info(self, body_text: str, img_sources: list[str]) -> str:
+    def _clean_account_info(self, body_text: str, level_src: str) -> str:
         cleaned = " ".join((body_text or "").split())
-        sources = " ".join(img_sources or [])
 
         state = "State Unknown"
-        state_match = re.search(r"State\s*:?\s*(\d+)", cleaned, re.IGNORECASE)
+        state_match = re.search(r"State\\s*:?\\s*(\\d+)", cleaned, re.IGNORECASE)
         if state_match:
             state = f"State {state_match.group(1)}"
 
         town_center = "TC Unknown"
 
-        tg_match = re.search(r"stove_lv_(10|[1-9])\.png", sources, re.IGNORECASE)
+        tg_match = re.search(r"stove_lv_(10|[1-9])\\.png", level_src or "", re.IGNORECASE)
         if tg_match:
             town_center = f"TG{tg_match.group(1)}"
         else:
             tc_match = re.search(
-                r"Town\s*Center\s*Level\s*:?\s*(\d{1,2})",
+                r"Town\\s*Center\\s*Level\\s*:?\\s*(\\d{1,2})",
                 cleaned,
                 re.IGNORECASE,
             )
@@ -263,29 +276,30 @@ class KingShotRedeemer:
         name = "Unknown Player"
 
         name_match = re.search(
-            r"Gift\s*Code\s*Center\s+(.+?)\s+Town\s*Center\s*Level",
+            r"Gift\\s*Code\\s*Center\\s+(.+?)\\s+Town\\s*Center\\s*Level",
             cleaned,
             re.IGNORECASE,
         )
         if name_match:
             name = name_match.group(1).strip()
         else:
-            fallback = re.sub(r"^.*?Gift\s*Code\s*Center\s+", "", cleaned, flags=re.IGNORECASE)
-            fallback = re.sub(r"\s+Town\s*Center\s*Level.*$", "", fallback, flags=re.IGNORECASE)
+            fallback = re.sub(r"^.*?Gift\\s*Code\\s*Center\\s+", "", cleaned, flags=re.IGNORECASE)
+            fallback = re.sub(r"\\s+Town\\s*Center\\s*Level.*$", "", fallback, flags=re.IGNORECASE)
             if fallback and not fallback.startswith("*"):
                 name = fallback.strip()
 
         name = self._clean_player_name(name)
 
-        pieces = [name, town_center, state]
-        if "retreat" in cleaned.lower():
-            pieces.append("Retreat")
-
-        return " | ".join(pieces)
+        return " | ".join([name, town_center, state])
 
     def _clean_player_name(self, name: str) -> str:
         name = " ".join((name or "").split())
-        name = re.sub(r"^(English|Korean|Japanese|Chinese|Deutsch|French|Spanish)\s+", "", name, flags=re.IGNORECASE)
+        name = re.sub(
+            r"^(English|Korean|Japanese|Chinese|Deutsch|French|Spanish)\\s+",
+            "",
+            name,
+            flags=re.IGNORECASE,
+        )
         name = name.replace("Gift Code Center", "").strip()
 
         if not name or name.startswith("*"):
