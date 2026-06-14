@@ -295,22 +295,29 @@ class KingShotRedeemer:
     def _clean_account_info(self, body_text: str, level_src: str) -> str:
         cleaned = " ".join((body_text or "").split())
 
-        if not cleaned or "check your player id" in cleaned.lower():
+        if not cleaned:
+            return "Unknown Player | TC Unknown | State Unknown"
+
+        has_account_marker = bool(
+            re.search(r"Town\s*Center\s*Level|State\s*:?\s*\d+", cleaned, re.IGNORECASE)
+        )
+
+        if not has_account_marker:
             return "Unknown Player | TC Unknown | State Unknown"
 
         state = "State Unknown"
-        state_match = re.search(r"State\\s*:?\\s*(\\d+)", cleaned, re.IGNORECASE)
+        state_match = re.search(r"State\s*:?\s*(\d+)", cleaned, re.IGNORECASE)
         if state_match:
             state = f"State {state_match.group(1)}"
 
         town_center = "TC Unknown"
 
-        tg_match = re.search(r"stove_lv_(10|[1-9])\\.png", level_src or "", re.IGNORECASE)
+        tg_match = re.search(r"stove_lv_(10|[1-9])\.png", level_src or "", re.IGNORECASE)
         if tg_match:
             town_center = f"TG{tg_match.group(1)}"
         else:
             tc_match = re.search(
-                r"Town\\s*Center\\s*Level\\s*:?\\s*(\\d{1,2})",
+                r"Town\s*Center\s*Level\s*:?\s*(\d{1,2})",
                 cleaned,
                 re.IGNORECASE,
             )
