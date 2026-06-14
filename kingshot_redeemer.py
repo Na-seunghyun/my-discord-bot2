@@ -305,7 +305,7 @@ class KingShotRedeemer:
             data.get("bodyText", ""),
             data.get("imageSources", []),
         )
-
+        
     async def _read_feedback(self, page) -> str:
         try:
             await page.wait_for_function(
@@ -363,26 +363,30 @@ class KingShotRedeemer:
         state = "State Unknown"
 
         for line in raw_lines:
-            match = re.search(r"^State\\s*:?\\s*(\\d+)$", line, re.IGNORECASE)
+            match = re.search(r"^State\s*:?\s*(\d+)$", line, re.IGNORECASE)
             if match:
                 state = f"State {match.group(1)}"
                 break
 
         if state == "State Unknown":
-            state_match = re.search(r"State\\s*:?\\s*(\\d+)", cleaned, re.IGNORECASE)
+            state_match = re.search(r"State\s*:?\s*(\d+)", cleaned, re.IGNORECASE)
             if state_match:
                 state = f"State {state_match.group(1)}"
 
         town_center = "TC Unknown"
 
         sources = " ".join(image_sources or [])
-        tg_match = re.search(r"stove_lv_(10|[1-9])\\.png", sources, re.IGNORECASE)
+        tg_match = re.search(r"stove_lv_(10|[1-9])\.png", sources, re.IGNORECASE)
         if tg_match:
             town_center = f"TG{tg_match.group(1)}"
         else:
             for index, line in enumerate(raw_lines):
-                if re.search(r"Town\\s*Center\\s*Level", line, re.IGNORECASE):
-                    same_line_match = re.search(r"Town\\s*Center\\s*Level\\s*:?\\s*(\\d{1,2})", line, re.IGNORECASE)
+                if re.search(r"Town\s*Center\s*Level", line, re.IGNORECASE):
+                    same_line_match = re.search(
+                        r"Town\s*Center\s*Level\s*:?\s*(\d{1,2})",
+                        line,
+                        re.IGNORECASE,
+                    )
                     if same_line_match:
                         level = int(same_line_match.group(1))
                         if 1 <= level <= 30:
@@ -391,7 +395,7 @@ class KingShotRedeemer:
 
                     if index + 1 < len(raw_lines):
                         next_line = raw_lines[index + 1]
-                        next_line_match = re.search(r"^(\\d{1,2})$", next_line)
+                        next_line_match = re.search(r"^(\d{1,2})$", next_line)
                         if next_line_match:
                             level = int(next_line_match.group(1))
                             if 1 <= level <= 30:
@@ -400,7 +404,7 @@ class KingShotRedeemer:
 
             if town_center == "TC Unknown":
                 tc_match = re.search(
-                    r"Town\\s*Center\\s*Level\\s*:?\\s*(\\d{1,2})",
+                    r"Town\s*Center\s*Level\s*:?\s*(\d{1,2})",
                     cleaned,
                     re.IGNORECASE,
                 )
