@@ -1,4 +1,5 @@
 import asyncio
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
 from playwright.async_api import TimeoutError as PlaywrightTimeoutError
@@ -12,7 +13,12 @@ GIFT_CODE_URL = "https://ks-giftcode.centurygame.com/"
 class RedeemResult:
     kingshot_id: str
     ok: bool
+    status: str
+    account_info: str
     message: str
+
+
+ProgressCallback = Callable[[int, int, RedeemResult], Awaitable[None]]
 
 
 class KingShotRedeemer:
@@ -27,22 +33,37 @@ class KingShotRedeemer:
         self.delay_seconds = delay_seconds
         self.timeout_ms = int(timeout_seconds * 1000)
 
-    async def redeem_many(self, kingshot_ids: list[str], gift_code: str) -> list[RedeemResult]:
+    async def redeem_many(
+        self,
+        kingshot_ids: list[str],
+        gift_code: str,
+        progress_callback: ProgressCallback | None = None,
+    ) -> list[RedeemResult]:
         results: list[RedeemResult] = []
+        total = len(kingshot_ids)
+
         async with async_playwright() as playwright:
             browser = await playwright.chromium.launch(headless=self.headless)
             try:
-                for kingshot_id in kingshot_ids:
+                for index, kingshot_id in enumerate(kingshot_ids, start=1):
                     result = await self._redeem_one(browser, kingshot_id, gift_code)
                     results.append(result)
+
+                    if progress_callback:
+                        await progress_callback(index, total, result)
+
                     await asyncio.sleep(self.delay_seconds)
             finally:
                 await browser.close()
+
         return results
 
     async def _redeem_one(self, browser, kingshot_id: str, gift_code: str) -> RedeemResult:
         page = await browser.new_page()
         page.set_default_timeout(self.timeout_ms)
+
+        account_info = "Account info not detected."
+
         try:
             await page.goto(GIFT_CODE_URL, wait_until="domcontentloaded")
 
@@ -63,10 +84,12 @@ class KingShotRedeemer:
                     "button:has-text('Login')",
                     "button:has-text('Log in')",
                     "text=/^\\s*Login\\s*$/i",
-                    "text=/^\\s*로그인\\s*$/",
                 ],
             )
             await login_button.click()
+
+            await page.wait_for_timeout(1200)
+            account_info = await self._read_account_info(page)
 
             code_input = await self._first_visible(
                 page,
@@ -86,26 +109,45 @@ class KingShotRedeemer:
                     "button:has-text('Confirm')",
                     "button:has-text('Redeem')",
                     "text=/^\\s*Confirm\\s*$/i",
-                    "text=/^\\s*확인\\s*$/",
                 ],
             )
             await confirm_button.click()
 
             message = await self._read_feedback(page)
-            ok = not any(
-                word in message.lower()
-                for word in ["invalid", "error", "failed", "already", "expired", "wrong"]
+            ok = self._looks_successful(message)
+
+            return RedeemResult(
+                kingshot_id=kingshot_id,
+                ok=ok,
+                status="SUCCESS" if ok else "FAILED",
+                account_info=account_info,
+                message=message,
             )
-            return RedeemResult(kingshot_id=kingshot_id, ok=ok, message=message)
+
         except PlaywrightTimeoutError:
-            return RedeemResult(kingshot_id=kingshot_id, ok=False, message="Timed out while using the gift-code page.")
+            return RedeemResult(
+                kingshot_id=kingshot_id,
+                ok=False,
+                status="FAILED",
+                account_info=account_info,
+                message="Timed out while using the gift-code page.",
+            )
+
         except Exception as exc:
-            return RedeemResult(kingshot_id=kingshot_id, ok=False, message=str(exc))
+            return RedeemResult(
+                kingshot_id=kingshot_id,
+                ok=False,
+                status="FAILED",
+                account_info=account_info,
+                message=str(exc),
+            )
+
         finally:
             await page.close()
 
     async def _first_visible(self, page, selectors: list[str]):
         last_error: Exception | None = None
+
         for selector in selectors:
             try:
                 locator = page.locator(selector).first
@@ -113,24 +155,112 @@ class KingShotRedeemer:
                 return locator
             except Exception as exc:
                 last_error = exc
+
         raise RuntimeError(f"Could not find a usable page element. Last error: {last_error}")
+
+    async def _read_account_info(self, page) -> str:
+        text = await self._read_text_from_candidates(
+            page,
+            [
+                ".user-info",
+                ".player-info",
+                ".role-info",
+                ".account-info",
+                "[class*='user' i]",
+                "[class*='player' i]",
+                "[class*='role' i]",
+                "body",
+            ],
+            max_length=300,
+        )
+
+        return self._clean_account_info(text)
 
     async def _read_feedback(self, page) -> str:
         await page.wait_for_timeout(1800)
-        candidates = [
-            "[role='dialog']",
-            ".modal",
-            ".toast",
-            ".notice",
-            ".message",
-            "body",
-        ]
-        for selector in candidates:
+
+        text = await self._read_text_from_candidates(
+            page,
+            [
+                "[role='dialog']",
+                ".modal",
+                ".toast",
+                ".notice",
+                ".message",
+                "[class*='toast' i]",
+                "[class*='modal' i]",
+                "[class*='message' i]",
+                "body",
+            ],
+            max_length=500,
+        )
+
+        return text or "Submitted, but no response text was detected."
+
+    async def _read_text_from_candidates(self, page, selectors: list[str], max_length: int) -> str:
+        for selector in selectors:
             try:
-                text = (await page.locator(selector).first.inner_text(timeout=1500)).strip()
+                text = await page.locator(selector).first.inner_text(timeout=1500)
+                text = " ".join(text.strip().split())
+
                 if text:
-                    return " ".join(text.split())[:500]
+                    return text[:max_length]
+
             except Exception:
                 continue
-        return "Submitted, but no response text was detected."
 
+        return ""
+
+    def _clean_account_info(self, text: str) -> str:
+        if not text:
+            return "Account info not detected."
+
+        ignored = {
+            "login",
+            "log in",
+            "confirm",
+            "redeem",
+            "gift code",
+            "player id",
+            "character id",
+        }
+
+        parts = [part.strip() for part in text.replace("|", "\n").split("\n") if part.strip()]
+        useful = [part for part in parts if part.lower() not in ignored]
+
+        if useful:
+            return " / ".join(useful[:4])[:300]
+
+        return text[:300]
+
+    def _looks_successful(self, message: str) -> bool:
+        lowered = message.lower()
+
+        failure_words = [
+            "already",
+            "cannot",
+            "error",
+            "expired",
+            "fail",
+            "invalid",
+            "not exist",
+            "used",
+            "wrong",
+        ]
+
+        success_words = [
+            "success",
+            "successful",
+            "sent",
+            "reward",
+            "claimed",
+            "redeemed",
+        ]
+
+        if any(word in lowered for word in failure_words):
+            return False
+
+        if any(word in lowered for word in success_words):
+            return True
+
+        return False
