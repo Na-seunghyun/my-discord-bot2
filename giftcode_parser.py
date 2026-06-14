@@ -15,7 +15,7 @@ def extract_gift_codes(text: str) -> list[str]:
     seen: set[str] = set()
     for pattern in GIFT_CODE_PATTERNS:
         for match in pattern.finditer(text):
-            code = match.group(1).strip().upper()
+            code = match.group(1).strip()
             if code not in seen:
                 seen.add(code)
                 codes.append(code)
