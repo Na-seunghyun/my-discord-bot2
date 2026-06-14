@@ -241,6 +241,9 @@ class KingShotRedeemer:
             """
         )
 
+        print("DEBUG_ACCOUNT_BODY:", data.get("bodyText", "")[:1000])
+        print("DEBUG_LEVEL_SRC:", data.get("levelSrc", ""))
+        
         return self._clean_account_info(
             data.get("bodyText", ""),
             data.get("levelSrc", ""),
