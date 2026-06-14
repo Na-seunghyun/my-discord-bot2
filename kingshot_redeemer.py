@@ -90,6 +90,9 @@ class KingShotRedeemer:
     async def _redeem_one(self, browser, kingshot_id: str, gift_code: str) -> RedeemResult:
         page = await browser.new_page()
         page.set_default_timeout(self.timeout_ms)
+
+        await self._block_unneeded_resources(page)
+
         account_info = "Unknown Player | TC Unknown | State Unknown"
 
         try:
@@ -169,6 +172,23 @@ class KingShotRedeemer:
 
         finally:
             await page.close()
+
+    async def _block_unneeded_resources(self, page) -> None:
+        async def route_handler(route):
+            resource_type = route.request.resource_type
+            url = route.request.url.lower()
+
+            if resource_type in {"font", "media"}:
+                await route.abort()
+                return
+
+            if resource_type == "image" and "stove_lv_" not in url:
+                await route.abort()
+                return
+
+            await route.continue_()
+
+        await page.route("**/*", route_handler)
 
     async def _first_visible(self, page, selectors: list[str], timeout_ms: int = 3000):
         last_error: Exception | None = None
@@ -299,25 +319,25 @@ class KingShotRedeemer:
             return "Unknown Player | TC Unknown | State Unknown"
 
         has_account_marker = bool(
-            re.search(r"Town\s*Center\s*Level|State\s*:?\s*\d+", cleaned, re.IGNORECASE)
+            re.search(r"Town\\s*Center\\s*Level|State\\s*:?\\s*\\d+", cleaned, re.IGNORECASE)
         )
 
         if not has_account_marker:
             return "Unknown Player | TC Unknown | State Unknown"
 
         state = "State Unknown"
-        state_match = re.search(r"State\s*:?\s*(\d+)", cleaned, re.IGNORECASE)
+        state_match = re.search(r"State\\s*:?\\s*(\\d+)", cleaned, re.IGNORECASE)
         if state_match:
             state = f"State {state_match.group(1)}"
 
         town_center = "TC Unknown"
 
-        tg_match = re.search(r"stove_lv_(10|[1-9])\.png", level_src or "", re.IGNORECASE)
+        tg_match = re.search(r"stove_lv_(10|[1-9])\\.png", level_src or "", re.IGNORECASE)
         if tg_match:
             town_center = f"TG{tg_match.group(1)}"
         else:
             tc_match = re.search(
-                r"Town\s*Center\s*Level\s*:?\s*(\d{1,2})",
+                r"Town\\s*Center\\s*Level\\s*:?\\s*(\\d{1,2})",
                 cleaned,
                 re.IGNORECASE,
             )
@@ -331,7 +351,7 @@ class KingShotRedeemer:
         return " | ".join([name, town_center, state])
 
     def _extract_player_name(self, cleaned: str) -> str:
-        lines = [line.strip() for line in re.split(r"\s{2,}|\n", cleaned) if line.strip()]
+        lines = [line.strip() for line in re.split(r"\\s{2,}|\\n", cleaned) if line.strip()]
 
         bad_words = [
             "english",
@@ -355,7 +375,7 @@ class KingShotRedeemer:
             if any(word in lowered for word in bad_words):
                 continue
 
-            if re.fullmatch(r"\d+", line):
+            if re.fullmatch(r"\\d+", line):
                 continue
 
             if len(line) < 2 or len(line) > 40:
@@ -366,15 +386,14 @@ class KingShotRedeemer:
         if candidates:
             return self._clean_player_name(candidates[0])
 
-        # Fallback: find the text immediately before "Town Center Level".
         match = re.search(
-            r"(?:Gift\s*Code\s*Center\s*)?(.{2,60}?)\s*Town\s*Center\s*Level",
+            r"(?:Gift\\s*Code\\s*Center\\s*)?(.{2,60}?)\\s*Town\\s*Center\\s*Level",
             cleaned,
             re.IGNORECASE,
         )
         if match:
             candidate = match.group(1)
-            candidate = re.sub(r"^(English|Login)\s+", "", candidate, flags=re.IGNORECASE).strip()
+            candidate = re.sub(r"^(English|Login)\\s+", "", candidate, flags=re.IGNORECASE).strip()
             return self._clean_player_name(candidate)
 
         return "Unknown Player"
