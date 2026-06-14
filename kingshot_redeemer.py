@@ -62,7 +62,6 @@ class KingShotRedeemer:
 
             async def run_one(index: int, kingshot_id: str) -> None:
                 nonlocal completed
-
                 await asyncio.sleep(index * self.delay_seconds)
 
                 async with semaphore:
@@ -140,6 +139,7 @@ class KingShotRedeemer:
             ok = self._looks_successful(message)
 
             if self._is_unknown_account_info(account_info):
+                await page.wait_for_timeout(300)
                 account_info = await self._read_account_info(page)
 
             return RedeemResult(
@@ -212,16 +212,17 @@ class KingShotRedeemer:
                 """
                 () => {
                     const text = document.body.innerText || "";
+                    const hasGiftCenter = /Gift\\s*Code\\s*Center/i.test(text);
                     const hasTownCenter = /Town\\s*Center\\s*Level/i.test(text);
                     const hasState = /State\\s*:?\\s*\\d+/i.test(text);
                     const hasLevelIcon = !!document.querySelector("img.level_icon");
-                    return hasTownCenter || hasState || hasLevelIcon;
+                    return hasGiftCenter && (hasTownCenter || hasState || hasLevelIcon);
                 }
                 """,
-                timeout=4000,
+                timeout=5000,
             )
         except Exception:
-            await page.wait_for_timeout(800)
+            await page.wait_for_timeout(1000)
 
     async def _read_account_info(self, page) -> str:
         data = await page.evaluate(
@@ -241,7 +242,6 @@ class KingShotRedeemer:
             """
         )
 
-
         return self._clean_account_info(
             data.get("bodyText", ""),
             data.get("levelSrc", ""),
@@ -253,10 +253,10 @@ class KingShotRedeemer:
                 """
                 () => {
                     const text = document.body.innerText || "";
-                    return /gift code|success|reward|invalid|expired|not found|already|case-sensitive|failed/i.test(text);
+                    return /gift code|success|reward|invalid|expired|not found|already|claimed|case-sensitive|failed/i.test(text);
                 }
                 """,
-                timeout=1200,
+                timeout=1500,
             )
         except Exception:
             await page.wait_for_timeout(300)
@@ -300,13 +300,6 @@ class KingShotRedeemer:
         if not cleaned:
             return "Unknown Player | TC Unknown | State Unknown"
 
-        has_account_marker = bool(
-            re.search(r"Town\\s*Center\\s*Level|State\\s*:?\\s*\\d+", cleaned, re.IGNORECASE)
-        )
-
-        if not has_account_marker:
-            return "Unknown Player | TC Unknown | State Unknown"
-
         state = "State Unknown"
         state_match = re.search(r"State\\s*:?\\s*(\\d+)", cleaned, re.IGNORECASE)
         if state_match:
@@ -348,47 +341,7 @@ class KingShotRedeemer:
 
                     return self._clean_player_name(next_line)
 
-        bad_words = [
-            "english",
-            "login",
-            "gift code center",
-            "gift code",
-            "town center level",
-            "state",
-            "confirm",
-            "check your player id",
-            "avatar",
-            "settings",
-            "redeem",
-            "rewards will be",
-            "gift code not found",
-        ]
-
-        for line in raw_lines:
-            lowered = line.lower()
-
-            if any(word in lowered for word in bad_words):
-                continue
-
-            if re.fullmatch(r"\d+", line):
-                continue
-
-            if 2 <= len(line) <= 40:
-                return self._clean_player_name(line)
-
-        patterns = [
-            r"Gift\s*Code\s*Center\s+(.+?)\s+Town\s*Center\s*Level",
-            r"Center\s+(.+?)\s+Town\s*Center\s*Level",
-            r"^(.+?)\s+Town\s*Center\s*Level",
-        ]
-
-        for pattern in patterns:
-            match = re.search(pattern, cleaned, re.IGNORECASE)
-            if match:
-                return self._clean_player_name(match.group(1))
-
         return "Unknown Player"
-
 
     def _is_bad_name_line(self, line: str) -> bool:
         lowered = (line or "").strip().lower()
@@ -411,22 +364,14 @@ class KingShotRedeemer:
             "gift code not found",
             "case-sensitive",
             "retreat",
+            "already claimed",
+            "unable to claim",
         ]
 
         return any(word in lowered for word in bad_words)
 
-
-    
-
     def _clean_player_name(self, name: str) -> str:
         name = " ".join((name or "").split())
-        name = re.sub(
-            r"^(English|Korean|Japanese|Chinese|Deutsch|French|Spanish)\\s+",
-            "",
-            name,
-            flags=re.IGNORECASE,
-        )
-        name = name.replace("Gift Code Center", "").strip()
 
         if not name or name.startswith("*") or "login" in name.lower():
             return "Unknown Player"
@@ -451,6 +396,7 @@ class KingShotRedeemer:
         cleaned = " ".join(text.split())
 
         feedback_patterns = [
+            r"Already claimed, unable to claim again\\.",
             r"Gift Code not found, this is case-sensitive!",
             r"This gift code has expired[^.]*\\.?",
             r"This gift code has already been used[^.]*\\.?",
@@ -464,21 +410,6 @@ class KingShotRedeemer:
             match = re.search(pattern, cleaned, re.IGNORECASE)
             if match:
                 return match.group(0).strip()
-
-        removable_suffixes = [
-            " Confirm",
-            " Redeem",
-            " Login",
-            " Log in",
-        ]
-
-        changed = True
-        while changed:
-            changed = False
-            for suffix in removable_suffixes:
-                if cleaned.endswith(suffix):
-                    cleaned = cleaned[: -len(suffix)].strip()
-                    changed = True
 
         return cleaned[:500]
 
@@ -496,6 +427,7 @@ class KingShotRedeemer:
             "not found",
             "used",
             "wrong",
+            "unable to claim",
         ]
 
         success_words = [
