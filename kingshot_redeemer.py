@@ -530,3 +530,59 @@ class KingShotRedeemer:
             r"Redeemed successfully[^.]*\\.?",
             r"Success[^.]*\\.?",
         ]
+
+        for pattern in feedback_patterns:
+            match = re.search(pattern, cleaned, re.IGNORECASE)
+            if match:
+                return match.group(0).strip()
+
+        removable_suffixes = [
+            " Confirm",
+            " Redeem",
+            " Login",
+            " Log in",
+        ]
+
+        changed = True
+        while changed:
+            changed = False
+            for suffix in removable_suffixes:
+                if cleaned.endswith(suffix):
+                    cleaned = cleaned[: -len(suffix)].strip()
+                    changed = True
+
+        return cleaned[:500]
+
+    def _looks_successful(self, message: str) -> bool:
+        lowered = message.lower()
+
+        failure_words = [
+            "already",
+            "cannot",
+            "error",
+            "expired",
+            "fail",
+            "invalid",
+            "not exist",
+            "not found",
+            "used",
+            "wrong",
+            "unable to claim",
+        ]
+
+        success_words = [
+            "success",
+            "successful",
+            "sent",
+            "reward",
+            "claimed",
+            "redeemed",
+        ]
+
+        if any(word in lowered for word in failure_words):
+            return False
+
+        if any(word in lowered for word in success_words):
+            return True
+
+        return False
