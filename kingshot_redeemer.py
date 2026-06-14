@@ -331,16 +331,51 @@ class KingShotRedeemer:
         return " | ".join([name, town_center, state])
 
     def _extract_player_name(self, cleaned: str) -> str:
-        patterns = [
-            r"Gift\\s*Code\\s*Center\\s+(.+?)\\s+Town\\s*Center\\s*Level",
-            r"Center\\s+(.+?)\\s+Town\\s*Center\\s*Level",
-            r"^(.+?)\\s+Town\\s*Center\\s*Level",
+        lines = [line.strip() for line in re.split(r"\s{2,}|\n", cleaned) if line.strip()]
+
+        bad_words = [
+            "english",
+            "login",
+            "gift code center",
+            "gift code",
+            "town center level",
+            "state",
+            "confirm",
+            "check your player id",
+            "avatar",
+            "settings",
+            "redeem",
         ]
 
-        for pattern in patterns:
-            match = re.search(pattern, cleaned, re.IGNORECASE)
-            if match:
-                return self._clean_player_name(match.group(1))
+        candidates = []
+
+        for line in lines:
+            lowered = line.lower()
+
+            if any(word in lowered for word in bad_words):
+                continue
+
+            if re.fullmatch(r"\d+", line):
+                continue
+
+            if len(line) < 2 or len(line) > 40:
+                continue
+
+            candidates.append(line)
+
+        if candidates:
+            return self._clean_player_name(candidates[0])
+
+        # Fallback: find the text immediately before "Town Center Level".
+        match = re.search(
+            r"(?:Gift\s*Code\s*Center\s*)?(.{2,60}?)\s*Town\s*Center\s*Level",
+            cleaned,
+            re.IGNORECASE,
+        )
+        if match:
+            candidate = match.group(1)
+            candidate = re.sub(r"^(English|Login)\s+", "", candidate, flags=re.IGNORECASE).strip()
+            return self._clean_player_name(candidate)
 
         return "Unknown Player"
 
