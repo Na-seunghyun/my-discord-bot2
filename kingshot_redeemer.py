@@ -27,8 +27,8 @@ class KingShotRedeemer:
         self,
         *,
         headless: bool = True,
-        delay_seconds: float = 0.1,
-        timeout_seconds: float = 15.0,
+        delay_seconds: float = 0.05,
+        timeout_seconds: float = 10.0,
         max_concurrency: int = 3,
     ):
         self.headless = headless
@@ -104,7 +104,7 @@ class KingShotRedeemer:
                     "input[type='text']",
                     "input:not([type])",
                 ],
-                timeout_ms=4000,
+                timeout_ms=3000,
             )
             await id_input.fill(kingshot_id)
 
@@ -115,24 +115,14 @@ class KingShotRedeemer:
                     "button:has-text('Log in')",
                     "text=/^\\s*Login\\s*$/i",
                 ],
-                timeout_ms=4000,
+                timeout_ms=3000,
             )
             await login_button.click()
 
-            code_input = await self._first_visible(
-                page,
-                [
-                    "input[placeholder*='code' i]",
-                    "input[placeholder*='gift' i]",
-                    "textarea",
-                    "input[type='text']",
-                    "input:not([type])",
-                ],
-                timeout_ms=5000,
-            )
-
+            await self._wait_for_account_loaded(page)
             account_info = await self._read_account_info(page)
 
+            code_input = await self._find_gift_code_input(page, kingshot_id)
             await code_input.fill(gift_code)
 
             confirm_button = await self._first_visible(
@@ -142,7 +132,7 @@ class KingShotRedeemer:
                     "button:has-text('Redeem')",
                     "text=/^\\s*Confirm\\s*$/i",
                 ],
-                timeout_ms=4000,
+                timeout_ms=3000,
             )
             await confirm_button.click()
 
@@ -178,7 +168,7 @@ class KingShotRedeemer:
         finally:
             await page.close()
 
-    async def _first_visible(self, page, selectors: list[str], timeout_ms: int = 4000):
+    async def _first_visible(self, page, selectors: list[str], timeout_ms: int = 3000):
         last_error: Exception | None = None
 
         for selector in selectors:
@@ -190,6 +180,44 @@ class KingShotRedeemer:
                 last_error = exc
 
         raise RuntimeError(f"Could not find a usable page element. Last error: {last_error}")
+
+    async def _find_gift_code_input(self, page, kingshot_id: str):
+        try:
+            preferred = page.locator("input[placeholder*='code' i], input[placeholder*='gift' i], textarea").first
+            await preferred.wait_for(state="visible", timeout=1500)
+            return preferred
+        except Exception:
+            pass
+
+        inputs = page.locator("input:visible, textarea:visible")
+        count = await inputs.count()
+
+        for index in range(count - 1, -1, -1):
+            item = inputs.nth(index)
+            try:
+                value = await item.input_value(timeout=500)
+                if value.strip() != kingshot_id:
+                    return item
+            except Exception:
+                return item
+
+        raise RuntimeError("Could not find the gift-code input.")
+
+    async def _wait_for_account_loaded(self, page) -> None:
+        try:
+            await page.wait_for_function(
+                """
+                () => {
+                    const text = document.body.innerText || "";
+                    const hasAccountText = /Town\\s*Center\\s*Level|State\\s*:?\\s*\\d+/i.test(text);
+                    const hasLevelIcon = !!document.querySelector("img.level_icon");
+                    return hasAccountText || hasLevelIcon;
+                }
+                """,
+                timeout=3000,
+            )
+        except Exception:
+            await page.wait_for_timeout(300)
 
     async def _read_account_info(self, page) -> str:
         data = await page.evaluate(
@@ -215,7 +243,18 @@ class KingShotRedeemer:
         )
 
     async def _read_feedback(self, page) -> str:
-        await page.wait_for_timeout(500)
+        try:
+            await page.wait_for_function(
+                """
+                () => {
+                    const text = document.body.innerText || "";
+                    return /gift code|success|reward|invalid|expired|not found|already|case-sensitive|failed/i.test(text);
+                }
+                """,
+                timeout=1200,
+            )
+        except Exception:
+            await page.wait_for_timeout(300)
 
         text = await self._read_text_from_candidates(
             page,
@@ -238,7 +277,7 @@ class KingShotRedeemer:
     async def _read_text_from_candidates(self, page, selectors: list[str], max_length: int) -> str:
         for selector in selectors:
             try:
-                text = await page.locator(selector).first.inner_text(timeout=700)
+                text = await page.locator(selector).first.inner_text(timeout=500)
                 text = " ".join(text.strip().split())
 
                 if text:
@@ -273,24 +312,34 @@ class KingShotRedeemer:
                 if 1 <= level <= 30:
                     town_center = f"TC {level}"
 
-        name = "Unknown Player"
-
-        name_match = re.search(
-            r"Gift\\s*Code\\s*Center\\s+(.+?)\\s+Town\\s*Center\\s*Level",
-            cleaned,
-            re.IGNORECASE,
-        )
-        if name_match:
-            name = name_match.group(1).strip()
-        else:
-            fallback = re.sub(r"^.*?Gift\\s*Code\\s*Center\\s+", "", cleaned, flags=re.IGNORECASE)
-            fallback = re.sub(r"\\s+Town\\s*Center\\s*Level.*$", "", fallback, flags=re.IGNORECASE)
-            if fallback and not fallback.startswith("*"):
-                name = fallback.strip()
-
-        name = self._clean_player_name(name)
+        name = self._extract_player_name(cleaned)
 
         return " | ".join([name, town_center, state])
+
+    def _extract_player_name(self, cleaned: str) -> str:
+        bad_markers = [
+            "*Check your Player ID",
+            "Login",
+            "Gift Code not found",
+            "Please enter",
+        ]
+
+        for marker in bad_markers:
+            if marker.lower() in cleaned.lower() and "Town Center Level" not in cleaned:
+                return "Unknown Player"
+
+        patterns = [
+            r"Gift\\s*Code\\s*Center\\s+(.+?)\\s+Town\\s*Center\\s*Level",
+            r"Center\\s+(.+?)\\s+Town\\s*Center\\s*Level",
+            r"^(.+?)\\s+Town\\s*Center\\s*Level",
+        ]
+
+        for pattern in patterns:
+            match = re.search(pattern, cleaned, re.IGNORECASE)
+            if match:
+                return self._clean_player_name(match.group(1))
+
+        return "Unknown Player"
 
     def _clean_player_name(self, name: str) -> str:
         name = " ".join((name or "").split())
@@ -302,7 +351,7 @@ class KingShotRedeemer:
         )
         name = name.replace("Gift Code Center", "").strip()
 
-        if not name or name.startswith("*"):
+        if not name or name.startswith("*") or "login" in name.lower():
             return "Unknown Player"
 
         return name[:60]
@@ -312,6 +361,21 @@ class KingShotRedeemer:
             return ""
 
         cleaned = " ".join(text.split())
+
+        feedback_patterns = [
+            r"Gift Code not found, this is case-sensitive!",
+            r"This gift code has expired[^.]*\\.?",
+            r"This gift code has already been used[^.]*\\.?",
+            r"Invalid gift code[^.]*\\.?",
+            r"Rewards sent successfully[^.]*\\.?",
+            r"Redeemed successfully[^.]*\\.?",
+            r"Success[^.]*\\.?",
+        ]
+
+        for pattern in feedback_patterns:
+            match = re.search(pattern, cleaned, re.IGNORECASE)
+            if match:
+                return match.group(0).strip()
 
         removable_suffixes = [
             " Confirm",
@@ -341,6 +405,7 @@ class KingShotRedeemer:
             "fail",
             "invalid",
             "not exist",
+            "not found",
             "used",
             "wrong",
         ]
