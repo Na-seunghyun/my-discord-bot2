@@ -48,6 +48,12 @@ class Settings:
     redeem_delay_seconds: float
     redeem_timeout_seconds: float
     redeem_max_concurrency: int
+    redeem_element_timeout_seconds: float
+    auto_redeem_start_delay_seconds: float
+    auto_redeem_delay_seconds: float
+    auto_redeem_timeout_seconds: float
+    auto_redeem_max_concurrency: int
+    auto_redeem_element_timeout_seconds: float
 
 
 def load_settings() -> Settings:
@@ -64,7 +70,13 @@ def load_settings() -> Settings:
         discord_guild_id=_get_int("DISCORD_GUILD_ID"),
         database_path=Path(os.getenv("DATABASE_PATH", "data/kingshot.sqlite3")),
         redeem_headless=_get_bool("REDEEM_HEADLESS", True),
-        redeem_delay_seconds=_get_float("REDEEM_DELAY_SECONDS", 0.2),
-        redeem_timeout_seconds=_get_float("REDEEM_TIMEOUT_SECONDS", 20.0),
-        redeem_max_concurrency=_get_int("REDEEM_MAX_CONCURRENCY", 3),
+        redeem_delay_seconds=_get_float("REDEEM_DELAY_SECONDS", 0.05),
+        redeem_timeout_seconds=_get_float("REDEEM_TIMEOUT_SECONDS", 12.0),
+        redeem_max_concurrency=_get_int("REDEEM_MAX_CONCURRENCY", 2),
+        redeem_element_timeout_seconds=_get_float("REDEEM_ELEMENT_TIMEOUT_SECONDS", 3.0),
+        auto_redeem_start_delay_seconds=_get_float("AUTO_REDEEM_START_DELAY_SECONDS", 5.0),
+        auto_redeem_delay_seconds=_get_float("AUTO_REDEEM_DELAY_SECONDS", 0.2),
+        auto_redeem_timeout_seconds=_get_float("AUTO_REDEEM_TIMEOUT_SECONDS", 20.0),
+        auto_redeem_max_concurrency=_get_int("AUTO_REDEEM_MAX_CONCURRENCY", 2),
+        auto_redeem_element_timeout_seconds=_get_float("AUTO_REDEEM_ELEMENT_TIMEOUT_SECONDS", 8.0),
     )
