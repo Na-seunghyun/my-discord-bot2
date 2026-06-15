@@ -29,11 +29,12 @@ def parse_ids(raw: str) -> list[str]:
 
 def short_result_report(results: list[RedeemResult], gift_code: str) -> str:
     success_count = sum(1 for result in results if result.ok)
-    fail_count = len(results) - success_count
+    claimed_after_retry_count = sum(1 for result in results if result.status == "CLAIMED_AFTER_RETRY")
+    fail_count = len(results) - success_count - claimed_after_retry_count
 
     lines = [
         f"Redeem result for `{gift_code}`",
-        f"Total: {len(results)} / Success: {success_count} / Failed: {fail_count}",
+        f"Total: {len(results)} / Success: {success_count} / Claimed after retry: {claimed_after_retry_count} / Failed: {fail_count}",
         "",
     ]
 
@@ -99,11 +100,19 @@ class KingShotBot(discord.Client):
         self.settings = settings
         self.tree = app_commands.CommandTree(self)
         self.store = KingShotStore(settings.database_path)
-        self.redeemer = KingShotRedeemer(
+        self.manual_redeemer = KingShotRedeemer(
             headless=settings.redeem_headless,
             delay_seconds=settings.redeem_delay_seconds,
             timeout_seconds=settings.redeem_timeout_seconds,
             max_concurrency=settings.redeem_max_concurrency,
+            element_timeout_seconds=settings.redeem_element_timeout_seconds,
+        )
+        self.auto_redeemer = KingShotRedeemer(
+            headless=settings.redeem_headless,
+            delay_seconds=settings.auto_redeem_delay_seconds,
+            timeout_seconds=settings.auto_redeem_timeout_seconds,
+            max_concurrency=settings.auto_redeem_max_concurrency,
+            element_timeout_seconds=settings.auto_redeem_element_timeout_seconds,
         )
         self.redeem_lock = asyncio.Lock()
 
@@ -139,8 +148,11 @@ class KingShotBot(discord.Client):
                 continue
 
             result_channel = self.get_result_channel() or message.channel
-            await result_channel.send(f"Detected gift code `{code}`. Starting auto redeem.")
-            asyncio.create_task(self.redeem_code_to_channel(result_channel, code))
+            wait_seconds = self.settings.auto_redeem_start_delay_seconds
+            await result_channel.send(
+                f"Detected gift code `{code}`. Waiting {wait_seconds:g} seconds before auto redeem."
+            )
+            asyncio.create_task(self.auto_redeem_after_delay(result_channel, code, wait_seconds))
 
     def get_result_channel(self) -> discord.abc.Messageable | None:
         channel = self.get_channel(self.settings.result_channel_id)
@@ -148,7 +160,22 @@ class KingShotBot(discord.Client):
             return channel
         return None
 
-    async def redeem_code_to_channel(self, channel: discord.abc.Messageable, gift_code: str) -> None:
+    async def auto_redeem_after_delay(
+        self,
+        channel: discord.abc.Messageable,
+        gift_code: str,
+        wait_seconds: float,
+    ) -> None:
+        await asyncio.sleep(wait_seconds)
+        await self.redeem_code_to_channel(channel, gift_code, self.auto_redeemer, source="auto")
+
+    async def redeem_code_to_channel(
+        self,
+        channel: discord.abc.Messageable,
+        gift_code: str,
+        redeemer: KingShotRedeemer,
+        source: str,
+    ) -> None:
         async with self.redeem_lock:
             ids = self.store.list_ids()
 
@@ -156,7 +183,7 @@ class KingShotBot(discord.Client):
                 await channel.send("No KingShot IDs are registered. Skipping redeem.")
                 return
 
-            await channel.send(f"Redeeming `{gift_code}` for {len(ids)} registered IDs.")
+            await channel.send(f"Redeeming `{gift_code}` for {len(ids)} registered IDs. Source: {source}.")
 
             last_progress_message = 0
 
@@ -167,7 +194,7 @@ class KingShotBot(discord.Client):
                     last_progress_message = index
                     await channel.send(f"Progress: {index}/{total} processed.")
 
-            results = await self.redeemer.redeem_many(ids, gift_code, progress)
+            results = await redeemer.redeem_many(ids, gift_code, progress)
             self.store_account_info(results)
 
             await send_chunked_message(
@@ -342,24 +369,10 @@ def register_commands(bot: KingShotBot) -> None:
             f"{interaction.user.mention} started redeeming `{gift_code}` for {len(ids)} registered IDs."
         )
 
-        last_progress_message = 0
-
-        async def progress(index: int, total: int, result: RedeemResult) -> None:
-            nonlocal last_progress_message
-
-            if index == total or index - last_progress_message >= 10:
-                last_progress_message = index
-                await result_channel.send(f"Progress: {index}/{total} processed.")
-
         async with bot.redeem_lock:
-            results = await bot.redeemer.redeem_many(ids, gift_code, progress)
+            ids = bot.store.list_ids()
 
-        bot.store_account_info(results)
-
-        await send_chunked_message(
-            result_channel,
-            short_result_report(results, gift_code),
-        )
+        await bot.redeem_code_to_channel(result_channel, gift_code, bot.manual_redeemer, source="manual")
 
         await interaction.followup.send(
             f"Redeem finished. Public results were posted in <#{bot.settings.result_channel_id}>.",
