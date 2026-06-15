@@ -115,6 +115,6 @@ class KingShotStore:
         with self._connect() as db:
             cursor = db.execute(
                 "INSERT OR IGNORE INTO redeemed_codes (gift_code) VALUES (?)",
-                (gift_code.strip().upper(),),
+                (gift_code.strip(),),
             )
             return cursor.rowcount > 0
