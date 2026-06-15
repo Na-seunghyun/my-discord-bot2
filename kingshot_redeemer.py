@@ -30,10 +30,12 @@ class KingShotRedeemer:
         delay_seconds: float = 0.05,
         timeout_seconds: float = 12.0,
         max_concurrency: int = 2,
+        element_timeout_seconds: float = 3.0,
     ):
         self.headless = headless
         self.delay_seconds = delay_seconds
         self.timeout_ms = int(timeout_seconds * 1000)
+        self.element_timeout_ms = int(element_timeout_seconds * 1000)
         self.max_concurrency = max(1, max_concurrency)
 
     async def redeem_many(
@@ -84,16 +86,22 @@ class KingShotRedeemer:
                     )
 
                     for original_index, retry_result in zip(retry_indexes, retry_results):
+                        original_result = results[original_index]
+                        status = retry_result.status
+                        ok = retry_result.ok
                         message = retry_result.message
-                        if retry_result.ok:
-                            message = f"{message} Retried after temporary failure."
-                        elif retry_result.message != results[original_index].message:
+
+                        if self._is_already_claimed(message):
+                            status = "CLAIMED_AFTER_RETRY"
+                            ok = False
+                            message = "Already claimed after retry. First attempt may have succeeded."
+                        elif retry_result.ok or retry_result.message != original_result.message:
                             message = f"{message} Retried after temporary failure."
 
                         results[original_index] = RedeemResult(
                             kingshot_id=retry_result.kingshot_id,
-                            ok=retry_result.ok,
-                            status=retry_result.status,
+                            ok=ok,
+                            status=status,
                             account_info=retry_result.account_info,
                             message=message,
                         )
@@ -158,7 +166,7 @@ class KingShotRedeemer:
                     "input[type='text']",
                     "input:not([type])",
                 ],
-                timeout_ms=3000,
+                timeout_ms=self.element_timeout_ms,
             )
             await id_input.fill(kingshot_id)
 
@@ -169,7 +177,7 @@ class KingShotRedeemer:
                     "button:has-text('Log in')",
                     "text=/^\\s*Login\\s*$/i",
                 ],
-                timeout_ms=3000,
+                timeout_ms=self.element_timeout_ms,
             )
             await login_button.click()
 
@@ -186,7 +194,7 @@ class KingShotRedeemer:
                     "button:has-text('Redeem')",
                     "text=/^\\s*Confirm\\s*$/i",
                 ],
-                timeout_ms=3000,
+                timeout_ms=self.element_timeout_ms,
             )
             await confirm_button.click()
 
@@ -226,7 +234,7 @@ class KingShotRedeemer:
         finally:
             await page.close()
 
-    async def _first_visible(self, page, selectors: list[str], timeout_ms: int = 3000):
+    async def _first_visible(self, page, selectors: list[str], timeout_ms: int):
         last_error: Exception | None = None
 
         for selector in selectors:
@@ -242,7 +250,7 @@ class KingShotRedeemer:
     async def _find_gift_code_input(self, page, kingshot_id: str):
         try:
             preferred = page.locator("input[placeholder*='code' i], input[placeholder*='gift' i], textarea").first
-            await preferred.wait_for(state="visible", timeout=1500)
+            await preferred.wait_for(state="visible", timeout=min(self.element_timeout_ms, 2000))
             return preferred
         except Exception:
             pass
@@ -274,7 +282,7 @@ class KingShotRedeemer:
                     return hasGiftCenter && (hasTownCenter || hasState || hasLevelIcon);
                 }
                 """,
-                timeout=5000,
+                timeout=max(self.element_timeout_ms, 5000),
             )
         except Exception:
             await page.wait_for_timeout(1000)
@@ -305,7 +313,7 @@ class KingShotRedeemer:
             data.get("bodyText", ""),
             data.get("imageSources", []),
         )
-        
+
     async def _read_feedback(self, page) -> str:
         try:
             await page.wait_for_function(
@@ -481,6 +489,10 @@ class KingShotRedeemer:
             or "login" in lowered
         )
 
+    def _is_already_claimed(self, message: str) -> bool:
+        lowered = (message or "").lower()
+        return "already claimed" in lowered or "unable to claim again" in lowered
+
     def _should_retry(self, result: RedeemResult) -> bool:
         if result.ok:
             return False
@@ -525,14 +537,14 @@ class KingShotRedeemer:
         cleaned = " ".join(text.split())
 
         feedback_patterns = [
-            r"Already claimed, unable to claim again\\.?",
+            r"Already claimed, unable to claim again\.?",
             r"Gift Code not found, this is case-sensitive!",
-            r"This gift code has expired[^.]*\\.?",
-            r"This gift code has already been used[^.]*\\.?",
-            r"Invalid gift code[^.]*\\.?",
-            r"Rewards sent successfully[^.]*\\.?",
-            r"Redeemed successfully[^.]*\\.?",
-            r"Success[^.]*\\.?",
+            r"This gift code has expired[^.]*\.?",
+            r"This gift code has already been used[^.]*\.?",
+            r"Invalid gift code[^.]*\.?",
+            r"Rewards sent successfully[^.]*\.?",
+            r"Redeemed successfully[^.]*\.?",
+            r"Success[^.]*\.?",
         ]
 
         for pattern in feedback_patterns:
