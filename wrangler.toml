@@ -1,5 +1,5 @@
 name = "my-discord-bot2"
-compatibility_date = "2026-06-17"
+compatibility_date = "2026-06-16"
 main = "src/index.js"
 
 [assets]
