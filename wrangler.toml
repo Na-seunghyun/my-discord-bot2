@@ -5,3 +5,7 @@ main = "src/index.js"
 [assets]
 directory = "."
 binding = "ASSETS"
+
+[[kv_namespaces]]
+binding = "VISITS"
+id = "59330ca6081448d8bd6d3a70445e8501"
