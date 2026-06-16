@@ -1,0 +1,1800 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kingshot Calculator Hub</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #111315;
+      --panel: #1a1d21;
+      --panel-2: #22262c;
+      --line: #343a42;
+      --text: #f3f5f7;
+      --muted: #9aa3ad;
+      --accent: #f0b84f;
+      --accent-2: #6fc7b5;
+      --danger: #e16f65;
+      --shadow: 0 18px 60px rgba(0, 0, 0, .35);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding-bottom: 92px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, Pretendard, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    main {
+      width: min(1240px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 26px 0;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: 28px;
+      line-height: 1.15;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .lang {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 260px minmax(0, 1fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .panel-title {
+      margin: 0;
+      font-size: 17px;
+      line-height: 1.2;
+    }
+
+    .panel-body { padding: 18px; }
+
+    .nav {
+      display: grid;
+      gap: 6px;
+      padding: 8px;
+    }
+
+    .nav button {
+      border: 0;
+      border-radius: 7px;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 800;
+      min-height: 43px;
+      padding: 9px 10px;
+      text-align: left;
+    }
+
+    .nav button.active {
+      color: var(--text);
+      background: var(--panel-2);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .05);
+    }
+
+    .status {
+      display: block;
+      margin-top: 3px;
+      color: var(--accent-2);
+      font-size: 11px;
+    }
+
+    .status.pending { color: var(--muted); }
+
+    .content-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(340px, .95fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      padding: 5px;
+      background: #111417;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      margin-bottom: 18px;
+    }
+
+    .tabs button {
+      border: 0;
+      border-radius: 6px;
+      padding: 11px 12px;
+      color: var(--muted);
+      background: transparent;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .tabs button.active {
+      background: var(--panel-2);
+      color: var(--text);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .field { min-width: 0; }
+    label {
+      display: block;
+      color: #d7dce2;
+      font-size: 13px;
+      font-weight: 750;
+      margin-bottom: 8px;
+    }
+
+    select, input {
+      width: 100%;
+      min-height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: #121519;
+      color: var(--text);
+      font: inherit;
+      padding: 10px 12px;
+      outline: none;
+    }
+
+    select:focus, input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(240, 184, 79, .16);
+    }
+
+    .section-label {
+      margin: 20px 0 12px;
+      padding-top: 18px;
+      border-top: 1px solid var(--line);
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 850;
+    }
+
+    .toggles {
+      display: grid;
+      gap: 10px;
+    }
+
+    .checkline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #15191d;
+      color: #dce1e6;
+      font-weight: 700;
+    }
+
+    .checkline input {
+      width: 18px;
+      min-height: 18px;
+      accent-color: var(--accent);
+      padding: 0;
+    }
+
+    .pill {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 12px;
+      padding: 13px 14px;
+      background: #24201a;
+      border: 1px solid rgba(240, 184, 79, .35);
+      border-radius: 8px;
+      color: #f6e5bd;
+      font-weight: 850;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .primary, .secondary {
+      min-height: 43px;
+      border-radius: 7px;
+      padding: 0 15px;
+      font: inherit;
+      font-weight: 850;
+      cursor: pointer;
+    }
+
+    .primary {
+      flex: 1;
+      border: 0;
+      background: var(--accent);
+      color: #1a1204;
+    }
+
+    .secondary {
+      border: 1px solid var(--line);
+      background: var(--panel-2);
+      color: var(--text);
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .metric, .resource {
+      border: 1px solid var(--line);
+      background: #15191d;
+      border-radius: 8px;
+      padding: 13px;
+      min-width: 0;
+    }
+
+    .metric .label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      margin-bottom: 7px;
+    }
+
+    .metric .value {
+      font-size: 22px;
+      line-height: 1.1;
+      font-weight: 900;
+      overflow-wrap: anywhere;
+    }
+
+    .resource-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .resource {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      font-weight: 850;
+    }
+
+    .academy-section {
+      display: grid;
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .academy-type-tabs {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin: 18px 0 4px;
+      padding: 6px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #111417;
+    }
+
+    .academy-type-tab {
+      min-height: 44px;
+      border: 0;
+      border-radius: 7px;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .academy-type-tab.active {
+      background: var(--panel-2);
+      color: var(--text);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .05);
+    }
+
+    .academy-section[hidden] {
+      display: none;
+    }
+
+    .academy-toolbar {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #15191d;
+    }
+
+    .tech-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .tech-card {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(130px, .55fr) minmax(130px, .55fr);
+      gap: 12px;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #15191d;
+      padding: 12px;
+    }
+
+    .tech-card.active {
+      border-color: rgba(111, 199, 181, .45);
+      background: #15201f;
+    }
+
+    .tech-heading {
+      display: grid;
+      grid-template-columns: 42px minmax(0, 1fr);
+      gap: 12px;
+      align-items: start;
+    }
+
+    .tech-icon {
+      display: grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      border-radius: 8px;
+      background: #24201a;
+      border: 1px solid rgba(240, 184, 79, .28);
+      font-size: 24px;
+      line-height: 1;
+    }
+
+    .tech-icon img {
+      width: 34px;
+      height: 34px;
+      border-radius: 7px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .tech-icon .fallback-icon {
+      display: none;
+    }
+
+    .tech-icon.image-error img {
+      display: none;
+    }
+
+    .tech-icon.image-error .fallback-icon {
+      display: block;
+    }
+
+    .tech-name {
+      margin: 0 0 4px;
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    .tech-desc {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .breakdown {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .breakdown th,
+    .breakdown td {
+      border-bottom: 1px solid var(--line);
+      padding: 8px 6px;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .breakdown th:first-child,
+    .breakdown td:first-child {
+      text-align: left;
+      white-space: normal;
+    }
+
+    .bonus-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .bonus-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      border: 1px solid rgba(111, 199, 181, .28);
+      border-radius: 8px;
+      background: rgba(111, 199, 181, .08);
+      padding: 10px 12px;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .result-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 14px;
+      font-size: 13px;
+    }
+
+    .result-table th,
+    .result-table td {
+      border-bottom: 1px solid var(--line);
+      padding: 9px 7px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .result-table th {
+      color: var(--muted);
+      font-weight: 900;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 360px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #121519;
+      color: var(--text);
+      font: inherit;
+      font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+      font-size: 12px;
+      line-height: 1.45;
+      padding: 12px;
+      resize: vertical;
+    }
+
+    .embed {
+      margin-top: 14px;
+      border-left: 4px solid #5865f2;
+      background: #171a20;
+      border-radius: 6px;
+      padding: 13px;
+      color: #dfe3ea;
+      font-size: 13px;
+      white-space: pre-line;
+      line-height: 1.55;
+    }
+
+    .note {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+      margin-top: 12px;
+    }
+
+    .hidden { display: none; }
+
+    .signature {
+      position: fixed;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      z-index: 50;
+      margin: 0;
+      padding: 18px 12px 20px;
+      pointer-events: none;
+      text-align: center;
+      color: var(--accent);
+      background: linear-gradient(180deg, rgba(17, 19, 21, 0), rgba(17, 19, 21, .96) 35%, #111315);
+      font-size: clamp(30px, 5vw, 58px);
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: 0;
+      text-shadow: 0 10px 34px rgba(240, 184, 79, .18);
+    }
+
+    @media (max-width: 900px) {
+      main { width: min(100% - 20px, 680px); padding: 18px 0; }
+      .topbar { align-items: start; flex-direction: column; }
+      .layout, .content-grid, .grid, .metric-grid { grid-template-columns: 1fr; }
+      .academy-toolbar, .tech-card { grid-template-columns: 1fr; }
+      .nav { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .nav button { text-align: center; }
+      h1 { font-size: 23px; }
+    }
+
+    @media (max-width: 520px) {
+      .nav { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="topbar">
+      <div>
+        <h1 id="appTitle">Kingshot 계산기 허브</h1>
+        <p class="subtitle" id="appSubtitle">디스코드 슬래시 명령어에서 열어 쓰는 개인용 통합 UI</p>
+      </div>
+      <div class="lang">
+        <label for="languageSelect" id="languageLabel">언어</label>
+        <select id="languageSelect">
+          <option value="ko">한국어</option>
+          <option value="en">English</option>
+          <option value="zh">中文</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="layout">
+      <aside class="panel">
+        <div class="panel-header">
+          <h2 class="panel-title" id="navTitle">계산기</h2>
+        </div>
+        <nav class="nav" id="calculatorNav" aria-label="Calculators"></nav>
+      </aside>
+
+      <section id="mainView"></section>
+    </div>
+
+    <footer class="signature" aria-label="Legend Nashsh">Legend Nashsh</footer>
+  </main>
+
+  <script>
+    const CALCULATORS = [
+      ["governor-gear", "https://kingshot.net/governor-gear-calculator", "range"],
+      ["governor-charm", "https://kingshot.net/governor-charm-calculator", "range"],
+      ["pet", "https://kingshot.net/pet-calculator", "pet"],
+      ["hero-shard", "https://kingshot.net/hero-shard-calculator", "heroShard"],
+      ["hero-exclusive-gear", "https://kingshot.net/hero-exclusive-gear-calculator", "heroExclusive"],
+      ["forgehammer", "https://kingshot.net/forgehammer-calculator", "forgehammer"],
+      ["hero-gear-xp", "https://kingshot.net/hero-gear-xp-calculator", "heroGearXp"],
+      ["hero-gear", "https://kingshot.net/hero-gear-calculator", "heroGear"],
+      ["forgehammer-set", "https://kingshot.net/forgehammer-set-calculator", "forgehammerSet"],
+      ["vip", "https://kingshot.net/vip-calculator", "vip"],
+      ["pack", "https://kingshot.net/pack-calculator", "pack"],
+      ["troop-training", "https://kingshot.net/troop-training-calculator", "troop"],
+      ["war-academy", "https://kingshot.net/war-academy-calculator", "warAcademy"],
+      ["fort-sanc", "https://github.com/Na-seunghyun/fr_web", "fortSanc"],
+      ["transfer-pass", "https://kingshot.net/transfer-pass-calculator", "transferPass"]
+    ];
+
+    const I18N = {
+      ko: {
+        appTitle: "Kingshot 계산기 허브",
+        appSubtitle: "디스코드 슬래시 명령어에서 열어 쓰는 개인용 통합 UI",
+        language: "언어",
+        navTitle: "계산기",
+        dataReady: "데이터 연결됨",
+        dataPending: "세부 데이터 추출 중",
+        source: "원본 보기",
+        input: "입력",
+        result: "결과",
+        calculate: "계산",
+        reset: "초기화",
+        current: "현재",
+        target: "목표",
+        level: "레벨",
+        quantity: "수량",
+        resources: "자원",
+        time: "시간",
+        power: "전투력",
+        summary: "디스코드 요약",
+        unsupported: "이 항목은 탭과 원본 페이지가 연결되어 있습니다. 세부 공식/데이터 추출을 이어서 진행하면 이 자리에 실제 계산 폼이 들어갑니다.",
+        troopModeTraining: "훈련",
+        troopModePromoting: "승급",
+        troopType: "병종",
+        trainingSpeed: "훈련 속도 보너스 (%)",
+        kingdomSkill: "왕국 스킬 30%",
+        kvkBonus: "KvK 보너스 25%",
+        ministry: "장관 보너스",
+        speedups: "보유 가속",
+        days: "일",
+        hours: "시간",
+        minutes: "분",
+        possible: "가능 수량",
+        currentPasses: "현재 패스",
+        targetPasses: "목표 패스",
+        lastPackage: "마지막 구매 패키지",
+        none: "없음",
+        calculators: {
+          "governor-gear": ["Governor Gear", "영주 장비"],
+          "governor-charm": ["Governor Charm", "영주 참"],
+          pet: ["Pet", "펫"],
+          "hero-shard": ["Hero Shard", "영웅 조각"],
+          "hero-exclusive-gear": ["Hero Exclusive Gear", "영웅 전용 장비"],
+          forgehammer: ["Forgehammer", "Forgehammer"],
+          "hero-gear-xp": ["Hero Gear XP", "영웅 장비 XP"],
+          "hero-gear": ["Hero Gear", "영웅 장비"],
+          "forgehammer-set": ["Forgehammer Set", "Forgehammer 세트"],
+          vip: ["VIP", "VIP"],
+          pack: ["Pack", "팩"],
+          "troop-training": ["Troop Training", "부대 훈련"],
+          "war-academy": ["War Academy", "전쟁 아카데미"],
+          "fort-sanc": ["Fort / Sanc", "Fort / Sanc 분배"],
+          "transfer-pass": ["Transfer Pass", "이전 패스"]
+        }
+      },
+      en: {
+        appTitle: "Kingshot Calculator Hub",
+        appSubtitle: "Personal calculator UI opened from Discord slash commands",
+        language: "Language",
+        navTitle: "Calculators",
+        dataReady: "Data connected",
+        dataPending: "Detailed data pending",
+        source: "Open source",
+        input: "Input",
+        result: "Results",
+        calculate: "Calculate",
+        reset: "Reset",
+        current: "Current",
+        target: "Target",
+        level: "Level",
+        quantity: "Quantity",
+        resources: "Resources",
+        time: "Time",
+        power: "Power",
+        summary: "Discord summary",
+        unsupported: "This tab and source page are connected. The detailed formula/data extraction can continue here to fill the real calculator form.",
+        troopModeTraining: "Training",
+        troopModePromoting: "Promotion",
+        troopType: "Troop Type",
+        trainingSpeed: "Training Speed Bonus (%)",
+        kingdomSkill: "Kingdom Skill 30%",
+        kvkBonus: "KvK Bonus 25%",
+        ministry: "Ministry Bonus",
+        speedups: "Available Speedups",
+        days: "Days",
+        hours: "Hours",
+        minutes: "Minutes",
+        possible: "Possible",
+        currentPasses: "Current Passes",
+        targetPasses: "Target Passes",
+        lastPackage: "Last Purchased Package",
+        none: "None",
+        calculators: {
+          "governor-gear": ["Governor Gear", "Governor Gear"],
+          "governor-charm": ["Governor Charm", "Governor Charm"],
+          pet: ["Pet", "Pet"],
+          "hero-shard": ["Hero Shard", "Hero Shard"],
+          "hero-exclusive-gear": ["Hero Exclusive Gear", "Hero Exclusive Gear"],
+          forgehammer: ["Forgehammer", "Forgehammer"],
+          "hero-gear-xp": ["Hero Gear XP", "Hero Gear XP"],
+          "hero-gear": ["Hero Gear", "Hero Gear"],
+          "forgehammer-set": ["Forgehammer Set", "Forgehammer Set"],
+          vip: ["VIP", "VIP"],
+          pack: ["Pack", "Pack"],
+          "troop-training": ["Troop Training", "Troop Training"],
+          "war-academy": ["War Academy", "War Academy"],
+          "fort-sanc": ["Fort / Sanc", "Fort / Sanc Planner"],
+          "transfer-pass": ["Transfer Pass", "Transfer Pass"]
+        }
+      },
+      zh: {
+        appTitle: "Kingshot 计算器中心",
+        appSubtitle: "通过 Discord 斜杠命令打开的个人计算界面",
+        language: "语言",
+        navTitle: "计算器",
+        dataReady: "数据已连接",
+        dataPending: "详细数据待提取",
+        source: "查看来源",
+        input: "输入",
+        result: "结果",
+        calculate: "计算",
+        reset: "重置",
+        current: "当前",
+        target: "目标",
+        level: "等级",
+        quantity: "数量",
+        resources: "资源",
+        time: "时间",
+        power: "战力",
+        summary: "Discord 摘要",
+        unsupported: "此标签和来源页面已连接。继续提取详细公式和数据后，这里会显示实际计算表单。",
+        troopModeTraining: "训练",
+        troopModePromoting: "晋升",
+        troopType: "兵种",
+        trainingSpeed: "训练速度加成 (%)",
+        kingdomSkill: "王国技能 30%",
+        kvkBonus: "KvK 加成 25%",
+        ministry: "官职加成",
+        speedups: "可用加速",
+        days: "天",
+        hours: "小时",
+        minutes: "分钟",
+        possible: "可完成数量",
+        currentPasses: "当前通行证",
+        targetPasses: "目标通行证",
+        lastPackage: "最后购买礼包",
+        none: "无",
+        calculators: {
+          "governor-gear": ["Governor Gear", "领主装备"],
+          "governor-charm": ["Governor Charm", "领主饰品"],
+          pet: ["Pet", "宠物"],
+          "hero-shard": ["Hero Shard", "英雄碎片"],
+          "hero-exclusive-gear": ["Hero Exclusive Gear", "英雄专属装备"],
+          forgehammer: ["Forgehammer", "Forgehammer"],
+          "hero-gear-xp": ["Hero Gear XP", "英雄装备 XP"],
+          "hero-gear": ["Hero Gear", "英雄装备"],
+          "forgehammer-set": ["Forgehammer Set", "Forgehammer 套装"],
+          vip: ["VIP", "VIP"],
+          pack: ["Pack", "礼包"],
+          "troop-training": ["Troop Training", "部队训练"],
+          "war-academy": ["War Academy", "战争学院"],
+          "fort-sanc": ["Fort / Sanc", "Fort / Sanc 分配"],
+          "transfer-pass": ["Transfer Pass", "转服通行证"]
+        }
+      }
+    };
+
+    let lang = "ko";
+    let activeId = "governor-gear";
+    let data = {};
+    const $ = (id) => document.getElementById(id);
+    const t = (key) => I18N[lang][key] || I18N.ko[key] || key;
+    const nameOf = (id) => (I18N[lang].calculators[id] || I18N.ko.calculators[id])[1];
+    const fmt = (n) => Math.round(Number(n) || 0).toLocaleString(lang === "ko" ? "ko-KR" : lang === "zh" ? "zh-CN" : "en-US");
+
+    function timeText(seconds) {
+      seconds = Math.max(0, Math.round(Number(seconds) || 0));
+      const d = Math.floor(seconds / 86400);
+      const h = Math.floor((seconds % 86400) / 3600);
+      const m = Math.floor((seconds % 3600) / 60);
+      const s = seconds % 60;
+      if (lang === "en") return d ? `${d}d ${h}h ${m}m` : h ? `${h}h ${m}m` : m ? `${m}m ${s}s` : `${s}s`;
+      if (lang === "zh") return d ? `${d}天 ${h}小时 ${m}分钟` : h ? `${h}小时 ${m}分钟` : m ? `${m}分钟 ${s}秒` : `${s}秒`;
+      return d ? `${d}일 ${h}시간 ${m}분` : h ? `${h}시간 ${m}분` : m ? `${m}분 ${s}초` : `${s}초`;
+    }
+
+    function calcMeta(id) {
+      return CALCULATORS.find((item) => item[0] === id);
+    }
+
+    function hasData(id) {
+      const d = data[id];
+      if (!d) return false;
+      return Boolean(d.levels?.length || d.packages?.length || d.shardTable?.length || d.widgetCosts?.length || d.xpCosts?.length || d.troop_types || d.vipRequirements || d.masteryForgehammers || d.resourceKeys || d.techs?.length || d.manualValue);
+    }
+
+    function renderShell(formHtml, resultHtml = "") {
+      $("mainView").innerHTML = `
+        <div class="content-grid">
+          <section class="panel">
+            <div class="panel-header"><h2 class="panel-title">${nameOf(activeId)}</h2></div>
+            <div class="panel-body">${formHtml}</div>
+          </section>
+          <section class="panel">
+            <div class="panel-header"><h2 class="panel-title">${t("result")}</h2></div>
+            <div class="panel-body" id="resultPanel">${resultHtml || emptyResult()}</div>
+          </section>
+        </div>`;
+    }
+
+    function emptyResult() {
+      return `<p class="note">${hasData(activeId) ? t("dataReady") : t("unsupported")}</p>
+        <p class="note"><a class="source-link" href="${calcMeta(activeId)[1]}" target="_blank" rel="noreferrer">${t("source")}</a></p>`;
+    }
+
+    function renderNav() {
+      $("calculatorNav").innerHTML = CALCULATORS.map(([id]) => `
+        <button type="button" class="${id === activeId ? "active" : ""}" data-id="${id}">
+          ${nameOf(id)}
+          <span class="status ${hasData(id) ? "" : "pending"}">${hasData(id) ? t("dataReady") : t("dataPending")}</span>
+        </button>`).join("");
+      document.querySelectorAll("#calculatorNav button").forEach((button) => {
+        button.addEventListener("click", () => {
+          activeId = button.dataset.id;
+          render();
+        });
+      });
+    }
+
+    function renderResult(lines, resources = {}) {
+      const resourceRows = Object.entries(resources)
+        .filter(([, value]) => Number(value))
+        .map(([key, value]) => `<div class="resource"><span>${key}</span><strong>${fmt(value)}</strong></div>`)
+        .join("");
+      $("resultPanel").innerHTML = `
+        <div class="metric-grid">${lines.map(([label, value]) => `<div class="metric"><div class="label">${label}</div><div class="value">${value}</div></div>`).join("")}</div>
+        ${resourceRows ? `<div class="section-label">${t("resources")}</div><div class="resource-list">${resourceRows}</div>` : ""}
+        <div class="embed" id="embedText">${lines.map(([label, value]) => `${label}: ${value}`).join("\n")}${resourceRows ? "\n" + Object.entries(resources).filter(([, value]) => Number(value)).map(([key, value]) => `${key}: ${fmt(value)}`).join("\n") : ""}</div>`;
+    }
+
+    function optionList(items, getLabel) {
+      return items.map((item, index) => `<option value="${index}">${getLabel(item, index)}</option>`).join("");
+    }
+
+    function sumObjects(items, pick) {
+      const total = {};
+      for (const item of items) {
+        const obj = pick(item) || {};
+        for (const [key, value] of Object.entries(obj)) total[key] = (total[key] || 0) + (Number(value) || 0);
+      }
+      return total;
+    }
+
+    function renderRangeCalculator(id) {
+      const levels = data[id]?.levels || [];
+      if (!levels.length) return renderPending();
+      const label = (row) => row.tier ? `${row.tier} ${row.level}` : `${t("level")} ${row.level}`;
+      renderShell(`
+        <div class="grid">
+          <div class="field"><label>${t("current")}</label><select id="current">${optionList(levels, label)}</select></div>
+          <div class="field"><label>${t("target")}</label><select id="target">${optionList(levels, label)}</select></div>
+        </div>
+        <div class="actions"><button class="primary" id="doCalc">${t("calculate")}</button></div>`);
+      $("target").value = String(Math.min(1, levels.length - 1));
+      $("doCalc").addEventListener("click", () => {
+        const current = Number($("current").value);
+        const target = Number($("target").value);
+        const from = Math.min(current, target);
+        const to = Math.max(current, target);
+        const slice = levels.slice(from + 1, to + 1);
+        const resources = sumObjects(slice, (row) => row.requirements || row.cost);
+        const power = slice.reduce((sum, row) => sum + (Number(row.power) || Number(row.powerIncrease) || 0), 0);
+        renderResult([[t("current"), label(levels[current])], [t("target"), label(levels[target])], [t("power"), fmt(power)]], resources);
+      });
+      $("doCalc").click();
+    }
+
+    function renderForgehammer(setMode = false) {
+      const levels = data[setMode ? "forgehammer-set" : "forgehammer"]?.levels || [];
+      if (!levels.length) return renderPending();
+      renderShell(`
+        <div class="grid">
+          <div class="field"><label>${t("current")} ${t("level")}</label><select id="current"><option value="0">0</option>${levels.map((x) => `<option value="${x.level}">${x.level}</option>`).join("")}</select></div>
+          <div class="field"><label>${t("target")} ${t("level")}</label><select id="target">${levels.map((x) => `<option value="${x.level}">${x.level}</option>`).join("")}</select></div>
+          ${setMode ? `<div class="field"><label>${t("quantity")}</label><input id="qty" type="number" min="1" value="3"></div>` : ""}
+        </div>
+        <div class="actions"><button class="primary" id="doCalc">${t("calculate")}</button></div>`);
+      $("target").value = "1";
+      $("doCalc").addEventListener("click", () => {
+        const current = Number($("current").value);
+        const target = Number($("target").value);
+        const qty = setMode ? Math.max(1, Number($("qty").value) || 1) : 1;
+        const slice = levels.filter((x) => x.level > current && x.level <= target);
+        const resources = {
+          forgehammers: slice.reduce((s, x) => s + x.forgehammers, 0) * qty,
+          mythicGears: slice.reduce((s, x) => s + x.mythicGears, 0) * qty
+        };
+        renderResult([[t("current"), current], [t("target"), target], [t("quantity"), qty]], resources);
+      });
+      $("doCalc").click();
+    }
+
+    function renderHeroShard() {
+      const table = data["hero-shard"]?.shardTable || [];
+      renderShell(`
+        <div class="grid">
+          <div class="field"><label>${t("current")} Star</label><select id="curStar">${table.map((_, i) => `<option value="${i}">${i}</option>`).join("")}</select></div>
+          <div class="field"><label>${t("current")} ${t("level")}</label><select id="curLevel">${[0,1,2,3,4,5].map((i) => `<option value="${i}">${i}</option>`).join("")}</select></div>
+          <div class="field"><label>${t("target")} Star</label><select id="tarStar">${table.map((_, i) => `<option value="${i}">${i}</option>`).join("")}</select></div>
+          <div class="field"><label>${t("target")} ${t("level")}</label><select id="tarLevel">${[0,1,2,3,4,5].map((i) => `<option value="${i}">${i}</option>`).join("")}</select></div>
+        </div>
+        <div class="actions"><button class="primary" id="doCalc">${t("calculate")}</button></div>`);
+      $("tarStar").value = "1";
+      $("doCalc").addEventListener("click", () => {
+        let cs = Number($("curStar").value), cl = Number($("curLevel").value), ts = Number($("tarStar").value), tl = Number($("tarLevel").value);
+        let shards = 0;
+        if (cs === ts) for (let i = cl; i < tl; i++) shards += table[cs][i] || 0;
+        else {
+          for (let i = cl; i < 6; i++) shards += table[cs][i] || 0;
+          for (let s = cs + 1; s < ts; s++) shards += table[s].reduce((a, b) => a + b, 0);
+          for (let i = 0; i < tl; i++) shards += table[ts][i] || 0;
+        }
+        renderResult([["Shards", fmt(Math.max(0, shards))], [t("current"), `${cs}-${cl}`], [t("target"), `${ts}-${tl}`]]);
+      });
+      $("doCalc").click();
+    }
+
+    function renderHeroExclusive() {
+      const costs = data["hero-exclusive-gear"]?.widgetCosts || [];
+      renderShell(`
+        <div class="grid">
+          <div class="field"><label>${t("current")} ${t("level")}</label><select id="current"><option value="0">0</option>${costs.map((_, i) => `<option value="${i + 1}">${i + 1}</option>`).join("")}</select></div>
+          <div class="field"><label>${t("target")} ${t("level")}</label><select id="target">${costs.map((_, i) => `<option value="${i + 1}">${i + 1}</option>`).join("")}</select></div>
+        </div>
+        <div class="actions"><button class="primary" id="doCalc">${t("calculate")}</button></div>`);
+      $("target").value = "1";
+      $("doCalc").addEventListener("click", () => {
+        const current = Number($("current").value);
+        const target = Number($("target").value);
+        const widgets = costs.slice(current, target).reduce((a, b) => a + b, 0);
+        renderResult([["Widgets", fmt(Math.max(0, widgets))], [t("current"), current], [t("target"), target]]);
+      });
+      $("doCalc").click();
+    }
+
+    function renderHeroGearXp() {
+      const costs = data["hero-gear-xp"]?.xpCosts || [];
+      const mithrilMilestones = data["hero-gear"]?.mithrilMilestones || {};
+      renderShell(`
+        <div class="grid">
+          <div class="field"><label>${t("current")} Quality</label><select id="currentQuality"><option value="mythic">Mythic / 신화</option><option value="red">Red / 레드</option></select></div>
+          <div class="field"><label>${t("current")} ${t("level")}</label><input id="current" type="number" min="0" max="100" value="0"></div>
+          <div class="field"><label>${t("target")} Quality</label><select id="targetQuality"><option value="mythic">Mythic / 신화</option><option value="red">Red / 레드</option></select></div>
+          <div class="field"><label>${t("target")} ${t("level")}</label><input id="target" type="number" min="0" max="100" value="1"></div>
+        </div>
+        <p class="note">Mythic is 0-100. Red starts after Mythic 100 and is calculated as 101-200 internally.</p>
+        <div class="actions"><button class="primary" id="doCalc">${t("calculate")}</button></div>`);
+      $("doCalc").addEventListener("click", () => {
+        const toAbsolute = (quality, level) => {
+          const value = Math.max(0, Math.min(100, Number(level) || 0));
+          return quality === "red" ? Math.min(200, 100 + value) : value;
+        };
+        const current = toAbsolute($("currentQuality").value, $("current").value);
+        const target = toAbsolute($("targetQuality").value, $("target").value);
+        const from = Math.min(current, target);
+        const to = Math.max(current, target);
+        const xp = costs.slice(from + 1, to + 1).reduce((a, b) => a + (Number(b) || 0), 0);
+        const mithril = [120, 140, 160, 180, 200].reduce((sum, level) => {
+          return sum + (from < level && to >= level ? Number(mithrilMilestones[level] || 0) : 0);
+        }, 0);
+        const name = (quality, level) => `${quality === "red" ? "Red" : "Mythic"} ${level}`;
+        renderResult(
+          [["XP", fmt(Math.max(0, xp))], [t("current"), name($("currentQuality").value, $("current").value)], [t("target"), name($("targetQuality").value, $("target").value)], ["Internal Range", `${from} → ${to}`]],
+          { Mithril: mithril }
+        );
+      });
+      $("doCalc").click();
+    }
+
+    function renderVip() {
+      const vip = data.vip || {};
+      const requirements = vip.vipRequirements || {};
+      const packages = vip.gemPackages || {};
+      const levels = Object.keys(requirements).map(Number).sort((a, b) => a - b);
+      renderShell(`
+        <div class="grid">
+          <div class="field"><label>${t("current")} VIP</label><select id="current">${levels.map((x) => `<option value="${x}">VIP ${x}</option>`).join("")}</select></div>
+          <div class="field"><label>Current VIP XP</label><input id="currentXp" type="number" min="0" value="0"></div>
+          <div class="field"><label>${t("target")} VIP</label><select id="target">${levels.map((x) => `<option value="${x}">VIP ${x}</option>`).join("")}</select></div>
+        </div>
+        <div class="actions"><button class="primary" id="doCalc">${t("calculate")}</button></div>`);
+      $("target").value = String(Math.min(2, levels.at(-1) || 2));
+      $("doCalc").addEventListener("click", () => {
+        const current = Number($("current").value);
+        const target = Number($("target").value);
+        const currentXp = Math.max(0, Number($("currentXp").value) || 0);
+        let neededXp = 0;
+        for (let level = current + 1; level <= target; level++) neededXp += Number(requirements[level] || 0);
+        neededXp = Math.max(0, neededXp - currentXp);
+        const gems = neededXp * 2;
+        const usd100 = Number(packages[100] || 50000);
+        const minUsd = gems ? Math.ceil(gems / usd100) * 100 : 0;
+        renderResult([["VIP XP", fmt(neededXp)], ["Gems", fmt(gems)], ["Estimated USD", `$${fmt(minUsd)}`], [t("current"), `VIP ${current}`], [t("target"), `VIP ${target}`]]);
+      });
+      $("doCalc").click();
+    }
+
+    function renderHeroGear() {
+      const gear = data["hero-gear"] || {};
+      const xpCosts = data["hero-gear-xp"]?.xpCosts || [];
+      const mastery = gear.masteryForgehammers || [];
+      const mithril = gear.mithrilMilestones || {};
+      const mythic = gear.mythicGearMilestones || {};
+      const minimumMastery = gear.minimumMasteryByEnhancement || {};
+      renderShell(`
+        <div class="grid">
+          <div class="field"><label>${t("current")} Enhancement</label><input id="curEnh" type="number" min="0" max="200" value="0"></div>
+          <div class="field"><label>${t("target")} Enhancement</label><input id="tarEnh" type="number" min="0" max="200" value="1"></div>
+          <div class="field"><label>${t("current")} Mastery</label><input id="curMas" type="number" min="0" max="20" value="0"></div>
+          <div class="field"><label>${t("target")} Mastery</label><input id="tarMas" type="number" min="0" max="20" value="0"></div>
+        </div>
+        <div class="section-label">Inventory</div>
+        <div class="grid">
+          <div class="field"><label>XP owned</label><input id="ownXp" type="number" min="0" value="0"></div>
+          <div class="field"><label>Forgehammers owned</label><input id="ownHammer" type="number" min="0" value="0"></div>
+          <div class="field"><label>Mithril owned</label><input id="ownMithril" type="number" min="0" value="0"></div>
+          <div class="field"><label>Mythic Gear owned</label><input id="ownMythic" type="number" min="0" value="0"></div>
+        </div>
+        <div class="actions"><button class="primary" id="doCalc">${t("calculate")}</button></div>`);
+      $("doCalc").addEventListener("click", () => {
+        const curEnh = Math.max(0, Math.min(200, Number($("curEnh").value) || 0));
+        const tarEnh = Math.max(0, Math.min(200, Number($("tarEnh").value) || 0));
+        const curMas = Math.max(0, Math.min(20, Number($("curMas").value) || 0));
+        const tarMas = Math.max(0, Math.min(20, Number($("tarMas").value) || 0));
+        const xp = Math.max(0, xpCosts.slice(curEnh + 1, tarEnh + 1).reduce((a, b) => a + (Number(b) || 0), 0));
+        const forgehammers = tarMas > curMas ? Math.max(0, (mastery[tarMas] || 0) - (mastery[curMas] || 0)) : 0;
+        const milestoneKeys = [101, 120, 140, 160, 180, 200];
+        const totalMithril = milestoneKeys.reduce((sum, level) => sum + (curEnh < level && tarEnh >= level ? Number(mithril[level] || 0) : 0), 0);
+        const mythicForMilestones = milestoneKeys.reduce((sum, level) => sum + (curEnh < level && tarEnh >= level ? Number(mythic[level] || 0) : 0), 0);
+        let mythicForMastery = 0;
+        for (let level = Math.max(11, curMas + 1); level <= tarMas; level++) mythicForMastery += level - 10;
+        const targetReq = milestoneKeys.reduce((req, level) => tarEnh >= level ? Number(minimumMastery[level] || req) : req, 0);
+        renderResult([
+          ["XP", fmt(xp)],
+          ["Forgehammers", fmt(forgehammers)],
+          ["Mithril", fmt(totalMithril)],
+          ["Mythic Gear", fmt(mythicForMilestones + mythicForMastery)],
+          ["Required Mastery", targetReq || "-"]
+        ], {
+          "Need XP": Math.max(0, xp - (Number($("ownXp").value) || 0)),
+          "Need Forgehammers": Math.max(0, forgehammers - (Number($("ownHammer").value) || 0)),
+          "Need Mithril": Math.max(0, totalMithril - (Number($("ownMithril").value) || 0)),
+          "Need Mythic Gear": Math.max(0, mythicForMilestones + mythicForMastery - (Number($("ownMythic").value) || 0))
+        });
+      });
+      $("doCalc").click();
+    }
+
+    function renderPet() {
+      const petData = data.pet || {};
+      const pets = (petData.pets || []).slice().sort((a, b) => (b.generation || 0) - (a.generation || 0));
+      const keys = petData.resourceKeys || ["petFood", "growthManual", "nutrientPotion", "promotionMedallion"];
+      if (!pets.length) return renderPending();
+      const resourceNames = {
+        petFood: "Pet Food",
+        growthManual: "Growth Manual",
+        nutrientPotion: "Nutrient Potion",
+        promotionMedallion: "Promotion Medallion"
+      };
+      const parseLevelValue = (value) => {
+        const text = String(value || "1");
+        return { level: Number(text.split("-")[0]) || 1, advancement: text.includes("advancement") };
+      };
+      const levelOptions = (pet) => {
+        const options = [];
+        for (const row of pet.requirements?.levels || []) {
+          if (typeof row.level === "number") {
+            options.push({ value: String(row.level), label: `${t("level")} ${row.level}`, level: row.level, advancement: false });
+            const adv = pet.requirements.levels.find((item) => item.level === "Advance" && item.fromLevel === row.level);
+            if (adv) options.push({ value: `${row.level}-advancement`, label: `${t("level")} ${row.level} - Advance`, level: row.level, advancement: true });
+          }
+        }
+        return options;
+      };
+      renderShell(`
+        <div class="grid">
+          <div class="field"><label>Pet</label><select id="petSelect">${pets.map((pet) => `<option value="${pet.id}">${pet.name} (Gen ${pet.generation})</option>`).join("")}</select></div>
+          <div class="field"><label>${t("current")} ${t("level")}</label><select id="current"></select></div>
+          <div class="field"><label>${t("target")} ${t("level")}</label><select id="target"></select></div>
+        </div>
+        <div class="actions"><button class="primary" id="doCalc">${t("calculate")}</button></div>`);
+      const selectedPet = () => pets.find((pet) => pet.id === $("petSelect").value) || pets[0];
+      const fillLevels = () => {
+        const pet = selectedPet();
+        const options = levelOptions(pet);
+        $("current").innerHTML = options.map((option) => `<option value="${option.value}">${option.label}</option>`).join("");
+        $("target").innerHTML = options.map((option) => `<option value="${option.value}">${option.label}</option>`).join("");
+        $("current").value = options[0]?.value || "1";
+        $("target").value = options.find((option) => option.level > parseLevelValue($("current").value).level)?.value || options.at(-1)?.value || "1";
+      };
+      $("doCalc").addEventListener("click", () => {
+        const resources = Object.fromEntries(keys.map((key) => [key, 0]));
+        const pet = selectedPet();
+        const current = parseLevelValue($("current").value);
+        const target = parseLevelValue($("target").value);
+        const from = Math.min(current.level, target.level);
+        const to = Math.max(current.level, target.level);
+        const breakdown = [];
+        for (let level = from + 1; level <= to; level++) {
+          const row = pet.requirements.levels.find((item) => item.level === level);
+          if (!row) continue;
+          for (const key of keys) resources[key] += Number(row[key] || 0);
+          breakdown.push(`${t("level")} ${level}`);
+          const adv = pet.requirements.levels.find((item) => item.level === "Advance" && item.fromLevel === level);
+          if (adv && (level < to || target.advancement)) {
+            for (const key of keys) resources[key] += Number(adv[key] || 0);
+            breakdown.push(`${t("level")} ${level} Advance`);
+          }
+        }
+        renderResult([[ "Pet", pet.name ], [t("current"), $("current").value], [t("target"), $("target").value], ["Steps", fmt(breakdown.length)]], Object.fromEntries(Object.entries(resources).map(([key, value]) => [resourceNames[key] || key, value])));
+      });
+      $("petSelect").addEventListener("input", () => { fillLevels(); $("doCalc").click(); });
+      $("current").addEventListener("input", () => $("doCalc").click());
+      $("target").addEventListener("input", () => $("doCalc").click());
+      fillLevels();
+      $("doCalc").click();
+    }
+
+    function renderPack() {
+      renderShell(`
+        <div class="grid">
+          <div class="field"><label>Pack price (USD)</label><input id="price" type="number" min="0" step="0.01" value="4.99"></div>
+          <div class="field"><label>Reference value per $1</label><input id="baseValue" type="number" min="1" value="500"></div>
+        </div>
+        <div class="section-label">Items</div>
+        ${[1,2,3,4,5].map((i) => `<div class="grid pack-row">
+          <div class="field"><label>Item ${i} quantity</label><input class="qty" type="number" min="0" value="0"></div>
+          <div class="field"><label>Item ${i} value each</label><input class="value" type="number" min="0" value="0"></div>
+        </div>`).join("")}
+        <div class="actions"><button class="primary" id="doCalc">${t("calculate")}</button></div>`);
+      $("doCalc").addEventListener("click", () => {
+        const price = Math.max(0.01, Number($("price").value) || 0.01);
+        const base = Math.max(1, Number($("baseValue").value) || 1);
+        let total = 0;
+        document.querySelectorAll(".pack-row").forEach((row) => {
+          total += (Number(row.querySelector(".qty").value) || 0) * (Number(row.querySelector(".value").value) || 0);
+        });
+        const expected = price * base;
+        const ratio = expected ? total / expected : 0;
+        renderResult([["Total Value", fmt(total)], ["Expected Value", fmt(expected)], ["Value Ratio", `${ratio.toFixed(2)}x`], ["Value / USD", fmt(total / price)]]);
+      });
+      $("doCalc").click();
+    }
+
+    function renderTransferPass() {
+      const packages = data["transfer-pass"]?.packages || [];
+      renderShell(`
+        <div class="grid">
+          <div class="field"><label>${t("currentPasses")}</label><input id="current" type="number" min="0" value="0"></div>
+          <div class="field"><label>${t("targetPasses")}</label><input id="target" type="number" min="0" max="50" value="10"></div>
+          <div class="field"><label>${t("lastPackage")}</label><select id="last"><option value="-1">${t("none")}</option>${packages.map((p, i) => `<option value="${i}">$${p.price} / ${p.passes}</option>`).join("")}</select></div>
+        </div>
+        <div class="actions"><button class="primary" id="doCalc">${t("calculate")}</button></div>`);
+      $("doCalc").addEventListener("click", () => {
+        const current = Number($("current").value) || 0;
+        const target = Number($("target").value) || 0;
+        const start = Math.max(0, Number($("last").value) + 1);
+        let need = Math.max(0, target - current), got = 0, cost = 0;
+        const bought = [];
+        for (let i = start; i < packages.length && got < need; i++) {
+          const p = packages[i];
+          const qty = i === packages.length - 1 ? Math.min(Math.ceil((need - got) / p.passes), p.available) : 1;
+          if (qty > 0) {
+            got += p.passes * qty;
+            cost += p.price * qty;
+            bought.push(`$${p.price} x ${qty}`);
+          }
+        }
+        renderResult([["Needed", fmt(need)], ["Passes", fmt(got)], ["Cost", `$${fmt(cost)}`], ["Packages", bought.join(", ") || "-"]]);
+      });
+      $("doCalc").click();
+    }
+
+    function renderWarAcademy() {
+      const academy = data["war-academy"] || {};
+      const techs = (academy.techs || []).filter((tech) => tech.id !== "war_academy");
+      if (!techs.length) return renderPending();
+      const resourceKeys = ["truegold_dust", "bread", "wood", "stone", "iron", "gold"];
+      const resourceLabels = {
+        truegold_dust: "Truegold Dust",
+        bread: "Bread",
+        wood: "Wood",
+        stone: "Stone",
+        iron: "Iron",
+        gold: "Gold"
+      };
+      const troopLabels = {
+        infantry: "Infantry",
+        cavalry: "Cavalry",
+        archer: "Archer"
+      };
+      const troopIcons = {
+        infantry: "⚔️",
+        cavalry: "🐎",
+        archer: "🏹"
+      };
+      const statLabels = {
+        deployment_capacity: "Deployment Capacity",
+        rally_capacity: "Rally Capacity",
+        infantry_health: "Infantry Health",
+        infantry_attack: "Infantry Attack",
+        infantry_defense: "Infantry Defense",
+        infantry_lethality: "Infantry Lethality",
+        cavalry_health: "Cavalry Health",
+        cavalry_attack: "Cavalry Attack",
+        cavalry_defense: "Cavalry Defense",
+        cavalry_lethality: "Cavalry Lethality",
+        archer_health: "Archer Health",
+        archer_attack: "Archer Attack",
+        archer_defense: "Archer Defense",
+        archer_lethality: "Archer Lethality",
+        truegold_infantry_healing_cost_reduction: "Infantry Healing Cost Reduction",
+        truegold_cavalry_healing_cost_reduction: "Cavalry Healing Cost Reduction",
+        truegold_archer_healing_cost_reduction: "Archer Healing Cost Reduction",
+        truegold_infantry_healing_time_down: "Infantry Healing Time Reduction",
+        truegold_cavalry_healing_time_down: "Cavalry Healing Time Reduction",
+        truegold_archer_healing_time_down: "Archer Healing Time Reduction",
+        truegold_infantry_training_cost_down: "Infantry Training Cost Reduction",
+        truegold_cavalry_training_cost_down: "Cavalry Training Cost Reduction",
+        truegold_archer_training_cost_down: "Archer Training Cost Reduction",
+        unlock_t11_infantry: "Unlock T11 Infantry",
+        unlock_t11_cavalry: "Unlock T11 Cavalry",
+        unlock_t11_archer: "Unlock T11 Archer"
+      };
+      const grouped = ["infantry", "cavalry", "archer"].map((type) => ({
+        type,
+        techs: techs.filter((tech) => tech.type === type)
+      }));
+      const techImage = (tech) => tech.image ? `https://kingshot.net/images/tech-tree/${tech.image}` : "";
+      const levelOptions = (max, includeZero = true) => `${includeZero ? `<option value="0">${t("none")}</option>` : ""}${Array.from({ length: max }, (_, i) => `<option value="${i + 1}">${t("level")} ${i + 1}</option>`).join("")}`;
+      renderShell(`
+        <div class="section-label">Your Inventory</div>
+        <div class="grid">
+          <div class="field"><label>Truegold Dust</label><input class="academy-inventory" data-key="truegold_dust" type="text" placeholder="0, 500K, 1.5M"></div>
+          <div class="field"><label>Gold</label><input class="academy-inventory" data-key="gold" type="text" placeholder="0, 500K, 1.5M"></div>
+          <div class="field"><label>Research Speed Bonus (%)</label><input id="academySpeed" type="number" min="0" max="500" step="0.1" value="0"></div>
+          <div class="field"><label>Bread</label><input class="academy-inventory" data-key="bread" type="text" placeholder="0"></div>
+          <div class="field"><label>Wood</label><input class="academy-inventory" data-key="wood" type="text" placeholder="0"></div>
+          <div class="field"><label>Stone</label><input class="academy-inventory" data-key="stone" type="text" placeholder="0"></div>
+          <div class="field"><label>Iron</label><input class="academy-inventory" data-key="iron" type="text" placeholder="0"></div>
+        </div>
+        <div class="academy-type-tabs" role="tablist" aria-label="War Academy troop type">
+          ${grouped.map(({ type }) => `<button class="academy-type-tab ${type === "infantry" ? "active" : ""}" type="button" data-type="${type}" role="tab" aria-selected="${type === "infantry"}">${troopIcons[type]} ${troopLabels[type]}</button>`).join("")}
+        </div>
+        ${grouped.map(({ type, techs }) => {
+          const maxLevel = Math.max(...techs.map((tech) => tech.data?.max_level || 1));
+          return `
+            <section class="academy-section" id="academy-${type}" data-type="${type}" ${type === "infantry" ? "" : "hidden"}>
+              <div class="section-label">${troopLabels[type]} research upgrades</div>
+              <div class="academy-toolbar" data-type="${type}">
+                <div class="field"><label>Current</label><select class="academy-set-current">${levelOptions(maxLevel, true)}</select></div>
+                <div class="field"><label>Target</label><select class="academy-set-target">${levelOptions(maxLevel, true)}</select></div>
+                <div class="actions" style="margin-top: 24px;"><button class="secondary academy-apply" type="button">Set All</button><button class="secondary academy-reset" type="button">Reset</button></div>
+              </div>
+              <div class="tech-list">
+                ${techs.map((tech) => {
+                  const max = tech.data?.max_level || 1;
+                  return `
+                    <div class="tech-card academy-tech" data-id="${tech.id}" data-type="${type}">
+                      <div class="tech-heading">
+                        <span class="tech-icon" aria-hidden="true">
+                          ${tech.image ? `<img src="${techImage(tech)}" alt="" loading="lazy" onerror="this.parentElement.classList.add('image-error')">` : ""}
+                          <span class="fallback-icon">${tech.icon || troopIcons[type] || "⚔️"}</span>
+                        </span>
+                        <div>
+                          <h4 class="tech-name">${tech.name}</h4>
+                          <p class="tech-desc">${tech.description || ""}</p>
+                        </div>
+                      </div>
+                      <div class="field"><label>${t("current")} ${t("level")}</label><select class="tech-current">${levelOptions(max, true)}</select></div>
+                      <div class="field"><label>${t("target")} ${t("level")}</label><select class="tech-target">${levelOptions(max, true)}</select></div>
+                    </div>`;
+                }).join("")}
+              </div>
+            </section>`;
+        }).join("")}
+        <div class="actions"><button class="primary" id="doCalc">Calculate Resources</button><button class="secondary" id="clearAcademy" type="button">Clear All</button></div>
+      `);
+
+      const parseResource = (value) => {
+        const text = String(value || "").trim().toLowerCase().replace(/\s/g, "").replace(/,/g, "");
+        if (!text) return 0;
+        const number = parseFloat(text);
+        if (Number.isNaN(number)) return 0;
+        if (text.endsWith("b")) return Math.floor(number * 1000000000);
+        if (text.endsWith("m")) return Math.floor(number * 1000000);
+        if (text.endsWith("k")) return Math.floor(number * 1000);
+        return Math.floor(number);
+      };
+      const levelRange = (current, target) => {
+        const from = Number(current) === 0 ? 1 : Number(current) + 1;
+        const to = Number(target);
+        return from <= to ? [from, to] : [0, -1];
+      };
+      const addBonus = (bonuses, benefit) => {
+        if (!benefit.type || benefit.type === "unlock_tech_tree" || !benefit.value) return;
+        const unit = benefit.unit || "";
+        const amount = Number.parseFloat(benefit.value) || 0;
+        bonuses[benefit.type] ||= { total: 0, unit, count: 0 };
+        bonuses[benefit.type].total += amount;
+        bonuses[benefit.type].count += 1;
+      };
+      const formatBonus = (bonus) => {
+        if (bonus.unit === "percentage") return `+${bonus.total.toFixed(2)}%`;
+        return `+${fmt(bonus.total)}`;
+      };
+      const collectSelection = () => {
+        const selected = [];
+        document.querySelectorAll(".academy-tech").forEach((card) => {
+          const tech = techs.find((item) => item.id === card.dataset.id);
+          const current = Number(card.querySelector(".tech-current").value) || 0;
+          const target = Number(card.querySelector(".tech-target").value) || 0;
+          card.classList.toggle("active", current < target);
+          if (!tech || current >= target) return;
+          selected.push({ tech, current, target });
+        });
+        return selected;
+      };
+      document.querySelectorAll(".academy-type-tab").forEach((button) => {
+        button.addEventListener("click", () => {
+          const activeType = button.dataset.type;
+          document.querySelectorAll(".academy-type-tab").forEach((tabButton) => {
+            const active = tabButton.dataset.type === activeType;
+            tabButton.classList.toggle("active", active);
+            tabButton.setAttribute("aria-selected", String(active));
+          });
+          document.querySelectorAll(".academy-section").forEach((section) => {
+            section.hidden = section.dataset.type !== activeType;
+          });
+        });
+      });
+      document.querySelectorAll(".academy-toolbar").forEach((bar) => {
+        bar.querySelector(".academy-apply").addEventListener("click", () => {
+          const current = Number(bar.querySelector(".academy-set-current").value) || 0;
+          const target = Number(bar.querySelector(".academy-set-target").value) || 0;
+          document.querySelectorAll(`.academy-tech[data-type="${bar.dataset.type}"]`).forEach((card) => {
+            const max = Number(card.querySelector(".tech-target option:last-child").value) || target;
+            card.querySelector(".tech-current").value = String(Math.min(current, max));
+            card.querySelector(".tech-target").value = String(target > current ? Math.min(target, max) : 0);
+            card.classList.toggle("active", current < target);
+          });
+        });
+        bar.querySelector(".academy-reset").addEventListener("click", () => {
+          document.querySelectorAll(`.academy-tech[data-type="${bar.dataset.type}"]`).forEach((card) => {
+            card.querySelector(".tech-current").value = "0";
+            card.querySelector(".tech-target").value = "0";
+            card.classList.remove("active");
+          });
+        });
+      });
+      document.querySelectorAll(".academy-tech select").forEach((select) => {
+        select.addEventListener("input", () => {
+          const card = select.closest(".academy-tech");
+          const current = Number(card.querySelector(".tech-current").value) || 0;
+          const target = Number(card.querySelector(".tech-target").value) || 0;
+          card.classList.toggle("active", current < target);
+        });
+      });
+      $("clearAcademy").addEventListener("click", () => {
+        document.querySelectorAll(".academy-tech").forEach((card) => {
+          card.querySelector(".tech-current").value = "0";
+          card.querySelector(".tech-target").value = "0";
+          card.classList.remove("active");
+        });
+        $("resultPanel").innerHTML = emptyResult();
+      });
+      $("doCalc").addEventListener("click", () => {
+        const totals = { truegold_dust: 0, bread: 0, wood: 0, stone: 0, iron: 0, gold: 0, time: 0, power: 0 };
+        const bonuses = {};
+        const breakdown = [];
+        const selected = collectSelection();
+        selected.forEach(({ tech, current, target }) => {
+          const costs = { truegold_dust: 0, bread: 0, wood: 0, stone: 0, iron: 0, gold: 0, time: 0, power: 0 };
+          const [from, to] = levelRange(current, target);
+          for (let level = from; level <= to; level++) {
+            const row = tech.data.levels.find((item) => item.level === level);
+            if (!row?.cost) continue;
+            Object.entries(row.cost).forEach(([key, value]) => {
+              if (key in totals) {
+                totals[key] += Number(value) || 0;
+                costs[key] += Number(value) || 0;
+              }
+            });
+            (row.benefits || []).forEach((benefit) => {
+              const power = Number.parseInt(String(benefit.power || 0), 10) || 0;
+              totals.power += power;
+              costs.power += power;
+              addBonus(bonuses, benefit);
+            });
+          }
+          breakdown.push({ tech, current, target, costs });
+        });
+        const speed = Number($("academySpeed").value) || 0;
+        const modifiedTime = Math.round(totals.time / (1 + speed / 100));
+        const savedTime = Math.max(0, totals.time - modifiedTime);
+        const inventory = {};
+        document.querySelectorAll(".academy-inventory").forEach((input) => {
+          inventory[input.dataset.key] = parseResource(input.value);
+        });
+        const resourceDiff = {};
+        resourceKeys.forEach((key) => {
+          const diff = totals[key] - (inventory[key] || 0);
+          resourceDiff[`${diff > 0 ? "Need" : "Extra"} ${resourceLabels[key] || key}`] = Math.abs(diff);
+        });
+        renderResult([
+          ["Truegold Dust", fmt(totals.truegold_dust)],
+          ["Gold", fmt(totals.gold)],
+          ["Research Time", timeText(modifiedTime * 60)],
+          ["Saved Time", timeText(savedTime * 60)],
+          ["Power Gain", fmt(totals.power)],
+          ["Technologies", fmt(selected.length)]
+        ], { bread: totals.bread, wood: totals.wood, stone: totals.stone, iron: totals.iron, ...resourceDiff });
+        const bonusHtml = Object.keys(bonuses).length ? `
+          <div class="section-label">Upgrade Bonuses</div>
+          <div class="bonus-list">${Object.entries(bonuses).map(([key, bonus]) => `<div class="bonus-row"><span>${statLabels[key] || key.replaceAll("_", " ")}</span><strong>${formatBonus(bonus)}</strong></div>`).join("")}</div>` : "";
+        const breakdownHtml = breakdown.length ? `
+          <div class="section-label">Technology Breakdown</div>
+          <table class="breakdown">
+            <thead><tr><th>Technology</th><th>Upgrade</th><th>Dust</th><th>Bread</th><th>Wood</th><th>Stone</th><th>Iron</th><th>Gold</th><th>Time</th><th>Power</th></tr></thead>
+            <tbody>${breakdown.map(({ tech, current, target, costs }) => `
+              <tr>
+                <td>${tech.name}</td>
+                <td>${current} -> ${target}</td>
+                <td>${fmt(costs.truegold_dust)}</td>
+                <td>${fmt(costs.bread)}</td>
+                <td>${fmt(costs.wood)}</td>
+                <td>${fmt(costs.stone)}</td>
+                <td>${fmt(costs.iron)}</td>
+                <td>${fmt(costs.gold)}</td>
+                <td>${timeText(Math.round(costs.time / (1 + speed / 100)) * 60)}</td>
+                <td>${fmt(costs.power)}</td>
+              </tr>`).join("")}</tbody>
+          </table>` : "";
+        $("resultPanel").insertAdjacentHTML("beforeend", bonusHtml + breakdownHtml);
+      });
+    }
+
+    function renderFortSanc() {
+      renderShell(`
+        <div class="grid">
+          <div class="field"><label>Alliances</label><input id="frAlliances" type="text" value="GTR, TNW, HOG, DEA, RES" placeholder="GTR, TNW, HOG, DEA, RES"></div>
+          <div class="field"><label>Target points per alliance</label><input id="frTarget" type="number" min="0" value="10"></div>
+          <div class="field"><label>Seed</label><input id="frSeed" type="number" min="0" value="7"></div>
+          <div class="field"><label>Rounds</label><input id="frRounds" type="number" min="1" value="8"></div>
+          <div class="field"><label>Fort count</label><input id="frForts" type="number" min="1" value="4"></div>
+          <div class="field"><label>San count</label><input id="frRelics" type="number" min="1" value="12"></div>
+          <div class="field"><label>San EMPTY min</label><input id="frEmptyMin" type="number" min="0" value="2"></div>
+          <div class="field"><label>San EMPTY max</label><input id="frEmptyMax" type="number" min="0" value="3"></div>
+        </div>
+        <div class="actions"><button class="primary" id="doCalc">Generate</button><button class="secondary" id="frCopy" type="button">Copy Discord</button></div>
+        <p class="note" id="frLimitNote"></p>
+      `);
+
+      const parseAlliances = (text) => {
+        const alliances = String(text || "").split(",").map((item) => item.trim()).filter(Boolean);
+        if (alliances.length < 2 || alliances.length > 8) throw new Error(`Alliances must be 2-8. Current: ${alliances.length}`);
+        if (new Set(alliances).size !== alliances.length) throw new Error("Alliance names are duplicated.");
+        return alliances;
+      };
+      const seededRandom = (seed) => {
+        let value = (Number(seed) || 0) >>> 0;
+        return () => {
+          value += 0x6D2B79F5;
+          let t = value;
+          t = Math.imul(t ^ (t >>> 15), t | 1);
+          t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+          return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+        };
+      };
+      const shuffle = (items, rand) => {
+        const arr = items.slice();
+        for (let i = arr.length - 1; i > 0; i--) {
+          const j = Math.floor(rand() * (i + 1));
+          [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+      };
+      const sortBy = (items, keyFn) => items.map((item) => ({ item, key: keyFn(item) })).sort((a, b) => {
+        for (let i = 0; i < a.key.length; i++) {
+          if (a.key[i] < b.key[i]) return -1;
+          if (a.key[i] > b.key[i]) return 1;
+        }
+        return 0;
+      }).map((entry) => entry.item);
+      const estimateCaps = (alliances, rounds, forts, relics, emptyMin, emptyMax) => {
+        const n = alliances.length;
+        const fortTotal = rounds * Math.min(forts, n) * 2;
+        const safeTotal = fortTotal + rounds * Math.max(0, relics - emptyMax);
+        const bestTotal = fortTotal + rounds * Math.max(0, relics - emptyMin);
+        return {
+          n,
+          safeCap: Math.max(0, Math.floor(safeTotal / n) - 2),
+          bestCap: Math.max(0, Math.floor(bestTotal / n))
+        };
+      };
+      const buildSchedule = (cfg) => {
+        const rand = seededRandom(cfg.seed);
+        const alliances = cfg.alliances;
+        const n = alliances.length;
+        const pts = Object.fromEntries(alliances.map((name) => [name, 0]));
+        const remaining = Object.fromEntries(alliances.map((name) => [name, cfg.target]));
+        const held = Object.fromEntries(alliances.map((name) => [name, new Set()]));
+        const fortSlots = Math.min(cfg.forts, n);
+        const fortCycle = shuffle(alliances, rand);
+        const sitOutByRound = {};
+        let sitPtr = 0;
+        for (let rd = 1; rd <= cfg.rounds; rd++) {
+          sitOutByRound[rd] = n > fortSlots ? fortCycle[sitPtr++ % n] : null;
+        }
+        const maxFutureRelicPoints = (heldNow, nextRd) => {
+          let heldCount = heldNow;
+          let total = 0;
+          for (let rd = nextRd; rd <= cfg.rounds; rd++) {
+            heldCount = Math.min(cfg.relics, heldCount + 1);
+            total += heldCount;
+          }
+          return total;
+        };
+        const maxFutureFortPoints = (alliance, nextRd) => {
+          let total = 0;
+          for (let rd = nextRd; rd <= cfg.rounds; rd++) {
+            if (sitOutByRound[rd] !== alliance) total += 2;
+          }
+          return total;
+        };
+        const schedule = [];
+        for (let rd = 1; rd <= cfg.rounds; rd++) {
+          const expectedCum = Math.round(cfg.target * rd / cfg.rounds);
+          const paceGap = Object.fromEntries(alliances.map((name) => [name, expectedCum - pts[name]]));
+          const fortOwner = Object.fromEntries(Array.from({ length: cfg.forts }, (_, i) => [i + 1, "EMPTY"]));
+          const sitOut = sitOutByRound[rd];
+          const candidates = alliances.filter((name) => name !== sitOut && remaining[name] >= 2);
+          const picks = sortBy(candidates, (name) => [-paceGap[name], rand()]).slice(0, fortSlots);
+          picks.forEach((name, index) => {
+            fortOwner[index + 1] = name;
+            pts[name] += 2;
+            remaining[name] -= 2;
+          });
+          const emptyTarget = Math.max(0, Math.min(cfg.relics, cfg.emptyMin + Math.floor(rand() * (cfg.emptyMax - cfg.emptyMin + 1))));
+          const fillLimit = cfg.relics - emptyTarget;
+          const cap = Object.fromEntries(alliances.map((name) => [name, rd === 1 ? 1 : Math.min(cfg.relics, held[name].size + 1)]));
+          const minNeeded = {};
+          alliances.forEach((name) => {
+            let best = null;
+            for (let k = 0; k <= cap[name]; k++) {
+              const futureRelic = rd < cfg.rounds ? maxFutureRelicPoints(k, rd + 1) : 0;
+              const futureFort = rd < cfg.rounds ? maxFutureFortPoints(name, rd + 1) : 0;
+              if (pts[name] + k + futureRelic + futureFort >= cfg.target) {
+                best = k;
+                break;
+              }
+            }
+            if (best === null) best = cap[name];
+            minNeeded[name] = Math.min(best, Math.max(0, remaining[name]));
+          });
+          const desiredHeld = {};
+          alliances.forEach((name) => {
+            const needNow = Math.min(Math.max(0, expectedCum - pts[name]), Math.max(0, remaining[name]));
+            desiredHeld[name] = Math.max(minNeeded[name], Math.min(cap[name], needNow));
+          });
+          let overflow = Object.values(desiredHeld).reduce((sum, value) => sum + value, 0) - fillLimit;
+          if (overflow > 0) {
+            const cutOrder = sortBy(alliances, (name) => [paceGap[name], rand()]);
+            for (const name of cutOrder) {
+              if (overflow <= 0) break;
+              const canCut = Math.max(0, desiredHeld[name] - minNeeded[name]);
+              const cut = Math.min(canCut, overflow);
+              desiredHeld[name] -= cut;
+              overflow -= cut;
+            }
+          }
+          if (overflow > 0) throw new Error(`Impossible at round ${rd}. Not enough San slots. overflow=${overflow}`);
+          alliances.forEach((name) => {
+            while (held[name].size > desiredHeld[name]) held[name].delete(Math.max(...held[name]));
+          });
+          const occupied = new Set();
+          alliances.forEach((name) => held[name].forEach((id) => occupied.add(id)));
+          const available = Array.from({ length: cfg.relics }, (_, i) => i + 1).filter((id) => !occupied.has(id));
+          for (const name of sortBy(alliances, (alliance) => [-paceGap[alliance], rand()])) {
+            while (available.length && held[name].size < desiredHeld[name]) {
+              held[name].add(available.shift());
+            }
+          }
+          const relicOwner = Object.fromEntries(Array.from({ length: cfg.relics }, (_, i) => [i + 1, "EMPTY"]));
+          alliances.forEach((name) => {
+            const gained = held[name].size;
+            pts[name] += gained;
+            remaining[name] -= gained;
+            held[name].forEach((id) => { relicOwner[id] = name; });
+          });
+          const emptyCount = Object.values(relicOwner).filter((owner) => owner === "EMPTY").length;
+          if (emptyCount < cfg.emptyMin) throw new Error(`EMPTY minimum ${cfg.emptyMin} violated at round ${rd}.`);
+          schedule.push({ round: rd, fortOwner, relicOwner, pointsAfter: { ...pts }, sitOut });
+        }
+        const notDone = Object.entries(remaining).filter(([, value]) => value !== 0);
+        if (notDone.length) throw new Error(`Target points not matched exactly: ${notDone.map(([name, value]) => `${name} ${value}`).join(", ")}`);
+        return schedule;
+      };
+      const formatDiscord = (alliances, schedule, forts, relics) => schedule.map((rd) => {
+        const lines = [`=== Round ${rd.round} ===`];
+        alliances.forEach((name) => {
+          const fortIds = Array.from({ length: forts }, (_, i) => i + 1).filter((id) => rd.fortOwner[id] === name);
+          const sanIds = Array.from({ length: relics }, (_, i) => i + 1).filter((id) => rd.relicOwner[id] === name);
+          lines.push(`${name} - ${fortIds.length ? `Fort${fortIds.join(",")}` : "No Fort"} / ${sanIds.length ? `San${sanIds.join(",")}` : "No San"}`);
+        });
+        const emptyIds = Array.from({ length: relics }, (_, i) => i + 1).filter((id) => rd.relicOwner[id] === "EMPTY");
+        lines.push(emptyIds.length ? `San EMPTY: ${emptyIds.length} (IDs: ${emptyIds.join(", ")})` : "San EMPTY: 0");
+        return lines.join("\n");
+      }).join("\n\n");
+      const renderSchedule = (alliances, schedule, cfg, discordText, caps) => {
+        const rows = schedule.map((rd) => {
+          const allocationRows = alliances.map((name) => {
+            const fortIds = Array.from({ length: cfg.forts }, (_, i) => i + 1).filter((id) => rd.fortOwner[id] === name);
+            const sanIds = Array.from({ length: cfg.relics }, (_, i) => i + 1).filter((id) => rd.relicOwner[id] === name);
+            return `<tr><td>${name}</td><td>${fortIds.length ? `Fort ${fortIds.join(", ")}` : "No Fort"}</td><td>${sanIds.length ? `San ${sanIds.join(", ")}` : "No San"}</td><td>${fmt(rd.pointsAfter[name] || 0)}</td></tr>`;
+          }).join("");
+          const emptyIds = Array.from({ length: cfg.relics }, (_, i) => i + 1).filter((id) => rd.relicOwner[id] === "EMPTY");
+          return `<div class="section-label">Round ${rd.round}</div><table class="result-table"><thead><tr><th>Alliance</th><th>Fort</th><th>San</th><th>Points</th></tr></thead><tbody>${allocationRows}<tr><td>EMPTY</td><td>-</td><td>${emptyIds.length ? emptyIds.join(", ") : "0"}</td><td>-</td></tr></tbody></table>`;
+        }).join("");
+        $("resultPanel").innerHTML = `
+          <div class="metric-grid">
+            <div class="metric"><div class="label">Safe cap</div><div class="value">${fmt(caps.safeCap)}</div></div>
+            <div class="metric"><div class="label">Best cap</div><div class="value">${fmt(caps.bestCap)}</div></div>
+            <div class="metric"><div class="label">Alliances</div><div class="value">${fmt(alliances.length)}</div></div>
+            <div class="metric"><div class="label">Rounds</div><div class="value">${fmt(cfg.rounds)}</div></div>
+          </div>
+          ${rows}
+          <div class="section-label">Discord Copy</div>
+          <textarea id="frDiscordText" readonly>${discordText}</textarea>
+        `;
+      };
+      const updateLimit = () => {
+        try {
+          const alliances = parseAlliances($("frAlliances").value);
+          const caps = estimateCaps(alliances, Number($("frRounds").value) || 8, Number($("frForts").value) || 4, Number($("frRelics").value) || 12, Number($("frEmptyMin").value) || 0, Number($("frEmptyMax").value) || 0);
+          $("frLimitNote").textContent = `Estimated target limit: safe ${fmt(caps.safeCap)} / best ${fmt(caps.bestCap)}`;
+        } catch {
+          $("frLimitNote").textContent = "";
+        }
+      };
+      document.querySelectorAll("#frAlliances,#frRounds,#frForts,#frRelics,#frEmptyMin,#frEmptyMax,#frTarget").forEach((input) => input.addEventListener("input", updateLimit));
+      $("frCopy").addEventListener("click", async () => {
+        const text = $("frDiscordText")?.value || "";
+        if (!text) return;
+        try { await navigator.clipboard.writeText(text); } catch {}
+      });
+      $("doCalc").addEventListener("click", () => {
+        try {
+          const alliances = parseAlliances($("frAlliances").value);
+          const cfg = {
+            alliances,
+            target: Number($("frTarget").value) || 0,
+            seed: Number($("frSeed").value) || 0,
+            rounds: Math.max(1, Number($("frRounds").value) || 8),
+            forts: Math.max(1, Number($("frForts").value) || 4),
+            relics: Math.max(1, Number($("frRelics").value) || 12),
+            emptyMin: Math.max(0, Number($("frEmptyMin").value) || 0),
+            emptyMax: Math.max(0, Number($("frEmptyMax").value) || 0)
+          };
+          if (cfg.emptyMin > cfg.emptyMax) throw new Error("San EMPTY min must be <= max.");
+          if (cfg.emptyMax > cfg.relics) throw new Error("San EMPTY max cannot exceed San count.");
+          const caps = estimateCaps(alliances, cfg.rounds, cfg.forts, cfg.relics, cfg.emptyMin, cfg.emptyMax);
+          if (cfg.target > caps.safeCap) throw new Error(`Impossible: safe cap ≈${caps.safeCap}, target=${cfg.target}`);
+          const schedule = buildSchedule(cfg);
+          const discordText = formatDiscord(alliances, schedule, cfg.forts, cfg.relics);
+          renderSchedule(alliances, schedule, cfg, discordText, caps);
+        } catch (error) {
+          $("resultPanel").innerHTML = `<p class="note">Failed: ${error.message}</p>`;
+        }
+      });
+      updateLimit();
+    }
+
+    function renderTroop() {
+      const troop = data["troop-training"];
+      const tierKeys = ["1","2","3","4","5","6","7","8","9","10","10-TG1","10-TG2","10-TG3","10-TG4","10-TG5","10-TG6","10-TG7","10-TG8","11","11-TG5","11-TG6","11-TG7","11-TG8"];
+      const troopNames = { infantry: "Infantry", archer: "Archer", cavalry: "Cavalry" };
+      renderShell(`
+        <div class="tabs"><button id="modeTrain" class="active">${t("troopModeTraining")}</button><button id="modePromote">${t("troopModePromoting")}</button></div>
+        <div class="grid">
+          <div class="field"><label>${t("troopType")}</label><select id="troopType">${Object.keys(troop.troop_types).map((k) => `<option value="${k}">${troopNames[k]}</option>`).join("")}</select></div>
+          <div class="field promote-only hidden"><label>${t("current")}</label><select id="currentTier">${tierKeys.map((k) => `<option value="${k}">${k}</option>`).join("")}</select></div>
+          <div class="field"><label>${t("target")}</label><select id="targetTier">${tierKeys.map((k) => `<option value="${k}">${k}</option>`).join("")}</select></div>
+          <div class="field"><label>${t("quantity")}</label><input id="qty" type="number" min="1" value="1000"></div>
+          <div class="field"><label>${t("trainingSpeed")}</label><input id="speed" type="number" min="0" value="0"></div>
+        </div>
+        <div class="section-label">Bonus</div>
+        <div class="toggles">
+          <label class="checkline"><span>${t("kingdomSkill")}</span><input id="kingdomBonus" type="checkbox"></label>
+          <label class="checkline"><span>${t("kvkBonus")}</span><input id="kvkBonus" type="checkbox"></label>
+        </div>
+        <div class="grid" style="margin-top: 12px;">
+          <div class="field"><label>${t("ministry")} (%)</label><input id="ministryBonus" type="number" min="0" value="0"></div>
+        </div>
+        <div class="section-label">${t("speedups")}</div>
+        <div class="grid"><div class="field"><label>${t("days")}</label><input id="days" type="number" min="0" value="0"></div><div class="field"><label>${t("hours")}</label><input id="hours" type="number" min="0" value="0"></div><div class="field"><label>${t("minutes")}</label><input id="minutes" type="number" min="0" value="0"></div></div>
+        <div class="actions"><button class="primary" id="doCalc">${t("calculate")}</button></div>`);
+      let mode = "train";
+      $("targetTier").value = "10";
+      $("currentTier").value = "9";
+      $("modeTrain").onclick = () => { mode = "train"; $("modeTrain").classList.add("active"); $("modePromote").classList.remove("active"); document.querySelector(".promote-only").classList.add("hidden"); };
+      $("modePromote").onclick = () => { mode = "promote"; $("modePromote").classList.add("active"); $("modeTrain").classList.remove("active"); document.querySelector(".promote-only").classList.remove("hidden"); };
+      $("doCalc").addEventListener("click", () => {
+        const type = $("troopType").value;
+        const qty = Math.max(1, Number($("qty").value) || 1);
+        const speed = Number($("speed").value) || 0;
+        const bonus = speed + ($("kingdomBonus").checked ? 30 : 0) + ($("kvkBonus").checked ? 25 : 0) + (Number($("ministryBonus").value) || 0);
+        const target = $("targetTier").value;
+        const current = $("currentTier").value;
+        const baseTier = (key) => key.split("-")[0];
+        const values = (key) => ({...troop.troop_types[type].tiers[baseTier(key)], time: troop.training_times[key] || 0, kvk: troop.kvk_points[key] || 0, hog: troop.hog_points[key] || 0, sg: troop.sg_points[key] || 0, power: troop.power[key] || 0});
+        let per = values(target);
+        if (mode === "promote") {
+          const cur = values(current);
+          per = Object.fromEntries(Object.keys(per).map((k) => [k, Math.max(0, (per[k] || 0) - (cur[k] || 0))]));
+        }
+        const totalTime = per.time * qty / (1 + bonus / 100);
+        const speedSecs = (Number($("days").value) || 0) * 86400 + (Number($("hours").value) || 0) * 3600 + (Number($("minutes").value) || 0) * 60;
+        const possible = per.time ? Math.floor(speedSecs / (per.time / (1 + bonus / 100))) : 0;
+        renderResult([[t("time"), timeText(totalTime)], ["Total Bonus", `${bonus}%`], ["KvK", fmt(per.kvk * qty)], ["HoG", fmt(per.hog * qty)], [t("possible"), fmt(possible)]], { bread: per.bread * qty, wood: per.wood * qty, stone: per.stone * qty, iron: per.iron * qty, power: per.power * qty });
+      });
+      $("doCalc").click();
+    }
+
+    function renderPending() {
+      renderShell(`<p class="note">${t("unsupported")}</p><p class="note"><a class="source-link" href="${calcMeta(activeId)[1]}" target="_blank" rel="noreferrer">${t("source")}</a></p>`);
+    }
+
+    function renderActive() {
+      const type = calcMeta(activeId)[2];
+      if (type === "troop") return renderTroop();
+      if (type === "range") return renderRangeCalculator(activeId);
+      if (type === "forgehammer") return renderForgehammer(false);
+      if (type === "forgehammerSet") return renderForgehammer(true);
+      if (type === "heroShard") return renderHeroShard();
+      if (type === "heroExclusive") return renderHeroExclusive();
+      if (type === "heroGearXp") return renderHeroGearXp();
+      if (type === "heroGear") return renderHeroGear();
+      if (type === "vip") return renderVip();
+      if (type === "pet") return renderPet();
+      if (type === "pack") return renderPack();
+      if (type === "warAcademy") return renderWarAcademy();
+      if (type === "fortSanc") return renderFortSanc();
+      if (type === "transferPass") return renderTransferPass();
+      renderPending();
+    }
+
+    function applyLanguage() {
+      document.documentElement.lang = lang === "zh" ? "zh-CN" : lang;
+      $("appTitle").textContent = t("appTitle");
+      $("appSubtitle").textContent = t("appSubtitle");
+      $("languageLabel").textContent = t("language");
+      $("navTitle").textContent = t("navTitle");
+      document.title = t("appTitle");
+    }
+
+    function render() {
+      applyLanguage();
+      renderNav();
+      renderActive();
+    }
+
+    async function init() {
+      try {
+        const res = await fetch("./kingshot_calculator_data.json");
+        data = (await res.json()).calculators || {};
+      } catch {
+        data = {};
+      }
+      $("languageSelect").addEventListener("input", (event) => {
+        lang = event.target.value;
+        render();
+      });
+      render();
+    }
+
+    init();
+  </script>
+</body>
+</html>
