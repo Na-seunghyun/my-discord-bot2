@@ -43,6 +43,7 @@ class Settings:
     admin_role_ids: set[int]
     id_manager_role_ids: set[int]
     discord_guild_id: int | None
+    calculator_url: str
     database_path: Path
     redeem_headless: bool
     redeem_delay_seconds: float
@@ -68,6 +69,7 @@ def load_settings() -> Settings:
         admin_role_ids=_get_int_set("ADMIN_ROLE_IDS"),
         id_manager_role_ids=_get_int_set("ID_MANAGER_ROLE_IDS"),
         discord_guild_id=_get_int("DISCORD_GUILD_ID"),
+        calculator_url=os.getenv("CALCULATOR_URL", "").strip(),
         database_path=Path(os.getenv("DATABASE_PATH", "data/kingshot.sqlite3")),
         redeem_headless=_get_bool("REDEEM_HEADLESS", True),
         redeem_delay_seconds=_get_float("REDEEM_DELAY_SECONDS", 0.05),
