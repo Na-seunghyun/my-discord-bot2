@@ -266,6 +266,26 @@ def register_commands(bot: KingShotBot) -> None:
         else:
             await interaction.response.send_message(message, ephemeral=True)
 
+
+    @bot.tree.command(name="calculator", description="Open the KingShot calculator hub.")
+    async def calculator(interaction: discord.Interaction):
+        url = bot.settings.calculator_url
+
+        if not url:
+            await interaction.response.send_message(
+                "Calculator URL is not configured.",
+                ephemeral=True,
+            )
+            return
+
+        await interaction.response.send_message(
+            f"KingShot calculator hub:\n{url}",
+            ephemeral=True,
+        )
+
+
+
+    
     @bot.tree.command(name="add-id", description="Register one KingShot player ID.")
     @require_id_manager()
     async def add_id(interaction: discord.Interaction, kingshot_id: str):
@@ -378,6 +398,10 @@ def register_commands(bot: KingShotBot) -> None:
             f"Redeem finished. Public results were posted in <#{bot.settings.result_channel_id}>.",
             ephemeral=True,
         )
+
+
+
+
 
 
 def main() -> None:
