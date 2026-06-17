@@ -1,0 +1,85 @@
+{
+  "app": {
+    "title": "Legend Nash Planner"
+  },
+  "ui": {
+    "usageTitle": "Cómo usar",
+    "usage": "• <b>Arrastrar y soltar</b>: coloca elementos desde la paleta izquierda (ajuste a la cuadrícula).<br>• <b>Arrastrar con el botón central del ratón</b>: mover la vista.<br>• <b>Ctrl/⌘ + Rueda del ratón</b>: acercar/alejar.<br>• <b>Pellizcar en el panel táctil</b>: acercar o alejar.<br>• <b>Haz clic en una celda</b>: alternar pintura roja.<br>• <b>Etiqueta de ciudad</b>: doble clic → editar (Enter para guardar / Esc para cancelar).<br>• <b>Área inferior 🗑</b>: arrastra un elemento aquí para eliminarlo.<br>※ La pintura azul es generada por <b>la Bandera (7×7)</b> y el <b>Cuartel General (15×15)</b>.",
+    "paletteTitle": "Paleta",
+    "toolbar": {
+      "undo": "Deshacer",
+      "redo": "Rehacer",
+      "reset": "Reiniciar",
+      "copy": "Copiar URL corta",
+      "export": "Exportar como PNG",
+      "import": "Importar PNG",
+      "dist2label": "Medir tiempo de movimiento",
+      "lang": "Idioma",
+      "home": "Ir al centro"
+    },
+    "trash": {
+      "label": "Arrastra aquí para eliminar",
+      "title": "Arrastra un bloque a esta zona para eliminarlo"
+    },
+    "footer": {
+      "credit": "Created by #885 Legend nashsh"
+    },
+    "contextMenu": {
+      "fontSize": "Tamaño de fuente",
+      "wordWrap": "Ajuste de línea"
+    }
+  },
+  "palette": {
+    "hq": "Cuartel General",
+    "flag": "Bandera",
+    "trap": "Trampa de caza",
+    "city": "Ciudad",
+    "resource": "Recurso",
+    "block1": "1×1",
+    "block2": "2×2",
+    "block3": "3×3",
+    "custom": "Bloque personalizado",
+    "customWidthLabel": "Ancho",
+    "customHeightLabel": "Alto",
+    "castle": "Castillo",
+    "turret": "Torreta",
+    "fortress": "Fortaleza",
+    "sanctuary": "Santuario",
+    "turret_directions": [
+      "Sur",
+      "Oeste",
+      "Este",
+      "Norte"
+    ]
+  },
+  "alert": {
+    "noCities": "No hay ciudades.",
+    "noTraps": "No hay trampas.",
+    "resetConfirm": "¿Reiniciar todo? (Todos los objetos y celdas rojas serán eliminados)",
+    "exportFail": "Error al exportar PNG.",
+    "exportAreaTooLarge": "El área de exportación es demasiado grande. Reduzca los objetos o haga el área más pequeña.",
+    "importFail": "Error al importar PNG."
+  },
+  "msg": {
+    "copiedShort": "¡URL corta copiada!",
+    "copiedFull": "URL completa copiada",
+    "copied": "¡Copiado!",
+    "shortenError": "Error al crear la URL corta.",
+    "copyError": "Error al copiar.",
+    "copyManual": "Por favor, copie con Ctrl+C o Cmd+C",
+    "urlTooLong": "La URL es demasiado larga para acortarla."
+  },
+  "modal": {
+    "urlCopy": {
+      "title": "Copiar URL",
+      "message": "Por favor, copie la siguiente URL.",
+      "copyBtn": "Copiar"
+    }
+  },
+  "consent": {
+    "message": "Usamos análisis anónimos para mejorar tu experiencia. No se recopilan datos personales.",
+    "accept": "Aceptar",
+    "reject": "Rechazar",
+    "learnMore": "Más información"
+  }
+}
