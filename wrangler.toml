@@ -3,7 +3,7 @@ compatibility_date = "2026-06-16"
 main = "src/index.js"
 
 [assets]
-directory = "."
+directory = "./site"
 binding = "ASSETS"
 
 [[kv_namespaces]]
