@@ -1,0 +1,181 @@
+/* File: app/static/css/base.css */
+
+/* ---------------------------------------------
+ * Design Tokens (CSS Variables)
+ * ------------------------------------------- */
+:root {
+  /* Layout */
+  --cell: 48px; /* Pixel size of one cell */
+  --sidebar-w: 286px;
+
+  /* Colors */
+  --bg: #eef3f8;
+  --grid-bold: rgba(28, 80, 115, 0.28);
+
+  /* Paint (selection / outlines) */
+  --paint-blue: rgba(31, 167, 133, 0.3);
+  --paint-blue-border: rgba(3, 119, 91, 0.95);
+  --paint-red: rgba(202, 49, 49, 0.34);
+  --paint-redzone: rgba(196, 42, 42, 0.38);
+  --paint-ruins: rgba(128, 128, 0, 0.3);
+  --paint-rich: rgba(34, 139, 34, 0.3);
+  --paint-plain: rgba(154, 205, 50, 0.3);
+  --paint-barren: rgba(255, 250, 205, 0.35);
+
+  /* Trash zone */
+  --trash-bg: rgba(220, 20, 60, 0.07);
+  --trash-bg-active: rgba(220, 20, 60, 0.2);
+  --trash-border: rgba(220, 20, 60, 0.5);
+  --trash-border-active: rgba(220, 20, 60, 0.9);
+  --trash-fg: #b00020;
+
+  /* Block kinds */
+  --ok-bg: #f4f8fb;
+  --ok-border: #61788a;
+  --warn-bg: #ffe1df;
+  --warn-border: #d9483f;
+  --resource-bg: #ffe0d3;
+  --resource-border: #d15a37;
+  --flag-bg: #d8f5ef;
+  --flag-border: #07816b;
+  --trap-bg: #d9efe6;
+  --trap-border: #1b7658;
+  --block123-bg: #f4f8fb;
+  --block123-border: #657a8b;
+  --city-bg: #ffe58a;
+  --city-border: #b47a00;
+  --castle-bg: #dde0ff;
+  --castle-border: #5056bd;
+  --turret-bg: #cad4ff;
+  --turret-border: #3146a3;
+  --fortress-bg: #d3ddff;
+  --fortress-border: #465ab5;
+  --sanctuary-bg: #e9ddff;
+  --sanctuary-border: #7351b8;
+
+  /* World / Zoom */
+  --zoom: 1; /* 1 = 100% */
+  --world-w: 1200px; /* Updated dynamically by JS */
+  --world-h: 1200px; /* Updated dynamically by JS */
+  --rot-k: 0.7071067811865476; /* √2 / 2 */
+}
+
+/* Optional: dark mode background */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0b0b0c;
+  }
+}
+
+/* ---------------------------------------------
+ * Cascade Layers
+ * ------------------------------------------- */
+@layer base, components, utilities;
+
+/* ---------------------------------------------
+ * Base
+ * ------------------------------------------- */
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html,
+  body {
+    height: 100%;
+  }
+
+  body {
+    margin: 0;
+    height: 100vh;
+    display: grid;
+    grid-template-areas: 'sidebar main';
+    grid-template-columns: var(--sidebar-w) 1fr;
+    font-family:
+      Bahnschrift,
+      'Segoe UI Variable',
+      'Noto Sans KR',
+      Arial,
+      sans-serif;
+    background: #101927;
+    color: #172332;
+  }
+
+  /* Place elements into fixed areas */
+  .sidebar {
+    grid-area: sidebar;
+  }
+  .viewport {
+    grid-area: main;
+  }
+
+  /* RTL: swap the areas so sidebar moves to the right, sizes stay correct */
+  body.rtl,
+  html[dir='rtl'] body {
+    direction: rtl;
+    grid-template-areas: 'main sidebar';
+    grid-template-columns: 1fr var(--sidebar-w);
+  }
+
+  /* Enhanced focus visibility */
+  :focus-visible {
+    outline: 2px solid #2684ff;
+    outline-offset: 2px;
+  }
+
+  /* Reduce animation when user prefers reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    html:focus-within {
+      scroll-behavior: auto;
+    }
+    * {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* ---------------------------------------------
+ * Components
+ * ------------------------------------------- */
+@layer components {
+  .viewport {
+    position: relative;
+    overflow: auto;
+    background: var(--bg);
+    touch-action: none;
+  }
+
+  .viewport.panning {
+    cursor: grabbing;
+  }
+
+  .world {
+    position: relative;
+  }
+
+  .rot {
+    position: absolute;
+    inset: 0;
+    transform-origin: 0 0; /* All calculations are based on origin */
+
+    /* Order matters: translate → rotate → scale(-1) → zoom */
+    transform: translate(
+        calc(var(--world-w) * var(--rot-k)),
+        calc((var(--world-w) + var(--world-h)) * var(--rot-k))
+      )
+      rotate(45deg) scale(-1) scale(var(--zoom));
+
+    /* GPU acceleration - prevents layer compositing bugs during zoom/scroll */
+    will-change: transform;
+  }
+}
+
+/* ---------------------------------------------
+ * Utilities
+ * ------------------------------------------- */
+@layer utilities {
+  /* Add utility classes here if needed */
+}
