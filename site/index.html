@@ -1,0 +1,430 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kingshot Calculator Hub</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #111827;
+      --panel: #172033;
+      --line: rgba(230, 238, 255, 0.16);
+      --text: #f8fbff;
+      --muted: #b7c3d6;
+      --accent: #23d3b6;
+      --gold: #f7c948;
+      --violet: #a9b7ff;
+      --shadow: 0 20px 70px rgba(0, 0, 0, 0.34);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 28px;
+      background:
+        linear-gradient(135deg, rgba(35, 211, 182, 0.13), transparent 34%),
+        radial-gradient(circle at 82% 8%, rgba(247, 201, 72, 0.16), transparent 30%),
+        var(--bg);
+      color: var(--text);
+      font-family: Pretendard, Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    main { width: min(1080px, 100%); }
+
+    .top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(28px, 5vw, 48px);
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    .support {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 42px;
+      padding: 0 15px;
+      border: 1px solid rgba(247, 201, 72, 0.52);
+      border-radius: 8px;
+      background: rgba(247, 201, 72, 0.16);
+      color: #ffe58a;
+      font-size: 13px;
+      font-weight: 900;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .support:hover { background: rgba(247, 201, 72, 0.25); }
+
+    .actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .lang-select {
+      min-height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      padding: 0 12px;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .lang-select option {
+      background: #172033;
+      color: var(--text);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .card {
+      display: grid;
+      gap: 14px;
+      min-height: 230px;
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02)), var(--panel);
+      box-shadow: var(--shadow);
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .card:hover {
+      border-color: rgba(35, 211, 182, 0.52);
+      background: linear-gradient(180deg, rgba(35, 211, 182, 0.11), rgba(255, 255, 255, 0.03)), var(--panel);
+    }
+
+    .label {
+      width: fit-content;
+      padding: 6px 9px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 23px;
+      line-height: 1.2;
+      letter-spacing: 0;
+    }
+
+    p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 14px;
+    }
+
+    .button {
+      align-self: end;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 44px;
+      width: fit-content;
+      padding: 0 15px;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #07151f;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .card:nth-child(2) .button {
+      background: var(--gold);
+      color: #171004;
+    }
+
+    .card:nth-child(3) .button {
+      background: var(--violet);
+      color: #111827;
+    }
+
+    .footer {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 12px;
+      text-align: center;
+    }
+
+    .footer a {
+      color: #ffe58a;
+      font-weight: 800;
+      text-decoration: none;
+    }
+
+    @media (max-width: 960px) {
+      .grid { grid-template-columns: 1fr; }
+      .card { min-height: 190px; }
+    }
+
+    @media (max-width: 720px) {
+      body {
+        padding: 18px;
+        place-items: start center;
+      }
+
+      .top {
+        display: grid;
+        align-items: start;
+      }
+
+      .actions {
+        justify-content: stretch;
+      }
+
+      .lang-select,
+      .support {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="top">
+      <div>
+        <h1 data-i18n="title">Kingshot Calculator Hub</h1>
+        <p class="subtitle" data-i18n="subtitle">기존 계산기, 지도 배치 계산기, 플레이어 정보 조회를 한곳에서 바로 사용할 수 있습니다.</p>
+      </div>
+      <div class="actions">
+        <select id="langSelect" class="lang-select" aria-label="Language">
+          
+          
+          <option value="ko">한국어</option>
+          <option value="en">English</option>
+          <option value="zh-CN">简体中文</option>
+          <option value="zh-TW">繁體中文</option>
+          <option value="fr">Français</option>
+          <option value="de">Deutsch</option>
+          <option value="th">ไทย</option>
+          <option value="id">Indonesia</option>
+        </select>
+        <a class="support" href="https://buymeacoffee.com/nashsh" target="_blank" rel="noreferrer" data-i18n="support">후원 페이지</a>
+      </div>
+    </section>
+
+    <section class="grid" aria-label="Calculator links">
+      <a class="card" data-link-base="./troop_training_ui.html" href="./troop_training_ui.html">
+        <span class="label">CALCULATOR</span>
+        <h2 data-i18n="calcTitle">Kingshot Calculator</h2>
+        <p data-i18n="calcBody">훈련, 장비, VIP, 팩, Fort / Sanc 분배 등 기존 계산기 허브를 엽니다.</p>
+        <span class="button" data-i18n="calcButton">기존 계산기 열기</span>
+      </a>
+
+      <a class="card" data-link-base="./traplace/" href="./traplace/?lang=ko">
+        <span class="label">MAP PLANNER</span>
+        <h2 data-i18n="mapTitle">War Map Planner</h2>
+        <p data-i18n="mapBody">도시, 함정, 성, 포탑 배치를 만들고 함정-도시 및 선택 개체 간 거리를 계산합니다.</p>
+        <span class="button" data-i18n="mapButton">지도 계산기 열기</span>
+      </a>
+
+      <a class="card" data-link-base="./kingshot_lookup.html" href="./kingshot_lookup.html">
+        <span class="label">PLAYER INTEL</span>
+        <h2 data-i18n="intelTitle">Kingshot Intel Lookup</h2>
+        <p data-i18n="intelBody">플레이어 이름/ID 검색, 왕국 요약, Top players, 연맹 목록과 상세 정보를 확인합니다.</p>
+        <span class="button" data-i18n="intelButton">정보 조회 열기</span>
+      </a>
+    </section>
+
+    <div class="footer">
+      <span>Created by #885 Legend nashsh</span>
+      <span aria-hidden="true">|</span>
+      <a href="https://buymeacoffee.com/nashsh" target="_blank" rel="noreferrer" data-i18n="support">후원 페이지</a>
+    </div>
+  </main>
+  <script>
+    const HUB_I18N = {
+      "ko": {
+            "title": "Kingshot Calculator Hub",
+            "subtitle": "계산기, 지도 플래너, 플레이어 정보 도구를 한곳에서 열 수 있습니다.",
+            "support": "후원 페이지",
+            "calcTitle": "Kingshot Calculator",
+            "calcBody": "훈련, 장비, VIP, 팩, Fort / Sanc 분배 등 기존 계산기 허브를 엽니다.",
+            "calcButton": "기존 계산기 열기",
+            "mapTitle": "War Map Planner",
+            "mapBody": "도시, 함정, 캐슬, 포탑 배치를 만들고 거리와 행군 시간을 계산합니다.",
+            "mapButton": "지도 플래너 열기",
+            "intelTitle": "Kingshot Intel Lookup",
+            "intelBody": "플레이어 이름/ID 검색, 왕국 조회, Top players, 영웅 장비 정보를 확인합니다.",
+            "intelButton": "정보 검색 열기"
+      },
+      "en": {
+            "title": "Kingshot Calculator Hub",
+            "subtitle": "Open the calculator, map planner, and player intel tools from one place.",
+            "support": "Support page",
+            "calcTitle": "Kingshot Calculator",
+            "calcBody": "Open the existing calculator hub for training, gear, VIP, packs, Fort / Sanc splits, and more.",
+            "calcButton": "Open calculator",
+            "mapTitle": "War Map Planner",
+            "mapBody": "Place cities, traps, castles, and turrets, then calculate distance and march time.",
+            "mapButton": "Open map planner",
+            "intelTitle": "Kingshot Intel Lookup",
+            "intelBody": "Search players by name or ID, inspect kingdoms, Top players, heroes, and gear.",
+            "intelButton": "Open intel lookup"
+      },
+      "zh-CN": {
+            "title": "Kingshot 计算器中心",
+            "subtitle": "从一个页面打开计算器、地图规划器和玩家情报工具。",
+            "support": "赞助页面",
+            "calcTitle": "Kingshot 计算器",
+            "calcBody": "打开训练、装备、VIP、礼包、Fort / Sanc 分配等计算工具。",
+            "calcButton": "打开计算器",
+            "mapTitle": "战争地图规划器",
+            "mapBody": "放置城市、陷阱、城堡和炮塔，并计算距离与行军时间。",
+            "mapButton": "打开地图规划器",
+            "intelTitle": "Kingshot 情报查询",
+            "intelBody": "按玩家名或 ID 搜索，查看王国、Top players、英雄和装备。",
+            "intelButton": "打开情报查询"
+      },
+      "zh-TW": {
+            "title": "Kingshot 計算器中心",
+            "subtitle": "從一個頁面開啟計算器、地圖規劃器與玩家情報工具。",
+            "support": "贊助頁面",
+            "calcTitle": "Kingshot 計算器",
+            "calcBody": "開啟訓練、裝備、VIP、禮包、Fort / Sanc 分配等計算工具。",
+            "calcButton": "開啟計算器",
+            "mapTitle": "戰爭地圖規劃器",
+            "mapBody": "放置城市、陷阱、城堡和砲塔，並計算距離與行軍時間。",
+            "mapButton": "開啟地圖規劃器",
+            "intelTitle": "Kingshot 情報查詢",
+            "intelBody": "依玩家名稱或 ID 搜尋，查看王國、Top players、英雄和裝備。",
+            "intelButton": "開啟情報查詢"
+      },
+      "fr": {
+            "title": "Hub de calculateurs Kingshot",
+            "subtitle": "Ouvrez les calculateurs, le planificateur de carte et les outils de recherche au même endroit.",
+            "support": "Page de soutien",
+            "calcTitle": "Calculateur Kingshot",
+            "calcBody": "Ouvrez les outils pour l'entraînement, l'équipement, VIP, packs, répartition Fort / Sanc, etc.",
+            "calcButton": "Ouvrir le calculateur",
+            "mapTitle": "Planificateur de carte",
+            "mapBody": "Placez villes, pièges, châteaux et tourelles, puis calculez distance et temps de marche.",
+            "mapButton": "Ouvrir la carte",
+            "intelTitle": "Recherche Kingshot",
+            "intelBody": "Recherchez des joueurs, royaumes, Top players, héros et équipements.",
+            "intelButton": "Ouvrir la recherche"
+      },
+      "de": {
+            "title": "Kingshot Rechner-Hub",
+            "subtitle": "Öffne Rechner, Kartenplaner und Spieler-Infos an einem Ort.",
+            "support": "Support-Seite",
+            "calcTitle": "Kingshot Rechner",
+            "calcBody": "Öffne Rechner für Training, Ausrüstung, VIP, Pakete, Fort / Sanc-Verteilung und mehr.",
+            "calcButton": "Rechner öffnen",
+            "mapTitle": "Kriegs-Kartenplaner",
+            "mapBody": "Platziere Städte, Fallen, Burgen und Türme und berechne Distanz und Marschzeit.",
+            "mapButton": "Kartenplaner öffnen",
+            "intelTitle": "Kingshot Info-Suche",
+            "intelBody": "Suche Spieler, Königreiche, Top players, Helden und Ausrüstung.",
+            "intelButton": "Info-Suche öffnen"
+      },
+      "th": {
+            "title": "ศูนย์เครื่องมือ Kingshot",
+            "subtitle": "เปิดเครื่องคำนวณ แผนที่สงคราม และข้อมูลผู้เล่นได้จากที่เดียว",
+            "support": "หน้าสนับสนุน",
+            "calcTitle": "เครื่องคำนวณ Kingshot",
+            "calcBody": "เปิดเครื่องมือคำนวณการฝึก อุปกรณ์ VIP แพ็ก และการแบ่ง Fort / Sanc",
+            "calcButton": "เปิดเครื่องคำนวณ",
+            "mapTitle": "วางแผนแผนที่สงคราม",
+            "mapBody": "วางเมือง กับดัก ปราสาท และป้อมปืน แล้วคำนวณระยะทางกับเวลาเดินทัพ",
+            "mapButton": "เปิดแผนที่",
+            "intelTitle": "ค้นหาข้อมูล Kingshot",
+            "intelBody": "ค้นหาผู้เล่น อาณาจักร Top players ฮีโร่ และอุปกรณ์",
+            "intelButton": "เปิดหน้าค้นหา"
+      },
+      "id": {
+            "title": "Pusat Kalkulator Kingshot",
+            "subtitle": "Buka kalkulator, perencana peta, dan info pemain dari satu tempat.",
+            "support": "Halaman dukungan",
+            "calcTitle": "Kalkulator Kingshot",
+            "calcBody": "Buka kalkulator latihan, perlengkapan, VIP, paket, pembagian Fort / Sanc, dan lainnya.",
+            "calcButton": "Buka kalkulator",
+            "mapTitle": "Perencana Peta Perang",
+            "mapBody": "Tempatkan kota, jebakan, kastel, dan menara, lalu hitung jarak serta waktu march.",
+            "mapButton": "Buka peta",
+            "intelTitle": "Pencarian Intel Kingshot",
+            "intelBody": "Cari pemain, kerajaan, Top players, hero, dan perlengkapan.",
+            "intelButton": "Buka pencarian"
+      }
+};
+
+    function getLang() {
+      const qp = new URL(location.href).searchParams.get('lang');
+      const saved = localStorage.getItem('lang') || localStorage.getItem('siteLang');
+      return HUB_I18N[qp] ? qp : HUB_I18N[saved] ? saved : 'ko';
+    }
+
+    function hrefWithLang(base, lang) {
+      const url = new URL(base, location.href);
+      url.searchParams.set('lang', lang);
+      return url.pathname.split('/').pop() === '' && base.startsWith('./')
+        ? `${base}?lang=${encodeURIComponent(lang)}`
+        : url.pathname.replace(location.pathname.replace(/[^/]+$/, ''), './') + url.search;
+    }
+
+    function applyLang(lang) {
+      const dict = HUB_I18N[lang] || HUB_I18N.ko;
+      document.documentElement.lang = lang;
+      document.querySelectorAll('[data-i18n]').forEach((node) => {
+        const key = node.dataset.i18n;
+        if (dict[key]) node.textContent = dict[key];
+      });
+      document.querySelectorAll('[data-link-base]').forEach((link) => {
+        const base = link.dataset.linkBase;
+        if (base === './traplace/') link.href = `./traplace/?lang=${encodeURIComponent(lang)}`;
+        else link.href = `${base}?lang=${encodeURIComponent(lang)}`;
+      });
+      localStorage.setItem('lang', lang);
+      localStorage.setItem('siteLang', lang);
+      const current = new URL(location.href);
+      current.searchParams.set('lang', lang);
+      history.replaceState(null, '', current.toString());
+      document.getElementById('langSelect').value = lang;
+    }
+
+    const initialLang = getLang();
+    applyLang(initialLang);
+    document.getElementById('langSelect').addEventListener('change', (event) => applyLang(event.target.value));
+  </script>
+</body>
+</html>
