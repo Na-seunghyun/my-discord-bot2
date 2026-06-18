@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kingshot Intel Lookup</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0e141f;
+      --panel: #151f2f;
+      --line: rgba(223, 235, 255, .16);
+      --text: #f7fbff;
+      --muted: #aab8ca;
+      --accent: #35d0ba;
+      --gold: #f5c84b;
+      --red: #ff7b66;
+      --shadow: 0 18px 60px rgba(0, 0, 0, .32);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: linear-gradient(145deg, rgba(53, 208, 186, .12), transparent 36%), radial-gradient(circle at 82% 8%, rgba(245, 200, 75, .15), transparent 28%), var(--bg);
+      color: var(--text);
+      font-family: Pretendard, Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    .shell { width: min(1180px, calc(100% - 32px)); margin: 0 auto; padding: 24px 0 42px; }
+    .topbar, .top-actions, .row, .chips, .footer-actions { display: flex; gap: 10px; align-items: center; }
+    .topbar { justify-content: space-between; margin-bottom: 18px; }
+    .top-actions { justify-content: flex-end; flex-wrap: wrap; }
+    .back, .support, button, select {
+      min-height: 40px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 900;
+    }
+    .back, .support { display: inline-flex; align-items: center; justify-content: center; padding: 0 13px; text-decoration: none; }
+    .back, select { border: 1px solid var(--line); background: rgba(255,255,255,.06); color: var(--text); }
+    .support { border: 1px solid rgba(245,200,75,.48); background: rgba(245,200,75,.14); color: #ffe28a; }
+    select { padding: 0 12px; }
+    select option { background: #151f2f; color: var(--text); }
+    h1 { margin: 0 0 8px; font-size: clamp(30px, 5vw, 52px); line-height: 1.02; letter-spacing: 0; }
+    h2 { margin: 0 0 12px; font-size: 17px; letter-spacing: 0; }
+    .subtitle, .hint, .status, .sub { color: var(--muted); }
+    .subtitle { margin: 0 0 18px; line-height: 1.55; font-size: 15px; }
+    .tools { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(280px, .8fr); gap: 14px; margin-bottom: 14px; }
+    .layout { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 14px; align-items: start; }
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.02)), var(--panel);
+      box-shadow: var(--shadow);
+      padding: 16px;
+    }
+    input {
+      min-width: 0;
+      width: 100%;
+      height: 44px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(7,13,22,.72);
+      color: var(--text);
+      padding: 0 12px;
+      font-size: 14px;
+      outline: none;
+    }
+    input:focus { border-color: rgba(53,208,186,.7); box-shadow: 0 0 0 3px rgba(53,208,186,.12); }
+    button {
+      border: 1px solid rgba(53,208,186,.5);
+      background: var(--accent);
+      color: #06151d;
+      padding: 0 14px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    button.secondary, .close { border-color: var(--line); background: rgba(255,255,255,.07); color: var(--text); }
+    button:disabled { opacity: .55; cursor: wait; }
+    .hint { margin: 9px 0 0; font-size: 12px; line-height: 1.45; }
+    .status { min-height: 22px; margin: 0 0 12px; font-size: 13px; }
+    .status strong { color: var(--text); }
+    .bad { color: var(--red); }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
+    .card {
+      display: grid;
+      gap: 10px;
+      min-height: 122px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: rgba(255,255,255,.04);
+      padding: 12px;
+      cursor: pointer;
+    }
+    .card:hover { border-color: rgba(53,208,186,.52); background: rgba(53,208,186,.08); }
+    .person { display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 10px; align-items: center; }
+    .avatar { width: 48px; height: 48px; border-radius: 8px; background: #1d2a3f; object-fit: cover; border: 1px solid var(--line); }
+    .avatar-empty { display: grid; place-items: center; color: var(--gold); font-weight: 900; }
+    .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 16px; font-weight: 900; }
+    .sub { font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .chips { flex-wrap: wrap; }
+    .chip { display: inline-flex; align-items: center; min-height: 26px; padding: 0 8px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); background: rgba(255,255,255,.05); font-size: 12px; font-weight: 800; }
+    .chip.gold { border-color: rgba(245,200,75,.48); color: #ffe28a; background: rgba(245,200,75,.12); }
+    .metric { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+    .metric-item, .alliance, .detail-box { border: 1px solid var(--line); border-radius: 8px; background: rgba(255,255,255,.04); padding: 10px; }
+    .metric-item span, .detail-box span, .alliance span { color: var(--muted); font-size: 11px; }
+    .metric-item strong, .detail-box strong { display: block; margin-top: 4px; font-size: 15px; }
+    .side-list { display: grid; gap: 8px; }
+    .alliance { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+    .alliance strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
+    .empty { padding: 26px; border: 1px dashed var(--line); border-radius: 10px; color: var(--muted); text-align: center; }
+    dialog { width: min(920px, calc(100% - 24px)); max-height: calc(100vh - 24px); border: 1px solid var(--line); border-radius: 12px; background: #111b2a; color: var(--text); box-shadow: 0 28px 90px rgba(0,0,0,.56); padding: 0; }
+    dialog::backdrop { background: rgba(0,0,0,.62); }
+    .modal-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px; border-bottom: 1px solid var(--line); }
+    .modal-body { padding: 16px; overflow: auto; max-height: calc(100vh - 120px); }
+    .close { min-width: 42px; }
+    .detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin: 14px 0; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { padding: 9px 8px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+    th { color: var(--muted); font-size: 11px; text-transform: uppercase; }
+    @media (max-width: 920px) { .tools, .layout, .metric { grid-template-columns: 1fr; } }
+    @media (max-width: 560px) {
+      .shell { width: min(100% - 20px, 1180px); padding-top: 16px; }
+      .topbar, .row { align-items: stretch; flex-direction: column; }
+      .top-actions { display: grid; grid-template-columns: 1fr; width: 100%; }
+      button, .back, .support, select { width: 100%; justify-content: center; }
+      .panel { padding: 12px; }
+      .grid { grid-template-columns: 1fr; }
+      th, td { padding: 8px 6px; font-size: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <nav class="topbar">
+      <a class="back" href="./index.html" data-i18n="back">허브로 돌아가기</a>
+      <div class="top-actions">
+        <select id="langSelect" aria-label="Language"><option value="ko">한국어</option><option value="en">English</option></select>
+        <a class="support" href="https://buymeacoffee.com/nashsh" target="_blank" rel="noreferrer" data-i18n="support">후원 페이지</a>
+      </div>
+    </nav>
+    <h1>Kingshot Intel Lookup</h1>
+    <p class="subtitle" data-i18n="subtitle">플레이어 이름/ID 검색과 왕국 요약 정보를 빠르게 확인합니다.</p>
+    <section class="tools">
+      <div class="panel">
+        <h2 data-i18n="playerSearch">플레이어 검색</h2>
+        <div class="row"><input id="playerQuery" autocomplete="off" data-placeholder="playerPlaceholder" placeholder="닉네임 또는 플레이어 ID"><button id="searchBtn" type="button" data-i18n="search">검색</button><button id="directBtn" class="secondary" type="button" data-i18n="idDetail">ID 상세</button></div>
+        <p class="hint" data-i18n="playerHint">숫자 ID를 입력하면 바로 상세 조회가 가능합니다.</p>
+      </div>
+      <div class="panel">
+        <h2 data-i18n="kingdomSearch">왕국 조회</h2>
+        <div class="row"><input id="kingdomInput" inputmode="numeric" autocomplete="off" data-placeholder="kingdomPlaceholder" placeholder="왕국 번호 예: 885"><button id="kingdomBtn" type="button" data-i18n="open">열기</button></div>
+        <p class="hint" data-i18n="kingdomHint">왕국 API에서 Top players, 연맹 목록, 왕국 등급을 불러옵니다.</p>
+      </div>
+    </section>
+    <div id="status" class="status" data-i18n="ready">검색어 또는 왕국 번호를 입력하세요.</div>
+    <section class="layout">
+      <div class="panel"><h2 id="mainTitle" data-i18n="resultsTitle">검색 결과</h2><div id="results" class="grid"><div class="empty" data-i18n="emptyResults">아직 표시할 정보가 없습니다.</div></div></div>
+      <aside class="panel"><h2 id="sideTitle" data-i18n="kingdomInfo">왕국 정보</h2><div id="kingdomSummary" class="empty" data-i18n="emptyKingdom">왕국 번호를 조회하면 요약이 표시됩니다.</div></aside>
+    </section>
+  </main>
+  <dialog id="playerModal"><div class="modal-head"><div id="modalTitle" class="person"></div><button id="closeModal" class="close" type="button" data-i18n="close">닫기</button></div><div id="modalBody" class="modal-body"></div></dialog>
+  <script>
+    const REMOTE_ASSET_BASE = 'https://kingshot.jeab.dev';
+    const API = '/kingshot';
+    const I18N = {
+      ko: { back:'허브로 돌아가기', support:'후원 페이지', subtitle:'플레이어 이름/ID 검색과 왕국 요약 정보를 빠르게 확인합니다.', playerSearch:'플레이어 검색', playerPlaceholder:'닉네임 또는 플레이어 ID', search:'검색', idDetail:'ID 상세', playerHint:'숫자 ID를 입력하면 바로 상세 조회가 가능합니다.', kingdomSearch:'왕국 조회', kingdomPlaceholder:'왕국 번호 예: 885', open:'열기', kingdomHint:'왕국 API에서 Top players, 연맹 목록, 왕국 등급을 불러옵니다.', ready:'검색어 또는 왕국 번호를 입력하세요.', resultsTitle:'검색 결과', emptyResults:'아직 표시할 정보가 없습니다.', kingdomInfo:'왕국 정보', emptyKingdom:'왕국 번호를 조회하면 요약이 표시됩니다.', close:'닫기', noResults:'결과가 없습니다.', enterSearch:'검색어를 입력하세요.', enterKingdom:'왕국 번호를 숫자로 입력하세요.', searchFail:'검색 실패', kingdomFail:'왕국 조회 실패', detailFail:'상세 조회 실패', loadingDetail:'상세정보를 불러오는 중입니다.' },
+      en: { back:'Back to hub', support:'Support page', subtitle:'Search players by name or ID and quickly inspect kingdom summaries.', playerSearch:'Player Search', playerPlaceholder:'Nickname or player ID', search:'Search', idDetail:'ID Detail', playerHint:'Enter a numeric player ID to open details directly.', kingdomSearch:'Kingdom Lookup', kingdomPlaceholder:'Kingdom number, e.g. 885', open:'Open', kingdomHint:'Loads top players, alliances, kingdom grades, and summary data.', ready:'Enter a search term or kingdom number.', resultsTitle:'Search Results', emptyResults:'No information to show yet.', kingdomInfo:'Kingdom Info', emptyKingdom:'Search a kingdom number to show its summary.', close:'Close', noResults:'No results.', enterSearch:'Enter a search term.', enterKingdom:'Enter a numeric kingdom number.', searchFail:'Search failed', kingdomFail:'Kingdom lookup failed', detailFail:'Detail lookup failed', loadingDetail:'Loading player details.' }
+    };
+    let currentLang = 'ko';
+    const $ = (id) => document.getElementById(id);
+    const statusEl = $('status'), resultsEl = $('results'), kingdomSummaryEl = $('kingdomSummary'), modal = $('playerModal');
+    const tr = (key) => (I18N[currentLang] && I18N[currentLang][key]) || I18N.ko[key] || key;
+    function detectLang(){ const qp = new URL(location.href).searchParams.get('lang'); const saved = localStorage.getItem('lang') || localStorage.getItem('siteLang'); return I18N[qp] ? qp : I18N[saved] ? saved : 'ko'; }
+    function applyLang(lang){ currentLang = I18N[lang] ? lang : 'ko'; document.documentElement.lang = currentLang; document.querySelectorAll('[data-i18n]').forEach(n => n.textContent = tr(n.dataset.i18n)); document.querySelectorAll('[data-placeholder]').forEach(n => n.placeholder = tr(n.dataset.placeholder)); localStorage.setItem('lang', currentLang); localStorage.setItem('siteLang', currentLang); const url = new URL(location.href); url.searchParams.set('lang', currentLang); history.replaceState(null, '', url.toString()); $('langSelect').value = currentLang; if (statusEl.dataset.i18n === 'ready') setStatus(tr('ready')); }
+    const fmt = (value) => { const num = Number(value); return Number.isFinite(num) ? num.toLocaleString() : (value || '-'); };
+    const ago = (value) => { if (!value || value.startsWith('0001-')) return 'unknown'; const ts = new Date(value).getTime(); if (!Number.isFinite(ts)) return value; const mins = Math.max(0, Math.floor((Date.now() - ts) / 60000)); if (mins < 60) return `${mins}m ago`; const hours = Math.floor(mins / 60); return hours < 48 ? `${hours}h ago` : `${Math.floor(hours / 24)}d ago`; };
+    const imgUrl = (src) => !src ? '' : src.startsWith('http') ? src : `${REMOTE_ASSET_BASE}${src}`;
+    const setStatus = (html) => { statusEl.innerHTML = html; statusEl.removeAttribute('data-i18n'); };
+    const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+    async function api(path, options = {}) { const res = await fetch(`${API}${path}`, { ...options, headers: { Accept:'application/json,text/plain,*/*', ...(options.headers || {}) } }); if (!res.ok) throw new Error(await res.text().catch(() => `API ${res.status}`)); const text = await res.text(); return text ? JSON.parse(text) : null; }
+    function avatar(p){ const src = imgUrl(p.avatar_url); return src ? `<img class="avatar" src="${src}" alt="">` : `<div class="avatar avatar-empty">${escapeHtml((p.username || p.id || '?').slice(0,1).toUpperCase())}</div>`; }
+    function playerCard(p){ const power = p.power ? `<span class="chip gold">Power ${fmt(p.power)}</span>` : ''; const tc = p.town_hall_level ? `<span class="chip">TC ${p.town_hall_level}</span>` : ''; const alliance = p.alliance_abbr || p.alliance_name ? `<span class="chip">${escapeHtml(p.alliance_abbr || p.alliance_name)}</span>` : ''; return `<article class="card" data-player-id="${p.id}"><div class="person">${avatar(p)}<div><div class="name">${escapeHtml(p.username || p.id)}</div><div class="sub">ID ${p.id || '-'} · K${p.state || '-'}</div></div></div><div class="chips">${tc}${power}${alliance}<span class="chip">Updated ${ago(p.last_refreshed_at)}</span></div></article>`; }
+    function renderPlayers(players, title = tr('resultsTitle')){ $('mainTitle').textContent = title; if (!players || !players.length){ resultsEl.innerHTML = `<div class="empty">${tr('noResults')}</div>`; return; } resultsEl.innerHTML = players.map(playerCard).join(''); resultsEl.querySelectorAll('[data-player-id]').forEach(card => card.addEventListener('click', () => openPlayer(card.dataset.playerId))); }
+    async function searchPlayers(){ const q = $('playerQuery').value.trim(); if (!q) return setStatus(`<span class="bad">${tr('enterSearch')}</span>`); if (/^\d{3,}$/.test(q)) return openPlayer(q); setBusy(true); setStatus(`Searching <strong>${escapeHtml(q)}</strong>...`); try { const data = await api(`/players/search?q=${encodeURIComponent(q)}&limit=80`); renderPlayers(data.players || [], `${tr('resultsTitle')}: ${q}`); setStatus(`<strong>${fmt(data.total || (data.players || []).length)}</strong> players found`); } catch(err) { setStatus(`<span class="bad">${tr('searchFail')}: ${escapeHtml(err.message)}</span>`); } finally { setBusy(false); } }
+    async function loadKingdom(){ const kid = $('kingdomInput').value.trim(); if (!/^\d+$/.test(kid)) return setStatus(`<span class="bad">${tr('enterKingdom')}</span>`); setBusy(true); setStatus(`Loading kingdom <strong>${kid}</strong>...`); try { const data = await api(`/kingdoms/${kid}`); renderKingdom(data); renderPlayers(data.top_players || [], `K${kid} Top Players`); setStatus(`K<strong>${kid}</strong> · tracked players ${fmt(data.tracked_players || 0)} · alliances ${(data.alliances || []).length}`); } catch(err) { setStatus(`<span class="bad">${tr('kingdomFail')}: ${escapeHtml(err.message)}</span>`); } finally { setBusy(false); } }
+    function renderKingdom(data){ const grade = data.grades && data.grades.overall; const kvk = data.kvk || {}; const stats = data.stats || []; const alliances = data.alliances || []; $('sideTitle').textContent = `K${data.kid} ${tr('kingdomInfo')}`; kingdomSummaryEl.className = ''; kingdomSummaryEl.innerHTML = `<div class="metric"><div class="metric-item"><span>Grade</span><strong>${grade ? `${grade.letter} #${grade.rank}` : '-'}</strong></div><div class="metric-item"><span>Tracked</span><strong>${fmt(data.tracked_players || 0)}</strong></div><div class="metric-item"><span>Castle</span><strong>${escapeHtml(kvk.castle_name || '-')}</strong></div></div><div class="chips" style="margin-bottom:12px">${stats.slice(0,6).map(i => `<span class="chip">${escapeHtml(i.label)} #${fmt(i.rank)} · ${fmt(i.total)}</span>`).join('')}</div><div class="side-list">${alliances.slice(0,24).map(a => `<div class="alliance"><div><strong>${escapeHtml(a.abbr || '-')} ${escapeHtml(a.name || '')}</strong><span>members ${fmt(a.tracked_members || a.member_count || 0)} · rank ${a.power_rank || '-'}</span></div><span>${fmt(a.power || 0)}</span></div>`).join('')}</div>`; }
+    async function openPlayer(id){ if (!id) return; setBusy(true); setStatus(`Loading player <strong>${escapeHtml(id)}</strong>...`); modal.showModal(); $('modalTitle').innerHTML = `<div class="sub">${tr('loadingDetail')}</div>`; $('modalBody').innerHTML = `<div class="empty">${tr('loadingDetail')}</div>`; try { const [player, history, redemptions, kingdata, standings] = await Promise.all([api(`/players/${encodeURIComponent(id)}`), api(`/players/${encodeURIComponent(id)}/history`).catch(() => []), api(`/players/${encodeURIComponent(id)}/redemptions`).catch(() => ({redemptions:[]})), api(`/players/${encodeURIComponent(id)}/kingdata`).catch(() => null), api(`/players/${encodeURIComponent(id)}/standings`).catch(() => ({standings:[]}))]); renderPlayerModal(player, history || [], redemptions || {}, kingdata, standings || {}); setStatus(`Loaded <strong>${escapeHtml(player.username || player.id)}</strong>`); } catch(err) { $('modalTitle').innerHTML = '<div class="sub">Load failed</div>'; $('modalBody').innerHTML = `<div class="empty">${tr('detailFail')}: ${escapeHtml(err.message)}</div>`; setStatus(`<span class="bad">${tr('detailFail')}: ${escapeHtml(err.message)}</span>`); } finally { setBusy(false); } }
+    function renderPlayerModal(p, history, redemptions, kingdata, standings){ $('modalTitle').innerHTML = `${avatar(p)}<div><div class="name">${escapeHtml(p.username || p.id)}</div><div class="sub">ID ${p.id} · K${p.state || '-'} · ${escapeHtml(p.alliance_abbr || p.alliance_name || '-')}</div></div>`; const boxes = [['Power',fmt(p.power)],['Town Center',p.town_hall_level || '-'],['Life Tree',p.life_tree_level || '-'],['Mystic Score',fmt(p.mystic_trial_score)],['Mystic Rank',p.mystic_trial_rank ? `#${p.mystic_trial_rank}` : '-'],['Updated',ago(p.last_refreshed_at)],['Crowns',kingdata && kingdata.crowns != null ? kingdata.crowns : '-'],['Kingdoms ruled',kingdata && kingdata.kingdoms_ruled != null ? kingdata.kingdoms_ruled : '-']]; const standingRows = (standings.standings || []).slice(0,14).map(r => `<tr><td>${escapeHtml(r.label || r.board_type)}</td><td>#${fmt(r.rank)}</td><td>${fmt(r.score)}</td><td>${r.kid ? `K${r.kid}` : '-'}</td></tr>`).join(''); const historyRows = history.slice(0,12).map(r => `<tr><td>${escapeHtml(r.username || '-')}</td><td>K${r.state || '-'}</td><td>${escapeHtml(r.alliance_abbr || r.alliance_name || '-')}</td><td>${fmt(r.power || '')}</td><td>${ago(r.recorded_at)}</td></tr>`).join(''); const codeRows = (redemptions.redemptions || []).slice(0,12).map(r => `<tr><td>${escapeHtml(r.Code || r.code || '-')}</td><td>${escapeHtml(r.Status || r.status || '-')}</td><td>${ago(r.RedeemedAt || r.redeemed_at)}</td></tr>`).join(''); $('modalBody').innerHTML = `<div class="detail-grid">${boxes.map(([l,v]) => `<div class="detail-box"><span>${l}</span><strong>${escapeHtml(v)}</strong></div>`).join('')}</div><h2>Standings</h2>${standingRows ? `<table><thead><tr><th>Board</th><th>Rank</th><th>Score</th><th>Kingdom</th></tr></thead><tbody>${standingRows}</tbody></table>` : `<div class="empty">${tr('noResults')}</div>`}<h2 style="margin-top:18px">History</h2>${historyRows ? `<table><thead><tr><th>Name</th><th>Kingdom</th><th>Alliance</th><th>Power</th><th>Recorded</th></tr></thead><tbody>${historyRows}</tbody></table>` : `<div class="empty">${tr('noResults')}</div>`}<h2 style="margin-top:18px">Codes</h2>${codeRows ? `<table><thead><tr><th>Code</th><th>Status</th><th>Time</th></tr></thead><tbody>${codeRows}</tbody></table>` : `<div class="empty">${tr('noResults')}</div>`}`; }
+    function setBusy(isBusy){ document.querySelectorAll('button').forEach(btn => { if (btn.id !== 'closeModal') btn.disabled = isBusy; }); }
+    $('searchBtn').addEventListener('click', searchPlayers); $('directBtn').addEventListener('click', () => openPlayer($('playerQuery').value.trim())); $('kingdomBtn').addEventListener('click', loadKingdom); $('closeModal').addEventListener('click', () => modal.close()); $('playerQuery').addEventListener('keydown', e => { if (e.key === 'Enter') searchPlayers(); }); $('kingdomInput').addEventListener('keydown', e => { if (e.key === 'Enter') loadKingdom(); }); $('langSelect').addEventListener('change', e => applyLang(e.target.value)); applyLang(detectLang());
+  </script>
+</body>
+</html>
