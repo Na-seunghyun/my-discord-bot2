@@ -1,0 +1,86 @@
+{
+  "app": {
+    "title": "Legend Nash Planner"
+  },
+  "ui": {
+    "usageTitle": "使用說明",
+    "usage": "• <b>拖放</b>：從左側調色盤放置物件（自動對齊網格）。<br>• <b>中鍵拖曳</b>：移動畫面。<br>• <b>Ctrl/⌘ + 滾輪</b>：縮放畫面。<br>• <b>觸控板捏合</b>：縮放。<br>• <b>點擊格子</b>：切換紅色標記。<br>• <b>城市</b> 標籤：雙擊 → 編輯（Enter 儲存 / Esc 取消）。<br>• 底部 <b>🗑 區域</b>：拖曳物件至此以刪除。<br>※ 藍色標記由 <b>旗幟（7×7）</b> 和 <b>總部（15×15）</b> 產生。",
+    "paletteTitle": "調色盤",
+    "toolbar": {
+      "undo": "復原",
+      "redo": "重做",
+      "reset": "重置",
+      "copy": "複製短網址",
+      "export": "匯出 PNG",
+      "import": "匯入 PNG",
+      "dist2label": "測量移動時間",
+      "lang": "語言",
+      "home": "返回中心",
+      "pairDist": "Measure selected objects"
+    },
+    "trash": {
+      "label": "拖曳至此刪除",
+      "title": "將方塊拖曳到此區以刪除"
+    },
+    "footer": {
+      "credit": "Created by #885 Legend nashsh"
+    },
+    "contextMenu": {
+      "fontSize": "字體大小",
+      "wordWrap": "自動換行"
+    }
+  },
+  "palette": {
+    "hq": "總部",
+    "flag": "旗幟",
+    "trap": "狩獵陷阱",
+    "city": "城市",
+    "resource": "資源",
+    "block1": "1×1",
+    "block2": "2×2",
+    "block3": "3×3",
+    "custom": "自定義方塊",
+    "customWidthLabel": "寬度",
+    "customHeightLabel": "高度",
+    "castle": "城堡",
+    "turret": "炮塔",
+    "fortress": "要塞",
+    "sanctuary": "聖所",
+    "turret_directions": [
+      "南部",
+      "西部",
+      "東部",
+      "北部"
+    ]
+  },
+  "alert": {
+    "noCities": "沒有城市。",
+    "noTraps": "沒有陷阱。",
+    "resetConfirm": "要重置所有內容嗎？（所有物件與紅色格子將被清除）",
+    "exportFail": "匯出 PNG 失敗。",
+    "exportAreaTooLarge": "匯出區域太大。請減少物件或縮小區域。",
+    "importFail": "匯入 PNG 失敗。"
+  },
+  "msg": {
+    "copiedShort": "已複製短網址！",
+    "copiedFull": "已複製完整網址",
+    "copied": "已複製！",
+    "shortenError": "建立短網址失敗。",
+    "copyError": "複製失敗。",
+    "copyManual": "請使用 Ctrl+C 或 Cmd+C 複製",
+    "urlTooLong": "URL過長，無法縮短。"
+  },
+  "modal": {
+    "urlCopy": {
+      "title": "複製網址",
+      "message": "請複製以下網址。",
+      "copyBtn": "複製"
+    }
+  },
+  "consent": {
+    "message": "為改進使用體驗，我們使用匿名分析資料。不會收集個人資訊。",
+    "accept": "同意",
+    "reject": "拒絕",
+    "learnMore": "瞭解更多"
+  }
+}
