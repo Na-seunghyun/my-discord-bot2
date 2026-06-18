@@ -1,0 +1,536 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kingshot Intel Lookup</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #101417;
+      --panel: #182026;
+      --panel-2: #202b33;
+      --line: rgba(214, 232, 255, .14);
+      --text: #f5f8fb;
+      --muted: #a9b8c4;
+      --accent: #40d7bd;
+      --gold: #f2c45a;
+      --bad: #ff7777;
+      --shadow: 0 18px 50px rgba(0, 0, 0, .34);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, Pretendard, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    .shell { width: min(1180px, calc(100% - 28px)); margin: 0 auto; padding: 22px 0 34px; }
+    .topbar, .top-actions, .row, .person, .chips { display: flex; align-items: center; gap: 10px; }
+    .topbar { justify-content: space-between; margin-bottom: 18px; }
+    .top-actions { flex-wrap: wrap; justify-content: flex-end; }
+    a, button, select, input { font: inherit; }
+    a { color: inherit; text-decoration: none; }
+    .back, .support, button {
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      min-height: 40px;
+      padding: 0 13px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 850;
+      cursor: pointer;
+    }
+    .back, .secondary { background: var(--panel-2); color: var(--text); }
+    .support, button:not(.secondary):not(.close) { background: var(--accent); border-color: transparent; color: #071513; }
+    button:disabled { opacity: .55; cursor: wait; }
+    select, input {
+      width: 100%;
+      min-height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: #11191f;
+      color: var(--text);
+      padding: 9px 11px;
+      outline: none;
+    }
+    select { width: auto; min-width: 112px; background: #e8f2f7; color: #0d1820; }
+    select option { background: #f6fbff; color: #0d1820; }
+    h1 { margin: 0; font-size: clamp(28px, 5vw, 48px); letter-spacing: 0; }
+    h2 { margin: 0 0 12px; font-size: 17px; }
+    .subtitle { margin: 8px 0 18px; color: var(--muted); }
+    .tools { display: grid; grid-template-columns: 1.1fr .9fr; gap: 14px; margin-bottom: 14px; }
+    .layout { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 14px; align-items: start; }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+      box-shadow: var(--shadow);
+      min-width: 0;
+    }
+    .row input { flex: 1; min-width: 0; }
+    .hint, .sub { color: var(--muted); font-size: 12px; line-height: 1.4; }
+    .status {
+      margin: 12px 0 14px;
+      padding: 12px 14px;
+      border: 1px solid rgba(64, 215, 189, .28);
+      border-radius: 8px;
+      background: rgba(64, 215, 189, .08);
+      color: #d9fff8;
+      font-weight: 760;
+    }
+    .bad { color: var(--bad); }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #121a20;
+      padding: 13px;
+      cursor: pointer;
+    }
+    .card:hover { border-color: rgba(64, 215, 189, .48); }
+    .avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 7px;
+      object-fit: cover;
+      display: grid;
+      place-items: center;
+      background: var(--panel-2);
+      color: var(--gold);
+      font-weight: 900;
+      flex: 0 0 auto;
+    }
+    .name { font-weight: 950; overflow-wrap: anywhere; }
+    .chips { flex-wrap: wrap; margin-top: 12px; }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      min-height: 26px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 0 9px;
+      color: #d7e2ea;
+      background: rgba(255, 255, 255, .04);
+      font-size: 12px;
+      font-weight: 780;
+    }
+    .chip.gold { color: #2b1d04; background: var(--gold); border-color: transparent; }
+    .empty { color: var(--muted); padding: 12px; border: 1px dashed var(--line); border-radius: 8px; }
+    .metric { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-bottom: 12px; }
+    .metric-item, .detail-box {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 11px;
+      background: #121a20;
+    }
+    .metric-item span, .detail-box span { display: block; color: var(--muted); font-size: 12px; margin-bottom: 5px; }
+    .metric-item strong, .detail-box strong { overflow-wrap: anywhere; }
+    .side-list { display: grid; gap: 8px; }
+    .alliance { display: flex; justify-content: space-between; gap: 10px; padding: 10px; border: 1px solid var(--line); border-radius: 8px; background: #121a20; }
+    .alliance span { display: block; color: var(--muted); font-size: 12px; margin-top: 3px; }
+    dialog {
+      width: min(940px, calc(100% - 24px));
+      max-height: min(86vh, 820px);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      color: var(--text);
+      padding: 0;
+      box-shadow: var(--shadow);
+    }
+    dialog::backdrop { background: rgba(3, 8, 12, .72); }
+    .modal-head { display: flex; justify-content: space-between; gap: 12px; align-items: center; padding: 16px; border-bottom: 1px solid var(--line); }
+    .close { background: var(--panel-2); color: var(--text); }
+    .modal-body { padding: 16px; overflow: auto; }
+    .detail-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+    .loadout-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .hero-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #121a20;
+      overflow: hidden;
+    }
+    .hero-art {
+      display: grid;
+      place-items: end start;
+      min-height: 150px;
+      padding: 10px;
+      background: linear-gradient(160deg, rgba(64, 215, 189, .16), rgba(242, 196, 90, .09));
+      position: relative;
+    }
+    .hero-art img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; object-position: center bottom; opacity: .96; }
+    .hero-id {
+      position: relative;
+      z-index: 1;
+      border-radius: 999px;
+      padding: 5px 8px;
+      background: rgba(5, 11, 15, .72);
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 900;
+    }
+    .hero-body { padding: 12px; }
+    .hero-line { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 8px; color: var(--muted); font-size: 12px; }
+    .hero-line strong { color: var(--text); }
+    .gear-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin-top: 10px; }
+    .gear-chip {
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      padding: 7px;
+      background: rgba(255, 255, 255, .04);
+      font-size: 12px;
+      color: #d7e2ea;
+    }
+    .weapon-line {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid rgba(242, 196, 90, .32);
+      border-radius: 7px;
+      padding: 7px;
+      background: rgba(242, 196, 90, .08);
+      font-size: 12px;
+      font-weight: 850;
+    }
+    .weapon-line img { width: 28px; height: 28px; object-fit: contain; }
+    table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 13px; }
+    th, td { border-bottom: 1px solid var(--line); padding: 9px 7px; text-align: left; vertical-align: top; }
+    th { color: var(--muted); }
+    @media (max-width: 920px) {
+      .tools, .layout, .grid, .detail-grid, .loadout-grid { grid-template-columns: 1fr; }
+      .topbar { align-items: flex-start; flex-direction: column; }
+      .top-actions, .back { width: 100%; }
+      select { width: 100%; }
+    }
+    @media (max-width: 560px) {
+      .shell { width: min(100% - 18px, 520px); padding-top: 12px; }
+      .row { flex-direction: column; align-items: stretch; }
+      button, .support { width: 100%; }
+      .metric { grid-template-columns: 1fr; }
+      .panel { padding: 13px; }
+      .modal-head { align-items: flex-start; flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <nav class="topbar">
+      <a class="back" href="./index.html" data-i18n="back">허브로 돌아가기</a>
+      <div class="top-actions">
+        <select id="langSelect" aria-label="Language">
+          <option value="ko">한국어</option>
+          <option value="en">English</option>
+        </select>
+        <a class="support" href="https://buymeacoffee.com/nashsh" target="_blank" rel="noreferrer" data-i18n="support">후원 페이지</a>
+      </div>
+    </nav>
+    <h1>Kingshot Intel Lookup</h1>
+    <p class="subtitle" data-i18n="subtitle">플레이어 이름/ID 검색과 왕국 요약 정보를 빠르게 확인합니다.</p>
+    <section class="tools">
+      <div class="panel">
+        <h2 data-i18n="playerSearch">플레이어 검색</h2>
+        <div class="row">
+          <input id="playerQuery" autocomplete="off" data-placeholder="playerPlaceholder" placeholder="닉네임 또는 플레이어 ID">
+          <button id="searchBtn" type="button" data-i18n="search">검색</button>
+          <button id="directBtn" class="secondary" type="button" data-i18n="idDetail">ID 상세</button>
+        </div>
+        <p class="hint" data-i18n="playerHint">숫자 ID를 입력하면 바로 상세 조회가 가능합니다.</p>
+      </div>
+      <div class="panel">
+        <h2 data-i18n="kingdomSearch">왕국 조회</h2>
+        <div class="row">
+          <input id="kingdomInput" inputmode="numeric" autocomplete="off" data-placeholder="kingdomPlaceholder" placeholder="왕국 번호 예: 885">
+          <button id="kingdomBtn" type="button" data-i18n="open">열기</button>
+        </div>
+        <p class="hint" data-i18n="kingdomHint">Top players, 연맹 목록, 왕국 등급 정보를 불러옵니다.</p>
+      </div>
+    </section>
+    <div id="status" class="status" data-i18n="ready">검색어 또는 왕국 번호를 입력하세요.</div>
+    <section class="layout">
+      <div class="panel">
+        <h2 id="mainTitle" data-i18n="resultsTitle">검색 결과</h2>
+        <div id="results" class="grid"><div class="empty" data-i18n="emptyResults">아직 표시할 정보가 없습니다.</div></div>
+      </div>
+      <aside class="panel">
+        <h2 id="sideTitle" data-i18n="kingdomInfo">왕국 정보</h2>
+        <div id="kingdomSummary" class="empty" data-i18n="emptyKingdom">왕국 번호를 조회하면 요약이 표시됩니다.</div>
+      </aside>
+    </section>
+  </main>
+  <dialog id="playerModal">
+    <div class="modal-head">
+      <div id="modalTitle" class="person"></div>
+      <button id="closeModal" class="close" type="button" data-i18n="close">닫기</button>
+    </div>
+    <div id="modalBody" class="modal-body"></div>
+  </dialog>
+  <script>
+    const REMOTE_ORIGIN = 'https://kingshot.jeab.dev';
+    const PROXY_BASE = '/kingshot';
+    const I18N = {
+      ko: {
+        back:'허브로 돌아가기', support:'후원 페이지', subtitle:'플레이어 이름/ID 검색과 왕국 요약 정보를 빠르게 확인합니다.',
+        playerSearch:'플레이어 검색', playerPlaceholder:'닉네임 또는 플레이어 ID', search:'검색', idDetail:'ID 상세',
+        playerHint:'숫자 ID를 입력하면 바로 상세 조회가 가능합니다.', kingdomSearch:'왕국 조회', kingdomPlaceholder:'왕국 번호 예: 885',
+        open:'열기', kingdomHint:'Top players, 연맹 목록, 왕국 등급 정보를 불러옵니다.', ready:'검색어 또는 왕국 번호를 입력하세요.',
+        resultsTitle:'검색 결과', emptyResults:'아직 표시할 정보가 없습니다.', kingdomInfo:'왕국 정보', emptyKingdom:'왕국 번호를 조회하면 요약이 표시됩니다.',
+        close:'닫기', noResults:'결과가 없습니다.', enterSearch:'검색어를 입력하세요.', enterKingdom:'왕국 번호를 숫자로 입력하세요.',
+        searchFail:'검색 실패', kingdomFail:'왕국 조회 실패', detailFail:'상세 조회 실패', loadingDetail:'상세정보를 불러오는 중입니다.',
+        apiHint:'로컬 테스트에서는 원격 API로 연결합니다.'
+      },
+      en: {
+        back:'Back to hub', support:'Support page', subtitle:'Search players by name or ID and quickly inspect kingdom summaries.',
+        playerSearch:'Player Search', playerPlaceholder:'Nickname or player ID', search:'Search', idDetail:'ID Detail',
+        playerHint:'Enter a numeric player ID to open details directly.', kingdomSearch:'Kingdom Lookup', kingdomPlaceholder:'Kingdom number, e.g. 885',
+        open:'Open', kingdomHint:'Loads top players, alliances, kingdom grades, and summary data.', ready:'Enter a search term or kingdom number.',
+        resultsTitle:'Search Results', emptyResults:'No information to show yet.', kingdomInfo:'Kingdom Info', emptyKingdom:'Search a kingdom number to show its summary.',
+        close:'Close', noResults:'No results.', enterSearch:'Enter a search term.', enterKingdom:'Enter a numeric kingdom number.',
+        searchFail:'Search failed', kingdomFail:'Kingdom lookup failed', detailFail:'Detail lookup failed', loadingDetail:'Loading player details.',
+        apiHint:'Local tests use the remote API fallback.'
+      }
+    };
+    let currentLang = 'ko';
+    let remoteToken = '';
+    let remoteTokenExpires = 0;
+    const $ = (id) => document.getElementById(id);
+    const statusEl = $('status');
+    const resultsEl = $('results');
+    const kingdomSummaryEl = $('kingdomSummary');
+    const modal = $('playerModal');
+    const tr = (key) => (I18N[currentLang] && I18N[currentLang][key]) || I18N.ko[key] || key;
+    const fmt = (value) => {
+      const num = Number(value);
+      return Number.isFinite(num) ? num.toLocaleString(currentLang === 'ko' ? 'ko-KR' : 'en-US') : (value || '-');
+    };
+    const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+    const imgUrl = (src) => !src ? '' : src.startsWith('http') ? src : `${REMOTE_ORIGIN}${src}`;
+    const heroBust = (id) => `${REMOTE_ORIGIN}/assets/heroes_bust/${id}.png`;
+    const weaponArt = (id) => `${REMOTE_ORIGIN}/assets/exclusive_weapons/${id}.png`;
+    const setStatus = (html) => { statusEl.innerHTML = html; statusEl.removeAttribute('data-i18n'); };
+    const ago = (value) => {
+      if (!value || String(value).startsWith('0001-')) return 'unknown';
+      const ts = new Date(value).getTime();
+      if (!Number.isFinite(ts)) return value;
+      const mins = Math.max(0, Math.floor((Date.now() - ts) / 60000));
+      if (mins < 60) return `${mins}m ago`;
+      const hours = Math.floor(mins / 60);
+      return hours < 48 ? `${hours}h ago` : `${Math.floor(hours / 24)}d ago`;
+    };
+    function detectLang() {
+      const qp = new URL(location.href).searchParams.get('lang');
+      const saved = localStorage.getItem('siteLang') || localStorage.getItem('lang');
+      return I18N[qp] ? qp : I18N[saved] ? saved : 'ko';
+    }
+    function applyLang(lang) {
+      currentLang = I18N[lang] ? lang : 'ko';
+      document.documentElement.lang = currentLang;
+      document.querySelectorAll('[data-i18n]').forEach(node => node.textContent = tr(node.dataset.i18n));
+      document.querySelectorAll('[data-placeholder]').forEach(node => node.placeholder = tr(node.dataset.placeholder));
+      localStorage.setItem('siteLang', currentLang);
+      localStorage.setItem('lang', currentLang);
+      const url = new URL(location.href);
+      url.searchParams.set('lang', currentLang);
+      history.replaceState(null, '', url);
+      $('langSelect').value = currentLang;
+      if (!statusEl.dataset.mode) {
+        statusEl.dataset.i18n = 'ready';
+        statusEl.textContent = tr('ready');
+      }
+    }
+    async function remoteHeaders() {
+      if (remoteToken && remoteTokenExpires - 30000 > Date.now()) {
+        return { Accept:'application/json,text/plain,*/*', 'X-API-Token': remoteToken };
+      }
+      const res = await fetch(`${REMOTE_ORIGIN}/api/session`, { headers: { Accept:'application/json' } });
+      if (!res.ok) throw new Error(`session ${res.status}`);
+      const data = await res.json();
+      remoteToken = data.token;
+      remoteTokenExpires = Number(data.expires_at || 0) * 1000;
+      return { Accept:'application/json,text/plain,*/*', 'X-API-Token': remoteToken };
+    }
+    async function fetchJson(url, headers) {
+      const res = await fetch(url, { headers });
+      const text = await res.text();
+      const type = res.headers.get('content-type') || '';
+      if (!res.ok) throw new Error(text || `HTTP ${res.status}`);
+      if (!type.includes('json')) throw new Error(`Non JSON response from ${url}`);
+      return text ? JSON.parse(text) : null;
+    }
+    async function api(path) {
+      try {
+        return await fetchJson(`${PROXY_BASE}${path}`, { Accept:'application/json,text/plain,*/*' });
+      } catch (proxyError) {
+        const headers = await remoteHeaders();
+        return fetchJson(`${REMOTE_ORIGIN}/api${path}`, headers);
+      }
+    }
+    function avatar(player) {
+      const src = imgUrl(player.avatar_url);
+      return src ? `<img class="avatar" src="${src}" alt="">` : `<div class="avatar">${escapeHtml((player.username || player.id || '?').slice(0, 1).toUpperCase())}</div>`;
+    }
+    function playerCard(player) {
+      const power = player.power ? `<span class="chip gold">Power ${fmt(player.power)}</span>` : '';
+      const town = player.town_hall_level ? `<span class="chip">TC ${player.town_hall_level}</span>` : '';
+      const alliance = player.alliance_abbr || player.alliance_name ? `<span class="chip">${escapeHtml(player.alliance_abbr || player.alliance_name)}</span>` : '';
+      return `<article class="card" data-player-id="${player.id}">
+        <div class="person">${avatar(player)}<div><div class="name">${escapeHtml(player.username || player.id)}</div><div class="sub">ID ${player.id || '-'} · K${player.state || '-'}</div></div></div>
+        <div class="chips">${town}${power}${alliance}<span class="chip">Updated ${ago(player.last_refreshed_at)}</span></div>
+      </article>`;
+    }
+    function renderPlayers(players, title = tr('resultsTitle')) {
+      $('mainTitle').textContent = title;
+      if (!players || !players.length) {
+        resultsEl.innerHTML = `<div class="empty">${tr('noResults')}</div>`;
+        return;
+      }
+      resultsEl.innerHTML = players.map(playerCard).join('');
+      resultsEl.querySelectorAll('[data-player-id]').forEach(card => card.addEventListener('click', () => openPlayer(card.dataset.playerId)));
+    }
+    function setBusy(isBusy) {
+      document.querySelectorAll('button').forEach(btn => { if (btn.id !== 'closeModal') btn.disabled = isBusy; });
+    }
+    async function searchPlayers() {
+      const q = $('playerQuery').value.trim();
+      if (!q) return setStatus(`<span class="bad">${tr('enterSearch')}</span>`);
+      if (/^\d{3,}$/.test(q)) return openPlayer(q);
+      setBusy(true);
+      setStatus(`Searching <strong>${escapeHtml(q)}</strong>...`);
+      try {
+        const data = await api(`/players/search?q=${encodeURIComponent(q)}&limit=80`);
+        renderPlayers(data.players || [], `${tr('resultsTitle')}: ${q}`);
+        setStatus(`<strong>${fmt(data.total || (data.players || []).length)}</strong> players found`);
+      } catch (error) {
+        setStatus(`<span class="bad">${tr('searchFail')}: ${escapeHtml(error.message)}</span>`);
+      } finally {
+        setBusy(false);
+      }
+    }
+    async function loadKingdom() {
+      const kid = $('kingdomInput').value.trim();
+      if (!/^\d+$/.test(kid)) return setStatus(`<span class="bad">${tr('enterKingdom')}</span>`);
+      setBusy(true);
+      setStatus(`Loading kingdom <strong>${kid}</strong>...`);
+      try {
+        const data = await api(`/kingdoms/${kid}`);
+        renderKingdom(data);
+        renderPlayers(data.top_players || [], `K${kid} Top Players`);
+        setStatus(`K<strong>${kid}</strong> · tracked players ${fmt(data.tracked_players || 0)} · alliances ${(data.alliances || []).length}`);
+      } catch (error) {
+        setStatus(`<span class="bad">${tr('kingdomFail')}: ${escapeHtml(error.message)}</span>`);
+      } finally {
+        setBusy(false);
+      }
+    }
+    function renderKingdom(data) {
+      const grade = data.grades && data.grades.overall;
+      const kvk = data.kvk || {};
+      const stats = data.stats || [];
+      const alliances = data.alliances || [];
+      $('sideTitle').textContent = `K${data.kid} ${tr('kingdomInfo')}`;
+      kingdomSummaryEl.className = '';
+      kingdomSummaryEl.innerHTML = `<div class="metric">
+        <div class="metric-item"><span>Grade</span><strong>${grade ? `${grade.letter} #${grade.rank}` : '-'}</strong></div>
+        <div class="metric-item"><span>Tracked</span><strong>${fmt(data.tracked_players || 0)}</strong></div>
+        <div class="metric-item"><span>Castle</span><strong>${escapeHtml(kvk.castle_name || '-')}</strong></div>
+        <div class="metric-item"><span>Alliances</span><strong>${fmt(alliances.length)}</strong></div>
+      </div>
+      <div class="chips">${stats.slice(0, 6).map(item => `<span class="chip">${escapeHtml(item.label)} #${fmt(item.rank)} · ${fmt(item.total)}</span>`).join('')}</div>
+      <div class="side-list">${alliances.slice(0, 24).map(a => `<div class="alliance"><div><strong>${escapeHtml(a.abbr || '-')} ${escapeHtml(a.name || '')}</strong><span>members ${fmt(a.tracked_members || a.member_count || 0)} · rank ${a.power_rank || '-'}</span></div><strong>${fmt(a.power || 0)}</strong></div>`).join('')}</div>`;
+    }
+    async function openPlayer(id) {
+      if (!id) return;
+      setBusy(true);
+      setStatus(`Loading player <strong>${escapeHtml(id)}</strong>...`);
+      modal.showModal();
+      $('modalTitle').innerHTML = `<div class="sub">${tr('loadingDetail')}</div>`;
+      $('modalBody').innerHTML = `<div class="empty">${tr('loadingDetail')}</div>`;
+      try {
+        const [player, history, redemptions, kingdata, standings, loadout] = await Promise.all([
+          api(`/players/${encodeURIComponent(id)}`),
+          api(`/players/${encodeURIComponent(id)}/history`).catch(() => []),
+          api(`/players/${encodeURIComponent(id)}/redemptions`).catch(() => ({ redemptions: [] })),
+          api(`/players/${encodeURIComponent(id)}/kingdata`).catch(() => null),
+          api(`/players/${encodeURIComponent(id)}/standings`).catch(() => ({ standings: [] })),
+          api(`/players/${encodeURIComponent(id)}/loadout?cached=1`).catch(() => null),
+        ]);
+        renderPlayerModal(player, history || [], redemptions || {}, kingdata, standings || {}, loadout);
+        setStatus(`Loaded <strong>${escapeHtml(player.username || player.id)}</strong>`);
+      } catch (error) {
+        $('modalTitle').innerHTML = '<div class="sub">Load failed</div>';
+        $('modalBody').innerHTML = `<div class="empty">${tr('detailFail')}: ${escapeHtml(error.message)}</div>`;
+        setStatus(`<span class="bad">${tr('detailFail')}: ${escapeHtml(error.message)}</span>`);
+      } finally {
+        setBusy(false);
+      }
+    }
+    function starText(star) {
+      const value = Number(star) || 0;
+      if (!value) return '-';
+      const rarity = Math.max(0, Math.floor((value - 1) / 5));
+      const stars = ((value - 1) % 5) + 1;
+      return `R${rarity} · ${stars}★`;
+    }
+    function equipmentName(slot) {
+      return ({ 1: 'Weapon', 2: 'Armor', 3: 'Helmet', 4: 'Boots' })[slot] || `Slot ${slot || '-'}`;
+    }
+    function renderLoadout(loadout) {
+      const heroes = loadout && Array.isArray(loadout.heroes) ? loadout.heroes : [];
+      if (!heroes.length) {
+        return `<h2 style="margin-top:18px">Heroes & Gear</h2><div class="empty">수집된 영웅/장비 정보가 없습니다. 참고 사이트에서 live battle data가 수집된 유저만 표시됩니다.</div>`;
+      }
+      const fetched = loadout.fetched_at ? `<span class="chip">Fetched ${ago(loadout.fetched_at)}</span>` : '';
+      const stale = loadout.stale ? `<span class="chip">Cached data may be stale</span>` : '';
+      const cards = heroes
+        .slice()
+        .sort((a, b) => (a.slot || 0) - (b.slot || 0))
+        .map((hero) => {
+          const weapon = hero.exclusive_equip ? `<div class="weapon-line"><img src="${weaponArt(hero.exclusive_equip)}" alt="" onerror="this.style.display='none'"><span>Exclusive Lv ${escapeHtml(hero.exclusive_equip_lv ?? '-')}</span></div>` : '';
+          const gear = (hero.equipment || [])
+            .slice()
+            .sort((a, b) => (a.sid || 0) - (b.sid || 0))
+            .map((item) => `<div class="gear-chip">${equipmentName(item.sid)}<br>Enh ${escapeHtml(item.slv ?? 0)} · Forge ${escapeHtml(item.rlv ?? 0)}</div>`)
+            .join('');
+          return `<article class="hero-card">
+            <div class="hero-art"><img src="${heroBust(hero.id)}" alt="" onerror="this.style.display='none'"><span class="hero-id">Hero ${escapeHtml(hero.id)}</span></div>
+            <div class="hero-body">
+              <div class="hero-line"><span>Slot</span><strong>${escapeHtml(hero.slot || hero.pos || '-')}</strong></div>
+              <div class="hero-line"><span>Level</span><strong>${escapeHtml(hero.lv ?? '-')}</strong></div>
+              <div class="hero-line"><span>Stars</span><strong>${escapeHtml(starText(hero.star))}</strong></div>
+              ${weapon}
+              <div class="gear-list">${gear || '<div class="empty">No gear</div>'}</div>
+            </div>
+          </article>`;
+        })
+        .join('');
+      return `<h2 style="margin-top:18px">Heroes & Gear</h2><div class="chips" style="margin-bottom:10px">${fetched}${stale}</div><div class="loadout-grid">${cards}</div>`;
+    }
+    function renderPlayerModal(player, history, redemptions, kingdata, standings, loadout) {
+      $('modalTitle').innerHTML = `${avatar(player)}<div><div class="name">${escapeHtml(player.username || player.id)}</div><div class="sub">ID ${player.id} · K${player.state || '-'} · ${escapeHtml(player.alliance_abbr || player.alliance_name || '-')}</div></div>`;
+      const boxes = [
+        ['Power', fmt(player.power)], ['Town Center', player.town_hall_level || '-'], ['Life Tree', player.life_tree_level || '-'], ['Mystic Score', fmt(player.mystic_trial_score)],
+        ['Mystic Rank', player.mystic_trial_rank ? `#${player.mystic_trial_rank}` : '-'], ['Updated', ago(player.last_refreshed_at)], ['Crowns', kingdata && kingdata.crowns != null ? kingdata.crowns : '-'], ['Kingdoms ruled', kingdata && kingdata.kingdoms_ruled != null ? kingdata.kingdoms_ruled : '-'],
+      ];
+      const standingRows = (standings.standings || []).slice(0, 14).map(row => `<tr><td>${escapeHtml(row.label || row.board_type)}</td><td>#${fmt(row.rank)}</td><td>${fmt(row.score)}</td><td>${row.kid ? `K${row.kid}` : '-'}</td></tr>`).join('');
+      const historyRows = history.slice(0, 12).map(row => `<tr><td>${escapeHtml(row.username || '-')}</td><td>K${row.state || '-'}</td><td>${escapeHtml(row.alliance_abbr || row.alliance_name || '-')}</td><td>${fmt(row.power || '')}</td><td>${ago(row.recorded_at)}</td></tr>`).join('');
+      const codeRows = (redemptions.redemptions || []).slice(0, 12).map(row => `<tr><td>${escapeHtml(row.Code || row.code || '-')}</td><td>${escapeHtml(row.Status || row.status || '-')}</td><td>${ago(row.RedeemedAt || row.redeemed_at)}</td></tr>`).join('');
+      $('modalBody').innerHTML = `<div class="detail-grid">${boxes.map(([label, value]) => `<div class="detail-box"><span>${label}</span><strong>${escapeHtml(value)}</strong></div>`).join('')}</div>
+        ${renderLoadout(loadout)}
+        <h2 style="margin-top:18px">Standings</h2>${standingRows ? `<table><thead><tr><th>Board</th><th>Rank</th><th>Score</th><th>Kingdom</th></tr></thead><tbody>${standingRows}</tbody></table>` : `<div class="empty">${tr('noResults')}</div>`}
+        <h2 style="margin-top:18px">History</h2>${historyRows ? `<table><thead><tr><th>Name</th><th>Kingdom</th><th>Alliance</th><th>Power</th><th>Recorded</th></tr></thead><tbody>${historyRows}</tbody></table>` : `<div class="empty">${tr('noResults')}</div>`}
+        <h2 style="margin-top:18px">Codes</h2>${codeRows ? `<table><thead><tr><th>Code</th><th>Status</th><th>Time</th></tr></thead><tbody>${codeRows}</tbody></table>` : `<div class="empty">${tr('noResults')}</div>`}`;
+    }
+    $('searchBtn').addEventListener('click', searchPlayers);
+    $('directBtn').addEventListener('click', () => openPlayer($('playerQuery').value.trim()));
+    $('kingdomBtn').addEventListener('click', loadKingdom);
+    $('closeModal').addEventListener('click', () => modal.close());
+    $('playerQuery').addEventListener('keydown', event => { if (event.key === 'Enter') searchPlayers(); });
+    $('kingdomInput').addEventListener('keydown', event => { if (event.key === 'Enter') loadKingdom(); });
+    $('langSelect').addEventListener('change', event => applyLang(event.target.value));
+    applyLang(detectLang());
+  </script>
+</body>
+</html>
