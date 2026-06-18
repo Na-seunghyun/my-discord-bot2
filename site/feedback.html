@@ -1,0 +1,511 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kingshot Feedback</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #111827;
+      --panel: #172033;
+      --panel2: #1d2940;
+      --line: rgba(230, 238, 255, 0.16);
+      --text: #f8fbff;
+      --muted: #b7c3d6;
+      --accent: #23d3b6;
+      --warn: #ff9f7a;
+      --gold: #f7c948;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding: 24px;
+      background:
+        linear-gradient(135deg, rgba(35, 211, 182, 0.12), transparent 36%),
+        radial-gradient(circle at 84% 12%, rgba(255, 159, 122, 0.16), transparent 28%),
+        var(--bg);
+      color: var(--text);
+      font-family: Pretendard, Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    main {
+      width: min(980px, 100%);
+      margin: 0 auto;
+      display: grid;
+      gap: 16px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+      padding: 18px 0 8px;
+    }
+
+    h1, h2, p { margin: 0; }
+
+    h1 {
+      font-size: clamp(28px, 5vw, 44px);
+      line-height: 1.08;
+      letter-spacing: 0;
+    }
+
+    h2 {
+      font-size: 19px;
+      letter-spacing: 0;
+    }
+
+    .sub {
+      margin-top: 8px;
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 14px;
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    a, button {
+      min-height: 40px;
+      border-radius: 8px;
+      font-weight: 900;
+      font-size: 13px;
+    }
+
+    a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 13px;
+      border: 1px solid var(--line);
+      color: var(--text);
+      text-decoration: none;
+      background: rgba(255, 255, 255, 0.06);
+      white-space: nowrap;
+    }
+
+    .lang-select {
+      min-height: 40px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      padding: 0 12px;
+      font-weight: 800;
+    }
+
+    .lang-select option {
+      background: #172033;
+      color: var(--text);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(280px, 0.85fr);
+      gap: 16px;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02)), var(--panel);
+      padding: 18px;
+      box-shadow: 0 18px 60px rgba(0, 0, 0, 0.28);
+    }
+
+    form {
+      display: grid;
+      gap: 13px;
+      margin-top: 14px;
+    }
+
+    label {
+      display: grid;
+      gap: 7px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      border: 1px solid rgba(230, 238, 255, 0.18);
+      border-radius: 8px;
+      background: rgba(9, 14, 26, 0.72);
+      color: var(--text);
+      padding: 11px 12px;
+      font: inherit;
+      outline: none;
+    }
+
+    textarea {
+      min-height: 170px;
+      resize: vertical;
+      line-height: 1.5;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      border-color: rgba(35, 211, 182, 0.78);
+      box-shadow: 0 0 0 3px rgba(35, 211, 182, 0.12);
+    }
+
+    .submit {
+      border: 0;
+      background: var(--accent);
+      color: #07151f;
+      cursor: pointer;
+      padding: 0 16px;
+    }
+
+    .submit:disabled {
+      opacity: 0.62;
+      cursor: wait;
+    }
+
+    .status {
+      min-height: 24px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .ok { color: #70f1d3; }
+    .bad { color: var(--warn); }
+
+    .admin {
+      display: grid;
+      gap: 10px;
+    }
+
+    .admin-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: end;
+    }
+
+    .load {
+      border: 1px solid rgba(247, 201, 72, 0.42);
+      background: rgba(247, 201, 72, 0.16);
+      color: #ffe58a;
+      cursor: pointer;
+      padding: 0 14px;
+    }
+
+    .list {
+      display: grid;
+      gap: 10px;
+      margin-top: 8px;
+      max-height: 560px;
+      overflow: auto;
+      padding-right: 2px;
+    }
+
+    .item {
+      border: 1px solid rgba(230, 238, 255, 0.14);
+      border-radius: 8px;
+      background: var(--panel2);
+      padding: 12px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .pill {
+      border: 1px solid rgba(230, 238, 255, 0.16);
+      border-radius: 999px;
+      padding: 4px 7px;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .message {
+      white-space: pre-wrap;
+      line-height: 1.45;
+      font-size: 13px;
+    }
+
+    @media (max-width: 820px) {
+      body { padding: 18px; }
+      header, .layout { display: grid; }
+      .top-actions { justify-content: stretch; }
+      .top-actions > * { width: 100%; }
+      .layout { grid-template-columns: 1fr; }
+      .admin-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1 data-i18n="title">업데이트 / 오류 건의</h1>
+        <p class="sub" data-i18n="subtitle">필요한 기능, 계산 오류, 번역 문제, 모바일 불편 사항을 남겨주세요.</p>
+      </div>
+      <div class="top-actions">
+        <select id="langSelect" class="lang-select" aria-label="Language">
+          <option value="ko">한국어</option>
+          <option value="en">English</option>
+          <option value="zh-CN">简体中文</option>
+          <option value="zh-TW">繁體中文</option>
+          <option value="fr">Français</option>
+          <option value="de">Deutsch</option>
+          <option value="th">ไทย</option>
+          <option value="id">Indonesia</option>
+        </select>
+        <a id="backLink" href="./index.html" data-i18n="back">허브로 돌아가기</a>
+      </div>
+    </header>
+
+    <section class="layout">
+      <div class="panel">
+        <h2 data-i18n="formTitle">건의 남기기</h2>
+        <form id="feedbackForm">
+          <label>
+            <span data-i18n="typeLabel">유형</span>
+            <select id="type" name="type">
+              <option value="bug" data-i18n="typeBug">오류 제보</option>
+              <option value="update" data-i18n="typeUpdate">업데이트 건의</option>
+              <option value="translation" data-i18n="typeTranslation">번역 문제</option>
+              <option value="other" data-i18n="typeOther">기타</option>
+            </select>
+          </label>
+
+          <label>
+            <span data-i18n="pageLabel">관련 페이지</span>
+            <select id="page" name="page">
+              <option value="hub" data-i18n="pageHub">허브</option>
+              <option value="calculator" data-i18n="pageCalculator">계산기</option>
+              <option value="map" data-i18n="pageMap">맵 플래너</option>
+              <option value="lookup" data-i18n="pageLookup">플레이어 정보 검색</option>
+              <option value="other" data-i18n="pageOther">기타</option>
+            </select>
+          </label>
+
+          <label>
+            <span data-i18n="messageLabel">내용</span>
+            <textarea id="message" name="message" maxlength="2000" required data-placeholder="messagePlaceholder" placeholder="어떤 문제가 있었는지, 어떤 기능이 필요한지 적어주세요."></textarea>
+          </label>
+
+          <label>
+            <span data-i18n="contactLabel">연락처 또는 닉네임</span>
+            <input id="contact" name="contact" maxlength="160" data-placeholder="contactPlaceholder" placeholder="선택 사항">
+          </label>
+
+          <button class="submit" type="submit" data-i18n="submit">제출하기</button>
+          <div id="status" class="status" data-i18n="ready">작성 후 제출하면 저장됩니다.</div>
+        </form>
+      </div>
+
+      <aside class="panel admin">
+        <div>
+          <h2 data-i18n="adminTitle">운영자 확인</h2>
+          <p class="sub" data-i18n="adminHelp">Cloudflare 환경 변수 ADMIN_TOKEN을 설정한 뒤, 같은 토큰으로 최근 건의를 확인할 수 있습니다.</p>
+        </div>
+        <div class="admin-row">
+          <label>
+            <span data-i18n="tokenLabel">관리자 토큰</span>
+            <input id="adminToken" type="password" autocomplete="off" data-placeholder="tokenPlaceholder" placeholder="ADMIN_TOKEN">
+          </label>
+          <button id="loadFeedback" class="load" type="button" data-i18n="load">불러오기</button>
+        </div>
+        <div id="adminStatus" class="status"></div>
+        <div id="feedbackList" class="list"></div>
+      </aside>
+    </section>
+  </main>
+
+  <script>
+    const I18N = {
+      ko: {
+        title: '업데이트 / 오류 건의',
+        subtitle: '필요한 기능, 계산 오류, 번역 문제, 모바일 불편 사항을 남겨주세요.',
+        back: '허브로 돌아가기',
+        formTitle: '건의 남기기',
+        typeLabel: '유형',
+        typeBug: '오류 제보',
+        typeUpdate: '업데이트 건의',
+        typeTranslation: '번역 문제',
+        typeOther: '기타',
+        pageLabel: '관련 페이지',
+        pageHub: '허브',
+        pageCalculator: '계산기',
+        pageMap: '맵 플래너',
+        pageLookup: '플레이어 정보 검색',
+        pageOther: '기타',
+        messageLabel: '내용',
+        messagePlaceholder: '어떤 문제가 있었는지, 어떤 기능이 필요한지 적어주세요.',
+        contactLabel: '연락처 또는 닉네임',
+        contactPlaceholder: '선택 사항',
+        submit: '제출하기',
+        ready: '작성 후 제출하면 저장됩니다.',
+        sending: '제출 중입니다...',
+        saved: '저장되었습니다. 알려줘서 고마워요.',
+        failed: '저장하지 못했습니다.',
+        adminTitle: '운영자 확인',
+        adminHelp: 'Cloudflare 환경 변수 ADMIN_TOKEN을 설정한 뒤, 같은 토큰으로 최근 건의를 확인할 수 있습니다.',
+        tokenLabel: '관리자 토큰',
+        tokenPlaceholder: 'ADMIN_TOKEN',
+        load: '불러오기',
+        empty: '아직 건의가 없습니다.',
+      },
+      en: {
+        title: 'Updates / Bug Reports',
+        subtitle: 'Share feature ideas, calculation bugs, translation issues, or mobile usability problems.',
+        back: 'Back to hub',
+        formTitle: 'Send feedback',
+        typeLabel: 'Type',
+        typeBug: 'Bug report',
+        typeUpdate: 'Feature request',
+        typeTranslation: 'Translation issue',
+        typeOther: 'Other',
+        pageLabel: 'Related page',
+        pageHub: 'Hub',
+        pageCalculator: 'Calculator',
+        pageMap: 'Map planner',
+        pageLookup: 'Intel lookup',
+        pageOther: 'Other',
+        messageLabel: 'Message',
+        messagePlaceholder: 'Describe the problem or feature you need.',
+        contactLabel: 'Contact or nickname',
+        contactPlaceholder: 'Optional',
+        submit: 'Submit',
+        ready: 'Submit the form to save it.',
+        sending: 'Submitting...',
+        saved: 'Saved. Thank you for the report.',
+        failed: 'Could not save feedback.',
+        adminTitle: 'Admin review',
+        adminHelp: 'Set ADMIN_TOKEN in Cloudflare, then use the same token to read recent feedback.',
+        tokenLabel: 'Admin token',
+        tokenPlaceholder: 'ADMIN_TOKEN',
+        load: 'Load',
+        empty: 'No feedback yet.',
+      },
+    };
+
+    I18N['zh-CN'] = { ...I18N.en, title: '更新 / 错误反馈', back: '返回中心', submit: '提交', saved: '已保存，谢谢反馈。' };
+    I18N['zh-TW'] = { ...I18N.en, title: '更新 / 錯誤回報', back: '返回中心', submit: '提交', saved: '已儲存，謝謝回報。' };
+    I18N.fr = { ...I18N.en, title: 'Suggestions / Bugs', back: 'Retour au hub', submit: 'Envoyer', saved: 'Enregistré. Merci.' };
+    I18N.de = { ...I18N.en, title: 'Updates / Fehler melden', back: 'Zurück zum Hub', submit: 'Senden', saved: 'Gespeichert. Danke.' };
+    I18N.th = { ...I18N.en, title: 'ข้อเสนอแนะ / แจ้งปัญหา', back: 'กลับไปหน้าหลัก', submit: 'ส่ง', saved: 'บันทึกแล้ว ขอบคุณครับ' };
+    I18N.id = { ...I18N.en, title: 'Saran / Laporan Bug', back: 'Kembali ke hub', submit: 'Kirim', saved: 'Tersimpan. Terima kasih.' };
+
+    const $ = (id) => document.getElementById(id);
+    let lang = new URL(location.href).searchParams.get('lang') || localStorage.getItem('siteLang') || localStorage.getItem('lang') || 'ko';
+    if (!I18N[lang]) lang = 'ko';
+
+    function tr(key) {
+      return I18N[lang]?.[key] || I18N.en[key] || key;
+    }
+
+    function applyLang(nextLang) {
+      lang = I18N[nextLang] ? nextLang : 'ko';
+      document.documentElement.lang = lang;
+      document.querySelectorAll('[data-i18n]').forEach((node) => {
+        node.textContent = tr(node.dataset.i18n);
+      });
+      document.querySelectorAll('[data-placeholder]').forEach((node) => {
+        node.placeholder = tr(node.dataset.placeholder);
+      });
+      $('langSelect').value = lang;
+      $('backLink').href = `./index.html?lang=${encodeURIComponent(lang)}`;
+      localStorage.setItem('lang', lang);
+      localStorage.setItem('siteLang', lang);
+      const url = new URL(location.href);
+      url.searchParams.set('lang', lang);
+      history.replaceState(null, '', url);
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, (ch) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;',
+      })[ch]);
+    }
+
+    $('feedbackForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const button = event.currentTarget.querySelector('button[type="submit"]');
+      button.disabled = true;
+      $('status').className = 'status';
+      $('status').textContent = tr('sending');
+
+      try {
+        const response = await fetch('/api/feedback', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            type: $('type').value,
+            page: $('page').value,
+            message: $('message').value,
+            contact: $('contact').value,
+            lang,
+            url: location.href,
+          }),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || !data.ok) throw new Error(data.error || response.statusText);
+        $('status').className = 'status ok';
+        $('status').textContent = tr('saved');
+        $('message').value = '';
+      } catch (error) {
+        $('status').className = 'status bad';
+        $('status').textContent = `${tr('failed')} ${error.message || ''}`.trim();
+      } finally {
+        button.disabled = false;
+      }
+    });
+
+    $('loadFeedback').addEventListener('click', async () => {
+      const token = $('adminToken').value.trim();
+      $('adminStatus').className = 'status';
+      $('adminStatus').textContent = tr('sending');
+      $('feedbackList').innerHTML = '';
+
+      try {
+        const response = await fetch(`/api/feedback?limit=80&token=${encodeURIComponent(token)}`);
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || !data.ok) throw new Error(data.error || response.statusText);
+        const items = data.items || [];
+        $('adminStatus').textContent = items.length ? `${items.length} items` : tr('empty');
+        $('feedbackList').innerHTML = items.map((item) => `
+          <article class="item">
+            <div class="meta">
+              <span class="pill">${escapeHtml(item.type)}</span>
+              <span class="pill">${escapeHtml(item.page || '-')}</span>
+              <span class="pill">${escapeHtml(item.lang || '-')}</span>
+              <span class="pill">${escapeHtml(item.createdAt || '')}</span>
+            </div>
+            <div class="message">${escapeHtml(item.message)}</div>
+            ${item.contact ? `<div class="meta"><span class="pill">${escapeHtml(item.contact)}</span></div>` : ''}
+          </article>
+        `).join('');
+      } catch (error) {
+        $('adminStatus').className = 'status bad';
+        $('adminStatus').textContent = error.message || tr('failed');
+      }
+    });
+
+    $('langSelect').addEventListener('change', (event) => applyLang(event.target.value));
+    applyLang(lang);
+  </script>
+</body>
+</html>

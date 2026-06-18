@@ -1,0 +1,591 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kingshot Calculator Hub</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #111827;
+      --panel: #172033;
+      --line: rgba(230, 238, 255, 0.16);
+      --text: #f8fbff;
+      --muted: #b7c3d6;
+      --accent: #23d3b6;
+      --gold: #f7c948;
+      --violet: #a9b7ff;
+      --coral: #ff9f7a;
+      --shadow: 0 20px 70px rgba(0, 0, 0, 0.34);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 28px;
+      background:
+        linear-gradient(135deg, rgba(35, 211, 182, 0.13), transparent 34%),
+        radial-gradient(circle at 82% 8%, rgba(247, 201, 72, 0.16), transparent 30%),
+        var(--bg);
+      color: var(--text);
+      font-family: Pretendard, Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    main { width: min(1120px, 100%); }
+
+    .top {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: end;
+      gap: 18px;
+      margin-bottom: 22px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      color: var(--gold);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 18px rgba(35, 211, 182, 0.75);
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(30px, 5vw, 52px);
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      max-width: 680px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.55;
+    }
+
+    .side {
+      display: grid;
+      justify-items: end;
+      gap: 10px;
+    }
+
+    .visit-panel {
+      display: grid;
+      grid-template-columns: auto auto;
+      gap: 1px;
+      overflow: hidden;
+      min-width: 270px;
+      border: 1px solid rgba(230, 238, 255, 0.16);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.08);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.22);
+    }
+
+    .visit-cell {
+      min-width: 132px;
+      padding: 11px 13px;
+      background: rgba(9, 14, 26, 0.42);
+    }
+
+    .visit-label {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .visit-value {
+      display: block;
+      margin-top: 3px;
+      color: var(--text);
+      font-size: 22px;
+      font-weight: 950;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .support {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 42px;
+      padding: 0 15px;
+      border: 1px solid rgba(247, 201, 72, 0.52);
+      border-radius: 8px;
+      background: rgba(247, 201, 72, 0.16);
+      color: #ffe58a;
+      font-size: 13px;
+      font-weight: 900;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .support:hover { background: rgba(247, 201, 72, 0.25); }
+
+    .lang-select {
+      min-height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      padding: 0 12px;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .lang-select option {
+      background: #172033;
+      color: var(--text);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .card {
+      display: grid;
+      gap: 14px;
+      min-height: 230px;
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02)), var(--panel);
+      box-shadow: var(--shadow);
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .card:hover {
+      border-color: rgba(35, 211, 182, 0.52);
+      background: linear-gradient(180deg, rgba(35, 211, 182, 0.11), rgba(255, 255, 255, 0.03)), var(--panel);
+    }
+
+    .label {
+      width: fit-content;
+      padding: 6px 9px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 22px;
+      line-height: 1.2;
+      letter-spacing: 0;
+    }
+
+    p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 14px;
+    }
+
+    .button {
+      align-self: end;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 44px;
+      width: fit-content;
+      padding: 0 15px;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #07151f;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .card:nth-child(2) .button {
+      background: var(--gold);
+      color: #171004;
+    }
+
+    .card:nth-child(3) .button {
+      background: var(--violet);
+      color: #111827;
+    }
+
+    .card:nth-child(4) .button {
+      background: var(--coral);
+      color: #1f0d05;
+    }
+
+    .footer {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 12px;
+      text-align: center;
+    }
+
+    .footer a {
+      color: #ffe58a;
+      font-weight: 800;
+      text-decoration: none;
+    }
+
+    @media (max-width: 1050px) {
+      .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 780px) {
+      body {
+        padding: 18px;
+        place-items: start center;
+      }
+
+      .top {
+        grid-template-columns: 1fr;
+        align-items: start;
+      }
+
+      .side {
+        justify-items: stretch;
+      }
+
+      .visit-panel {
+        min-width: 0;
+        width: 100%;
+      }
+
+      .actions {
+        justify-content: stretch;
+      }
+
+      .lang-select,
+      .support {
+        width: 100%;
+      }
+
+      .grid { grid-template-columns: 1fr; }
+      .card { min-height: 188px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="top">
+      <div>
+        <div class="eyebrow">Legend Nash Tools</div>
+        <h1 data-i18n="title">Kingshot Calculator Hub</h1>
+        <p class="subtitle" data-i18n="subtitle">Open the calculator, map planner, and player intel tools from one place.</p>
+      </div>
+      <div class="side">
+        <div id="visitPanel" class="visit-panel" aria-live="polite">
+          <div class="visit-cell">
+            <span class="visit-label" data-i18n="visitsTotal">Total visits</span>
+            <span id="visitTotal" class="visit-value">-</span>
+          </div>
+          <div class="visit-cell">
+            <span class="visit-label" data-i18n="visitsToday">Today</span>
+            <span id="visitToday" class="visit-value">-</span>
+          </div>
+        </div>
+        <div class="actions">
+          <select id="langSelect" class="lang-select" aria-label="Language">
+            <option value="ko">&#54620;&#44397;&#50612;</option>
+            <option value="en">English</option>
+            <option value="zh-CN">&#31616;&#20307;&#20013;&#25991;</option>
+            <option value="zh-TW">&#32321;&#39636;&#20013;&#25991;</option>
+            <option value="fr">Fran&ccedil;ais</option>
+            <option value="de">Deutsch</option>
+            <option value="th">&#3652;&#3607;&#3618;</option>
+            <option value="id">Indonesia</option>
+          </select>
+          <a class="support" href="https://buymeacoffee.com/nashsh" target="_blank" rel="noreferrer" data-i18n="support">Support page</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid" aria-label="Calculator links">
+      <a class="card" data-link-base="./troop_training_ui.html" href="./troop_training_ui.html">
+        <span class="label">CALCULATOR</span>
+        <h2 data-i18n="calcTitle">Kingshot Calculator</h2>
+        <p data-i18n="calcBody">Open the existing calculator hub for training, gear, VIP, packs, Fort / Sanc splits, and more.</p>
+        <span class="button" data-i18n="calcButton">Open calculator</span>
+      </a>
+
+      <a class="card" data-link-base="./traplace/" href="./traplace/?lang=ko">
+        <span class="label">MAP PLANNER</span>
+        <h2 data-i18n="mapTitle">War Map Planner</h2>
+        <p data-i18n="mapBody">Place cities, traps, castles, and turrets, then calculate distance and march time.</p>
+        <span class="button" data-i18n="mapButton">Open map planner</span>
+      </a>
+
+      <a class="card" data-link-base="./kingshot_lookup.html" href="./kingshot_lookup.html">
+        <span class="label">PLAYER INTEL</span>
+        <h2 data-i18n="intelTitle">Kingshot Intel Lookup</h2>
+        <p data-i18n="intelBody">Search players by name or ID, inspect kingdoms, Top players, heroes, and gear.</p>
+        <span class="button" data-i18n="intelButton">Open intel lookup</span>
+      </a>
+
+      <a class="card" data-link-base="./feedback.html" href="./feedback.html">
+        <span class="label">FEEDBACK</span>
+        <h2 data-i18n="feedbackTitle">Updates / Bug Reports</h2>
+        <p data-i18n="feedbackBody">Send feature ideas, translation issues, calculation bugs, or mobile usability feedback.</p>
+        <span class="button" data-i18n="feedbackButton">Open feedback</span>
+      </a>
+    </section>
+
+    <div class="footer">
+      <span>Created by #885 Legend nashsh</span>
+      <span aria-hidden="true">|</span>
+      <a href="https://buymeacoffee.com/nashsh" target="_blank" rel="noreferrer" data-i18n="support">Support page</a>
+    </div>
+  </main>
+  <script>
+    const HUB_I18N = {
+      ko: {
+        title: 'Kingshot Calculator Hub',
+        subtitle: '\uacc4\uc0b0\uae30, \uc9c0\ub3c4 \ud50c\ub798\ub108, \ud50c\ub808\uc774\uc5b4 \uc815\ubcf4 \ub3c4\uad6c\ub97c \ud55c\uacf3\uc5d0\uc11c \uc5f4 \uc218 \uc788\uc2b5\ub2c8\ub2e4.',
+        support: '\ud6c4\uc6d0 \ud398\uc774\uc9c0',
+        calcTitle: 'Kingshot Calculator',
+        calcBody: '\ud6c8\ub828, \uc7a5\ube44, VIP, \ud329, Fort / Sanc \ubd84\ubc30 \ub4f1 \uae30\uc874 \uacc4\uc0b0\uae30 \ud5c8\ube0c\ub97c \uc5fd\ub2c8\ub2e4.',
+        calcButton: '\uae30\uc874 \uacc4\uc0b0\uae30 \uc5f4\uae30',
+        mapTitle: 'War Map Planner',
+        mapBody: '\ub3c4\uc2dc, \ud568\uc815, \uce90\uc2ac, \ud3ec\ud0d1 \ubc30\uce58\ub97c \ub9cc\ub4e4\uace0 \uac70\ub9ac\uc640 \ud589\uad70 \uc2dc\uac04\uc744 \uacc4\uc0b0\ud569\ub2c8\ub2e4.',
+        mapButton: '\uc9c0\ub3c4 \ud50c\ub798\ub108 \uc5f4\uae30',
+        intelTitle: 'Kingshot Intel Lookup',
+        intelBody: '\ud50c\ub808\uc774\uc5b4 \uc774\ub984/ID \uac80\uc0c9, \uc655\uad6d \uc870\ud68c, Top players, \uc601\uc6c5 \uc7a5\ube44 \uc815\ubcf4\ub97c \ud655\uc778\ud569\ub2c8\ub2e4.',
+        intelButton: '\uc815\ubcf4 \uac80\uc0c9 \uc5f4\uae30',
+        feedbackTitle: '\uc5c5\ub370\uc774\ud2b8 / \uc624\ub958 \uac74\uc758',
+        feedbackBody: '\ud544\uc694\ud55c \uae30\ub2a5, \ubc88\uc5ed \ubb38\uc81c, \uacc4\uc0b0 \uc624\ub958, \ubaa8\ubc14\uc77c \ubd88\ud3b8 \uc0ac\ud56d\uc744 \ub0a8\uae38 \uc218 \uc788\uc2b5\ub2c8\ub2e4.',
+        feedbackButton: '\uac74\uc758\ud568 \uc5f4\uae30',
+        visitsTotal: '\uc804\uccb4 \ubc29\ubb38',
+        visitsToday: '\uc624\ub298',
+      },
+      en: {
+        title: 'Kingshot Calculator Hub',
+        subtitle: 'Open the calculator, map planner, and player intel tools from one place.',
+        support: 'Support page',
+        calcTitle: 'Kingshot Calculator',
+        calcBody: 'Open the existing calculator hub for training, gear, VIP, packs, Fort / Sanc splits, and more.',
+        calcButton: 'Open calculator',
+        mapTitle: 'War Map Planner',
+        mapBody: 'Place cities, traps, castles, and turrets, then calculate distance and march time.',
+        mapButton: 'Open map planner',
+        intelTitle: 'Kingshot Intel Lookup',
+        intelBody: 'Search players by name or ID, inspect kingdoms, Top players, heroes, and gear.',
+        intelButton: 'Open intel lookup',
+        feedbackTitle: 'Updates / Bug Reports',
+        feedbackBody: 'Send feature ideas, translation issues, calculation bugs, or mobile usability feedback.',
+        feedbackButton: 'Open feedback',
+        visitsTotal: 'Total visits',
+        visitsToday: 'Today',
+      },
+      'zh-CN': {
+        title: 'Kingshot \u8ba1\u7b97\u5668\u4e2d\u5fc3',
+        subtitle: '\u4ece\u4e00\u4e2a\u9875\u9762\u6253\u5f00\u8ba1\u7b97\u5668\u3001\u5730\u56fe\u89c4\u5212\u5668\u548c\u73a9\u5bb6\u60c5\u62a5\u5de5\u5177\u3002',
+        support: '\u8d5e\u52a9\u9875\u9762',
+        calcTitle: 'Kingshot \u8ba1\u7b97\u5668',
+        calcBody: '\u6253\u5f00\u8bad\u7ec3\u3001\u88c5\u5907\u3001VIP\u3001\u793c\u5305\u3001Fort / Sanc \u5206\u914d\u7b49\u8ba1\u7b97\u5de5\u5177\u3002',
+        calcButton: '\u6253\u5f00\u8ba1\u7b97\u5668',
+        mapTitle: '\u6218\u4e89\u5730\u56fe\u89c4\u5212\u5668',
+        mapBody: '\u653e\u7f6e\u57ce\u5e02\u3001\u9677\u9631\u3001\u57ce\u5821\u548c\u70ae\u5854\uff0c\u5e76\u8ba1\u7b97\u8ddd\u79bb\u4e0e\u884c\u519b\u65f6\u95f4\u3002',
+        mapButton: '\u6253\u5f00\u5730\u56fe\u89c4\u5212\u5668',
+        intelTitle: 'Kingshot \u60c5\u62a5\u67e5\u8be2',
+        intelBody: '\u6309\u73a9\u5bb6\u540d\u6216 ID \u641c\u7d22\uff0c\u67e5\u770b\u738b\u56fd\u3001Top players\u3001\u82f1\u96c4\u548c\u88c5\u5907\u3002',
+        intelButton: '\u6253\u5f00\u60c5\u62a5\u67e5\u8be2',
+        feedbackTitle: '\u66f4\u65b0 / \u9519\u8bef\u53cd\u9988',
+        feedbackBody: '\u63d0\u4ea4\u529f\u80fd\u5efa\u8bae\u3001\u7ffb\u8bd1\u95ee\u9898\u3001\u8ba1\u7b97\u9519\u8bef\u6216\u79fb\u52a8\u7aef\u4f7f\u7528\u95ee\u9898\u3002',
+        feedbackButton: '\u6253\u5f00\u53cd\u9988',
+        visitsTotal: '\u603b\u8bbf\u95ee',
+        visitsToday: '\u4eca\u5929',
+      },
+      'zh-TW': {
+        title: 'Kingshot \u8a08\u7b97\u5668\u4e2d\u5fc3',
+        subtitle: '\u5f9e\u4e00\u500b\u9801\u9762\u958b\u555f\u8a08\u7b97\u5668\u3001\u5730\u5716\u898f\u5283\u5668\u8207\u73a9\u5bb6\u60c5\u5831\u5de5\u5177\u3002',
+        support: '\u8d0a\u52a9\u9801\u9762',
+        calcTitle: 'Kingshot \u8a08\u7b97\u5668',
+        calcBody: '\u958b\u555f\u8a13\u7df4\u3001\u88dd\u5099\u3001VIP\u3001\u79ae\u5305\u3001Fort / Sanc \u5206\u914d\u7b49\u8a08\u7b97\u5de5\u5177\u3002',
+        calcButton: '\u958b\u555f\u8a08\u7b97\u5668',
+        mapTitle: '\u6230\u722d\u5730\u5716\u898f\u5283\u5668',
+        mapBody: '\u653e\u7f6e\u57ce\u5e02\u3001\u9677\u9631\u3001\u57ce\u5821\u548c\u7832\u5854\uff0c\u4e26\u8a08\u7b97\u8ddd\u96e2\u8207\u884c\u8ecd\u6642\u9593\u3002',
+        mapButton: '\u958b\u555f\u5730\u5716\u898f\u5283\u5668',
+        intelTitle: 'Kingshot \u60c5\u5831\u67e5\u8a62',
+        intelBody: '\u4f9d\u73a9\u5bb6\u540d\u7a31\u6216 ID \u641c\u5c0b\uff0c\u67e5\u770b\u738b\u570b\u3001Top players\u3001\u82f1\u96c4\u548c\u88dd\u5099\u3002',
+        intelButton: '\u958b\u555f\u60c5\u5831\u67e5\u8a62',
+        feedbackTitle: '\u66f4\u65b0 / \u932f\u8aa4\u56de\u5831',
+        feedbackBody: '\u63d0\u4ea4\u529f\u80fd\u5efa\u8b70\u3001\u7ffb\u8b6f\u554f\u984c\u3001\u8a08\u7b97\u932f\u8aa4\u6216\u624b\u6a5f\u4f7f\u7528\u554f\u984c\u3002',
+        feedbackButton: '\u958b\u555f\u56de\u5831',
+        visitsTotal: '\u7e3d\u8a2a\u554f',
+        visitsToday: '\u4eca\u5929',
+      },
+      fr: {
+        title: 'Hub de calculateurs Kingshot',
+        subtitle: 'Ouvrez les calculateurs, le planificateur de carte et les outils de recherche au meme endroit.',
+        support: 'Page de soutien',
+        calcTitle: 'Calculateur Kingshot',
+        calcBody: "Ouvrez les outils pour l'entrainement, l'equipement, VIP, packs, repartition Fort / Sanc, etc.",
+        calcButton: 'Ouvrir le calculateur',
+        mapTitle: 'Planificateur de carte',
+        mapBody: 'Placez villes, pieges, chateaux et tourelles, puis calculez distance et temps de marche.',
+        mapButton: 'Ouvrir la carte',
+        intelTitle: 'Recherche Kingshot',
+        intelBody: 'Recherchez des joueurs, royaumes, Top players, heros et equipements.',
+        intelButton: 'Ouvrir la recherche',
+        feedbackTitle: 'Suggestions / Bugs',
+        feedbackBody: 'Envoyez des idees, problemes de traduction, erreurs de calcul ou retours mobile.',
+        feedbackButton: 'Ouvrir',
+        visitsTotal: 'Visites',
+        visitsToday: "Aujourd'hui",
+      },
+      de: {
+        title: 'Kingshot Rechner-Hub',
+        subtitle: 'Oeffne Rechner, Kartenplaner und Spieler-Infos an einem Ort.',
+        support: 'Support-Seite',
+        calcTitle: 'Kingshot Rechner',
+        calcBody: 'Oeffne Rechner fuer Training, Ausruestung, VIP, Pakete, Fort / Sanc-Verteilung und mehr.',
+        calcButton: 'Rechner oeffnen',
+        mapTitle: 'Kriegs-Kartenplaner',
+        mapBody: 'Platziere Staedte, Fallen, Burgen und Tuerme und berechne Distanz und Marschzeit.',
+        mapButton: 'Kartenplaner oeffnen',
+        intelTitle: 'Kingshot Info-Suche',
+        intelBody: 'Suche Spieler, Koenigreiche, Top players, Helden und Ausruestung.',
+        intelButton: 'Info-Suche oeffnen',
+        feedbackTitle: 'Updates / Fehler melden',
+        feedbackBody: 'Sende Ideen, Uebersetzungsprobleme, Rechenfehler oder mobiles Feedback.',
+        feedbackButton: 'Oeffnen',
+        visitsTotal: 'Besuche',
+        visitsToday: 'Heute',
+      },
+      th: {
+        title: '\u0e28\u0e39\u0e19\u0e22\u0e4c\u0e40\u0e04\u0e23\u0e37\u0e48\u0e2d\u0e07\u0e21\u0e37\u0e2d Kingshot',
+        subtitle: '\u0e40\u0e1b\u0e34\u0e14\u0e40\u0e04\u0e23\u0e37\u0e48\u0e2d\u0e07\u0e04\u0e33\u0e19\u0e27\u0e13 \u0e41\u0e1c\u0e19\u0e17\u0e35\u0e48\u0e2a\u0e07\u0e04\u0e23\u0e32\u0e21 \u0e41\u0e25\u0e30\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e1c\u0e39\u0e49\u0e40\u0e25\u0e48\u0e19\u0e44\u0e14\u0e49\u0e08\u0e32\u0e01\u0e17\u0e35\u0e48\u0e40\u0e14\u0e35\u0e22\u0e27',
+        support: '\u0e2b\u0e19\u0e49\u0e32\u0e2a\u0e19\u0e31\u0e1a\u0e2a\u0e19\u0e38\u0e19',
+        calcTitle: '\u0e40\u0e04\u0e23\u0e37\u0e48\u0e2d\u0e07\u0e04\u0e33\u0e19\u0e27\u0e13 Kingshot',
+        calcBody: '\u0e40\u0e1b\u0e34\u0e14\u0e40\u0e04\u0e23\u0e37\u0e48\u0e2d\u0e07\u0e21\u0e37\u0e2d\u0e04\u0e33\u0e19\u0e27\u0e13\u0e01\u0e32\u0e23\u0e1d\u0e36\u0e01 \u0e2d\u0e38\u0e1b\u0e01\u0e23\u0e13\u0e4c VIP \u0e41\u0e1e\u0e47\u0e01 \u0e41\u0e25\u0e30 Fort / Sanc',
+        calcButton: '\u0e40\u0e1b\u0e34\u0e14\u0e40\u0e04\u0e23\u0e37\u0e48\u0e2d\u0e07\u0e04\u0e33\u0e19\u0e27\u0e13',
+        mapTitle: '\u0e27\u0e32\u0e07\u0e41\u0e1c\u0e19\u0e41\u0e1c\u0e19\u0e17\u0e35\u0e48\u0e2a\u0e07\u0e04\u0e23\u0e32\u0e21',
+        mapBody: '\u0e27\u0e32\u0e07\u0e40\u0e21\u0e37\u0e2d\u0e07 \u0e01\u0e31\u0e1a\u0e14\u0e31\u0e01 \u0e1b\u0e23\u0e32\u0e2a\u0e32\u0e17 \u0e41\u0e25\u0e30\u0e1b\u0e49\u0e2d\u0e21\u0e1b\u0e37\u0e19 \u0e41\u0e25\u0e49\u0e27\u0e04\u0e33\u0e19\u0e27\u0e13\u0e23\u0e30\u0e22\u0e30\u0e17\u0e32\u0e07\u0e01\u0e31\u0e1a\u0e40\u0e27\u0e25\u0e32\u0e40\u0e14\u0e34\u0e19\u0e17\u0e31\u0e1e',
+        mapButton: '\u0e40\u0e1b\u0e34\u0e14\u0e41\u0e1c\u0e19\u0e17\u0e35\u0e48',
+        intelTitle: '\u0e04\u0e49\u0e19\u0e2b\u0e32\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25 Kingshot',
+        intelBody: '\u0e04\u0e49\u0e19\u0e2b\u0e32\u0e1c\u0e39\u0e49\u0e40\u0e25\u0e48\u0e19 \u0e2d\u0e32\u0e13\u0e32\u0e08\u0e31\u0e01\u0e23 Top players \u0e2e\u0e35\u0e42\u0e23\u0e48 \u0e41\u0e25\u0e30\u0e2d\u0e38\u0e1b\u0e01\u0e23\u0e13\u0e4c',
+        intelButton: '\u0e40\u0e1b\u0e34\u0e14\u0e2b\u0e19\u0e49\u0e32\u0e04\u0e49\u0e19\u0e2b\u0e32',
+        feedbackTitle: '\u0e02\u0e49\u0e2d\u0e40\u0e2a\u0e19\u0e2d\u0e41\u0e19\u0e30 / \u0e41\u0e08\u0e49\u0e07\u0e1b\u0e31\u0e0d\u0e2b\u0e32',
+        feedbackBody: '\u0e2a\u0e48\u0e07\u0e44\u0e2d\u0e40\u0e14\u0e35\u0e22 \u0e1b\u0e31\u0e0d\u0e2b\u0e32\u0e01\u0e32\u0e23\u0e41\u0e1b\u0e25 \u0e02\u0e49\u0e2d\u0e1c\u0e34\u0e14\u0e1e\u0e25\u0e32\u0e14\u0e01\u0e32\u0e23\u0e04\u0e33\u0e19\u0e27\u0e13 \u0e2b\u0e23\u0e37\u0e2d\u0e1b\u0e31\u0e0d\u0e2b\u0e32\u0e1a\u0e19\u0e21\u0e37\u0e2d\u0e16\u0e37\u0e2d',
+        feedbackButton: '\u0e40\u0e1b\u0e34\u0e14\u0e01\u0e25\u0e48\u0e2d\u0e07\u0e02\u0e49\u0e2d\u0e40\u0e2a\u0e19\u0e2d\u0e41\u0e19\u0e30',
+        visitsTotal: '\u0e40\u0e02\u0e49\u0e32\u0e0a\u0e21\u0e23\u0e27\u0e21',
+        visitsToday: '\u0e27\u0e31\u0e19\u0e19\u0e35\u0e49',
+      },
+      id: {
+        title: 'Pusat Kalkulator Kingshot',
+        subtitle: 'Buka kalkulator, perencana peta, dan info pemain dari satu tempat.',
+        support: 'Halaman dukungan',
+        calcTitle: 'Kalkulator Kingshot',
+        calcBody: 'Buka kalkulator latihan, perlengkapan, VIP, paket, pembagian Fort / Sanc, dan lainnya.',
+        calcButton: 'Buka kalkulator',
+        mapTitle: 'Perencana Peta Perang',
+        mapBody: 'Tempatkan kota, jebakan, kastel, dan menara, lalu hitung jarak serta waktu march.',
+        mapButton: 'Buka peta',
+        intelTitle: 'Pencarian Intel Kingshot',
+        intelBody: 'Cari pemain, kerajaan, Top players, hero, dan perlengkapan.',
+        intelButton: 'Buka pencarian',
+        feedbackTitle: 'Saran / Laporan Bug',
+        feedbackBody: 'Kirim ide fitur, masalah terjemahan, bug kalkulasi, atau kendala mobile.',
+        feedbackButton: 'Buka feedback',
+        visitsTotal: 'Total kunjungan',
+        visitsToday: 'Hari ini',
+      },
+    };
+
+    function getLang() {
+      const qp = new URL(location.href).searchParams.get('lang');
+      const saved = localStorage.getItem('lang') || localStorage.getItem('siteLang');
+      return HUB_I18N[qp] ? qp : HUB_I18N[saved] ? saved : 'ko';
+    }
+
+    function applyLang(lang) {
+      const dict = HUB_I18N[lang] || HUB_I18N.ko;
+      document.documentElement.lang = lang;
+      document.querySelectorAll('[data-i18n]').forEach((node) => {
+        const key = node.dataset.i18n;
+        if (dict[key]) node.textContent = dict[key];
+      });
+      document.querySelectorAll('[data-link-base]').forEach((link) => {
+        const base = link.dataset.linkBase;
+        if (base === './traplace/') link.href = `./traplace/?lang=${encodeURIComponent(lang)}`;
+        else link.href = `${base}?lang=${encodeURIComponent(lang)}`;
+      });
+      localStorage.setItem('lang', lang);
+      localStorage.setItem('siteLang', lang);
+      const current = new URL(location.href);
+      current.searchParams.set('lang', lang);
+      history.replaceState(null, '', current.toString());
+      document.getElementById('langSelect').value = lang;
+    }
+
+    function formatNumber(value) {
+      const n = Number(value);
+      return Number.isFinite(n) ? n.toLocaleString() : '-';
+    }
+
+    async function loadVisitStats() {
+      const countedKey = 'hubVisitCounted';
+      try {
+        let data = null;
+        if (!sessionStorage.getItem(countedKey)) {
+          const visit = await fetch('/api/visit', { method: 'POST' });
+          data = await visit.json();
+          if (visit.ok) sessionStorage.setItem(countedKey, '1');
+        }
+        if (!data || !data.enabled) {
+          const stats = await fetch('/api/stats');
+          data = await stats.json();
+        }
+        if (data && data.enabled) {
+          document.getElementById('visitTotal').textContent = formatNumber(data.total);
+          document.getElementById('visitToday').textContent = formatNumber(data.today);
+        } else {
+          document.getElementById('visitPanel').style.display = 'none';
+        }
+      } catch {
+        document.getElementById('visitPanel').style.display = 'none';
+      }
+    }
+
+    const initialLang = getLang();
+    applyLang(initialLang);
+    loadVisitStats();
+    document.getElementById('langSelect').addEventListener('change', (event) => applyLang(event.target.value));
+  </script>
+</body>
+</html>
