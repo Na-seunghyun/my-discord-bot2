@@ -1,0 +1,86 @@
+{
+  "app": {
+    "title": "Legend Nash Planner"
+  },
+  "ui": {
+    "usageTitle": "Anleitung",
+    "usage": "• <b>Drag & Drop</b>: Platziere Elemente aus der linken Palette (am Raster ausgerichtet).<br>• <b>Mittlere Maustaste ziehen</b>: Ansicht verschieben.<br>• <b>Ctrl/⌘ + Mausrad</b>: Hinein-/Herauszoomen.<br>• <b>Trackpad-Pinch</b>: Zoomen.<br>• <b>Zelle anklicken</b>: Rote Markierung umschalten.<br>• <b>Stadt</b>-Label: Doppelklick → Bearbeiten (Enter = Speichern / Esc = Abbrechen).<br>• Unterer Bereich <b>🗑</b>: Ziehe ein Objekt hierher, um es zu löschen.<br>※ Blaue Markierungen werden durch <b>Banner (7×7)</b> und <b>Hauptquartier (15×15)</b> erzeugt.",
+    "paletteTitle": "Palette",
+    "toolbar": {
+      "undo": "Rückgängig",
+      "redo": "Wiederholen",
+      "reset": "Zurücksetzen",
+      "copy": "Kurz-URL kopieren",
+      "export": "Als PNG exportieren",
+      "import": "PNG importieren",
+      "dist2label": "Bewegungszeit messen",
+      "lang": "Sprache",
+      "home": "Zur Mitte",
+      "pairDist": "Measure selected objects"
+    },
+    "trash": {
+      "label": "Hierher ziehen, um zu löschen",
+      "title": "Ziehe einen Block in diesen Bereich, um ihn zu löschen"
+    },
+    "footer": {
+      "credit": "Created by #885 Legend nashsh"
+    },
+    "contextMenu": {
+      "fontSize": "Schrifttypgröße",
+      "wordWrap": "Zeilenumbruch"
+    }
+  },
+  "palette": {
+    "hq": "Hauptquartier",
+    "flag": "Banner",
+    "trap": "Jagd-Falle",
+    "city": "Stadt",
+    "resource": "Ressource",
+    "block1": "1×1",
+    "block2": "2×2",
+    "block3": "3×3",
+    "custom": "Benutzerdefinierter Block",
+    "customWidthLabel": "Breite",
+    "customHeightLabel": "Höhe",
+    "castle": "Burg",
+    "turret": "Turm",
+    "fortress": "Festung",
+    "sanctuary": "Heiligtum",
+    "turret_directions": [
+      "Süd",
+      "West",
+      "Ost",
+      "Nord"
+    ]
+  },
+  "alert": {
+    "noCities": "Keine Städte.",
+    "noTraps": "Keine Fallen.",
+    "resetConfirm": "Alles zurücksetzen? (Alle Objekte und roten Felder werden gelöscht)",
+    "exportFail": "PNG-Export fehlgeschlagen.",
+    "exportAreaTooLarge": "Der Exportbereich ist zu groß. Bitte reduzieren Sie die Objekte oder verkleinern Sie den Bereich.",
+    "importFail": "PNG-Import fehlgeschlagen."
+  },
+  "msg": {
+    "copiedShort": "Kurz-URL kopiert!",
+    "copiedFull": "Vollständige URL kopiert",
+    "copied": "Kopiert!",
+    "shortenError": "Kurz-URL konnte nicht erstellt werden.",
+    "copyError": "Kopieren fehlgeschlagen.",
+    "copyManual": "Bitte mit Strg+C oder Cmd+C kopieren",
+    "urlTooLong": "URL ist zu lang zum Kürzen."
+  },
+  "modal": {
+    "urlCopy": {
+      "title": "URL kopieren",
+      "message": "Bitte kopieren Sie die folgende URL.",
+      "copyBtn": "Kopieren"
+    }
+  },
+  "consent": {
+    "message": "Wir verwenden anonyme Analysen zur Verbesserung Ihrer Erfahrung. Es werden keine persönlichen Daten erfasst.",
+    "accept": "Akzeptieren",
+    "reject": "Ablehnen",
+    "learnMore": "Mehr erfahren"
+  }
+}
