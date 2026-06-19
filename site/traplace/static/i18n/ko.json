@@ -1,0 +1,89 @@
+{
+  "app": {
+    "title": "Legend Nash Planner"
+  },
+  "ui": {
+    "usageTitle": "사용 방법",
+    "usage": "• <b>드래그 앤 드롭</b>: 왼쪽 팔레트의 객체를 모눈에 배치 (그리드 스냅).<br>• <b>중클릭 드래그</b>: 화면 이동(패닝).<br>• <b>Ctrl/⌘ + 마우스 휠</b>: 확대/축소(감도 ½).<br>• <b>트랙패드 핀치</b>: 확대/축소(감도 ½).<br>• <b>셀 클릭</b>: 바닥 타일 빨간색 토글 칠하기.<br>• <b>도시</b> 라벨: 더블클릭→텍스트 수정(Enter 저장 / Esc 취소).<br>• 하단 <b>삭제 영역</b>: 객체를 드래그해 삭제.<br>※ 파란색 칠은 <b>연맹깃발(7×7)</b>, <b>평원본부(15×15)</b>가 생성.",
+    "paletteTitle": "객체 팔레트",
+    "toolbar": {
+      "undo": "되돌리기",
+      "redo": "다시하기",
+      "reset": "초기화",
+      "copy": "단축 URL 복사",
+      "export": "PNG 내보내기",
+      "import": "PNG 가져오기",
+      "dist2label": "행군 시간 계산",
+      "lang": "언어",
+      "home": "중앙으로 이동",
+      "pairDist": "선택 개체 거리 계산"
+    },
+    "trash": {
+      "label": "여기로 드래그하면 삭제",
+      "title": "블록을 이 영역으로 드래그해서 삭제하세요"
+    },
+    "footer": {
+      "credit": "Created by #885 Legend nashsh"
+    },
+    "contextMenu": {
+      "fontSize": "글자 크기",
+      "wordWrap": "줄바꿈",
+      "distanceTarget": "거리 계산 개체 선택"
+    }
+  },
+  "palette": {
+    "hq": "평원본부",
+    "flag": "연맹깃발",
+    "trap": "사냥함정",
+    "city": "도시",
+    "resource": "연맹자원",
+    "block1": "1×1",
+    "block2": "2×2",
+    "block3": "3×3",
+    "custom": "커스텀 블록",
+    "customWidthLabel": "가로 크기",
+    "customHeightLabel": "세로 크기",
+    "castle": "캐슬",
+    "turret": "포탑",
+    "fortress": "성채",
+    "sanctuary": "유적",
+    "turret_directions": [
+      "남부",
+      "서부",
+      "동부",
+      "북부"
+    ]
+  },
+  "alert": {
+    "noCities": "도시가 없습니다.",
+    "noTraps": "사냥함정이 없습니다.",
+    "resetConfirm": "정말 초기화할까요? (모든 객체 및 빨간 칠이 삭제됩니다)",
+    "exportFail": "PNG 내보내기에 실패했습니다.",
+    "exportAreaTooLarge": "내보내기 영역이 너무 큽니다. 객체를 줄이거나 영역을 작게 만들어주세요.",
+    "importFail": "PNG 가져오기에 실패했습니다.",
+    "needTwoDistanceTargets": "먼저 개체 2개를 선택하세요.",
+    "specialMarchFormulaNeeded": "캐슬/포탑 행군시간은 다른 공식이 필요합니다. 게임 내 실제 시간 샘플을 알려주세요."
+  },
+  "msg": {
+    "copiedShort": "단축 복사됨!",
+    "copiedFull": "전체 복사됨",
+    "copied": "복사됨!",
+    "shortenError": "단축 URL 생성에 실패했습니다.",
+    "copyError": "복사에 실패했습니다.",
+    "copyManual": "Ctrl+C 또는 Cmd+C로 복사해주세요",
+    "urlTooLong": "URL이 너무 길어 단축할 수 없습니다."
+  },
+  "modal": {
+    "urlCopy": {
+      "title": "URL 복사",
+      "message": "아래 주소를 복사해주세요.",
+      "copyBtn": "복사"
+    }
+  },
+  "consent": {
+    "message": "사용 경험 개선을 위해 익명 분석 데이터를 수집합니다. 개인 정보는 수집되지 않습니다.",
+    "accept": "동의",
+    "reject": "거부",
+    "learnMore": "자세히 보기"
+  }
+}
