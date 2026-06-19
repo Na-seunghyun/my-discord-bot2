@@ -336,6 +336,29 @@
       </div>
     </section>
 
+    <section class="legend-statline" aria-label="885 Legend Nashsh overview">
+      <div class="legend-stat legend-stat-wide">
+        <strong>885</strong>
+        <span>LEGEND NASHSH</span>
+        <small>calculator command deck</small>
+      </div>
+      <div class="legend-stat">
+        <strong id="dashTotal">-</strong>
+        <span>TRACKING</span>
+        <small>total visits</small>
+      </div>
+      <div class="legend-stat">
+        <strong id="dashToday">-</strong>
+        <span>TODAY</span>
+        <small>active checks</small>
+      </div>
+      <div class="legend-stat legend-stat-accent">
+        <strong>4</strong>
+        <span>TOOLS</span>
+        <small>planner · intel · calculator</small>
+      </div>
+    </section>
+
     <section class="grid" aria-label="Calculator links">
       <a class="card" data-link-base="./troop_training_ui.html" href="./troop_training_ui.html">
         <span class="label">CALCULATOR</span>
@@ -574,8 +597,14 @@
           data = await stats.json();
         }
         if (data && data.enabled) {
-          document.getElementById('visitTotal').textContent = formatNumber(data.total);
-          document.getElementById('visitToday').textContent = formatNumber(data.today);
+          const total = formatNumber(data.total);
+          const todayCount = formatNumber(data.today);
+          document.getElementById('visitTotal').textContent = total;
+          document.getElementById('visitToday').textContent = todayCount;
+          const dashTotal = document.getElementById('dashTotal');
+          const dashToday = document.getElementById('dashToday');
+          if (dashTotal) dashTotal.textContent = total;
+          if (dashToday) dashToday.textContent = todayCount;
         } else {
           document.getElementById('visitPanel').style.display = 'none';
         }
