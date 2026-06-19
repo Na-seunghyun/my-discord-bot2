@@ -794,6 +794,138 @@ body[data-legend-page="intel"] .gear-enh {
   color: #fff !important;
 }
 
+body[data-legend-page="intel"] {
+  overflow-x: hidden;
+}
+
+body[data-legend-page="intel"] .shell {
+  position: relative;
+  z-index: 2;
+}
+
+.intel-mosaic {
+  position: fixed;
+  inset: 58vh 0 auto 0;
+  z-index: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+  grid-auto-rows: 112px;
+  gap: 2px;
+  min-height: 72vh;
+  opacity: 0.46;
+  filter: saturate(1.18) contrast(1.05);
+  pointer-events: none;
+  overflow: hidden;
+  transform: translateY(-10px);
+  mask-image: linear-gradient(to bottom, transparent 0, black 12%, black 82%, transparent 100%);
+}
+
+.intel-mosaic::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background:
+    linear-gradient(to bottom, rgba(8, 10, 16, 0.88), rgba(8, 10, 16, 0.28) 28%, rgba(8, 10, 16, 0.72)),
+    radial-gradient(circle at 42% 10%, rgba(255, 45, 170, 0.18), transparent 36%);
+}
+
+.intel-tile {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  background:
+    linear-gradient(135deg, rgba(255, 45, 170, 0.18), rgba(47, 229, 255, 0.1)),
+    #12151d;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.intel-tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transform: scale(1.04);
+}
+
+.intel-tile::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to top, rgba(0, 0, 0, 0.68), transparent 46%),
+    linear-gradient(135deg, rgba(255, 45, 170, 0.22), transparent 38%);
+}
+
+.intel-kingdom,
+.intel-tg,
+.intel-tag,
+.intel-name {
+  position: absolute;
+  z-index: 1;
+  font-weight: 1000;
+  line-height: 1;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.85);
+}
+
+.intel-kingdom {
+  left: 6px;
+  top: 6px;
+  padding: 3px 5px;
+  border-radius: 5px;
+  background: rgba(12, 16, 22, 0.72);
+  color: #ffffff;
+  font-size: 11px;
+}
+
+.intel-tg {
+  right: 5px;
+  top: 5px;
+  color: #ffe75f;
+  font-size: 22px;
+  -webkit-text-stroke: 1px rgba(0, 0, 0, 0.45);
+}
+
+.intel-tag {
+  left: 6px;
+  bottom: 28px;
+  color: #ff63bd;
+  font-size: 11px;
+}
+
+.intel-name {
+  left: 6px;
+  right: 5px;
+  bottom: 8px;
+  overflow: hidden;
+  color: #ffffff;
+  font-size: 12px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.intel-name b {
+  color: #7ceeff;
+}
+
+body[data-legend-page="intel"] .tools,
+body[data-legend-page="intel"] .layout,
+body[data-legend-page="intel"] .status,
+body[data-legend-page="intel"] h1,
+body[data-legend-page="intel"] .subtitle,
+body[data-legend-page="intel"] .ln-brand-chip {
+  position: relative;
+  z-index: 2;
+}
+
+body[data-legend-page="intel"] .panel,
+body[data-legend-page="intel"] dialog {
+  background:
+    linear-gradient(135deg, rgba(255, 45, 170, 0.12), transparent 50%),
+    rgba(13, 16, 24, 0.9) !important;
+  backdrop-filter: blur(16px);
+}
+
 body[data-legend-page="planner"] .toolbar,
 body[data-legend-page="planner"] .sidebar {
   background:

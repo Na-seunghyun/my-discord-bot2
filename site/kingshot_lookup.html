@@ -300,6 +300,7 @@
   <link rel="stylesheet" href="static/legend-ui.css?v=885-nashsh-unified-1">
 </head>
 <body data-legend-page="intel">
+  <div id="intelMosaic" class="intel-mosaic" aria-hidden="true"></div>
   <main class="shell">
     <nav class="topbar">
       <a class="back" href="./index.html" data-i18n="back">허브로 돌아가기</a>
@@ -728,6 +729,47 @@
     $('playerQuery').addEventListener('keydown', event => { if (event.key === 'Enter') searchPlayers(); });
     $('kingdomInput').addEventListener('keydown', event => { if (event.key === 'Enter') loadKingdom(); });
     $('langSelect').addEventListener('change', event => applyLang(event.target.value));
+    const MOSAIC_AVATARS = [
+      ['0df220779a6ac2f6edc7267d866a143f.png', 'RALLY', 4],
+      ['8aee124535ab86ba9092d572fe96d90c.png', 'MARTINA', 8],
+      ['1965ad455c3bc5860c095e64b9b643ee.png', 'YETI', 5],
+      ['bde817bef7f39d67c85737e39e9649b5.png', 'DAEGUN', 5],
+      ['5997f17685608a4c3d8fadd629df89b0.png', 'BRAIN', 6],
+      ['5058313b9c1471ae1cc77a3342bf5bb4.png', 'MINI', 5],
+      ['cc788e10d1f9830bd0adddca19bc8054.png', 'BULMA', 7],
+      ['9e33fbbe9aeb778d511c7c512938697e.png', 'GIRLY', 8],
+      ['1a67fbb55bbfcbe7588f60c72a81ccd3.png', 'DEUS', 8],
+      ['b82be869f392bf2a2dc77464d669414f.png', 'JOSE', 5],
+      ['e8cda2219a1772cd63cb048fc0b96157.png', 'ZEROZ', 5],
+      ['2d699c71bc7b3199bfd91dad603785cb.png', 'TYLER', 5],
+      ['c48046f48d8423554f4a8c9afdb28752.png', 'YEON', 1],
+      ['e0850652b08d8e5013f264415a096a43.png', 'SNICKER', 5],
+      ['1d9e7fe1943c672c9fb690bec24bfbb6.png', 'COOKIE', 5],
+      ['0957a1748b6f3c2098559175b45c93b4.png', 'MORRIGAN', 5],
+      ['2786f821168dd0607b6c625a7366ec4d.png', 'MISAKA', 8],
+      ['cdcd9fb69ef7253065ce71a734bab222.png', 'COLBA', 6],
+      ['a9101864dcec444e5f35cf4df18b0e08.png', 'CHEF', 5],
+      ['c838335cb675d13231c5c35dd79eaa3d.png', 'EVIL', 2],
+    ];
+    function renderIntelMosaic() {
+      const wrap = $('intelMosaic');
+      if (!wrap) return;
+      const items = Array.from({ length: 56 }, (_, index) => {
+        const [avatarName, name, tg] = MOSAIC_AVATARS[(index * 7 + 3) % MOSAIC_AVATARS.length];
+        const kingdoms = [57, 86, 100, 162, 205, 240, 271, 386, 401, 529, 652, 688, 734, 753, 766, 777, 823, 832, 846, 888, 954, 958, 979, 1448, 1819, 1846, 2050];
+        const kingdom = kingdoms[(index * 11 + tg) % kingdoms.length];
+        const tag = ['BRO', 'RAT', 'KING', 'GOAT', 'QUEEN', 'F2P', 'SR', 'KOR'][index % 8];
+        return `<div class="intel-tile">
+          <img src="${REMOTE_ORIGIN}/avatars/${avatarName}" alt="" loading="lazy">
+          <span class="intel-kingdom">#${kingdom}</span>
+          <span class="intel-tg">TG${tg}</span>
+          <span class="intel-tag">${tag}</span>
+          <span class="intel-name">${escapeHtml(name)} <b>#${kingdom}</b></span>
+        </div>`;
+      });
+      wrap.innerHTML = items.join('');
+    }
+    renderIntelMosaic();
     applyLang(detectLang());
   </script>
 </body>
