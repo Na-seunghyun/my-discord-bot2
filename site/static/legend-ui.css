@@ -1,0 +1,515 @@
+/*
+  885 LEGEND NASHSH unified interface layer.
+  This file intentionally overrides the older mixed page styles without changing app logic.
+*/
+:root {
+  color-scheme: dark;
+  --ln-bg: #0b1016;
+  --ln-bg-2: #101821;
+  --ln-surface: rgba(18, 27, 37, 0.94);
+  --ln-surface-2: rgba(25, 37, 50, 0.94);
+  --ln-surface-3: rgba(35, 49, 65, 0.92);
+  --ln-line: rgba(219, 231, 242, 0.14);
+  --ln-line-strong: rgba(242, 198, 93, 0.34);
+  --ln-text: #f7fafc;
+  --ln-muted: #aebdcc;
+  --ln-faint: #7f91a2;
+  --ln-gold: #f2c65d;
+  --ln-mint: #5ee0c2;
+  --ln-coral: #ff8d72;
+  --ln-blue: #79b7ff;
+  --ln-red: #ff6b7a;
+  --ln-shadow: 0 18px 60px rgba(0, 0, 0, 0.34);
+  --ln-shadow-soft: 0 12px 34px rgba(0, 0, 0, 0.24);
+  --ln-radius: 8px;
+  --ln-radius-sm: 6px;
+  --ln-font: Inter, Pretendard, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--ln-bg);
+}
+
+body {
+  background:
+    linear-gradient(150deg, rgba(94, 224, 194, 0.09), transparent 34%),
+    linear-gradient(24deg, rgba(242, 198, 93, 0.08), transparent 42%),
+    var(--ln-bg) !important;
+  color: var(--ln-text) !important;
+  font-family: var(--ln-font) !important;
+  letter-spacing: 0 !important;
+}
+
+body::before {
+  content: "885 LEGEND NASHSH";
+  position: fixed;
+  right: 18px;
+  bottom: 14px;
+  z-index: 2147480000;
+  pointer-events: none;
+  padding: 7px 10px;
+  border: 1px solid rgba(242, 198, 93, 0.26);
+  border-radius: 999px;
+  background: rgba(10, 15, 21, 0.72);
+  color: rgba(247, 250, 252, 0.62);
+  backdrop-filter: blur(14px);
+  font-size: 10px;
+  font-weight: 950;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+a,
+button,
+input,
+select,
+textarea {
+  font-family: var(--ln-font) !important;
+  letter-spacing: 0 !important;
+}
+
+button,
+a.back,
+a.support,
+.support,
+.button,
+.hub-link,
+.coffee-link,
+.load,
+.submit,
+.tb-btn,
+.usage-toggle,
+.url-modal-copy-btn,
+.mini-action,
+.close {
+  border-radius: var(--ln-radius-sm) !important;
+  transition:
+    transform 0.16s ease,
+    border-color 0.16s ease,
+    background-color 0.16s ease,
+    box-shadow 0.16s ease,
+    color 0.16s ease !important;
+}
+
+button:hover,
+a.back:hover,
+a.support:hover,
+.support:hover,
+.button:hover,
+.hub-link:hover,
+.coffee-link:hover,
+.load:hover,
+.submit:hover,
+.tb-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.24);
+}
+
+button:disabled {
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+input,
+select,
+textarea,
+.lang-select,
+.badge-coord-input,
+.url-display-input {
+  border-color: var(--ln-line) !important;
+  border-radius: var(--ln-radius-sm) !important;
+  background: rgba(7, 12, 18, 0.74) !important;
+  color: var(--ln-text) !important;
+}
+
+select option {
+  background: #111a24 !important;
+  color: var(--ln-text) !important;
+}
+
+input:focus,
+select:focus,
+textarea:focus,
+.badge-coord-input:focus,
+.url-display-input:focus {
+  border-color: rgba(94, 224, 194, 0.72) !important;
+  box-shadow: 0 0 0 3px rgba(94, 224, 194, 0.13) !important;
+  outline: none !important;
+}
+
+.ln-brand-chip,
+.eyebrow,
+.label,
+.chip,
+.pill,
+.status,
+.visit-label {
+  letter-spacing: 0 !important;
+}
+
+.ln-brand-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  min-height: 30px;
+  padding: 0 10px;
+  border: 1px solid rgba(242, 198, 93, 0.28);
+  border-radius: 999px;
+  background: rgba(242, 198, 93, 0.1);
+  color: var(--ln-gold);
+  font-size: 12px;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.ln-brand-chip::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ln-mint);
+  box-shadow: 0 0 18px rgba(94, 224, 194, 0.72);
+}
+
+.panel,
+.card,
+.metric-item,
+.detail-box,
+.item,
+.hero-card,
+.alliance,
+.visit-panel,
+.url-modal-content,
+dialog {
+  border-color: var(--ln-line) !important;
+  border-radius: var(--ln-radius) !important;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.015)),
+    var(--ln-surface) !important;
+  box-shadow: var(--ln-shadow-soft) !important;
+}
+
+.card:hover,
+.item:hover,
+.palette-item:hover {
+  border-color: rgba(94, 224, 194, 0.48) !important;
+}
+
+.support,
+.coffee-link,
+.submit,
+button:not(.secondary):not(.close):not(.tb-btn):not(.cm-size-btn):not(.url-modal-close):not(.usage-toggle),
+.button,
+.mini-action,
+.url-modal-copy-btn {
+  border-color: transparent !important;
+  background: linear-gradient(135deg, var(--ln-gold), #ffd984) !important;
+  color: #1b1405 !important;
+  font-weight: 950 !important;
+}
+
+.secondary,
+.back,
+.hub-link,
+.close,
+.load,
+.tb-btn,
+.usage-toggle {
+  border: 1px solid var(--ln-line) !important;
+  background: rgba(255, 255, 255, 0.055) !important;
+  color: var(--ln-text) !important;
+}
+
+.primary,
+.tb-btn.primary,
+.nav button.active,
+.tabs button.active {
+  background: linear-gradient(135deg, rgba(94, 224, 194, 0.22), rgba(121, 183, 255, 0.15)) !important;
+  color: var(--ln-text) !important;
+  border-color: rgba(94, 224, 194, 0.35) !important;
+}
+
+.danger,
+.tb-btn.danger {
+  border-color: rgba(255, 107, 122, 0.32) !important;
+  background: rgba(255, 107, 122, 0.12) !important;
+  color: #ffd4da !important;
+}
+
+.subtitle,
+.sub,
+.hint,
+.muted,
+.visit-label,
+.panel-title + p,
+p {
+  color: var(--ln-muted) !important;
+}
+
+/* Hub */
+body[data-legend-page="hub"] main {
+  width: min(1180px, 100%) !important;
+}
+
+body[data-legend-page="hub"] .top {
+  align-items: center !important;
+}
+
+body[data-legend-page="hub"] h1 {
+  max-width: 760px;
+}
+
+body[data-legend-page="hub"] .grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+}
+
+body[data-legend-page="hub"] .card {
+  min-height: 238px !important;
+  align-content: start;
+}
+
+body[data-legend-page="hub"] .visit-cell {
+  background: rgba(8, 13, 19, 0.72) !important;
+}
+
+/* Intel and feedback */
+body[data-legend-page="intel"] .shell,
+body[data-legend-page="feedback"] main {
+  width: min(1180px, calc(100% - 28px)) !important;
+}
+
+body[data-legend-page="intel"] .tools,
+body[data-legend-page="feedback"] .layout {
+  align-items: stretch !important;
+}
+
+body[data-legend-page="intel"] .status {
+  border-color: rgba(94, 224, 194, 0.28) !important;
+  background: rgba(94, 224, 194, 0.08) !important;
+  color: #dffdf6 !important;
+}
+
+body[data-legend-page="intel"] .card {
+  min-height: 150px;
+}
+
+body[data-legend-page="intel"] dialog {
+  max-height: min(88vh, 860px) !important;
+}
+
+body[data-legend-page="intel"] .modal-head {
+  background: rgba(14, 22, 30, 0.96) !important;
+}
+
+/* Troop calculator */
+body[data-legend-page="training"] main {
+  width: min(1240px, calc(100% - 24px)) !important;
+}
+
+body[data-legend-page="training"] .layout {
+  grid-template-columns: 250px minmax(0, 1fr) !important;
+}
+
+body[data-legend-page="training"] .nav {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+body[data-legend-page="training"] .tabs {
+  background: rgba(7, 12, 18, 0.58) !important;
+}
+
+/* Map planner */
+body[data-legend-page="planner"] {
+  background: var(--ln-bg) !important;
+}
+
+body[data-legend-page="planner"] .sidebar,
+body[data-legend-page="planner"] .toolbar,
+body[data-legend-page="planner"] .badge,
+body[data-legend-page="planner"] .context-menu,
+body[data-legend-page="planner"] .minimap {
+  border-color: var(--ln-line) !important;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.018)),
+    rgba(14, 22, 30, 0.95) !important;
+  color: var(--ln-text) !important;
+  box-shadow: var(--ln-shadow-soft) !important;
+}
+
+body[data-legend-page="planner"] .brand-mark {
+  background: linear-gradient(135deg, var(--ln-gold), var(--ln-mint)) !important;
+  color: #111820 !important;
+}
+
+body[data-legend-page="planner"] .sidebar-brand strong::after {
+  content: " 885";
+  color: var(--ln-gold);
+}
+
+body[data-legend-page="planner"] .palette-item {
+  border-radius: var(--ln-radius) !important;
+  background: rgba(255, 255, 255, 0.045) !important;
+  color: var(--ln-text) !important;
+}
+
+body[data-legend-page="planner"] .viewport {
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03), transparent 32%),
+    #10161d !important;
+}
+
+body[data-legend-page="planner"] .badge {
+  border-radius: var(--ln-radius) !important;
+}
+
+@media (max-width: 1040px) {
+  body[data-legend-page="hub"] .top,
+  body[data-legend-page="intel"] .tools,
+  body[data-legend-page="intel"] .layout,
+  body[data-legend-page="feedback"] .layout,
+  body[data-legend-page="training"] .layout,
+  body[data-legend-page="training"] .content-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  body[data-legend-page="hub"] .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  body[data-legend-page="hub"] .side {
+    justify-items: stretch !important;
+  }
+
+  body[data-legend-page="hub"] .visit-panel {
+    min-width: 0 !important;
+  }
+}
+
+@media (max-width: 760px) {
+  body {
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+  }
+
+  body::before {
+    display: none;
+  }
+
+  .ln-brand-chip {
+    min-height: 28px;
+    font-size: 11px;
+  }
+
+  h1 {
+    font-size: clamp(27px, 9vw, 40px) !important;
+  }
+
+  h2 {
+    font-size: 19px !important;
+  }
+
+  body[data-legend-page="hub"] {
+    display: block !important;
+    padding-top: 18px !important;
+  }
+
+  body[data-legend-page="hub"] .grid,
+  body[data-legend-page="intel"] .grid,
+  body[data-legend-page="intel"] .detail-grid,
+  body[data-legend-page="intel"] .loadout-grid,
+  body[data-legend-page="intel"] .gear-list,
+  body[data-legend-page="training"] .grid,
+  body[data-legend-page="training"] .tabs {
+    grid-template-columns: 1fr !important;
+  }
+
+  body[data-legend-page="hub"] .card {
+    min-height: 190px !important;
+  }
+
+  body[data-legend-page="hub"] .actions,
+  body[data-legend-page="intel"] .top-actions,
+  body[data-legend-page="feedback"] .top-actions,
+  body[data-legend-page="training"] .lang {
+    justify-content: stretch !important;
+  }
+
+  body[data-legend-page="hub"] .actions > *,
+  body[data-legend-page="intel"] .top-actions > *,
+  body[data-legend-page="feedback"] .top-actions > *,
+  body[data-legend-page="training"] .lang > * {
+    width: 100% !important;
+  }
+
+  body[data-legend-page="intel"] .row,
+  body[data-legend-page="feedback"] .admin-row {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+  }
+
+  body[data-legend-page="intel"] button,
+  body[data-legend-page="intel"] .support,
+  body[data-legend-page="training"] .hub-link,
+  body[data-legend-page="training"] .coffee-link {
+    width: 100% !important;
+  }
+
+  body[data-legend-page="planner"] {
+    padding: 0 !important;
+  }
+
+  body[data-legend-page="planner"] .toolbar {
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    max-height: 34vh;
+    overflow: auto;
+    border-radius: 0 !important;
+  }
+
+  body[data-legend-page="planner"] .sidebar {
+    width: 100% !important;
+    min-height: 154px !important;
+    max-height: 31vh !important;
+    overflow: auto !important;
+  }
+
+  body[data-legend-page="planner"] .palette {
+    display: flex !important;
+    min-height: 82px !important;
+    height: auto !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    padding: 8px 8px 12px !important;
+    gap: 8px !important;
+    scrollbar-width: thin;
+  }
+
+  body[data-legend-page="planner"] .palette-item {
+    flex: 0 0 104px !important;
+    width: 104px !important;
+    min-width: 104px !important;
+    gap: 8px !important;
+  }
+
+  body[data-legend-page="planner"] .palette-item {
+    min-height: 72px !important;
+    height: 72px !important;
+  }
+
+  body[data-legend-page="planner"] .minimap {
+    width: 156px !important;
+    transform-origin: top right;
+  }
+}
+
+@media (max-width: 420px) {
+  body[data-legend-page="planner"] .palette {
+    min-height: 82px !important;
+  }
+}
