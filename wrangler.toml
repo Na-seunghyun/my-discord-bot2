@@ -13,3 +13,15 @@ id = "08261076ead3448a96bf924729adb01d"
 [[kv_namespaces]]
 binding = "VISITS"
 id = "59330ca6081448d8bd6d3a70445e8501"
+
+# Optional Kingshot Intel cache.
+# Create these in Cloudflare first, then remove the # marks and paste real IDs/names.
+#
+# [[d1_databases]]
+# binding = "INTEL_DB"
+# database_name = "my-discord-bot2-intel"
+# database_id = "PASTE_D1_DATABASE_ID_HERE"
+#
+# [[r2_buckets]]
+# binding = "INTEL_BUCKET"
+# bucket_name = "my-discord-bot2-intel"

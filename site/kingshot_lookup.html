@@ -412,6 +412,8 @@
     const statusEl = $('status');
     const modal = $('playerModal');
     let currentLang = 'ko';
+    let remoteToken = '';
+    let remoteTokenExpires = 0;
     let currentPlayerId = '';
     const fmt = (value) => Number(value || 0).toLocaleString(currentLang);
     const tr = (key) => (I18N[currentLang] && I18N[currentLang][key]) || I18N.en[key] || key;
@@ -474,11 +476,32 @@
       if (!type.includes('json')) throw new Error(`Non JSON response from ${url}`);
       return text ? JSON.parse(text) : null;
     }
+    async function remoteHeaders() {
+      if (remoteToken && remoteTokenExpires - 30000 > Date.now()) {
+        return { Accept:'application/json,text/plain,*/*', 'X-API-Token': remoteToken };
+      }
+      const res = await fetch(`${REMOTE_ORIGIN}/api/session`, { headers: { Accept:'application/json' } });
+      if (!res.ok) throw new Error(`session ${res.status}`);
+      const data = await res.json();
+      remoteToken = data.token || '';
+      remoteTokenExpires = Number(data.expires_at || 0) * 1000;
+      if (!remoteToken) throw new Error('session token missing');
+      return { Accept:'application/json,text/plain,*/*', 'X-API-Token': remoteToken };
+    }
     async function api(path, options = {}) {
       const method = options.method || 'GET';
       const headers = { Accept:'application/json,text/plain,*/*', ...(options.headers || {}) };
       const requestOptions = { ...options, method, headers };
-      return fetchJson(`${PROXY_BASE}${path}`, requestOptions);
+      try {
+        return await fetchJson(`${PROXY_BASE}${path}`, requestOptions);
+      } catch (proxyError) {
+        if (!/504|502|503|timeout/i.test(proxyError.message || '')) throw proxyError;
+        const directHeaders = await remoteHeaders();
+        return fetchJson(`${REMOTE_ORIGIN}/api${path}`, {
+          ...requestOptions,
+          headers: { ...directHeaders, ...(options.headers || {}) }
+        });
+      }
     }
     function avatar(player) {
       const src = imgUrl(player.avatar_url);
@@ -514,7 +537,8 @@
       try {
         const data = await api(`/players/search?q=${encodeURIComponent(q)}&limit=80`);
         renderPlayers(data.players || [], `${tr('resultsTitle')}: ${q}`);
-        setStatus(`<strong>${fmt(data.total || (data.players || []).length)}</strong> players found`);
+        const cacheNote = data._cache ? ' · local cache' : '';
+        setStatus(`<strong>${fmt(data.total || (data.players || []).length)}</strong> players found${cacheNote}`);
       } catch (error) {
         setStatus(`<span class="bad">${tr('searchFail')}: ${escapeHtml(error.message)}</span>`);
       } finally {
@@ -571,7 +595,8 @@
           api(`/players/${encodeURIComponent(id)}/loadout?cached=1`).catch(() => null),
         ]);
         renderPlayerModal(player, history || [], redemptions || {}, kingdata, standings || {}, loadout);
-        setStatus(`Loaded <strong>${escapeHtml(player.username || player.id)}</strong>`);
+        const cacheNote = player._cache ? ' · local cache' : '';
+        setStatus(`Loaded <strong>${escapeHtml(player.username || player.id)}</strong>${cacheNote}`);
       } catch (error) {
         $('modalTitle').innerHTML = '<div class="sub">Load failed</div>';
         $('modalBody').innerHTML = `<div class="empty">${tr('detailFail')}: ${escapeHtml(error.message)}</div>`;

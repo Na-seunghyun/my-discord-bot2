@@ -1,5 +1,7 @@
 const UPSTREAM = "https://kingshot.jeab.dev";
 const TOKEN_REFRESH_MARGIN_MS = 30000;
+const UPSTREAM_RETRY_STATUSES = new Set([502, 503, 504]);
+const INTEL_CACHE_TTL_MS = 1000 * 60 * 60 * 24 * 14;
 const FEEDBACK_INDEX_KEY = "feedback:index";
 const FEEDBACK_INDEX_LIMIT = 200;
 const MAX_FEEDBACK_MESSAGE = 2000;
@@ -8,6 +10,9 @@ const MAX_FEEDBACK_CONTACT = 160;
 let cachedToken = "";
 let cachedTokenExpires = 0;
 let tokenPromise = null;
+let intelSchemaReady = false;
+
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const json = (payload, status = 200) =>
   new Response(JSON.stringify(payload), {
@@ -84,6 +89,183 @@ function parseJsonArray(value) {
   } catch {
     return [];
   }
+}
+
+function parseJsonObject(value) {
+  try {
+    return JSON.parse(value || "{}");
+  } catch {
+    return {};
+  }
+}
+
+function apiPathFromRequest(request) {
+  const incoming = new URL(request.url);
+  return incoming.pathname.replace(/^\/kingshot\/?/, "");
+}
+
+function cacheKeyFromRequest(request) {
+  const incoming = new URL(request.url);
+  return `${incoming.pathname}${incoming.search}`;
+}
+
+function hasIntelDb(env) {
+  return Boolean(env.INTEL_DB && typeof env.INTEL_DB.prepare === "function");
+}
+
+async function ensureIntelSchema(env) {
+  if (!hasIntelDb(env) || intelSchemaReady) return false;
+
+  await env.INTEL_DB.batch([
+    env.INTEL_DB.prepare(
+      "CREATE TABLE IF NOT EXISTS intel_players (id TEXT PRIMARY KEY, username TEXT, username_lc TEXT, state INTEGER, alliance_name TEXT, alliance_abbr TEXT, power INTEGER, town_hall_level INTEGER, avatar_url TEXT, last_refreshed_at TEXT, updated_at INTEGER, summary_json TEXT)",
+    ),
+    env.INTEL_DB.prepare(
+      "CREATE INDEX IF NOT EXISTS idx_intel_players_name ON intel_players(username_lc)",
+    ),
+    env.INTEL_DB.prepare(
+      "CREATE INDEX IF NOT EXISTS idx_intel_players_state ON intel_players(state)",
+    ),
+    env.INTEL_DB.prepare(
+      "CREATE TABLE IF NOT EXISTS intel_cache (cache_key TEXT PRIMARY KEY, api_path TEXT, response_json TEXT, updated_at INTEGER)",
+    ),
+    env.INTEL_DB.prepare(
+      "CREATE INDEX IF NOT EXISTS idx_intel_cache_path ON intel_cache(api_path)",
+    ),
+  ]);
+
+  intelSchemaReady = true;
+  return true;
+}
+
+function normalizePlayerSummary(player) {
+  if (!player || !player.id) return null;
+  const username = cleanText(player.username || player.name || player.nickname || player.id, 160);
+  const item = {
+    ...player,
+    id: String(player.id),
+    username,
+    state: Number(player.state || player.kid || player.kingdom || 0) || null,
+    alliance_name: cleanText(player.alliance_name || player.alliance || "", 160),
+    alliance_abbr: cleanText(player.alliance_abbr || player.alliance_tag || "", 40),
+    power: Number(player.power || 0) || null,
+    town_hall_level: Number(player.town_hall_level || player.townhall || player.tc || 0) || null,
+    avatar_url: cleanText(player.avatar_url || player.avatar || "", 500),
+    last_refreshed_at: cleanText(player.last_refreshed_at || player.updated_at || "", 80),
+  };
+  return item;
+}
+
+async function savePlayerSummaries(env, players) {
+  if (!hasIntelDb(env) || !Array.isArray(players) || !players.length) return;
+  await ensureIntelSchema(env);
+  const now = Date.now();
+  const statements = players
+    .map(normalizePlayerSummary)
+    .filter(Boolean)
+    .map((player) =>
+      env.INTEL_DB.prepare(
+        "INSERT OR REPLACE INTO intel_players (id, username, username_lc, state, alliance_name, alliance_abbr, power, town_hall_level, avatar_url, last_refreshed_at, updated_at, summary_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      ).bind(
+        player.id,
+        player.username,
+        player.username.toLowerCase(),
+        player.state,
+        player.alliance_name,
+        player.alliance_abbr,
+        player.power,
+        player.town_hall_level,
+        player.avatar_url,
+        player.last_refreshed_at,
+        now,
+        JSON.stringify(player),
+      ),
+    );
+  if (statements.length) await env.INTEL_DB.batch(statements);
+}
+
+async function saveIntelCache(env, request, payload) {
+  if (!hasIntelDb(env) || request.method !== "GET" || payload == null) return;
+  await ensureIntelSchema(env);
+
+  const apiPath = apiPathFromRequest(request);
+  const cacheKey = cacheKeyFromRequest(request);
+  const responseJson = JSON.stringify(payload);
+  const now = Date.now();
+
+  await env.INTEL_DB.prepare(
+    "INSERT OR REPLACE INTO intel_cache (cache_key, api_path, response_json, updated_at) VALUES (?, ?, ?, ?)",
+  ).bind(cacheKey, apiPath, responseJson, now).run();
+
+  if (payload && payload.id) await savePlayerSummaries(env, [payload]);
+  if (payload && Array.isArray(payload.players)) await savePlayerSummaries(env, payload.players);
+  if (payload && Array.isArray(payload.top_players)) await savePlayerSummaries(env, payload.top_players);
+
+  if (env.INTEL_BUCKET && typeof env.INTEL_BUCKET.put === "function") {
+    await env.INTEL_BUCKET.put(`intel/${encodeURIComponent(cacheKey)}.json`, responseJson, {
+      httpMetadata: { contentType: "application/json; charset=utf-8" },
+      customMetadata: { apiPath, updatedAt: String(now) },
+    }).catch(() => {});
+  }
+}
+
+async function readIntelCache(env, request) {
+  if (!hasIntelDb(env) || request.method !== "GET") return null;
+  await ensureIntelSchema(env);
+
+  const cacheKey = cacheKeyFromRequest(request);
+  const row = await env.INTEL_DB.prepare(
+    "SELECT response_json, updated_at FROM intel_cache WHERE cache_key = ?",
+  ).bind(cacheKey).first();
+  if (!row || !row.response_json) return null;
+
+  const data = parseJsonObject(row.response_json);
+  data._cache = { source: "local", updated_at: Number(row.updated_at || 0) };
+  return data;
+}
+
+async function searchIntelPlayers(env, request) {
+  if (!hasIntelDb(env) || request.method !== "GET") return null;
+  const url = new URL(request.url);
+  const q = cleanText(url.searchParams.get("q"), 80).toLowerCase();
+  if (!q) return { players: [], total: 0, _cache: { source: "local-search", updated_at: 0 } };
+
+  await ensureIntelSchema(env);
+  const limit = Math.min(80, Math.max(1, Number(url.searchParams.get("limit")) || 80));
+  const rows = await env.INTEL_DB.prepare(
+    "SELECT summary_json, updated_at FROM intel_players WHERE id = ? OR username_lc LIKE ? ORDER BY updated_at DESC LIMIT ?",
+  ).bind(q, `%${q}%`, limit).all();
+
+  const players = (rows.results || [])
+    .map((row) => parseJsonObject(row.summary_json))
+    .filter((player) => player && player.id);
+  const updatedAt = Math.max(0, ...(rows.results || []).map((row) => Number(row.updated_at || 0)));
+  return { players, total: players.length, _cache: { source: "local-search", updated_at: updatedAt } };
+}
+
+async function fallbackIntelResponse(env, request) {
+  const apiPath = apiPathFromRequest(request);
+  if (/^players\/search\/?$/.test(apiPath)) return searchIntelPlayers(env, request);
+  return readIntelCache(env, request);
+}
+
+async function intelStatus(env) {
+  const status = {
+    d1: hasIntelDb(env),
+    r2: Boolean(env.INTEL_BUCKET && typeof env.INTEL_BUCKET.put === "function"),
+    players: 0,
+    cachedResponses: 0,
+  };
+
+  if (!status.d1) return status;
+  await ensureIntelSchema(env);
+  const [players, cached] = await Promise.all([
+    env.INTEL_DB.prepare("SELECT COUNT(*) AS count FROM intel_players").first(),
+    env.INTEL_DB.prepare("SELECT COUNT(*) AS count FROM intel_cache").first(),
+  ]);
+  status.players = Number(players && players.count) || 0;
+  status.cachedResponses = Number(cached && cached.count) || 0;
+  return status;
 }
 
 function clientIp(request) {
@@ -248,7 +430,7 @@ function buildUpstreamUrl(request) {
   return upstream;
 }
 
-async function proxyKingshot(request) {
+async function proxyKingshot(request, env) {
   const origin = request.headers.get("origin") || "";
 
   if (request.method === "OPTIONS") {
@@ -269,7 +451,10 @@ async function proxyKingshot(request) {
       method: request.method,
       headers: {
         accept: "application/json,text/plain,*/*",
+        "accept-language": request.headers.get("accept-language") || "en-US,en;q=0.9,ko;q=0.8",
         ...(request.method === "POST" ? { "content-type": contentType } : {}),
+        origin: UPSTREAM,
+        referer: `${UPSTREAM}/`,
         "x-api-token": token,
       },
       body: bodyText,
@@ -280,8 +465,14 @@ async function proxyKingshot(request) {
   try {
     let response = await forward(false);
     if (response.status === 401) response = await forward(true);
+    if (UPSTREAM_RETRY_STATUSES.has(response.status)) {
+      await delay(350);
+      response = await forward(true);
+    }
 
     if (!response.ok) {
+      const cached = await fallbackIntelResponse(env, request);
+      if (cached) return json(cached);
       const message = await response.text().catch(() => "");
       return upstreamError(message, response.status, origin);
     }
@@ -290,11 +481,21 @@ async function proxyKingshot(request) {
     headers.set("content-type", response.headers.get("content-type") || "application/json; charset=utf-8");
     headers.set("cache-control", "no-store");
 
-    return new Response(response.body, {
+    const text = await response.text();
+    if ((headers.get("content-type") || "").includes("json")) {
+      try {
+        const data = JSON.parse(text);
+        await saveIntelCache(env, request, data).catch(() => {});
+      } catch {}
+    }
+
+    return new Response(text, {
       status: response.status,
       headers,
     });
   } catch (error) {
+    const cached = await fallbackIntelResponse(env, request);
+    if (cached) return json(cached);
     return jsonError(error.message || "Proxy request failed.", 502, origin);
   }
 }
@@ -310,7 +511,7 @@ export default {
     const url = new URL(request.url);
 
     if (url.pathname === "/kingshot" || url.pathname.startsWith("/kingshot/")) {
-      return proxyKingshot(request);
+      return proxyKingshot(request, env);
     }
 
     if (url.pathname === "/api/visit" && request.method === "POST") {
@@ -319,6 +520,10 @@ export default {
 
     if (url.pathname === "/api/stats" && request.method === "GET") {
       return json(await readStats(env));
+    }
+
+    if (url.pathname === "/api/intel/status" && request.method === "GET") {
+      return json(await intelStatus(env));
     }
 
     if (url.pathname === "/api/feedback" && request.method === "POST") {
