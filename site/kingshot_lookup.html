@@ -412,8 +412,6 @@
     const statusEl = $('status');
     const modal = $('playerModal');
     let currentLang = 'ko';
-    let remoteToken = '';
-    let remoteTokenExpires = 0;
     let currentPlayerId = '';
     const fmt = (value) => Number(value || 0).toLocaleString(currentLang);
     const tr = (key) => (I18N[currentLang] && I18N[currentLang][key]) || I18N.en[key] || key;
@@ -460,22 +458,18 @@
         statusEl.textContent = tr('ready');
       }
     }
-    async function remoteHeaders() {
-      if (remoteToken && remoteTokenExpires - 30000 > Date.now()) {
-        return { Accept:'application/json,text/plain,*/*', 'X-API-Token': remoteToken };
-      }
-      const res = await fetch(`${REMOTE_ORIGIN}/api/session`, { headers: { Accept:'application/json' } });
-      if (!res.ok) throw new Error(`session ${res.status}`);
-      const data = await res.json();
-      remoteToken = data.token;
-      remoteTokenExpires = Number(data.expires_at || 0) * 1000;
-      return { Accept:'application/json,text/plain,*/*', 'X-API-Token': remoteToken };
-    }
     async function fetchJson(url, options = {}) {
       const res = await fetch(url, options);
       const text = await res.text();
       const type = res.headers.get('content-type') || '';
-      if (!res.ok) throw new Error(text || `HTTP ${res.status}`);
+      if (!res.ok) {
+        let message = text || `HTTP ${res.status}`;
+        try {
+          const parsed = JSON.parse(text);
+          message = parsed.error || message;
+        } catch {}
+        throw new Error(message);
+      }
       if (res.status === 204 || !text) return null;
       if (!type.includes('json')) throw new Error(`Non JSON response from ${url}`);
       return text ? JSON.parse(text) : null;
@@ -484,12 +478,7 @@
       const method = options.method || 'GET';
       const headers = { Accept:'application/json,text/plain,*/*', ...(options.headers || {}) };
       const requestOptions = { ...options, method, headers };
-      try {
-        return await fetchJson(`${PROXY_BASE}${path}`, requestOptions);
-      } catch (proxyError) {
-        const headers = await remoteHeaders();
-        return fetchJson(`${REMOTE_ORIGIN}/api${path}`, { ...requestOptions, headers: { ...headers, ...(options.headers || {}) } });
-      }
+      return fetchJson(`${PROXY_BASE}${path}`, requestOptions);
     }
     function avatar(player) {
       const src = imgUrl(player.avatar_url);
