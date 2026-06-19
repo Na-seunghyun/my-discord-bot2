@@ -1,0 +1,405 @@
+﻿<!-- File: app/templates/index.html -->
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Analytics removed for the customized build -->
+
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Legend Nash Planner</title>
+
+    <!-- Icons & Styles -->
+    <link rel="icon" href="static/favicon.ico" />
+    <link rel="stylesheet" href="static/css/base.css?v=legend-nash-10" />
+    <link rel="stylesheet" href="static/css/grid.css?v=legend-nash-10" />
+    <link rel="stylesheet" href="static/css/blocks.css?v=legend-nash-10" />
+    <link rel="stylesheet" href="static/css/ui.css?v=legend-nash-10" />
+  </head>
+
+  <body>
+
+    <!-- Sidebar: palette only (footer removed by convention) -->
+    <aside id="sidebar" class="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-mark">LN</div>
+        <div class="brand-copy">
+          <strong>Legend Nash</strong>
+          <span>Warpath layout planner</span>
+        </div>
+      </div>
+      <a class="hub-return" href="../index.html">Hub</a>
+      <!-- Hidden on mobile: usage block -->
+      <div class="usage-section" data-mobile-hidden>
+        <button id="usageToggle" class="usage-toggle" type="button" aria-expanded="false">
+          <h2 data-i18n="ui.usageTitle">How to use</h2>
+          <span class="toggle-icon" aria-hidden="true">▾</span>
+        </button>
+        <div id="usageContent" class="usage-content collapsed">
+          <div class="usage" data-i18n="ui.usage"></div>
+        </div>
+      </div>
+
+      <!-- Hidden on mobile: palette title -->
+      <div class="palette-title" data-i18n="ui.paletteTitle" data-mobile-hidden>Palette</div>
+
+      <!-- Palette -->
+      <div
+        id="palette"
+        class="palette palette--scroll"
+        role="listbox"
+        tabindex="0"
+        aria-label="Palette"
+      >
+        <div
+          class="palette-item"
+          data-kind="hq"
+          data-size="3"
+          role="button"
+          tabindex="0"
+          aria-label="HQ"
+        >
+          <div class="pi-rot"></div>
+          <span class="pi-text">HQ</span>
+        </div>
+
+        <div
+          class="palette-item"
+          data-kind="flag"
+          data-size="1"
+          role="button"
+          tabindex="0"
+          aria-label="Banner"
+        >
+          <div class="pi-rot"></div>
+          <span class="pi-text">Banner</span>
+        </div>
+
+        <div
+          class="palette-item"
+          data-kind="trap"
+          data-size="3"
+          role="button"
+          tabindex="0"
+          aria-label="Hunting Trap"
+        >
+          <div class="pi-rot"></div>
+          <span class="pi-text">Hunting Trap</span>
+        </div>
+
+        <div
+          class="palette-item"
+          data-kind="city"
+          data-size="2"
+          role="button"
+          tabindex="0"
+          aria-label="Town"
+        >
+          <div class="pi-rot"></div>
+          <span class="pi-text">Town</span>
+        </div>
+
+        <div
+          class="palette-item"
+          data-kind="resource"
+          data-size="2"
+          role="button"
+          tabindex="0"
+          aria-label="Resource"
+        >
+          <div class="pi-rot"></div>
+          <span class="pi-text">Resource</span>
+        </div>
+
+        <div
+          class="palette-item palette-item-custom"
+          data-kind="custom"
+          role="button"
+          tabindex="0"
+          aria-label="Custom Block"
+        >
+          <div class="pi-rot"></div>
+          <span class="pi-text">Custom</span>
+          <div class="custom-inputs">
+            <input
+              type="number"
+              class="custom-width"
+              placeholder="X"
+              min="1"
+              max="30"
+              value="1"
+              aria-label="Width"
+            />
+            <span class="custom-separator">횞</span>
+            <input
+              type="number"
+              class="custom-height"
+              placeholder="Y"
+              min="1"
+              max="30"
+              value="1"
+              aria-label="Height"
+            />
+          </div>
+        </div>
+      </div>
+      <div class="sidebar-footer">
+        <div class="footer-info footer-info-credit-only">
+          <span class="credit" data-i18n="ui.footer.credit">Created by #885 Legend nashsh</span>
+        </div>
+        <a
+          class="support-link"
+          href="https://buymeacoffee.com/nashsh"
+          target="_blank"
+          rel="noreferrer"
+        >
+          후원 페이지
+        </a>
+      </div>
+    </aside>
+
+    <!-- Top toolbar -->
+    <header id="toolbar" class="toolbar" role="toolbar" aria-label="Editor toolbar">
+      <div class="tb-group">
+        <button
+          id="btnUndo"
+          class="tb-btn"
+          type="button"
+          title="Undo (?쁛 / Ctrl+Z)"
+          aria-label="Undo"
+          data-i18n="ui.toolbar.undo"
+        >
+            Undo
+          </button>
+        <button
+          id="btnRedo"
+          class="tb-btn"
+          type="button"
+          title="Redo (?㎮뙓Z / Ctrl+Y)"
+          aria-label="Redo"
+          data-i18n="ui.toolbar.redo"
+        >
+            Redo
+          </button>
+      </div>
+
+      <div class="tb-sep" aria-hidden="true"></div>
+
+      <div class="tb-group">
+        <button
+          id="btnCityTrapDist"
+          class="tb-btn"
+          type="button"
+          title="Measure move time (?β뙓D / Ctrl+Alt+D)"
+          aria-label="Measure move time"
+          data-i18n="ui.toolbar.dist2label"
+        >
+            Measure move time
+          </button>
+        <button
+          id="btnPairDist"
+          class="tb-btn"
+          type="button"
+          title="Measure selected objects"
+          aria-label="Measure selected objects"
+          data-i18n="ui.toolbar.pairDist"
+        >
+            Measure selected objects
+          </button>
+        <button
+          id="btnReset"
+          class="tb-btn danger"
+          type="button"
+          title="Reset (?β뙓R / Ctrl+Alt+R)"
+          aria-label="Reset"
+          data-i18n="ui.toolbar.reset"
+        >
+            Reset
+          </button>
+        <button
+          id="btnCopyURL"
+          class="tb-btn"
+          type="button"
+          title="Copy URL (?β뙓C / Ctrl+Alt+C)"
+          aria-label="Copy URL"
+          data-i18n="ui.toolbar.copy"
+        >
+            Copy short URL
+          </button>
+        <button
+          id="btnExportPNG"
+          class="tb-btn primary"
+          type="button"
+          title="Export PNG (?β뙓E / Ctrl+Alt+E)"
+          aria-label="Export PNG"
+          data-i18n="ui.toolbar.export"
+        >
+            Export PNG
+          </button>
+        <button
+          id="btnImportPNG"
+          class="tb-btn primary"
+          type="button"
+          title="Import PNG (?β뙓I / Ctrl+Alt+I)"
+          aria-label="Import PNG"
+          data-i18n="ui.toolbar.import"
+        >
+            Import PNG
+          </button>
+        <input
+          id="pngFileInput"
+          type="file"
+          accept="image/png"
+          style="display: none;"
+          aria-hidden="true"
+        />
+      </div>
+
+      <div class="tb-flex-spacer" aria-hidden="true"></div>
+
+      <div class="tb-group">
+        <label class="lang-label" for="langSelect" data-i18n="ui.toolbar.lang">Language</label>
+        <select id="langSelect" class="lang-select" aria-label="Language">
+          <option value="en">English</option>
+          <option value="ko">한국어</option>
+          <option value="zh-CN">简体中文</option>
+          <option value="zh-TW">繁體中文</option>
+          <option value="ja">日本語</option>
+          <option value="fr">Français</option>
+          <option value="de">Deutsch</option>
+          <option value="es">Español</option>
+          <option value="it">Italiano</option>
+          <option value="pl">Polski</option>
+          <option value="pt">Português</option>
+          <option value="tr">Türkçe</option>
+          <!-- <option value="ar" data-rtl>Arabic</option> -->
+          <option value="th">ไทย</option>
+          <option value="id">Indonesian</option>
+        </select>
+      </div>
+    </header>
+
+    <!-- Viewport / World -->
+    <main id="viewport" class="viewport" aria-label="scrollable-viewport">
+      <div id="world" class="world">
+        <div id="rot" class="rot">
+          <div class="grid"></div>
+          <div id="tilesRedZone" class="tiles-redzone"></div>
+          <div id="tiles" class="tiles"></div>
+          <div id="tilesUser" class="tiles-user"></div>
+          <div id="tilesPreview" class="tiles-preview"></div>
+          <div id="outlines" class="outlines"></div>
+          <div id="outlinesPreview" class="outlines-preview"></div>
+          <div id="snap" class="snap-outline"></div>
+        </div>
+
+        <div id="badge" class="badge">
+          <button id="btnHome" class="home-btn" type="button" title="Home" aria-label="Home">
+            중앙
+          </button>
+          <button id="btnTrap" class="trap-btn" type="button" title="Find Trap" aria-label="Find Trap">
+            함정
+          </button>
+          <span id="badgeCoord" class="badge-coord-text" title="Click to jump to coordinates">x:-, y:-</span>
+          <input id="badgeInput" class="badge-coord-input" type="text" style="display: none;" placeholder="x, y" />
+          <span id="badgeZoom" aria-live="polite">100%</span>
+        </div>
+      </div>
+    </main>
+
+    <!-- Trash zone for delete via drag -->
+    <div
+      id="trashZone"
+      class="trash-zone"
+      data-i18n-title="ui.trash.title"
+      title="Drag here to delete"
+    >
+      <span class="trash-label" data-i18n="ui.trash.label">Drag here to delete</span>
+    </div>
+
+    <!-- URL Copy Modal -->
+    <div id="urlModal" class="url-modal" style="display: none;">
+      <div class="url-modal-content">
+        <div class="url-modal-header">
+          <h3 data-i18n="modal.urlCopy.title">Copy URL</h3>
+          <button id="urlModalClose" class="url-modal-close" type="button" aria-label="Close">&times;</button>
+        </div>
+        <div class="url-modal-body">
+          <p data-i18n="modal.urlCopy.message">Please copy the URL below.</p>
+          <div class="url-display-container">
+            <input id="urlDisplayInput" class="url-display-input" type="text" readonly />
+          </div>
+        </div>
+        <div class="url-modal-footer">
+          <button id="urlModalCopy" class="url-modal-copy-btn" type="button" data-i18n="modal.urlCopy.copyBtn">Copy</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Context Menu -->
+    <div id="contextMenu" class="context-menu" style="display: none;">
+      <button id="cmDistanceTarget" class="cm-item cm-action" type="button" data-i18n="ui.contextMenu.distanceTarget">
+        Select for pair distance
+      </button>
+      <div class="cm-sep"></div>
+      <div class="cm-group">
+        <div class="cm-label" data-i18n="ui.contextMenu.fontSize">Font Size</div>
+        <div class="cm-font-sizes">
+          <button class="cm-size-btn" data-size="10">10</button>
+          <button class="cm-size-btn" data-size="12">12</button>
+          <button class="cm-size-btn" data-size="14">14</button>
+          <button class="cm-size-btn" data-size="16">16</button>
+          <button class="cm-size-btn" data-size="18">18</button>
+          <button class="cm-size-btn" data-size="20">20</button>
+        </div>
+      </div>
+      <div class="cm-sep"></div>
+      <div class="cm-item cm-checkbox" id="cmWordWrap">
+        <label>
+          <input type="checkbox" id="cmWordWrapInput" />
+          <span data-i18n="ui.contextMenu.wordWrap">Word Wrap</span>
+        </label>
+      </div>
+    </div>
+
+    <noscript>Please enable JavaScript to use this app.</noscript>
+    <script src="static/js/i18n-inline.js?v=legend-nash-2"></script>
+    <script type="module" src="static/js/mainLegend.js?v=legend-nash-8"></script>
+    <script>
+      (function syncMinimapViewbox() {
+        function update() {
+          var viewport = document.querySelector('.viewport');
+          var canvas = document.querySelector('.minimap-canvas');
+          var box = document.querySelector('.minimap-viewbox');
+          var wrap = document.querySelector('.minimap');
+          if (!viewport || !canvas || !box || !wrap) return;
+
+          var canvasRect = canvas.getBoundingClientRect();
+          var wrapRect = wrap.getBoundingClientRect();
+          var scale = Math.min(196 / viewport.scrollWidth, 138 / viewport.scrollHeight);
+          var mapW = viewport.scrollWidth * scale;
+          var mapH = viewport.scrollHeight * scale;
+          var offX = (196 - mapW) / 2;
+          var offY = (138 - mapH) / 2;
+          var w = Math.min(mapW, Math.max(54, viewport.clientWidth * scale));
+          var h = Math.min(mapH, Math.max(54, viewport.clientHeight * scale));
+          var centerX = offX + (viewport.scrollLeft + viewport.clientWidth / 2) * scale;
+          var centerY = offY + (viewport.scrollTop + viewport.clientHeight / 2) * scale;
+          var x = Math.max(offX, Math.min(centerX - w / 2, offX + mapW - w));
+          var y = Math.max(offY, Math.min(centerY - h / 2, offY + mapH - h));
+
+          box.style.transform = 'none';
+          box.style.left = canvasRect.left - wrapRect.left + x * (canvasRect.width / 196) + 'px';
+          box.style.top = canvasRect.top - wrapRect.top + y * (canvasRect.height / 138) + 'px';
+          box.style.width = w * (canvasRect.width / 196) + 'px';
+          box.style.height = h * (canvasRect.height / 138) + 'px';
+        }
+
+        window.addEventListener('load', update);
+        window.addEventListener('resize', update);
+        window.addEventListener('scroll', update, true);
+        setInterval(update, 250);
+      })();
+    </script>
+  </body>
+</html>

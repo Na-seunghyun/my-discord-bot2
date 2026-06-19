@@ -1,0 +1,15 @@
+name = "my-discord-bot2"
+main = "src/index.js"
+compatibility_date = "2025-06-18"
+
+[assets]
+directory = "."
+binding = "ASSETS"
+
+[[kv_namespaces]]
+binding = "FEEDBACK"
+id = "08261076ead3448a96bf924729adb01d"
+
+[[kv_namespaces]]
+binding = "VISITS"
+id = "59330ca6081448d8bd6d3a70445e8501"

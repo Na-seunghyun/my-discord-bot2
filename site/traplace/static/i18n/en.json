@@ -1,0 +1,89 @@
+{
+  "app": {
+    "title": "Legend Nash Planner"
+  },
+  "ui": {
+    "usageTitle": "How to use",
+    "usage": "• <b>Drag & drop</b>: place items from the left palette (grid snap).<br>• <b>Middle mouse drag</b>: pan the view.<br>• <b>Ctrl/⌘ + Wheel</b>: zoom in/out.<br>• <b>Trackpad pinch</b>: .<br>• <b>Click a cell</b>: toggle red paint.<br>• <b>Town</b> label: double-click → edit (Enter save / Esc cancel).<br>• Bottom <b>delete zone</b>: drag an item here to delete.<br>※ Blue paint is created by <b>Banner (7×7)</b> and <b>HQ (15×15)</b>.",
+    "paletteTitle": "Palette",
+    "toolbar": {
+      "undo": "Undo",
+      "redo": "Redo",
+      "reset": "Reset",
+      "copy": "Copy short URL",
+      "export": "Export PNG",
+      "import": "Import PNG",
+      "dist2label": "Measure move time",
+      "pairDist": "Measure selected objects",
+      "lang": "Language",
+      "home": "Go to center"
+    },
+    "trash": {
+      "label": "Drag here to delete",
+      "title": "Drag a block into this area to delete it"
+    },
+    "footer": {
+      "credit": "Created by #885 Legend nashsh"
+    },
+    "contextMenu": {
+      "fontSize": "Font Size",
+      "wordWrap": "Word Wrap",
+      "distanceTarget": "Select for pair distance"
+    }
+  },
+  "palette": {
+    "hq": "HQ",
+    "flag": "Banner",
+    "trap": "Hunting Trap",
+    "city": "Town",
+    "resource": "Resource",
+    "block1": "1×1",
+    "block2": "2×2",
+    "block3": "3×3",
+    "custom": "Custom Block",
+    "customWidthLabel": "Width",
+    "customHeightLabel": "Height",
+    "castle": "Castle",
+    "turret": "Turret",
+    "fortress": "Fortress",
+    "sanctuary": "Sanctuary",
+    "turret_directions": [
+      "South",
+      "West",
+      "East",
+      "North"
+    ]
+  },
+  "alert": {
+    "noCities": "No cities.",
+    "noTraps": "No traps.",
+    "needTwoDistanceTargets": "Select two objects first.",
+    "specialMarchFormulaNeeded": "Castle and turret march times use a different formula. Please provide an in-game time sample.",
+    "resetConfirm": "Reset everything? (All objects and red tiles will be removed)",
+    "exportFail": "Failed to export PNG.",
+    "exportAreaTooLarge": "Export area is too large. Please reduce objects or make the area smaller.",
+    "importFail": "Failed to import PNG."
+  },
+  "msg": {
+    "copiedShort": "Short URL copied!",
+    "copiedFull": "Full URL copied",
+    "copied": "Copied!",
+    "shortenError": "Failed to create short URL.",
+    "copyError": "Failed to copy.",
+    "copyManual": "Please copy with Ctrl+C or Cmd+C",
+    "urlTooLong": "URL is too long to shorten."
+  },
+  "modal": {
+    "urlCopy": {
+      "title": "Copy URL",
+      "message": "Please copy the URL below.",
+      "copyBtn": "Copy"
+    }
+  },
+  "consent": {
+    "message": "We use anonymous analytics to improve your experience. No personal data is collected.",
+    "accept": "Accept",
+    "reject": "Reject",
+    "learnMore": "Learn More"
+  }
+}
