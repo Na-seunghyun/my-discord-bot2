@@ -25,3 +25,10 @@ id = "59330ca6081448d8bd6d3a70445e8501"
 # [[r2_buckets]]
 # binding = "INTEL_BUCKET"
 # bucket_name = "my-discord-bot2-intel"
+
+# Optional Supabase Intel storage.
+# Add SUPABASE_URL as a plain environment variable in Cloudflare.
+# Add SUPABASE_SERVICE_ROLE_KEY as a secret, never in this file.
+#
+# Example:
+# SUPABASE_URL = "https://YOUR_PROJECT_REF.supabase.co"

@@ -6,6 +6,7 @@ const FEEDBACK_INDEX_KEY = "feedback:index";
 const FEEDBACK_INDEX_LIMIT = 200;
 const MAX_FEEDBACK_MESSAGE = 2000;
 const MAX_FEEDBACK_CONTACT = 160;
+const SUPABASE_MAX_CACHE_BYTES = 120000;
 
 let cachedToken = "";
 let cachedTokenExpires = 0;
@@ -113,6 +114,55 @@ function hasIntelDb(env) {
   return Boolean(env.INTEL_DB && typeof env.INTEL_DB.prepare === "function");
 }
 
+function supabaseConfig(env) {
+  const url = String(env.SUPABASE_URL || "").replace(/\/+$/, "");
+  const key = String(env.SUPABASE_SERVICE_ROLE_KEY || "");
+  return { enabled: Boolean(url && key), url, key };
+}
+
+async function supabaseFetch(env, path, init = {}) {
+  const cfg = supabaseConfig(env);
+  if (!cfg.enabled) return null;
+
+  const headers = new Headers(init.headers || {});
+  headers.set("apikey", cfg.key);
+  headers.set("authorization", `Bearer ${cfg.key}`);
+  headers.set("accept", "application/json");
+  if (init.body && !headers.has("content-type")) headers.set("content-type", "application/json");
+
+  const response = await fetch(`${cfg.url}/rest/v1${path}`, {
+    ...init,
+    headers,
+  });
+
+  if (!response.ok) {
+    const detail = await response.text().catch(() => "");
+    throw new Error(`Supabase ${response.status}: ${detail || response.statusText}`);
+  }
+
+  return response;
+}
+
+async function supabaseJson(env, path, init = {}) {
+  const response = await supabaseFetch(env, path, init);
+  if (!response) return null;
+  const text = await response.text();
+  return text ? JSON.parse(text) : null;
+}
+
+async function supabaseCount(env, table) {
+  const response = await supabaseFetch(env, `/${table}?select=id&limit=1`, {
+    headers: {
+      prefer: "count=exact",
+      range: "0-0",
+    },
+  });
+  if (!response) return 0;
+  const range = response.headers.get("content-range") || "";
+  const total = Number(range.split("/")[1]);
+  return Number.isFinite(total) ? total : 0;
+}
+
 async function ensureIntelSchema(env) {
   if (!hasIntelDb(env) || intelSchemaReady) return false;
 
@@ -156,7 +206,7 @@ function normalizePlayerSummary(player) {
   return item;
 }
 
-async function savePlayerSummaries(env, players) {
+async function savePlayerSummariesD1(env, players) {
   if (!hasIntelDb(env) || !Array.isArray(players) || !players.length) return;
   await ensureIntelSchema(env);
   const now = Date.now();
@@ -184,22 +234,60 @@ async function savePlayerSummaries(env, players) {
   if (statements.length) await env.INTEL_DB.batch(statements);
 }
 
+async function savePlayerSummariesSupabase(env, players) {
+  if (!supabaseConfig(env).enabled || !Array.isArray(players) || !players.length) return;
+  const now = Date.now();
+  const rows = players
+    .map(normalizePlayerSummary)
+    .filter(Boolean)
+    .map((player) => ({
+      id: player.id,
+      username: player.username,
+      username_lc: player.username.toLowerCase(),
+      state: player.state,
+      alliance_name: player.alliance_name,
+      alliance_abbr: player.alliance_abbr,
+      power: player.power,
+      town_hall_level: player.town_hall_level,
+      avatar_url: player.avatar_url,
+      last_refreshed_at: player.last_refreshed_at,
+      updated_at_ms: now,
+      summary_json: player,
+    }));
+  if (!rows.length) return;
+
+  await supabaseJson(env, "/intel_players?on_conflict=id", {
+    method: "POST",
+    headers: { prefer: "resolution=merge-duplicates" },
+    body: JSON.stringify(rows.slice(0, 100)),
+  });
+}
+
 async function saveIntelCache(env, request, payload) {
-  if (!hasIntelDb(env) || request.method !== "GET" || payload == null) return;
-  await ensureIntelSchema(env);
+  if (request.method !== "GET" || payload == null) return;
 
   const apiPath = apiPathFromRequest(request);
   const cacheKey = cacheKeyFromRequest(request);
   const responseJson = JSON.stringify(payload);
   const now = Date.now();
 
-  await env.INTEL_DB.prepare(
-    "INSERT OR REPLACE INTO intel_cache (cache_key, api_path, response_json, updated_at) VALUES (?, ?, ?, ?)",
-  ).bind(cacheKey, apiPath, responseJson, now).run();
+  if (hasIntelDb(env)) {
+    await ensureIntelSchema(env);
+    await env.INTEL_DB.prepare(
+      "INSERT OR REPLACE INTO intel_cache (cache_key, api_path, response_json, updated_at) VALUES (?, ?, ?, ?)",
+    ).bind(cacheKey, apiPath, responseJson, now).run();
+  }
 
-  if (payload && payload.id) await savePlayerSummaries(env, [payload]);
-  if (payload && Array.isArray(payload.players)) await savePlayerSummaries(env, payload.players);
-  if (payload && Array.isArray(payload.top_players)) await savePlayerSummaries(env, payload.top_players);
+  const players = [];
+  if (payload && payload.id) players.push(payload);
+  if (payload && Array.isArray(payload.players)) players.push(...payload.players);
+  if (payload && Array.isArray(payload.top_players)) players.push(...payload.top_players);
+
+  await Promise.all([
+    savePlayerSummariesD1(env, players).catch(() => {}),
+    savePlayerSummariesSupabase(env, players).catch(() => {}),
+    saveIntelCacheSupabase(env, cacheKey, apiPath, responseJson, now).catch(() => {}),
+  ]);
 
   if (env.INTEL_BUCKET && typeof env.INTEL_BUCKET.put === "function") {
     await env.INTEL_BUCKET.put(`intel/${encodeURIComponent(cacheKey)}.json`, responseJson, {
@@ -207,6 +295,23 @@ async function saveIntelCache(env, request, payload) {
       customMetadata: { apiPath, updatedAt: String(now) },
     }).catch(() => {});
   }
+}
+
+async function saveIntelCacheSupabase(env, cacheKey, apiPath, responseJson, now) {
+  if (!supabaseConfig(env).enabled) return;
+  if (responseJson.length > SUPABASE_MAX_CACHE_BYTES) return;
+
+  await supabaseJson(env, "/intel_cache?on_conflict=cache_key", {
+    method: "POST",
+    headers: { prefer: "resolution=merge-duplicates" },
+    body: JSON.stringify([{
+      cache_key: cacheKey,
+      api_path: apiPath,
+      response_json: JSON.parse(responseJson),
+      updated_at_ms: now,
+      byte_size: responseJson.length,
+    }]),
+  });
 }
 
 async function readIntelCache(env, request) {
@@ -221,6 +326,20 @@ async function readIntelCache(env, request) {
 
   const data = parseJsonObject(row.response_json);
   data._cache = { source: "local", updated_at: Number(row.updated_at || 0) };
+  return data;
+}
+
+async function readIntelCacheSupabase(env, request) {
+  if (!supabaseConfig(env).enabled || request.method !== "GET") return null;
+  const cacheKey = encodeURIComponent(cacheKeyFromRequest(request));
+  const rows = await supabaseJson(
+    env,
+    `/intel_cache?cache_key=eq.${cacheKey}&select=response_json,updated_at_ms&limit=1`,
+  );
+  const row = rows && rows[0];
+  if (!row || !row.response_json) return null;
+  const data = row.response_json;
+  data._cache = { source: "supabase", updated_at: Number(row.updated_at_ms || 0) };
   return data;
 }
 
@@ -243,28 +362,69 @@ async function searchIntelPlayers(env, request) {
   return { players, total: players.length, _cache: { source: "local-search", updated_at: updatedAt } };
 }
 
+async function searchIntelPlayersSupabase(env, request) {
+  if (!supabaseConfig(env).enabled || request.method !== "GET") return null;
+  const url = new URL(request.url);
+  const q = cleanText(url.searchParams.get("q"), 80).toLowerCase();
+  if (!q) return { players: [], total: 0, _cache: { source: "supabase-search", updated_at: 0 } };
+
+  const limit = Math.min(80, Math.max(1, Number(url.searchParams.get("limit")) || 80));
+  const query = encodeURIComponent(`*${q}*`);
+  const id = encodeURIComponent(q);
+  const rows = await supabaseJson(
+    env,
+    `/intel_players?or=(id.eq.${id},username_lc.ilike.${query})&select=summary_json,updated_at_ms&order=updated_at_ms.desc&limit=${limit}`,
+  );
+  const players = (rows || []).map((row) => row.summary_json).filter((player) => player && player.id);
+  const updatedAt = Math.max(0, ...(rows || []).map((row) => Number(row.updated_at_ms || 0)));
+  return { players, total: players.length, _cache: { source: "supabase-search", updated_at: updatedAt } };
+}
+
 async function fallbackIntelResponse(env, request) {
   const apiPath = apiPathFromRequest(request);
-  if (/^players\/search\/?$/.test(apiPath)) return searchIntelPlayers(env, request);
-  return readIntelCache(env, request);
+  if (/^players\/search\/?$/.test(apiPath)) {
+    return (
+      (await searchIntelPlayersSupabase(env, request).catch(() => null)) ||
+      (await searchIntelPlayers(env, request).catch(() => null))
+    );
+  }
+  return (
+    (await readIntelCacheSupabase(env, request).catch(() => null)) ||
+    (await readIntelCache(env, request).catch(() => null))
+  );
 }
 
 async function intelStatus(env) {
+  const supabase = supabaseConfig(env);
   const status = {
     d1: hasIntelDb(env),
     r2: Boolean(env.INTEL_BUCKET && typeof env.INTEL_BUCKET.put === "function"),
+    supabase: supabase.enabled,
     players: 0,
     cachedResponses: 0,
+    supabasePlayers: 0,
+    supabaseCachedResponses: 0,
   };
 
-  if (!status.d1) return status;
-  await ensureIntelSchema(env);
-  const [players, cached] = await Promise.all([
-    env.INTEL_DB.prepare("SELECT COUNT(*) AS count FROM intel_players").first(),
-    env.INTEL_DB.prepare("SELECT COUNT(*) AS count FROM intel_cache").first(),
-  ]);
-  status.players = Number(players && players.count) || 0;
-  status.cachedResponses = Number(cached && cached.count) || 0;
+  if (status.d1) {
+    await ensureIntelSchema(env);
+    const [players, cached] = await Promise.all([
+      env.INTEL_DB.prepare("SELECT COUNT(*) AS count FROM intel_players").first(),
+      env.INTEL_DB.prepare("SELECT COUNT(*) AS count FROM intel_cache").first(),
+    ]);
+    status.players = Number(players && players.count) || 0;
+    status.cachedResponses = Number(cached && cached.count) || 0;
+  }
+
+  if (status.supabase) {
+    const [players, cached] = await Promise.all([
+      supabaseCount(env, "intel_players").catch(() => 0),
+      supabaseCount(env, "intel_cache").catch(() => 0),
+    ]);
+    status.supabasePlayers = players;
+    status.supabaseCachedResponses = cached;
+  }
+
   return status;
 }
 
@@ -355,6 +515,46 @@ async function listFeedback(request, env) {
   );
 
   return json({ ok: true, enabled: true, items: items.filter(Boolean) });
+}
+
+function requireAdmin(request, env) {
+  if (!env.ADMIN_TOKEN) return { ok: false, response: json({ ok: false, error: "ADMIN_TOKEN is not configured." }, 403) };
+  const url = new URL(request.url);
+  const token = url.searchParams.get("token") || request.headers.get("x-admin-token") || "";
+  if (token !== env.ADMIN_TOKEN) return { ok: false, response: json({ ok: false, error: "Invalid admin token." }, 403) };
+  return { ok: true };
+}
+
+async function cleanupIntel(request, env) {
+  const admin = requireAdmin(request, env);
+  if (!admin.ok) return admin.response;
+
+  const url = new URL(request.url);
+  const days = Math.min(180, Math.max(7, Number(url.searchParams.get("days")) || 45));
+  const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
+  const result = {
+    ok: true,
+    days,
+    cutoff,
+    d1Deleted: 0,
+    supabaseDeleted: 0,
+  };
+
+  if (hasIntelDb(env)) {
+    await ensureIntelSchema(env);
+    const deleted = await env.INTEL_DB.prepare("DELETE FROM intel_cache WHERE updated_at < ?").bind(cutoff).run();
+    result.d1Deleted = Number(deleted.meta && deleted.meta.changes) || 0;
+  }
+
+  if (supabaseConfig(env).enabled) {
+    const response = await supabaseFetch(env, `/intel_cache?updated_at_ms=lt.${cutoff}`, {
+      method: "DELETE",
+      headers: { prefer: "return=minimal" },
+    }).catch(() => null);
+    result.supabaseDeleted = response ? 1 : 0;
+  }
+
+  return json(result);
 }
 
 async function getToken(force = false) {
@@ -524,6 +724,10 @@ export default {
 
     if (url.pathname === "/api/intel/status" && request.method === "GET") {
       return json(await intelStatus(env));
+    }
+
+    if (url.pathname === "/api/intel/cleanup" && request.method === "POST") {
+      return cleanupIntel(request, env);
     }
 
     if (url.pathname === "/api/feedback" && request.method === "POST") {
