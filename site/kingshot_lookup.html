@@ -184,6 +184,10 @@
       gap: 10px;
       padding: 15px 16px 0;
     }
+    body.results-mode .spotlight-head,
+    body.results-mode #spotlight {
+      display: none;
+    }
     .scout-board {
       padding: 16px;
       display: grid;
@@ -307,11 +311,14 @@
     .metric-item strong, .detail-box strong { overflow-wrap: anywhere; }
     .alliance { display: flex; justify-content: space-between; gap: 10px; }
     dialog {
-      width: min(1080px, calc(100% - 22px));
+      width: min(1140px, calc(100% - 22px));
       max-height: min(90vh, 900px);
       border: 1px solid rgba(255,255,255,.16);
       border-radius: var(--radius);
-      background: rgba(10, 13, 22, .96);
+      background:
+        radial-gradient(circle at 18% 0%, rgba(255,60,167,.18), transparent 34%),
+        radial-gradient(circle at 86% 8%, rgba(79,229,255,.16), transparent 36%),
+        rgba(8, 10, 18, .98);
       color: var(--text);
       box-shadow: var(--shadow);
       padding: 0;
@@ -334,6 +341,101 @@
     }
     .modal-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
     .modal-body { padding: 16px; overflow: auto; min-height: 0; }
+    .modal-body.premium { display: grid; gap: 14px; }
+    .premium-profile {
+      position: relative;
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: 190px minmax(0, 1fr);
+      gap: 16px;
+      min-height: 230px;
+      padding: 16px;
+      border: 1px solid rgba(255,255,255,.16);
+      border-radius: 10px;
+      background:
+        linear-gradient(135deg, rgba(255,60,167,.2), transparent 48%),
+        linear-gradient(245deg, rgba(79,229,255,.16), transparent 44%),
+        rgba(255,255,255,.055);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 22px 58px rgba(0,0,0,.34);
+    }
+    .premium-profile::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        repeating-linear-gradient(0deg, rgba(255,255,255,.035) 0 1px, transparent 1px 9px),
+        linear-gradient(90deg, transparent, rgba(255,255,255,.08), transparent);
+      opacity: .25;
+      mix-blend-mode: screen;
+    }
+    .premium-portrait {
+      position: relative;
+      z-index: 1;
+      min-height: 198px;
+      overflow: hidden;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.18);
+      background:
+        radial-gradient(circle at 50% 18%, rgba(255,215,106,.28), transparent 46%),
+        linear-gradient(135deg, rgba(255,60,167,.22), rgba(79,229,255,.14));
+    }
+    .premium-portrait img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .premium-summary {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      align-content: space-between;
+      gap: 14px;
+      min-width: 0;
+    }
+    .premium-title { display: grid; gap: 8px; }
+    .premium-title h2 {
+      margin: 0;
+      color: white;
+      font-size: clamp(30px, 4vw, 52px);
+      line-height: .96;
+      overflow-wrap: anywhere;
+      text-shadow: 0 0 26px rgba(255,60,167,.18);
+    }
+    .premium-id { color: var(--muted); font-weight: 850; }
+    .premium-badges { display: flex; flex-wrap: wrap; gap: 8px; }
+    .premium-badge {
+      min-height: 30px;
+      display: inline-flex;
+      align-items: center;
+      padding: 0 10px;
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 999px;
+      background: rgba(0,0,0,.28);
+      color: #eaf6ff;
+      font-size: 12px;
+      font-weight: 950;
+    }
+    .premium-badge.hot { border-color: rgba(255,215,106,.32); background: linear-gradient(135deg, rgba(255,215,106,.22), rgba(255,60,167,.12)); color: #fff1b8; }
+    .premium-stat-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .premium-stat {
+      min-height: 78px;
+      padding: 12px;
+      border: 1px solid rgba(255,255,255,.13);
+      border-radius: 9px;
+      background: rgba(0,0,0,.25);
+    }
+    .premium-stat span { display: block; margin-bottom: 7px; color: var(--muted); font-size: 11px; font-weight: 850; text-transform: uppercase; }
+    .premium-stat strong { display: block; color: white; font-size: 19px; overflow-wrap: anywhere; }
+    .premium-section {
+      padding: 14px;
+      border: 1px solid rgba(255,255,255,.13);
+      border-radius: 10px;
+      background:
+        linear-gradient(135deg, rgba(79,229,255,.08), transparent 48%),
+        rgba(255,255,255,.045);
+    }
+    .premium-section h2 { margin-bottom: 10px; }
     .profile-hero {
       display: grid;
       grid-template-columns: 170px minmax(0, 1fr);
@@ -475,19 +577,20 @@
     th { color: var(--muted); }
     .bad { color: var(--red); }
     @media (max-width: 980px) {
-      .hero, .layout, .profile-hero { grid-template-columns: 1fr; }
-      .detail-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .hero, .layout, .profile-hero, .premium-profile { grid-template-columns: 1fr; }
+      .detail-grid, .premium-stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
     @media (max-width: 640px) {
       .shell { width: min(100% - 18px, 560px); padding-top: 10px; }
       .topbar { position: relative; top: auto; align-items: stretch; flex-direction: column; }
       .top-actions { justify-content: stretch; }
       .top-actions > *, .link-button { width: 100%; }
-      .search-box, .kingdom-box, .statline, .detail-grid, .gear-list { grid-template-columns: 1fr; }
+      .search-box, .kingdom-box, .statline, .detail-grid, .gear-list, .premium-stat-grid { grid-template-columns: 1fr; }
       .scout-board { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 12px; }
       .profile-tile { min-height: 146px; }
       .results { grid-template-columns: 1fr; padding: 12px; }
       .intro, .search-deck, .side, .modal-body { padding: 13px; }
+      .premium-profile { padding: 12px; }
       .modal-head { align-items: stretch; flex-direction: column; }
       .modal-actions button { width: 100%; }
     }
@@ -542,7 +645,7 @@
 
     <section class="layout">
       <div class="panel">
-        <div class="section-head">
+        <div id="spotlightHead" class="section-head spotlight-head">
           <h2 id="mainTitle" data-i18n="scoutBoard">스카우트 보드</h2>
           <button id="shuffleBtn" type="button" data-i18n="shuffle">새로 보기</button>
         </div>
@@ -720,6 +823,7 @@
       }
     }
     async function loadSpotlight() {
+      document.body.classList.remove('results-mode');
       spotlightEl.innerHTML = `<div class="empty">${tr('loadingTiles')}</div>`;
       const offset = Math.floor(Math.random() * 8) * 100;
       try {
@@ -736,6 +840,7 @@
       if (!q) return setStatus(`<span class="bad">${tr('enterSearch')}</span>`);
       if (/^\d{3,}$/.test(q)) return openPlayer(q);
       setBusy(true);
+      document.body.classList.add('results-mode');
       setStatus(`Searching <strong>${escapeHtml(q)}</strong>...`);
       try {
         const data = await api(`/players/search?q=${encodeURIComponent(q)}&limit=80`);
@@ -752,6 +857,7 @@
       const kid = $('kingdomInput').value.trim();
       if (!/^\d+$/.test(kid)) return setStatus(`<span class="bad">${tr('enterKingdom')}</span>`);
       setBusy(true);
+      document.body.classList.add('results-mode');
       setStatus(`Loading kingdom <strong>${escapeHtml(kid)}</strong>...`);
       try {
         const data = await api(`/kingdoms/${kid}`);
@@ -887,6 +993,48 @@
         <h2>Standings</h2>${standingRows ? `<table><thead><tr><th>Board</th><th>Rank</th><th>Score</th><th>Kingdom</th></tr></thead><tbody>${standingRows}</tbody></table>` : `<div class="empty">${tr('noResults')}</div>`}
         <h2>History</h2>${historyRows ? `<table><thead><tr><th>Name</th><th>Kingdom</th><th>Alliance</th><th>Power</th><th>Recorded</th></tr></thead><tbody>${historyRows}</tbody></table>` : `<div class="empty">${tr('noResults')}</div>`}
         <h2>Codes</h2>${codeRows ? `<table><thead><tr><th>Code</th><th>Status</th><th>Time</th></tr></thead><tbody>${codeRows}</tbody></table>` : `<div class="empty">${tr('noResults')}</div>`}`;
+    }
+
+    function renderPlayerModal(player, history, redemptions, kingdata, standings, loadout) {
+      const kingdom = player.state || player.kid || player.kingdom || '-';
+      const alliance = player.alliance_abbr || player.alliance_name || '-';
+      $('modalTitle').innerHTML = `${avatar(player)}<div><div class="name">${escapeHtml(player.username || player.id)}</div><div class="sub">ID ${escapeHtml(player.id)} / K${escapeHtml(kingdom)} / ${escapeHtml(alliance)}</div></div>`;
+      const portrait = imgUrl(player.avatar_url);
+      const boxes = [
+        ['Power', fmt(player.power)],
+        ['Town Center', player.town_hall_level || '-'],
+        ['Life Tree', player.life_tree_level || '-'],
+        ['Mystic Score', fmt(player.mystic_trial_score)],
+        ['Mystic Rank', player.mystic_trial_rank ? `#${fmt(player.mystic_trial_rank)}` : '-'],
+        ['Crowns', kingdata && kingdata.crowns != null ? kingdata.crowns : '-'],
+        ['Kingdoms ruled', kingdata && kingdata.kingdoms_ruled != null ? kingdata.kingdoms_ruled : '-'],
+        ['Updated', ago(player.last_refreshed_at)],
+      ];
+      const standingRows = (standings.standings || []).slice(0, 12).map(row => `<tr><td>${escapeHtml(row.label || row.board_type)}</td><td>#${fmt(row.rank)}</td><td>${fmt(row.score)}</td><td>${row.kid ? `K${escapeHtml(row.kid)}` : '-'}</td></tr>`).join('');
+      const historyRows = history.slice(0, 10).map(row => `<tr><td>${escapeHtml(row.username || '-')}</td><td>K${escapeHtml(row.state || '-')}</td><td>${escapeHtml(row.alliance_abbr || row.alliance_name || '-')}</td><td>${fmt(row.power || '')}</td><td>${ago(row.recorded_at)}</td></tr>`).join('');
+      const codeRows = (redemptions.redemptions || []).slice(0, 10).map(row => `<tr><td>${escapeHtml(row.Code || row.code || '-')}</td><td>${escapeHtml(row.Status || row.status || '-')}</td><td>${ago(row.RedeemedAt || row.redeemed_at)}</td></tr>`).join('');
+      $('modalBody').className = 'modal-body premium';
+      $('modalBody').innerHTML = `<section class="premium-profile">
+          <div class="premium-portrait">${portrait ? `<img src="${escapeHtml(portrait)}" alt="">` : ''}</div>
+          <div class="premium-summary">
+            <div class="premium-title">
+              <div class="brand">885 LEGEND NASHSH INTEL</div>
+              <h2>${escapeHtml(player.username || player.id)}</h2>
+              <div class="premium-id">ID ${escapeHtml(player.id)} / K${escapeHtml(kingdom)} / ${escapeHtml(alliance)}</div>
+              <div class="premium-badges">
+                <span class="premium-badge hot">Power ${fmt(player.power)}</span>
+                <span class="premium-badge">TC ${escapeHtml(player.town_hall_level || '-')}</span>
+                <span class="premium-badge">Mystic #${escapeHtml(player.mystic_trial_rank || '-')}</span>
+                <span class="premium-badge">Updated ${ago(player.last_refreshed_at)}</span>
+              </div>
+            </div>
+            <div class="premium-stat-grid">${boxes.map(([label, value]) => `<div class="premium-stat"><span>${label}</span><strong>${escapeHtml(value)}</strong></div>`).join('')}</div>
+          </div>
+        </section>
+        <section class="premium-section">${renderLoadout(loadout)}</section>
+        <section class="premium-section"><h2>Standings</h2>${standingRows ? `<table><thead><tr><th>Board</th><th>Rank</th><th>Score</th><th>Kingdom</th></tr></thead><tbody>${standingRows}</tbody></table>` : `<div class="empty">${tr('noResults')}</div>`}</section>
+        <section class="premium-section"><h2>History</h2>${historyRows ? `<table><thead><tr><th>Name</th><th>Kingdom</th><th>Alliance</th><th>Power</th><th>Recorded</th></tr></thead><tbody>${historyRows}</tbody></table>` : `<div class="empty">${tr('noResults')}</div>`}</section>
+        <section class="premium-section"><h2>Codes</h2>${codeRows ? `<table><thead><tr><th>Code</th><th>Status</th><th>Time</th></tr></thead><tbody>${codeRows}</tbody></table>` : `<div class="empty">${tr('noResults')}</div>`}</section>`;
     }
 
     $('searchBtn').addEventListener('click', searchPlayers);
