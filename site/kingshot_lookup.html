@@ -1507,6 +1507,104 @@
         <section class="premium-section"><h2>${tr('codes')}</h2>${codeRows ? `<table><thead><tr><th>${tr('code')}</th><th>${tr('status')}</th><th>${tr('time')}</th></tr></thead><tbody>${codeRows}</tbody></table>` : `<div class="empty">${tr('noResults')}</div>`}</section>`;
     }
 
+    Object.assign(I18N, {
+      ko: {
+        back:'허브로 돌아가기', support:'후원 페이지', title:'인텔 커맨드 덱',
+        subtitle:'플레이어 검색, 왕국 요약, 영웅과 장비 정보를 한 화면에서 확인하는 인텔 허브입니다.',
+        storedPlayers:'저장된 플레이어', cachedData:'캐시 응답', storageState:'저장소 상태',
+        quickSearch:'빠른 검색', playerPlaceholder:'플레이어 이름 또는 ID', search:'검색', idDetail:'ID 상세',
+        kingdomPlaceholder:'왕국 번호 예: 885', open:'열기', ready:'검색어 또는 왕국 번호를 입력하세요.',
+        scoutBoard:'스카우트 보드', shuffle:'새로 보기', loadingTiles:'프로필 블록을 불러오는 중입니다.',
+        resultsTitle:'검색 결과', emptyResults:'아직 표시할 정보가 없습니다.', kingdomInfo:'왕국 정보',
+        emptyKingdom:'왕국 번호를 조회하면 요약이 표시됩니다.', refresh:'새로고침', close:'닫기',
+        enterSearch:'검색어를 입력하세요.', enterKingdom:'왕국 번호를 입력하세요.', noResults:'검색 결과가 없습니다.',
+        searchFail:'검색 결과를 불러오지 못했습니다.', kingdomFail:'왕국 정보를 불러오지 못했습니다.',
+        detailFail:'플레이어 상세 정보를 불러오지 못했습니다.', loadingDetail:'플레이어 상세 정보를 불러오는 중입니다...',
+        noLoadout:'수집된 영웅/장비 정보가 없습니다. 원본 서비스에 존재하는 정보만 표시할 수 있습니다.',
+        searchStatus:'검색 중', found:'명 발견', localCache:'로컬 캐시', loadingKingdom:'왕국 불러오는 중',
+        trackedPlayers:'추적 플레이어', alliances:'연맹', loaded:'불러옴', partialDetail:'일부 정보', loadFailed:'불러오기 실패',
+        retry:'다시 시도', partialAlert:'일부 세부 패널을 원본에서 불러오지 못했습니다. 사용 가능한 응답/캐시의 기본 프로필 정보는 표시됩니다.',
+        power:'전투력', townCenter:'도시 레벨', lifeTree:'생명의 나무', mysticScore:'미스틱 점수', mysticRank:'미스틱 순위',
+        crowns:'왕관', kingdomsRuled:'통치 왕국', updated:'업데이트', kingdom:'왕국', heroesGear:'영웅과 장비',
+        fetched:'수집', stale:'캐시 데이터가 오래되었을 수 있습니다.', noGear:'장비 없음', slot:'슬롯', level:'레벨', stars:'별',
+        exclusive:'전용 장비', forgeLevel:'제련 레벨', standings:'순위', history:'기록', codes:'쿠폰',
+        board:'보드', rank:'순위', score:'점수', name:'이름', alliance:'연맹', recorded:'기록일', code:'코드', status:'상태', time:'시간',
+        grade:'등급', tracked:'추적', castle:'캐슬', members:'멤버', weapon:'무기', armor:'갑옷', helmet:'투구', boots:'신발'
+      },
+      en: I18N.en,
+      fr: I18N.fr || I18N.en,
+      de: I18N.de || I18N.en,
+      id: I18N.id || I18N.en,
+      'zh-CN': {
+        ...I18N.en,
+        back:'返回主页', support:'赞助页面', title:'情报指挥台', subtitle:'用于搜索玩家、查看王国摘要、英雄和装备信息的独立情报中心。',
+        storedPlayers:'已存玩家', cachedData:'缓存响应', storageState:'存储状态', quickSearch:'快速搜索', playerPlaceholder:'玩家名称或 ID',
+        search:'搜索', idDetail:'ID 详情', kingdomPlaceholder:'王国编号，例如 885', open:'打开', ready:'请输入搜索词或王国编号。',
+        scoutBoard:'侦察看板', shuffle:'换一批', loadingTiles:'正在加载资料卡。', resultsTitle:'搜索结果', emptyResults:'暂无可显示信息。',
+        kingdomInfo:'王国信息', emptyKingdom:'输入王国编号后会显示摘要。', refresh:'刷新', close:'关闭',
+        enterSearch:'请输入搜索词。', enterKingdom:'请输入王国编号。', noResults:'没有找到结果。', searchFail:'无法加载搜索结果。',
+        kingdomFail:'无法加载王国信息。', detailFail:'无法加载玩家详情。', loadingDetail:'正在加载玩家详情...',
+        noLoadout:'没有已收集的英雄/装备信息。只能显示来源服务中存在的数据。', searchStatus:'搜索中', found:'名玩家',
+        localCache:'本地缓存', loadingKingdom:'正在加载王国', trackedPlayers:'已追踪玩家', alliances:'联盟',
+        loaded:'已加载', partialDetail:'部分详情', loadFailed:'加载失败', retry:'重试',
+        partialAlert:'部分详情面板无法从来源加载。仍会显示可用响应/缓存中的基础资料。',
+        power:'战力', townCenter:'城市等级', lifeTree:'生命之树', mysticScore:'秘境分数', mysticRank:'秘境排名',
+        crowns:'王冠', kingdomsRuled:'统治王国', updated:'更新时间', kingdom:'王国', heroesGear:'英雄与装备',
+        fetched:'获取时间', stale:'缓存数据可能已过期', noGear:'无装备', slot:'位置', level:'等级', stars:'星级',
+        exclusive:'专属装备', forgeLevel:'锻造等级', standings:'排行榜', history:'历史', codes:'兑换码',
+        board:'榜单', rank:'排名', score:'分数', name:'名称', alliance:'联盟', recorded:'记录时间', code:'代码',
+        status:'状态', time:'时间', grade:'评级', tracked:'追踪', castle:'城堡', members:'成员', weapon:'武器',
+        armor:'护甲', helmet:'头盔', boots:'靴子'
+      },
+      'zh-TW': {
+        ...I18N.en,
+        back:'返回首頁', support:'贊助頁面', title:'情報指揮台', subtitle:'用於搜尋玩家、查看王國摘要、英雄與裝備資訊的獨立情報中心。',
+        storedPlayers:'已存玩家', cachedData:'快取回應', storageState:'儲存狀態', quickSearch:'快速搜尋', playerPlaceholder:'玩家名稱或 ID',
+        search:'搜尋', idDetail:'ID 詳情', kingdomPlaceholder:'王國編號，例如 885', open:'開啟', ready:'請輸入搜尋詞或王國編號。',
+        scoutBoard:'偵察看板', shuffle:'換一批', loadingTiles:'正在載入資料卡。', resultsTitle:'搜尋結果', emptyResults:'暫無可顯示資訊。',
+        kingdomInfo:'王國資訊', emptyKingdom:'輸入王國編號後會顯示摘要。', refresh:'重新整理', close:'關閉',
+        enterSearch:'請輸入搜尋詞。', enterKingdom:'請輸入王國編號。', noResults:'沒有找到結果。', searchFail:'無法載入搜尋結果。',
+        kingdomFail:'無法載入王國資訊。', detailFail:'無法載入玩家詳情。', loadingDetail:'正在載入玩家詳情...',
+        noLoadout:'沒有已收集的英雄/裝備資訊。只能顯示來源服務中存在的資料。', searchStatus:'搜尋中', found:'名玩家',
+        localCache:'本機快取', loadingKingdom:'正在載入王國', trackedPlayers:'已追蹤玩家', alliances:'聯盟',
+        loaded:'已載入', partialDetail:'部分詳情', loadFailed:'載入失敗', retry:'重試',
+        partialAlert:'部分詳情面板無法從來源載入。仍會顯示可用回應/快取中的基本資料。',
+        power:'戰力', townCenter:'城市等級', lifeTree:'生命之樹', mysticScore:'秘境分數', mysticRank:'秘境排名',
+        crowns:'王冠', kingdomsRuled:'統治王國', updated:'更新時間', kingdom:'王國', heroesGear:'英雄與裝備',
+        fetched:'取得時間', stale:'快取資料可能已過期', noGear:'無裝備', slot:'位置', level:'等級', stars:'星級',
+        exclusive:'專屬裝備', forgeLevel:'鍛造等級', standings:'排行榜', history:'歷史', codes:'兌換碼',
+        board:'榜單', rank:'排名', score:'分數', name:'名稱', alliance:'聯盟', recorded:'記錄時間', code:'代碼',
+        status:'狀態', time:'時間', grade:'評級', tracked:'追蹤', castle:'城堡', members:'成員', weapon:'武器',
+        armor:'護甲', helmet:'頭盔', boots:'靴子'
+      },
+      th: {
+        ...I18N.en,
+        back:'กลับหน้าหลัก', support:'หน้าสนับสนุน', title:'Intel Command Deck',
+        subtitle:'ศูนย์ข้อมูลสำหรับค้นหาผู้เล่น สรุปอาณาจักร ฮีโร่ และอุปกรณ์',
+        storedPlayers:'ผู้เล่นที่บันทึก', cachedData:'คำตอบแคช', storageState:'สถานะพื้นที่เก็บ',
+        quickSearch:'ค้นหาด่วน', playerPlaceholder:'ชื่อผู้เล่นหรือ ID', search:'ค้นหา', idDetail:'รายละเอียด ID',
+        kingdomPlaceholder:'หมายเลขอาณาจักร เช่น 885', open:'เปิด', ready:'ใส่คำค้นหาหรือหมายเลขอาณาจักร',
+        scoutBoard:'กระดานสอดแนม', shuffle:'สุ่มใหม่', loadingTiles:'กำลังโหลดโปรไฟล์',
+        resultsTitle:'ผลการค้นหา', emptyResults:'ยังไม่มีข้อมูลให้แสดง', kingdomInfo:'ข้อมูลอาณาจักร',
+        emptyKingdom:'ใส่หมายเลขอาณาจักรเพื่อดูสรุป', refresh:'รีเฟรช', close:'ปิด',
+        enterSearch:'ใส่คำค้นหา', enterKingdom:'ใส่หมายเลขอาณาจักร', noResults:'ไม่พบผลลัพธ์',
+        searchFail:'โหลดผลการค้นหาไม่ได้', kingdomFail:'โหลดข้อมูลอาณาจักรไม่ได้', detailFail:'โหลดรายละเอียดผู้เล่นไม่ได้',
+        loadingDetail:'กำลังโหลดรายละเอียดผู้เล่น...', noLoadout:'ไม่มีข้อมูลฮีโร่/อุปกรณ์ที่เก็บไว้ แสดงได้เฉพาะข้อมูลจากแหล่งต้นทาง',
+        searchStatus:'กำลังค้นหา', found:'ผู้เล่นที่พบ', localCache:'แคชในเครื่อง', loadingKingdom:'กำลังโหลดอาณาจักร',
+        trackedPlayers:'ผู้เล่นที่ติดตาม', alliances:'พันธมิตร', loaded:'โหลดแล้ว', partialDetail:'รายละเอียดบางส่วน',
+        loadFailed:'โหลดล้มเหลว', retry:'ลองอีกครั้ง', partialAlert:'บางส่วนโหลดจากต้นทางไม่ได้ แต่ยังแสดงข้อมูลพื้นฐานจากข้อมูลที่มี/แคช',
+        power:'พลัง', townCenter:'ระดับเมือง', lifeTree:'ต้นไม้ชีวิต', mysticScore:'คะแนน Mystic', mysticRank:'อันดับ Mystic',
+        crowns:'มงกุฎ', kingdomsRuled:'อาณาจักรที่ปกครอง', updated:'อัปเดต', kingdom:'อาณาจักร', heroesGear:'ฮีโร่และอุปกรณ์',
+        fetched:'ดึงข้อมูล', stale:'ข้อมูลแคชอาจเก่า', noGear:'ไม่มีอุปกรณ์', slot:'ช่อง', level:'เลเวล', stars:'ดาว',
+        exclusive:'อุปกรณ์เฉพาะ', forgeLevel:'เลเวล Forge', standings:'อันดับ', history:'ประวัติ', codes:'โค้ด',
+        board:'กระดาน', rank:'อันดับ', score:'คะแนน', name:'ชื่อ', alliance:'พันธมิตร', recorded:'บันทึกเมื่อ',
+        code:'โค้ด', status:'สถานะ', time:'เวลา', grade:'เกรด', tracked:'ติดตาม', castle:'ปราสาท', members:'สมาชิก',
+        weapon:'อาวุธ', armor:'เกราะ', helmet:'หมวก', boots:'รองเท้า'
+      }
+    });
+
+    I18N.zh = I18N['zh-CN'];
+
     $('searchBtn').addEventListener('click', searchPlayers);
     $('directBtn').addEventListener('click', () => openPlayer($('playerQuery').value.trim()));
     $('kingdomBtn').addEventListener('click', loadKingdom);
