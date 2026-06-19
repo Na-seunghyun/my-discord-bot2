@@ -1,0 +1,459 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fort / Sanc Distributor</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #070a12;
+      --panel: rgba(16,22,38,.82);
+      --line: rgba(154,183,255,.22);
+      --text: #f7fbff;
+      --muted: #aab8d5;
+      --dim: #73819f;
+      --cyan: #43f6d7;
+      --gold: #f6cf72;
+      --pink: #ff7fb6;
+      --bad: #ff726d;
+      font-family: Inter, Pretendard, "Noto Sans KR", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      background:
+        linear-gradient(115deg, rgba(67,246,215,.14), transparent 34%),
+        radial-gradient(circle at 80% 10%, rgba(246,207,114,.18), transparent 32%),
+        radial-gradient(circle at 12% 88%, rgba(255,127,182,.13), transparent 35%),
+        var(--bg);
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+      background-size: 52px 52px;
+      mask-image: linear-gradient(to bottom, rgba(0,0,0,.92), rgba(0,0,0,.18));
+    }
+    a { color: inherit; text-decoration: none; }
+    .wrap {
+      position: relative;
+      z-index: 1;
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 24px 0 36px;
+    }
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 16px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(7,10,18,.62);
+      backdrop-filter: blur(18px);
+      box-shadow: 0 24px 80px rgba(0,0,0,.42);
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      min-width: 0;
+      font-weight: 950;
+    }
+    .mark {
+      display: grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      border: 1px solid rgba(67,246,215,.48);
+      border-radius: 14px;
+      color: var(--gold);
+      background: rgba(67,246,215,.1);
+    }
+    .actions { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
+    select, button, input, textarea {
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: rgba(255,255,255,.07);
+      color: var(--text);
+      font: inherit;
+    }
+    select, button, .back {
+      min-height: 42px;
+      padding: 0 13px;
+      font-size: 13px;
+      font-weight: 900;
+    }
+    select option { background: #12192b; color: var(--text); }
+    button { cursor: pointer; }
+    .back { display: inline-flex; align-items: center; justify-content: center; }
+    .support {
+      border-color: rgba(246,207,114,.48);
+      background: rgba(246,207,114,.13);
+      color: #ffe8a6;
+    }
+    .hero {
+      margin: 22px 0 16px;
+      padding: clamp(22px, 4vw, 38px);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: linear-gradient(135deg, rgba(67,246,215,.11), transparent 42%), rgba(16,22,38,.78);
+      box-shadow: 0 24px 80px rgba(0,0,0,.42);
+    }
+    .eyebrow {
+      display: inline-flex;
+      padding: 8px 11px;
+      border: 1px solid rgba(67,246,215,.36);
+      border-radius: 999px;
+      color: var(--cyan);
+      background: rgba(67,246,215,.09);
+      font-size: 12px;
+      font-weight: 950;
+    }
+    h1 {
+      margin: 16px 0 10px;
+      font-size: clamp(34px, 6vw, 70px);
+      line-height: .98;
+      letter-spacing: 0;
+    }
+    .gradient {
+      background: linear-gradient(100deg, var(--cyan), var(--gold), var(--pink));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .hero p {
+      max-width: 780px;
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(320px, 420px) minmax(0, 1fr);
+      gap: 16px;
+      align-items: start;
+    }
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: rgba(16,22,38,.78);
+      box-shadow: 0 24px 80px rgba(0,0,0,.36);
+      overflow: hidden;
+    }
+    .panel-head {
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255,255,255,.04);
+    }
+    .panel-head strong { display: block; font-size: 17px; }
+    .panel-head span { display: block; margin-top: 5px; color: var(--muted); font-size: 13px; }
+    .form {
+      display: grid;
+      gap: 13px;
+      padding: 18px;
+    }
+    label { display: grid; gap: 7px; color: var(--muted); font-size: 12px; font-weight: 850; }
+    input, textarea {
+      width: 100%;
+      min-height: 44px;
+      padding: 11px 12px;
+      outline: none;
+    }
+    textarea { min-height: 96px; resize: vertical; line-height: 1.5; }
+    .twocol { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px; }
+    .primary {
+      border-color: transparent;
+      background: linear-gradient(135deg, var(--cyan), var(--gold));
+      color: #09101c;
+    }
+    .ghost { background: rgba(255,255,255,.06); }
+    .error {
+      display: none;
+      margin: 0 18px 18px;
+      padding: 12px;
+      border: 1px solid rgba(255,114,109,.36);
+      border-radius: 14px;
+      color: #ffd3d1;
+      background: rgba(255,114,109,.1);
+      font-size: 13px;
+    }
+    .result {
+      display: grid;
+      gap: 12px;
+      padding: 18px;
+    }
+    .round {
+      border: 1px solid rgba(154,183,255,.18);
+      border-radius: 18px;
+      background: rgba(255,255,255,.045);
+      overflow: hidden;
+    }
+    .round-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 13px 15px;
+      border-bottom: 1px solid rgba(154,183,255,.16);
+      font-weight: 950;
+    }
+    .items {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1px;
+      background: rgba(154,183,255,.12);
+    }
+    .item {
+      padding: 12px;
+      background: rgba(7,10,18,.38);
+    }
+    .item b { display: block; color: var(--gold); font-size: 12px; }
+    .item span { display: block; margin-top: 4px; color: var(--text); font-weight: 900; }
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      padding: 18px;
+      border-bottom: 1px solid var(--line);
+    }
+    .stat {
+      padding: 14px;
+      border: 1px solid rgba(154,183,255,.18);
+      border-radius: 16px;
+      background: rgba(255,255,255,.045);
+    }
+    .stat strong { display: block; font-size: 22px; font-variant-numeric: tabular-nums; }
+    .stat span { display: block; margin-top: 5px; color: var(--muted); font-size: 12px; font-weight: 850; }
+    .empty {
+      padding: 38px 20px;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.6;
+    }
+    @media (max-width: 860px) {
+      .nav { align-items: stretch; flex-direction: column; }
+      .actions { display: grid; grid-template-columns: 1fr; }
+      select, .back, .support { width: 100%; }
+      .layout { grid-template-columns: 1fr; }
+      .summary, .items { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 520px) {
+      .wrap { width: min(100% - 22px, 1180px); padding-top: 12px; }
+      .twocol, .btns, .summary, .items { grid-template-columns: 1fr; }
+      .hero, .panel { border-radius: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <nav class="nav">
+      <a class="brand" id="backHome" href="./index.html"><span class="mark">885</span><span>885 LEGEND NASHSH</span></a>
+      <div class="actions">
+        <a class="back" id="hubLink" href="./index.html" data-i18n="back">Back to hub</a>
+        <select id="langSelect" aria-label="Language">
+          <option value="ko">한국어</option>
+          <option value="en">English</option>
+          <option value="zh-CN">简体中文</option>
+          <option value="zh-TW">繁體中文</option>
+          <option value="fr">Français</option>
+          <option value="de">Deutsch</option>
+          <option value="th">ไทย</option>
+          <option value="id">Indonesia</option>
+        </select>
+        <a class="back support" href="https://buymeacoffee.com/nashsh" target="_blank" rel="noreferrer" data-i18n="support">Support page</a>
+      </div>
+    </nav>
+
+    <section class="hero">
+      <span class="eyebrow">ALLIANCE OPERATIONS</span>
+      <h1><span data-i18n="title">Fort / Sanc Distributor</span><br><span class="gradient">885 LEGEND NASHSH</span></h1>
+      <p data-i18n="subtitle">Create a clean rotation plan for Fort and Sanctuary targets. This page is separated from the calculator because it is mainly an alliance management tool.</p>
+    </section>
+
+    <main class="layout">
+      <section class="panel">
+        <div class="panel-head"><strong data-i18n="setup">Setup</strong><span data-i18n="setupHint">Enter alliances and target counts, then generate a fair rotation.</span></div>
+        <form class="form" id="form">
+          <label><span data-i18n="alliances">Alliances</span><textarea id="alliances" placeholder="885, KOR, NASH, LEGEND">885, KOR, NASH, LEGEND</textarea></label>
+          <div class="twocol">
+            <label><span data-i18n="rounds">Rounds</span><input id="rounds" type="number" min="1" max="20" value="4"></label>
+            <label><span data-i18n="seed">Shuffle seed</span><input id="seed" value="885"></label>
+          </div>
+          <div class="twocol">
+            <label><span data-i18n="fortCount">Forts per round</span><input id="fortCount" type="number" min="0" max="20" value="4"></label>
+            <label><span data-i18n="sancCount">Sanc per round</span><input id="sancCount" type="number" min="0" max="20" value="8"></label>
+          </div>
+          <div class="twocol">
+            <label><span data-i18n="fortPoints">Fort points</span><input id="fortPoints" type="number" min="0" value="2"></label>
+            <label><span data-i18n="sancPoints">Sanc points</span><input id="sancPoints" type="number" min="0" value="1"></label>
+          </div>
+          <div class="btns">
+            <button class="primary" type="submit" data-i18n="generate">Generate</button>
+            <button class="ghost" id="copyBtn" type="button" data-i18n="copy">Copy result</button>
+          </div>
+        </form>
+        <div class="error" id="error"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head"><strong data-i18n="resultTitle">Distribution Plan</strong><span data-i18n="resultHint">Lowest total score receives priority in the next slot.</span></div>
+        <div class="summary" id="summary"></div>
+        <div class="result" id="result"><div class="empty" data-i18n="empty">Generate a plan to see the rotation here.</div></div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const I18N = {
+      ko: {
+        back: '허브로 돌아가기', support: '후원 페이지', title: 'Fort / Sanc 분배기',
+        subtitle: 'Fort와 Sanctuary 목표를 깔끔하게 배분하는 연맹 운영 도구입니다. 계산기 성격보다 운영 성격이 강해서 독립 페이지로 분리했습니다.',
+        setup: '설정', setupHint: '연맹과 목표 수를 입력한 뒤 공정한 로테이션을 생성하세요.', alliances: '연맹 목록', rounds: '라운드', seed: '섞기 기준',
+        fortCount: '라운드당 Fort', sancCount: '라운드당 Sanc', fortPoints: 'Fort 점수', sancPoints: 'Sanc 점수',
+        generate: '생성', copy: '결과 복사', resultTitle: '분배 계획', resultHint: '누적 점수가 낮은 연맹부터 다음 슬롯에 우선 배정합니다.',
+        empty: '생성 버튼을 누르면 이곳에 로테이션이 표시됩니다.', round: '라운드', fort: 'Fort', sanc: 'Sanc', total: '총점',
+        noAlliance: '연맹을 2개 이상 입력해주세요.', copied: '복사 완료'
+      },
+      en: {
+        back: 'Back to hub', support: 'Support page', title: 'Fort / Sanc Distributor',
+        subtitle: 'Create a clean rotation plan for Fort and Sanctuary targets. This page is separated from the calculator because it is mainly an alliance management tool.',
+        setup: 'Setup', setupHint: 'Enter alliances and target counts, then generate a fair rotation.', alliances: 'Alliances', rounds: 'Rounds', seed: 'Shuffle seed',
+        fortCount: 'Forts per round', sancCount: 'Sanc per round', fortPoints: 'Fort points', sancPoints: 'Sanc points',
+        generate: 'Generate', copy: 'Copy result', resultTitle: 'Distribution Plan', resultHint: 'Lowest total score receives priority in the next slot.',
+        empty: 'Generate a plan to see the rotation here.', round: 'Round', fort: 'Fort', sanc: 'Sanc', total: 'Total',
+        noAlliance: 'Please enter at least 2 alliances.', copied: 'Copied'
+      }
+    };
+    ['zh-CN','zh-TW','fr','de','th','id'].forEach((lang) => { I18N[lang] = I18N.en; });
+    const $ = (id) => document.getElementById(id);
+    let lastText = '';
+    function getLang() {
+      const q = new URL(location.href).searchParams.get('lang');
+      const saved = localStorage.getItem('lang') || localStorage.getItem('siteLang');
+      return I18N[q] ? q : I18N[saved] ? saved : 'ko';
+    }
+    function setLang(lang) {
+      const dict = I18N[lang] || I18N.ko;
+      document.documentElement.lang = lang;
+      document.querySelectorAll('[data-i18n]').forEach((node) => {
+        if (dict[node.dataset.i18n]) node.textContent = dict[node.dataset.i18n];
+      });
+      const hub = `./index.html?lang=${encodeURIComponent(lang)}`;
+      $('hubLink').href = hub;
+      $('backHome').href = hub;
+      $('langSelect').value = lang;
+      localStorage.setItem('lang', lang);
+      localStorage.setItem('siteLang', lang);
+      const url = new URL(location.href);
+      url.searchParams.set('lang', lang);
+      history.replaceState(null, '', url.toString());
+    }
+    function dict() { return I18N[getLang()] || I18N.ko; }
+    function hashSeed(text) {
+      let h = 2166136261;
+      for (let i = 0; i < text.length; i += 1) h = Math.imul(h ^ text.charCodeAt(i), 16777619);
+      return h >>> 0;
+    }
+    function rng(seedText) {
+      let s = hashSeed(seedText || '885');
+      return () => {
+        s = Math.imul(1664525, s) + 1013904223;
+        return ((s >>> 0) / 4294967296);
+      };
+    }
+    function shuffle(list, seedText) {
+      const out = [...list];
+      const random = rng(seedText);
+      for (let i = out.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(random() * (i + 1));
+        [out[i], out[j]] = [out[j], out[i]];
+      }
+      return out;
+    }
+    function pickNext(score, order, previous) {
+      const sorted = [...order].sort((a, b) => (score[a] - score[b]) || order.indexOf(a) - order.indexOf(b));
+      return sorted.find((name) => name !== previous) || sorted[0];
+    }
+    function generatePlan() {
+      const d = dict();
+      const alliances = $('alliances').value.split(/[\n,]+/).map((v) => v.trim()).filter(Boolean);
+      if (alliances.length < 2) throw new Error(d.noAlliance);
+      const rounds = Math.min(20, Math.max(1, Number($('rounds').value) || 1));
+      const fortCount = Math.min(20, Math.max(0, Number($('fortCount').value) || 0));
+      const sancCount = Math.min(20, Math.max(0, Number($('sancCount').value) || 0));
+      const fortPoints = Math.max(0, Number($('fortPoints').value) || 0);
+      const sancPoints = Math.max(0, Number($('sancPoints').value) || 0);
+      const order = shuffle(alliances, `${$('seed').value}|${alliances.join('|')}`);
+      const score = Object.fromEntries(alliances.map((name) => [name, 0]));
+      const plan = [];
+      let previous = '';
+      for (let r = 1; r <= rounds; r += 1) {
+        const forts = [];
+        const sancs = [];
+        for (let i = 0; i < fortCount; i += 1) {
+          const name = pickNext(score, order, previous);
+          score[name] += fortPoints;
+          previous = name;
+          forts.push(name);
+        }
+        for (let i = 0; i < sancCount; i += 1) {
+          const name = pickNext(score, order, previous);
+          score[name] += sancPoints;
+          previous = name;
+          sancs.push(name);
+        }
+        plan.push({ round: r, forts, sancs });
+      }
+      return { plan, score };
+    }
+    function render({ plan, score }) {
+      const d = dict();
+      $('summary').innerHTML = Object.entries(score).sort((a, b) => b[1] - a[1]).map(([name, total]) =>
+        `<div class="stat"><strong>${total}</strong><span>${escapeHtml(name)} ${d.total}</span></div>`
+      ).join('');
+      $('result').innerHTML = plan.map((round) => {
+        const fortItems = round.forts.map((name, i) => `<div class="item"><b>${d.fort} ${i + 1}</b><span>${escapeHtml(name)}</span></div>`).join('');
+        const sancItems = round.sancs.map((name, i) => `<div class="item"><b>${d.sanc} ${i + 1}</b><span>${escapeHtml(name)}</span></div>`).join('');
+        return `<article class="round"><div class="round-title"><span>${d.round} ${round.round}</span><span>${round.forts.length + round.sancs.length} slots</span></div><div class="items">${fortItems}${sancItems}</div></article>`;
+      }).join('');
+      lastText = plan.map((round) => {
+        const fort = round.forts.length ? `${d.fort}: ${round.forts.join(', ')}` : `${d.fort}: -`;
+        const sanc = round.sancs.length ? `${d.sanc}: ${round.sancs.join(', ')}` : `${d.sanc}: -`;
+        return `${d.round} ${round.round}\n${fort}\n${sanc}`;
+      }).join('\n\n');
+    }
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[ch]));
+    }
+    $('form').addEventListener('submit', (event) => {
+      event.preventDefault();
+      $('error').style.display = 'none';
+      try {
+        render(generatePlan());
+      } catch (error) {
+        $('error').textContent = error.message;
+        $('error').style.display = 'block';
+      }
+    });
+    $('copyBtn').addEventListener('click', async () => {
+      if (!lastText) render(generatePlan());
+      await navigator.clipboard.writeText(lastText);
+      const old = $('copyBtn').textContent;
+      $('copyBtn').textContent = dict().copied;
+      setTimeout(() => { $('copyBtn').textContent = old; }, 1100);
+    });
+    const initialLang = getLang();
+    setLang(initialLang);
+    $('langSelect').addEventListener('change', (event) => setLang(event.target.value));
+  </script>
+</body>
+</html>

@@ -624,6 +624,165 @@
       font-weight: 900;
     }
     .weapon-line img { width: 28px; height: 28px; object-fit: contain; }
+    .modal-body.premium {
+      gap: 16px;
+      background:
+        linear-gradient(135deg, rgba(255,255,255,.045), transparent 44%),
+        rgba(5, 7, 13, .72);
+    }
+    .intel-passport {
+      display: grid;
+      grid-template-columns: minmax(220px, 300px) minmax(0, 1fr);
+      gap: 16px;
+      padding: 16px;
+      border: 1px solid rgba(255,255,255,.16);
+      border-radius: 18px;
+      background:
+        linear-gradient(135deg, rgba(79,229,255,.13), transparent 42%),
+        linear-gradient(225deg, rgba(255,215,106,.14), transparent 40%),
+        rgba(255,255,255,.055);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 24px 72px rgba(0,0,0,.34);
+    }
+    .intel-image-card {
+      position: relative;
+      min-height: 290px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 16px;
+      background:
+        radial-gradient(circle at 50% 18%, rgba(255,215,106,.3), transparent 45%),
+        linear-gradient(145deg, rgba(255,60,167,.2), rgba(79,229,255,.12)),
+        rgba(0,0,0,.32);
+    }
+    .intel-image-card img {
+      width: 100%;
+      height: 100%;
+      min-height: 290px;
+      object-fit: contain;
+      object-position: center bottom;
+      padding: 14px;
+      filter: drop-shadow(0 22px 32px rgba(0,0,0,.46));
+    }
+    .intel-image-card .profile-initial {
+      display: grid;
+      place-items: center;
+      height: 100%;
+      min-height: 290px;
+      font-size: 72px;
+      font-weight: 1000;
+      color: var(--gold);
+    }
+    .intel-card-label {
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 10px 12px;
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 12px;
+      background: rgba(0,0,0,.58);
+      backdrop-filter: blur(12px);
+      font-size: 12px;
+      font-weight: 950;
+    }
+    .intel-profile-card {
+      display: grid;
+      align-content: space-between;
+      gap: 14px;
+      min-width: 0;
+    }
+    .intel-head-card {
+      padding: 18px;
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 16px;
+      background:
+        linear-gradient(135deg, rgba(255,255,255,.09), transparent 54%),
+        rgba(0,0,0,.24);
+    }
+    .intel-head-card .brand {
+      color: var(--cyan);
+      font-size: 12px;
+      font-weight: 1000;
+    }
+    .intel-head-card h2 {
+      margin: 10px 0 6px;
+      font-size: clamp(32px, 4vw, 58px);
+      line-height: .96;
+      overflow-wrap: anywhere;
+    }
+    .intel-meta-line {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 850;
+    }
+    .intel-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+    }
+    .intel-badge {
+      min-height: 32px;
+      display: inline-flex;
+      align-items: center;
+      padding: 0 11px;
+      border: 1px solid rgba(255,255,255,.13);
+      border-radius: 999px;
+      background: rgba(255,255,255,.065);
+      color: #edf8ff;
+      font-size: 12px;
+      font-weight: 950;
+    }
+    .intel-badge.gold {
+      border-color: rgba(255,215,106,.32);
+      background: rgba(255,215,106,.13);
+      color: #ffe8a6;
+    }
+    .intel-stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .intel-stat {
+      min-height: 84px;
+      padding: 13px;
+      border: 1px solid rgba(255,255,255,.13);
+      border-radius: 14px;
+      background: rgba(0,0,0,.24);
+    }
+    .intel-stat span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .intel-stat strong {
+      display: block;
+      color: white;
+      font-size: 20px;
+      overflow-wrap: anywhere;
+    }
+    .partial-alert {
+      padding: 11px 12px;
+      border: 1px solid rgba(255,215,106,.28);
+      border-radius: 13px;
+      background: rgba(255,215,106,.09);
+      color: #ffe8a6;
+      font-size: 12px;
+      font-weight: 850;
+    }
+    .premium-section {
+      border-radius: 16px;
+    }
+    @media (max-width: 900px) {
+      .intel-passport { grid-template-columns: 1fr; }
+      .intel-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
     table { width: 100%; border-collapse: collapse; margin-top: 9px; font-size: 13px; }
     th, td { padding: 9px 7px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
     th { color: var(--muted); }
@@ -808,7 +967,12 @@
       history.replaceState(null, '', url);
     }
     async function fetchJson(url, options = {}) {
-      const res = await fetch(url, options);
+      const timeoutMs = options.timeoutMs || 12000;
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeoutMs);
+      const cleanOptions = { ...options };
+      delete cleanOptions.timeoutMs;
+      const res = await fetch(url, { ...cleanOptions, signal: controller.signal }).finally(() => clearTimeout(timer));
       const text = await res.text();
       if (!res.ok) {
         let message = text || `HTTP ${res.status}`;
@@ -818,10 +982,21 @@
       return text ? JSON.parse(text) : null;
     }
     async function api(path, options = {}) {
-      return fetchJson(`${PROXY_BASE}${path}`, {
-        ...options,
-        headers: { Accept:'application/json,text/plain,*/*', ...(options.headers || {}) }
-      });
+      const attempts = options.method === 'POST' ? 1 : 2;
+      let lastError;
+      for (let i = 0; i < attempts; i += 1) {
+        try {
+          return await fetchJson(`${PROXY_BASE}${path}`, {
+            timeoutMs: options.timeoutMs || (i ? 18000 : 12000),
+            ...options,
+            headers: { Accept:'application/json,text/plain,*/*', ...(options.headers || {}) }
+          });
+        } catch (error) {
+          lastError = error;
+          if (i + 1 < attempts) await new Promise(resolve => setTimeout(resolve, 450));
+        }
+      }
+      throw lastError;
     }
     function setBusy(isBusy) {
       document.querySelectorAll('button').forEach(btn => { if (btn.id !== 'closeModal') btn.disabled = isBusy; });
@@ -1109,6 +1284,89 @@
         btn.disabled = false;
         btn.textContent = originalText || tr('refresh');
       }
+    }
+
+    async function openPlayer(id) {
+      if (!id) return;
+      currentPlayerId = String(id);
+      setBusy(true);
+      setStatus(`Loading player <strong>${escapeHtml(id)}</strong>...`);
+      modal.showModal();
+      $('modalTitle').innerHTML = `<div class="sub">${tr('loadingDetail')}</div>`;
+      $('modalBody').className = 'modal-body premium';
+      $('modalBody').innerHTML = `<section class="premium-section"><div class="empty">${tr('loadingDetail')}</div></section>`;
+      try {
+        const player = await api(`/players/${encodeURIComponent(id)}`, { timeoutMs: 16000 });
+        const detailResults = await Promise.allSettled([
+          api(`/players/${encodeURIComponent(id)}/history`, { timeoutMs: 9000 }),
+          api(`/players/${encodeURIComponent(id)}/redemptions`, { timeoutMs: 9000 }),
+          api(`/players/${encodeURIComponent(id)}/kingdata`, { timeoutMs: 9000 }),
+          api(`/players/${encodeURIComponent(id)}/standings`, { timeoutMs: 9000 }),
+          api(`/players/${encodeURIComponent(id)}/loadout?cached=1`, { timeoutMs: 14000 }),
+        ]);
+        const [history, redemptions, kingdata, standings, loadout] = detailResults.map((result, index) => {
+          if (result.status === 'fulfilled') return result.value;
+          return [[], { redemptions: [] }, null, { standings: [] }, null][index];
+        });
+        const partial = detailResults.some(result => result.status === 'rejected');
+        renderPlayerModal(player, history || [], redemptions || {}, kingdata, standings || {}, loadout, { partial });
+        setStatus(`Loaded <strong>${escapeHtml(player.username || player.id)}</strong>${player._cache ? ' · local cache' : ''}${partial ? ' · partial detail' : ''}`);
+        await loadIntelStatus();
+      } catch (error) {
+        $('modalTitle').innerHTML = '<div class="sub">Load failed</div>';
+        $('modalBody').className = 'modal-body premium';
+        $('modalBody').innerHTML = `<section class="premium-section"><div class="empty">${tr('detailFail')}: ${escapeHtml(error.message)}<br><br><button type="button" onclick="openPlayer('${escapeHtml(String(id))}')">Retry</button></div></section>`;
+        setStatus(`<span class="bad">${tr('detailFail')}: ${escapeHtml(error.message)}</span>`);
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    function renderPlayerModal(player, history, redemptions, kingdata, standings, loadout, options = {}) {
+      const kingdom = player.state || player.kid || player.kingdom || '-';
+      const alliance = player.alliance_abbr || player.alliance_name || '-';
+      const portrait = imgUrl(player.avatar_url);
+      const initial = escapeHtml((player.username || player.id || '?').slice(0, 1).toUpperCase());
+      const boxes = [
+        ['Power', fmt(player.power)],
+        ['Town Center', player.town_hall_level || '-'],
+        ['Life Tree', player.life_tree_level || '-'],
+        ['Mystic Score', fmt(player.mystic_trial_score)],
+        ['Mystic Rank', player.mystic_trial_rank ? `#${fmt(player.mystic_trial_rank)}` : '-'],
+        ['Crowns', kingdata && kingdata.crowns != null ? kingdata.crowns : '-'],
+        ['Kingdoms ruled', kingdata && kingdata.kingdoms_ruled != null ? kingdata.kingdoms_ruled : '-'],
+        ['Updated', ago(player.last_refreshed_at)],
+      ];
+      const standingRows = (standings.standings || []).slice(0, 12).map(row => `<tr><td>${escapeHtml(row.label || row.board_type)}</td><td>#${fmt(row.rank)}</td><td>${fmt(row.score)}</td><td>${row.kid ? `K${escapeHtml(row.kid)}` : '-'}</td></tr>`).join('');
+      const historyRows = history.slice(0, 10).map(row => `<tr><td>${escapeHtml(row.username || '-')}</td><td>K${escapeHtml(row.state || '-')}</td><td>${escapeHtml(row.alliance_abbr || row.alliance_name || '-')}</td><td>${fmt(row.power || '')}</td><td>${ago(row.recorded_at)}</td></tr>`).join('');
+      const codeRows = (redemptions.redemptions || []).slice(0, 10).map(row => `<tr><td>${escapeHtml(row.Code || row.code || '-')}</td><td>${escapeHtml(row.Status || row.status || '-')}</td><td>${ago(row.RedeemedAt || row.redeemed_at)}</td></tr>`).join('');
+      $('modalTitle').innerHTML = `${avatar(player)}<div><div class="name">${escapeHtml(player.username || player.id)}</div><div class="sub">ID ${escapeHtml(player.id)} · K${escapeHtml(kingdom)} · ${escapeHtml(alliance)}</div></div>`;
+      $('modalBody').className = 'modal-body premium';
+      $('modalBody').innerHTML = `<section class="intel-passport">
+          <div class="intel-image-card">
+            ${portrait ? `<img src="${escapeHtml(portrait)}" alt="">` : `<div class="profile-initial">${initial}</div>`}
+            <div class="intel-card-label"><span>K${escapeHtml(kingdom)}</span><span>${escapeHtml(alliance)}</span></div>
+          </div>
+          <div class="intel-profile-card">
+            <div class="intel-head-card">
+              <div class="brand">885 LEGEND NASHSH INTEL</div>
+              <h2>${escapeHtml(player.username || player.id)}</h2>
+              <div class="intel-meta-line">ID ${escapeHtml(player.id)} · Kingdom ${escapeHtml(kingdom)} · ${escapeHtml(alliance)}</div>
+              <div class="intel-badges">
+                <span class="intel-badge gold">Power ${fmt(player.power)}</span>
+                <span class="intel-badge">TC ${escapeHtml(player.town_hall_level || '-')}</span>
+                <span class="intel-badge">Mystic ${player.mystic_trial_rank ? `#${fmt(player.mystic_trial_rank)}` : '-'}</span>
+                <span class="intel-badge">Updated ${ago(player.last_refreshed_at)}</span>
+              </div>
+            </div>
+            ${options.partial ? `<div class="partial-alert">Some detail panels could not load from the source. Basic profile data is still shown from the available response/cache.</div>` : ''}
+            <div class="intel-stats">${boxes.map(([label, value]) => `<div class="intel-stat"><span>${label}</span><strong>${escapeHtml(value)}</strong></div>`).join('')}</div>
+          </div>
+        </section>
+        <section class="premium-section">${renderLoadout(loadout)}</section>
+        <section class="premium-section"><h2>Standings</h2>${standingRows ? `<table><thead><tr><th>Board</th><th>Rank</th><th>Score</th><th>Kingdom</th></tr></thead><tbody>${standingRows}</tbody></table>` : `<div class="empty">${tr('noResults')}</div>`}</section>
+        <section class="premium-section"><h2>History</h2>${historyRows ? `<table><thead><tr><th>Name</th><th>Kingdom</th><th>Alliance</th><th>Power</th><th>Recorded</th></tr></thead><tbody>${historyRows}</tbody></table>` : `<div class="empty">${tr('noResults')}</div>`}</section>
+        <section class="premium-section"><h2>Codes</h2>${codeRows ? `<table><thead><tr><th>Code</th><th>Status</th><th>Time</th></tr></thead><tbody>${codeRows}</tbody></table>` : `<div class="empty">${tr('noResults')}</div>`}</section>`;
     }
 
     $('searchBtn').addEventListener('click', searchPlayers);
