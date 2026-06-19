@@ -221,6 +221,17 @@ function jsonError(message, status, origin) {
   });
 }
 
+function upstreamError(message, status, origin) {
+  return new Response(JSON.stringify({ error: message || `Upstream ${status}`, upstreamStatus: status }), {
+    status,
+    headers: {
+      ...corsHeaders(origin),
+      "content-type": "application/json; charset=utf-8",
+      "cache-control": "no-store",
+    },
+  });
+}
+
 function buildUpstreamUrl(request) {
   const incoming = new URL(request.url);
   const apiPath = incoming.pathname.replace(/^\/kingshot\/?/, "");
@@ -259,7 +270,6 @@ async function proxyKingshot(request) {
       headers: {
         accept: "application/json,text/plain,*/*",
         ...(request.method === "POST" ? { "content-type": contentType } : {}),
-        "user-agent": "Legend-Nash-Kingshot-Hub/1.0",
         "x-api-token": token,
       },
       body: bodyText,
@@ -270,6 +280,11 @@ async function proxyKingshot(request) {
   try {
     let response = await forward(false);
     if (response.status === 401) response = await forward(true);
+
+    if (!response.ok) {
+      const message = await response.text().catch(() => "");
+      return upstreamError(message, response.status, origin);
+    }
 
     const headers = new Headers(corsHeaders(origin));
     headers.set("content-type", response.headers.get("content-type") || "application/json; charset=utf-8");
