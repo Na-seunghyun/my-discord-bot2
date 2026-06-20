@@ -45,22 +45,7 @@ body {
 }
 
 body::before {
-  content: "885 LEGEND NASHSH";
-  position: fixed;
-  right: 18px;
-  bottom: 14px;
-  z-index: 2147480000;
-  pointer-events: none;
-  padding: 7px 10px;
-  border: 1px solid rgba(242, 198, 93, 0.26);
-  border-radius: 999px;
-  background: rgba(10, 15, 21, 0.72);
-  color: rgba(247, 250, 252, 0.62);
-  backdrop-filter: blur(14px);
-  font-size: 10px;
-  font-weight: 950;
-  line-height: 1;
-  text-transform: uppercase;
+  content: none !important;
 }
 
 a,
@@ -614,7 +599,7 @@ body[data-legend-page="hub"] .legend-stat {
 }
 
 body[data-legend-page="hub"] .legend-stat::after {
-  content: "";
+  content: none;
   position: absolute;
   inset: auto -20px -34px auto;
   width: 160px;
@@ -976,9 +961,9 @@ body[data-legend-page="planner"] .badge {
 /* Neon balance pass: stronger glow, less awkward stacking on tablet-sized views. */
 body {
   background:
-    radial-gradient(circle at 18% 0%, rgba(255, 45, 170, 0.28), transparent 30%),
-    radial-gradient(circle at 82% 8%, rgba(47, 229, 255, 0.2), transparent 28%),
-    radial-gradient(circle at 54% 36%, rgba(242, 198, 93, 0.14), transparent 34%),
+    linear-gradient(125deg, rgba(255, 45, 170, 0.18), transparent 34%),
+    linear-gradient(245deg, rgba(47, 229, 255, 0.14), transparent 38%),
+    linear-gradient(180deg, rgba(242, 198, 93, 0.08), transparent 54%),
     linear-gradient(180deg, #100716 0%, #070a10 46%, #080a10 100%) !important;
 }
 
@@ -1041,7 +1026,7 @@ body[data-legend-page="hub"] .legend-stat strong {
 
 body[data-legend-page="hub"] .card::after,
 body[data-legend-page="hub"] .legend-stat::before {
-  content: "";
+  content: none;
   position: absolute;
   inset: 0;
   pointer-events: none;

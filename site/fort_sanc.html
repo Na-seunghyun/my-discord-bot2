@@ -26,8 +26,8 @@
       color: var(--text);
       background:
         linear-gradient(115deg, rgba(67,246,215,.14), transparent 34%),
-        radial-gradient(circle at 80% 10%, rgba(246,207,114,.18), transparent 32%),
-        radial-gradient(circle at 12% 88%, rgba(255,127,182,.13), transparent 35%),
+        linear-gradient(245deg, rgba(246,207,114,.12), transparent 42%),
+        linear-gradient(180deg, rgba(255,127,182,.08), transparent 54%),
         var(--bg);
     }
     body::before {
@@ -161,6 +161,18 @@
       gap: 13px;
       padding: 18px;
     }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .field {
+      display: grid;
+      gap: 7px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 850;
+    }
     label { display: grid; gap: 7px; color: var(--muted); font-size: 12px; font-weight: 850; }
     input, textarea {
       width: 100%;
@@ -171,6 +183,22 @@
     textarea { min-height: 96px; resize: vertical; line-height: 1.5; }
     .twocol { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px; }
+    .calc-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 0 18px 18px;
+    }
+    .calc-actions button {
+      flex: 1 1 160px;
+      min-height: 46px;
+    }
+    .note {
+      margin: 0 18px 18px;
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 13px;
+    }
     .primary {
       border-color: transparent;
       background: linear-gradient(135deg, var(--cyan), var(--gold));
@@ -239,16 +267,68 @@
       text-align: center;
       line-height: 1.6;
     }
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .metric {
+      padding: 14px;
+      border: 1px solid rgba(154,183,255,.18);
+      border-radius: 16px;
+      background: rgba(255,255,255,.045);
+    }
+    .metric .label,
+    .section-label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 950;
+      text-transform: uppercase;
+    }
+    .metric .value {
+      margin-top: 6px;
+      color: var(--text);
+      font-size: 26px;
+      font-weight: 950;
+      font-variant-numeric: tabular-nums;
+    }
+    .section-label {
+      margin: 18px 0 8px;
+    }
+    .result-table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border-radius: 14px;
+      font-size: 13px;
+    }
+    .result-table th,
+    .result-table td {
+      padding: 10px 11px;
+      border: 1px solid rgba(154,183,255,.16);
+      text-align: left;
+    }
+    .result-table th {
+      color: #ffe8a6;
+      background: rgba(246,207,114,.1);
+      font-weight: 950;
+    }
+    #frDiscordText {
+      min-height: 220px;
+      font-family: Consolas, "SFMono-Regular", monospace;
+      white-space: pre;
+    }
     @media (max-width: 860px) {
       .nav { align-items: stretch; flex-direction: column; }
       .actions { display: grid; grid-template-columns: 1fr; }
       select, .back, .support { width: 100%; }
       .layout { grid-template-columns: 1fr; }
-      .summary, .items { grid-template-columns: 1fr 1fr; }
+      .summary, .items, .metric-grid { grid-template-columns: 1fr 1fr; }
     }
     @media (max-width: 520px) {
       .wrap { width: min(100% - 22px, 1180px); padding-top: 12px; }
-      .twocol, .btns, .summary, .items { grid-template-columns: 1fr; }
+      .twocol, .btns, .summary, .items, .grid, .metric-grid { grid-template-columns: 1fr; }
       .hero, .panel { border-radius: 18px; }
     }
   </style>
@@ -283,32 +363,29 @@
     <main class="layout">
       <section class="panel">
         <div class="panel-head"><strong data-i18n="setup">Setup</strong><span data-i18n="setupHint">Enter alliances and target counts, then generate a fair rotation.</span></div>
-        <form class="form" id="form">
-          <label><span data-i18n="alliances">Alliances</span><textarea id="alliances" placeholder="885, KOR, NASH, LEGEND">885, KOR, NASH, LEGEND</textarea></label>
-          <div class="twocol">
-            <label><span data-i18n="rounds">Rounds</span><input id="rounds" type="number" min="1" max="20" value="4"></label>
-            <label><span data-i18n="seed">Shuffle seed</span><input id="seed" value="885"></label>
+        <div class="form">
+          <div class="grid">
+            <div class="field"><label for="frAlliances">Alliances</label><input id="frAlliances" type="text" value="GTR, TNW, HOG, DEA, RES" placeholder="GTR, TNW, HOG, DEA, RES"></div>
+            <div class="field"><label for="frTarget">Target points per alliance</label><input id="frTarget" type="number" min="0" value="10"></div>
+            <div class="field"><label for="frSeed">Seed</label><input id="frSeed" type="number" min="0" value="7"></div>
+            <div class="field"><label for="frRounds">Rounds</label><input id="frRounds" type="number" min="1" value="8"></div>
+            <div class="field"><label for="frForts">Fort count</label><input id="frForts" type="number" min="1" value="4"></div>
+            <div class="field"><label for="frRelics">San count</label><input id="frRelics" type="number" min="1" value="12"></div>
+            <div class="field"><label for="frEmptyMin">San EMPTY min</label><input id="frEmptyMin" type="number" min="0" value="2"></div>
+            <div class="field"><label for="frEmptyMax">San EMPTY max</label><input id="frEmptyMax" type="number" min="0" value="3"></div>
           </div>
-          <div class="twocol">
-            <label><span data-i18n="fortCount">Forts per round</span><input id="fortCount" type="number" min="0" max="20" value="4"></label>
-            <label><span data-i18n="sancCount">Sanc per round</span><input id="sancCount" type="number" min="0" max="20" value="8"></label>
-          </div>
-          <div class="twocol">
-            <label><span data-i18n="fortPoints">Fort points</span><input id="fortPoints" type="number" min="0" value="2"></label>
-            <label><span data-i18n="sancPoints">Sanc points</span><input id="sancPoints" type="number" min="0" value="1"></label>
-          </div>
-          <div class="btns">
-            <button class="primary" type="submit" data-i18n="generate">Generate</button>
-            <button class="ghost" id="copyBtn" type="button" data-i18n="copy">Copy result</button>
-          </div>
-        </form>
-        <div class="error" id="error"></div>
+        </div>
+        <div class="calc-actions">
+          <button class="ghost" id="frMax" type="button">MAX ignore EMPTY</button>
+          <button class="primary" id="doCalc" type="button">Generate</button>
+          <button class="ghost" id="frCopy" type="button">Copy Discord</button>
+        </div>
+        <p class="note" id="frLimitNote"></p>
       </section>
 
       <section class="panel">
         <div class="panel-head"><strong data-i18n="resultTitle">Distribution Plan</strong><span data-i18n="resultHint">Lowest total score receives priority in the next slot.</span></div>
-        <div class="summary" id="summary"></div>
-        <div class="result" id="result"><div class="empty" data-i18n="empty">Generate a plan to see the rotation here.</div></div>
+        <div class="result" id="resultPanel"><div class="empty" data-i18n="empty">Generate a plan to see the rotation here.</div></div>
       </section>
     </main>
   </div>
@@ -386,7 +463,6 @@
       empty:'Buat rencana untuk melihat rotasi di sini.', round:'Ronde', total:'Total', slots:'slot', noAlliance:'Masukkan minimal 2 aliansi.', copied:'Tersalin'
     });
     const $ = (id) => document.getElementById(id);
-    let lastText = '';
     function getLang() {
       const q = new URL(location.href).searchParams.get('lang');
       const saved = localStorage.getItem('lang') || localStorage.getItem('siteLang');
@@ -417,100 +493,270 @@
       url.searchParams.set('lang', lang);
       history.replaceState(null, '', url.toString());
     }
-    function dict() { return I18N[getLang()] || I18N.ko; }
-    function hashSeed(text) {
-      let h = 2166136261;
-      for (let i = 0; i < text.length; i += 1) h = Math.imul(h ^ text.charCodeAt(i), 16777619);
-      return h >>> 0;
-    }
-    function rng(seedText) {
-      let s = hashSeed(seedText || '885');
-      return () => {
-        s = Math.imul(1664525, s) + 1013904223;
-        return ((s >>> 0) / 4294967296);
-      };
-    }
-    function shuffle(list, seedText) {
-      const out = [...list];
-      const random = rng(seedText);
-      for (let i = out.length - 1; i > 0; i -= 1) {
-        const j = Math.floor(random() * (i + 1));
-        [out[i], out[j]] = [out[j], out[i]];
-      }
-      return out;
-    }
-    function pickNext(score, order, previous) {
-      const sorted = [...order].sort((a, b) => (score[a] - score[b]) || order.indexOf(a) - order.indexOf(b));
-      return sorted.find((name) => name !== previous) || sorted[0];
-    }
-    function generatePlan() {
-      const d = dict();
-      const alliances = $('alliances').value.split(/[\n,]+/).map((v) => v.trim()).filter(Boolean);
-      if (alliances.length < 2) throw new Error(d.noAlliance);
-      const rounds = Math.min(20, Math.max(1, Number($('rounds').value) || 1));
-      const fortCount = Math.min(20, Math.max(0, Number($('fortCount').value) || 0));
-      const sancCount = Math.min(20, Math.max(0, Number($('sancCount').value) || 0));
-      const fortPoints = Math.max(0, Number($('fortPoints').value) || 0);
-      const sancPoints = Math.max(0, Number($('sancPoints').value) || 0);
-      const order = shuffle(alliances, `${$('seed').value}|${alliances.join('|')}`);
-      const score = Object.fromEntries(alliances.map((name) => [name, 0]));
-      const plan = [];
-      let previous = '';
-      for (let r = 1; r <= rounds; r += 1) {
-        const forts = [];
-        const sancs = [];
-        for (let i = 0; i < fortCount; i += 1) {
-          const name = pickNext(score, order, previous);
-          score[name] += fortPoints;
-          previous = name;
-          forts.push(name);
-        }
-        for (let i = 0; i < sancCount; i += 1) {
-          const name = pickNext(score, order, previous);
-          score[name] += sancPoints;
-          previous = name;
-          sancs.push(name);
-        }
-        plan.push({ round: r, forts, sancs });
-      }
-      return { plan, score };
-    }
-    function render({ plan, score }) {
-      const d = dict();
-      $('summary').innerHTML = Object.entries(score).sort((a, b) => b[1] - a[1]).map(([name, total]) =>
-        `<div class="stat"><strong>${total}</strong><span>${escapeHtml(name)} ${d.total}</span></div>`
-      ).join('');
-      $('result').innerHTML = plan.map((round) => {
-        const fortItems = round.forts.map((name, i) => `<div class="item"><b>${d.fort} ${i + 1}</b><span>${escapeHtml(name)}</span></div>`).join('');
-        const sancItems = round.sancs.map((name, i) => `<div class="item"><b>${d.sanc} ${i + 1}</b><span>${escapeHtml(name)}</span></div>`).join('');
-        return `<article class="round"><div class="round-title"><span>${d.round} ${round.round}</span><span>${round.forts.length + round.sancs.length} ${d.slots}</span></div><div class="items">${fortItems}${sancItems}</div></article>`;
-      }).join('');
-      lastText = plan.map((round) => {
-        const fort = round.forts.length ? `${d.fort}: ${round.forts.join(', ')}` : `${d.fort}: -`;
-        const sanc = round.sancs.length ? `${d.sanc}: ${round.sancs.join(', ')}` : `${d.sanc}: -`;
-        return `${d.round} ${round.round}\n${fort}\n${sanc}`;
-      }).join('\n\n');
+    function fmt(value) {
+      return Math.round(Number(value) || 0).toLocaleString(document.documentElement.lang || 'ko');
     }
     function escapeHtml(value) {
-      return String(value).replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[ch]));
+      return String(value ?? '').replace(/[&<>"']/g, (ch) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
     }
-    $('form').addEventListener('submit', (event) => {
-      event.preventDefault();
-      $('error').style.display = 'none';
+    function parseAlliances(text) {
+      const alliances = String(text || '').split(',').map((item) => item.trim()).filter(Boolean);
+      if (alliances.length < 2 || alliances.length > 8) throw new Error(`Alliances must be 2-8. Current: ${alliances.length}`);
+      if (new Set(alliances).size !== alliances.length) throw new Error('Alliance names are duplicated.');
+      return alliances;
+    }
+    function seededRandom(seed) {
+      let value = (Number(seed) || 0) >>> 0;
+      return () => {
+        value += 0x6D2B79F5;
+        let t = value;
+        t = Math.imul(t ^ (t >>> 15), t | 1);
+        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+    function shuffle(items, rand) {
+      const arr = items.slice();
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(rand() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+    function sortBy(items, keyFn) {
+      return items.map((item) => ({ item, key: keyFn(item) })).sort((a, b) => {
+        for (let i = 0; i < a.key.length; i++) {
+          if (a.key[i] < b.key[i]) return -1;
+          if (a.key[i] > b.key[i]) return 1;
+        }
+        return 0;
+      }).map((entry) => entry.item);
+    }
+    function estimateCaps(alliances, rounds, forts, relics, emptyMin, emptyMax) {
+      const n = alliances.length;
+      const fortTotal = rounds * Math.min(forts, n) * 2;
+      const safeTotal = fortTotal + rounds * Math.max(0, relics - emptyMax);
+      const bestTotal = fortTotal + rounds * Math.max(0, relics - emptyMin);
+      return {
+        n,
+        safeCap: Math.max(0, Math.floor(safeTotal / n) - 2),
+        bestCap: Math.max(0, Math.floor(bestTotal / n)),
+      };
+    }
+    function readFortSancConfig(alliances, target, forceEmptyZero = false) {
+      return {
+        alliances,
+        target,
+        seed: Number($('frSeed').value) || 0,
+        rounds: Math.max(1, Number($('frRounds').value) || 8),
+        forts: Math.max(1, Number($('frForts').value) || 4),
+        relics: Math.max(1, Number($('frRelics').value) || 12),
+        emptyMin: forceEmptyZero ? 0 : Math.max(0, Number($('frEmptyMin').value) || 0),
+        emptyMax: forceEmptyZero ? 0 : Math.max(0, Number($('frEmptyMax').value) || 0),
+      };
+    }
+    function buildSchedule(cfg) {
+      const rand = seededRandom(cfg.seed);
+      const alliances = cfg.alliances;
+      const n = alliances.length;
+      const pts = Object.fromEntries(alliances.map((name) => [name, 0]));
+      const remaining = Object.fromEntries(alliances.map((name) => [name, cfg.target]));
+      const held = Object.fromEntries(alliances.map((name) => [name, new Set()]));
+      const fortSlots = Math.min(cfg.forts, n);
+      const fortCycle = shuffle(alliances, rand);
+      const sitOutByRound = {};
+      let sitPtr = 0;
+      for (let rd = 1; rd <= cfg.rounds; rd++) sitOutByRound[rd] = n > fortSlots ? fortCycle[sitPtr++ % n] : null;
+
+      const maxFutureRelicPoints = (heldNow, nextRd) => {
+        let heldCount = heldNow;
+        let total = 0;
+        for (let rd = nextRd; rd <= cfg.rounds; rd++) {
+          heldCount = Math.min(cfg.relics, heldCount + 1);
+          total += heldCount;
+        }
+        return total;
+      };
+      const maxFutureFortPoints = (alliance, nextRd) => {
+        let total = 0;
+        for (let rd = nextRd; rd <= cfg.rounds; rd++) {
+          if (sitOutByRound[rd] !== alliance) total += 2;
+        }
+        return total;
+      };
+
+      const schedule = [];
+      for (let rd = 1; rd <= cfg.rounds; rd++) {
+        const expectedCum = Math.round(cfg.target * rd / cfg.rounds);
+        const paceGap = Object.fromEntries(alliances.map((name) => [name, expectedCum - pts[name]]));
+        const fortOwner = Object.fromEntries(Array.from({ length: cfg.forts }, (_, i) => [i + 1, 'EMPTY']));
+        const sitOut = sitOutByRound[rd];
+        const candidates = alliances.filter((name) => name !== sitOut && remaining[name] >= 2);
+        const picks = sortBy(candidates, (name) => [-paceGap[name], rand()]).slice(0, fortSlots);
+        picks.forEach((name, index) => {
+          fortOwner[index + 1] = name;
+          pts[name] += 2;
+          remaining[name] -= 2;
+        });
+
+        const emptyTarget = Math.max(0, Math.min(cfg.relics, cfg.emptyMin + Math.floor(rand() * (cfg.emptyMax - cfg.emptyMin + 1))));
+        const fillLimit = cfg.relics - emptyTarget;
+        const cap = Object.fromEntries(alliances.map((name) => [name, rd === 1 ? 1 : Math.min(cfg.relics, held[name].size + 1)]));
+        const minNeeded = {};
+        alliances.forEach((name) => {
+          let best = null;
+          for (let k = 0; k <= cap[name]; k++) {
+            const futureRelic = rd < cfg.rounds ? maxFutureRelicPoints(k, rd + 1) : 0;
+            const futureFort = rd < cfg.rounds ? maxFutureFortPoints(name, rd + 1) : 0;
+            if (pts[name] + k + futureRelic + futureFort >= cfg.target) {
+              best = k;
+              break;
+            }
+          }
+          if (best === null) best = cap[name];
+          minNeeded[name] = Math.min(best, Math.max(0, remaining[name]));
+        });
+
+        const desiredHeld = {};
+        alliances.forEach((name) => {
+          const needNow = Math.min(Math.max(0, expectedCum - pts[name]), Math.max(0, remaining[name]));
+          desiredHeld[name] = Math.max(minNeeded[name], Math.min(cap[name], needNow));
+        });
+
+        let overflow = Object.values(desiredHeld).reduce((sum, value) => sum + value, 0) - fillLimit;
+        if (overflow > 0) {
+          const cutOrder = sortBy(alliances, (name) => [paceGap[name], rand()]);
+          for (const name of cutOrder) {
+            if (overflow <= 0) break;
+            const canCut = Math.max(0, desiredHeld[name] - minNeeded[name]);
+            const cut = Math.min(canCut, overflow);
+            desiredHeld[name] -= cut;
+            overflow -= cut;
+          }
+        }
+        if (overflow > 0) throw new Error(`Impossible at round ${rd}. Not enough San slots. overflow=${overflow}`);
+
+        alliances.forEach((name) => {
+          while (held[name].size > desiredHeld[name]) held[name].delete(Math.max(...held[name]));
+        });
+        const occupied = new Set();
+        alliances.forEach((name) => held[name].forEach((id) => occupied.add(id)));
+        const available = Array.from({ length: cfg.relics }, (_, i) => i + 1).filter((id) => !occupied.has(id));
+        for (const name of sortBy(alliances, (alliance) => [-paceGap[alliance], rand()])) {
+          while (available.length && held[name].size < desiredHeld[name]) held[name].add(available.shift());
+        }
+
+        const relicOwner = Object.fromEntries(Array.from({ length: cfg.relics }, (_, i) => [i + 1, 'EMPTY']));
+        alliances.forEach((name) => {
+          const gained = held[name].size;
+          pts[name] += gained;
+          remaining[name] -= gained;
+          held[name].forEach((id) => { relicOwner[id] = name; });
+        });
+        const emptyCount = Object.values(relicOwner).filter((owner) => owner === 'EMPTY').length;
+        if (emptyCount < cfg.emptyMin) throw new Error(`EMPTY minimum ${cfg.emptyMin} violated at round ${rd}.`);
+        schedule.push({ round: rd, fortOwner, relicOwner, pointsAfter: { ...pts }, sitOut });
+      }
+
+      const notDone = Object.entries(remaining).filter(([, value]) => value !== 0);
+      if (notDone.length) throw new Error(`Target points not matched exactly: ${notDone.map(([name, value]) => `${name} ${value}`).join(', ')}`);
+      return schedule;
+    }
+    function findMaxIgnoringEmpty(alliances) {
+      const rounds = Math.max(1, Number($('frRounds').value) || 8);
+      const forts = Math.max(1, Number($('frForts').value) || 4);
+      const relics = Math.max(1, Number($('frRelics').value) || 12);
+      const theoretical = Math.floor((rounds * Math.min(forts, alliances.length) * 2 + rounds * relics) / alliances.length);
+      for (let target = theoretical; target >= 0; target--) {
+        const cfg = readFortSancConfig(alliances, target, true);
+        try {
+          buildSchedule(cfg);
+          return { target, theoretical };
+        } catch {}
+      }
+      return { target: 0, theoretical };
+    }
+    function formatDiscord(alliances, schedule, forts, relics) {
+      return schedule.map((rd) => {
+        const lines = [`=== Round ${rd.round} ===`];
+        alliances.forEach((name) => {
+          const fortIds = Array.from({ length: forts }, (_, i) => i + 1).filter((id) => rd.fortOwner[id] === name);
+          const sanIds = Array.from({ length: relics }, (_, i) => i + 1).filter((id) => rd.relicOwner[id] === name);
+          lines.push(`${name} - ${fortIds.length ? `Fort${fortIds.join(',')}` : 'No Fort'} / ${sanIds.length ? `San${sanIds.join(',')}` : 'No San'}`);
+        });
+        const emptyIds = Array.from({ length: relics }, (_, i) => i + 1).filter((id) => rd.relicOwner[id] === 'EMPTY');
+        lines.push(emptyIds.length ? `San EMPTY: ${emptyIds.length} (IDs: ${emptyIds.join(', ')})` : 'San EMPTY: 0');
+        return lines.join('\n');
+      }).join('\n\n');
+    }
+    function renderSchedule(alliances, schedule, cfg, discordText, caps) {
+      const rows = schedule.map((rd) => {
+        const allocationRows = alliances.map((name) => {
+          const fortIds = Array.from({ length: cfg.forts }, (_, i) => i + 1).filter((id) => rd.fortOwner[id] === name);
+          const sanIds = Array.from({ length: cfg.relics }, (_, i) => i + 1).filter((id) => rd.relicOwner[id] === name);
+          return `<tr><td>${escapeHtml(name)}</td><td>${fortIds.length ? `Fort ${fortIds.join(', ')}` : 'No Fort'}</td><td>${sanIds.length ? `San ${sanIds.join(', ')}` : 'No San'}</td><td>${fmt(rd.pointsAfter[name] || 0)}</td></tr>`;
+        }).join('');
+        const emptyIds = Array.from({ length: cfg.relics }, (_, i) => i + 1).filter((id) => rd.relicOwner[id] === 'EMPTY');
+        return `<div class="section-label">Round ${rd.round}</div><table class="result-table"><thead><tr><th>Alliance</th><th>Fort</th><th>San</th><th>Points</th></tr></thead><tbody>${allocationRows}<tr><td>EMPTY</td><td>-</td><td>${emptyIds.length ? emptyIds.join(', ') : '0'}</td><td>-</td></tr></tbody></table>`;
+      }).join('');
+      $('resultPanel').innerHTML = `
+        <div class="metric-grid">
+          <div class="metric"><div class="label">Safe cap</div><div class="value">${fmt(caps.safeCap)}</div></div>
+          <div class="metric"><div class="label">Best cap</div><div class="value">${fmt(caps.bestCap)}</div></div>
+          <div class="metric"><div class="label">Alliances</div><div class="value">${fmt(alliances.length)}</div></div>
+          <div class="metric"><div class="label">Rounds</div><div class="value">${fmt(cfg.rounds)}</div></div>
+        </div>
+        ${rows}
+        <div class="section-label">Discord Copy</div>
+        <textarea id="frDiscordText" readonly>${escapeHtml(discordText)}</textarea>
+      `;
+    }
+    function updateLimit() {
       try {
-        render(generatePlan());
+        const alliances = parseAlliances($('frAlliances').value);
+        const caps = estimateCaps(alliances, Number($('frRounds').value) || 8, Number($('frForts').value) || 4, Number($('frRelics').value) || 12, Number($('frEmptyMin').value) || 0, Number($('frEmptyMax').value) || 0);
+        $('frLimitNote').textContent = `Estimated target limit: safe ${fmt(caps.safeCap)} / best ${fmt(caps.bestCap)}`;
+      } catch {
+        $('frLimitNote').textContent = '';
+      }
+    }
+    function runFortSanc() {
+      try {
+        const alliances = parseAlliances($('frAlliances').value);
+        const cfg = readFortSancConfig(alliances, Number($('frTarget').value) || 0);
+        if (cfg.emptyMin > cfg.emptyMax) throw new Error('San EMPTY min must be <= max.');
+        if (cfg.emptyMax > cfg.relics) throw new Error('San EMPTY max cannot exceed San count.');
+        const caps = estimateCaps(alliances, cfg.rounds, cfg.forts, cfg.relics, cfg.emptyMin, cfg.emptyMax);
+        if (cfg.target > caps.safeCap) throw new Error(`Impossible: safe cap ≈${caps.safeCap}, target=${cfg.target}`);
+        const schedule = buildSchedule(cfg);
+        const discordText = formatDiscord(alliances, schedule, cfg.forts, cfg.relics);
+        renderSchedule(alliances, schedule, cfg, discordText, caps);
       } catch (error) {
-        $('error').textContent = error.message;
-        $('error').style.display = 'block';
+        $('resultPanel').innerHTML = `<p class="note">Failed: ${escapeHtml(error.message)}</p>`;
+      }
+    }
+    document.querySelectorAll('#frAlliances,#frRounds,#frForts,#frRelics,#frEmptyMin,#frEmptyMax,#frTarget').forEach((input) => input.addEventListener('input', updateLimit));
+    $('frMax').addEventListener('click', () => {
+      try {
+        const alliances = parseAlliances($('frAlliances').value);
+        const result = findMaxIgnoringEmpty(alliances);
+        $('frEmptyMin').value = '0';
+        $('frEmptyMax').value = '0';
+        $('frTarget').value = String(result.target);
+        updateLimit();
+        $('frLimitNote').textContent = `MAX applied: ${fmt(result.target)} points per alliance. EMPTY ignored. Theoretical cap: ${fmt(result.theoretical)}.`;
+        runFortSanc();
+      } catch (error) {
+        $('resultPanel').innerHTML = `<p class="note">Failed: ${escapeHtml(error.message)}</p>`;
       }
     });
-    $('copyBtn').addEventListener('click', async () => {
-      if (!lastText) render(generatePlan());
-      await navigator.clipboard.writeText(lastText);
-      const old = $('copyBtn').textContent;
-      $('copyBtn').textContent = dict().copied;
-      setTimeout(() => { $('copyBtn').textContent = old; }, 1100);
+    $('frCopy').addEventListener('click', async () => {
+      const text = $('frDiscordText')?.value || '';
+      if (!text) return;
+      try { await navigator.clipboard.writeText(text); } catch {}
     });
+    $('doCalc').addEventListener('click', runFortSanc);
+    updateLimit();
     Object.assign(I18N.ko, {
       back: '\ud5c8\ube0c\ub85c \ub3cc\uc544\uac00\uae30',
       support: '\ud6c4\uc6d0 \ud398\uc774\uc9c0',

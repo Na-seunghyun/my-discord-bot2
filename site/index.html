@@ -31,8 +31,8 @@
       color: var(--text);
       background:
         linear-gradient(115deg, rgba(67, 246, 215, .14), transparent 34%),
-        radial-gradient(circle at 76% 12%, rgba(246, 207, 114, .18), transparent 32%),
-        radial-gradient(circle at 18% 86%, rgba(156, 177, 255, .16), transparent 36%),
+        linear-gradient(245deg, rgba(246, 207, 114, .12), transparent 42%),
+        linear-gradient(180deg, rgba(156, 177, 255, .08), transparent 54%),
         var(--bg);
       overflow-x: hidden;
     }
@@ -253,17 +253,7 @@
     }
     .tool.large { grid-column: span 6; min-height: 292px; }
     .tool.mid { grid-column: span 4; }
-    .tool::after {
-      content: "";
-      position: absolute;
-      width: 160px;
-      height: 160px;
-      right: -54px;
-      top: -54px;
-      border-radius: 50%;
-      background: var(--glow, rgba(67,246,215,.16));
-      filter: blur(6px);
-    }
+    .tool::after { content: none; }
     .tag {
       width: fit-content;
       height: 30px;
@@ -376,31 +366,31 @@
     </section>
 
     <section class="tools" aria-label="Tools">
-      <a class="tool large" style="--glow: rgba(67,246,215,.20)" data-link-base="./fort_sanc.html" href="./fort_sanc.html">
+      <a class="tool large" data-link-base="./fort_sanc.html" href="./fort_sanc.html">
         <span class="tag" data-i18n="tagAlliance">Alliance Operations</span>
         <h2 data-i18n="fortTitle">Fort / Sanc Distributor</h2>
         <p data-i18n="fortBody">Moved to the front because it is an alliance coordination tool, not just a calculator. Build fair rotation plans quickly.</p>
         <span class="open" data-i18n="fortButton">Open distributor</span>
       </a>
-      <a class="tool large" style="--glow: rgba(156,177,255,.18)" data-link-base="./kingshot_lookup.html" href="./kingshot_lookup.html">
+      <a class="tool large" data-link-base="./kingshot_lookup.html" href="./kingshot_lookup.html">
         <span class="tag" data-i18n="tagIntel">Player Intel</span>
         <h2 data-i18n="intelTitle">Kingshot Intel Lookup</h2>
         <p data-i18n="intelBody">Search players, kingdoms, hero sets, and saved local intel when the upstream service is unstable.</p>
         <span class="open" data-i18n="intelButton">Open intel</span>
       </a>
-      <a class="tool mid" style="--glow: rgba(246,207,114,.18)" data-link-base="./traplace/" href="./traplace/">
+      <a class="tool mid" data-link-base="./traplace/" href="./traplace/">
         <span class="tag" data-i18n="tagMap">War Map</span>
         <h2 data-i18n="mapTitle">War Map Planner</h2>
         <p data-i18n="mapBody">Plan cities, traps, castles, turrets, distance lines, and march timing.</p>
         <span class="open" data-i18n="mapButton">Open planner</span>
       </a>
-      <a class="tool mid" style="--glow: rgba(132,243,165,.16)" data-link-base="./troop_training_ui.html" href="./troop_training_ui.html">
+      <a class="tool mid" data-link-base="./troop_training_ui.html" href="./troop_training_ui.html">
         <span class="tag" data-i18n="tagCalc">Calculator Vault</span>
         <h2 data-i18n="calcTitle">Kingshot Calculators</h2>
         <p data-i18n="calcBody">Training, gear, VIP, pack value, and other resource planning calculators.</p>
         <span class="open" data-i18n="calcButton">Open calculators</span>
       </a>
-      <a class="tool mid" style="--glow: rgba(255,127,182,.16)" data-link-base="./feedback.html" href="./feedback.html">
+      <a class="tool mid" data-link-base="./feedback.html" href="./feedback.html">
         <span class="tag" data-i18n="tagFeedback">Feedback</span>
         <h2 data-i18n="feedbackTitle">Updates / Bug Reports</h2>
         <p data-i18n="feedbackBody">Send suggestions, calculation issues, translation fixes, or mobile feedback.</p>
