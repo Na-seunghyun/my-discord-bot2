@@ -41,7 +41,7 @@ import { importPNG } from './importPNG.js';
 import { undo, redo, onHistoryChange, saveCheckpoint } from './history.js';
 import { posToCell } from './transform.js';
 import { makeMovable } from './interactions/drag.js';
-import { t } from './i18n.js';
+import { t } from './i18n.js?v=legend-nash-5';
 import { renderDistancePairLine } from './distancePair.js';
 
 /** Platform detection (used for shortcut hint labels). */
@@ -410,7 +410,7 @@ export function setupActions() {
 
   // Copy URL (TTL 7 days via shortener) — on failure, show modal
   btnCopyURL?.addEventListener('click', async () => {
-    const restoreIcon = () => setTimeout(() => (btnCopyURL.textContent = '공유 URL'), 1200);
+    const restoreIcon = () => setTimeout(() => (btnCopyURL.textContent = t('ui.toolbar.copy')), 1200);
 
     // iOS requires clipboard write to happen immediately on user gesture
     // First, copy the full URL to clipboard synchronously

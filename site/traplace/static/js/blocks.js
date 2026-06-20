@@ -9,7 +9,7 @@ import { recomputePaint } from './render.js';
 import { posToCell } from './transform.js';
 import { queueSaveToURL } from './urlState.js';
 import { saveCheckpoint } from './history.js';
-import { t } from './i18n.js';
+import { t } from './i18n.js?v=legend-nash-5';
 import { onCreateBlock, onDeleteBlock } from './counters.js';
 import { clearDistancePairLine } from './distancePair.js';
 

@@ -39,7 +39,7 @@ let CUR_LANG = FALLBACK_LANG; // Active language code
 
 // Built-in EN dictionary as the last-resort safety net
 const BUILTIN_EN = {
-  app: { title: 'Alliance Placement Simulator' },
+  app: { title: 'Alliance Placement Simulator', subtitle: 'War map planner' },
   ui: {
     usageTitle: 'How to use',
     usage:
@@ -62,9 +62,16 @@ const BUILTIN_EN = {
       pairDist: 'Measure selected objects',
       lang: 'Language',
       home: 'Go to center',
+      findTrap: 'Find trap',
+      coordJump: 'Jump to coordinates',
+      editor: 'Editor toolbar',
     },
+    homeHub: 'Hub',
+    viewport: 'Map viewport',
+    minimap: 'Minimap',
     footer: {
       credit: 'Created by #885 Legend nashsh',
+      support: 'Support page',
     },
     contextMenu: {
       fontSize: 'Font Size',
@@ -93,6 +100,136 @@ const BUILTIN_EN = {
     exportFail: 'Failed to export PNG.',
   },
 };
+
+const TRANSLATION_PATCHES = {
+  en: {
+    app: { subtitle: 'War map planner' },
+    ui: {
+      homeHub: 'Hub',
+      viewport: 'Map viewport',
+      minimap: 'Minimap',
+      toolbar: {
+        editor: 'Editor toolbar',
+        findTrap: 'Find trap',
+        coordJump: 'Jump to coordinates',
+        pairDist: 'Measure selected objects',
+      },
+      footer: { support: 'Support page' },
+    },
+    modal: { urlCopy: { close: 'Close' } },
+  },
+  ko: {
+    app: { subtitle: '전쟁 지도 플래너' },
+    ui: {
+      homeHub: '허브',
+      viewport: '지도 화면',
+      minimap: '미니맵',
+      toolbar: {
+        editor: '편집 도구',
+        findTrap: '함정 찾기',
+        coordJump: '좌표로 이동',
+        pairDist: '선택 개체 거리 계산',
+      },
+      footer: { support: '후원 페이지' },
+    },
+    modal: { urlCopy: { close: '닫기' } },
+  },
+  'zh-CN': {
+    app: { subtitle: '战争地图规划器' },
+    ui: {
+      homeHub: '主页',
+      viewport: '地图视图',
+      minimap: '小地图',
+      toolbar: { editor: '编辑工具栏', findTrap: '查找陷阱', coordJump: '跳转到坐标', pairDist: '测量所选对象' },
+      footer: { support: '支持页面' },
+    },
+    modal: { urlCopy: { close: '关闭' } },
+  },
+  'zh-TW': {
+    app: { subtitle: '戰爭地圖規劃器' },
+    ui: {
+      homeHub: '首頁',
+      viewport: '地圖畫面',
+      minimap: '小地圖',
+      toolbar: { editor: '編輯工具列', findTrap: '尋找陷阱', coordJump: '跳到座標', pairDist: '測量所選物件' },
+      footer: { support: '支援頁面' },
+    },
+    modal: { urlCopy: { close: '關閉' } },
+  },
+  ja: {
+    app: { subtitle: '戦争マッププランナー' },
+    ui: {
+      homeHub: 'ハブ',
+      viewport: 'マップ表示',
+      minimap: 'ミニマップ',
+      toolbar: { editor: '編集ツールバー', findTrap: '罠を探す', coordJump: '座標へ移動', pairDist: '選択オブジェクトを測定' },
+      footer: { support: 'サポートページ' },
+    },
+    modal: { urlCopy: { close: '閉じる' } },
+  },
+  fr: {
+    app: { subtitle: 'Planificateur de carte de guerre' },
+    ui: {
+      homeHub: 'Hub',
+      viewport: 'Vue de la carte',
+      minimap: 'Minicarte',
+      toolbar: { editor: 'Barre d’outils', findTrap: 'Trouver piege', coordJump: 'Aller aux coordonnees', pairDist: 'Mesurer les objets selectionnes' },
+      footer: { support: 'Page de soutien' },
+    },
+    modal: { urlCopy: { close: 'Fermer' } },
+  },
+  de: {
+    app: { subtitle: 'Kartenplaner fuer den Krieg' },
+    ui: {
+      homeHub: 'Hub',
+      viewport: 'Kartenansicht',
+      minimap: 'Minikarte',
+      toolbar: { editor: 'Editor-Werkzeuge', findTrap: 'Falle suchen', coordJump: 'Zu Koordinaten springen', pairDist: 'Ausgewaehlte Objekte messen' },
+      footer: { support: 'Support-Seite' },
+    },
+    modal: { urlCopy: { close: 'Schliessen' } },
+  },
+  th: {
+    app: { subtitle: 'ตัววางแผนแผนที่สงคราม' },
+    ui: {
+      homeHub: 'ฮับ',
+      viewport: 'มุมมองแผนที่',
+      minimap: 'มินิแมป',
+      toolbar: { editor: 'แถบเครื่องมือแก้ไข', findTrap: 'ค้นหากับดัก', coordJump: 'ไปยังพิกัด', pairDist: 'วัดวัตถุที่เลือก' },
+      footer: { support: 'หน้าสนับสนุน' },
+    },
+    modal: { urlCopy: { close: 'ปิด' } },
+  },
+  id: {
+    app: { subtitle: 'Perencana peta perang' },
+    ui: {
+      homeHub: 'Hub',
+      viewport: 'Tampilan peta',
+      minimap: 'Minimap',
+      toolbar: { editor: 'Bilah alat editor', findTrap: 'Cari perangkap', coordJump: 'Lompat ke koordinat', pairDist: 'Ukur objek terpilih' },
+      footer: { support: 'Halaman dukungan' },
+    },
+    modal: { urlCopy: { close: 'Tutup' } },
+  },
+};
+
+function mergeDeep(target, patch) {
+  for (const [key, value] of Object.entries(patch || {})) {
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+      target[key] = mergeDeep(target[key] && typeof target[key] === 'object' ? target[key] : {}, value);
+    } else {
+      target[key] = value;
+    }
+  }
+  return target;
+}
+
+function withTranslationPatch(lang, dict) {
+  const next = JSON.parse(JSON.stringify(dict || BUILTIN_EN));
+  mergeDeep(next, TRANSLATION_PATCHES.en);
+  mergeDeep(next, TRANSLATION_PATCHES[lang] || {});
+  return next;
+}
 
 /* ---------------------------------------------
  * Base URL resolution
@@ -254,7 +391,7 @@ export async function loadLanguageOnline(lang) {
     appliedLang = FALLBACK_LANG;
   }
 
-  DICT = dict;
+  DICT = withTranslationPatch(appliedLang, dict);
   CUR_LANG = appliedLang;
 
   // Persist language in URL and localStorage
@@ -487,6 +624,7 @@ export function applyI18nToDOM() {
     trap: t('palette.trap'),
     city: t('palette.city'),
     resource: t('palette.resource'),
+    custom: t('palette.custom'),
   };
   document.querySelectorAll('.palette-item').forEach((el) => {
     const kind = el.getAttribute('data-kind');

@@ -96,8 +96,9 @@
       .admin-row { grid-template-columns: 1fr; }
     }
   </style>
+  <link rel="stylesheet" href="./static/legend-ui.css?v=20260620-ui5">
 </head>
-<body>
+<body data-legend-page="feedback">
   <main class="wrap">
     <header>
       <div>
@@ -109,8 +110,8 @@
         <select id="langSelect" aria-label="Language">
           <option value="ko">Korean</option>
           <option value="en">English</option>
-          <option value="zh-CN">Chinese</option>
-          <option value="zh-TW">Taiwanese</option>
+          <option value="zh-CN">Chinese Simplified</option>
+          <option value="zh-TW">Chinese Traditional</option>
           <option value="fr">Francais</option>
           <option value="de">Deutsch</option>
           <option value="th">Thai</option>
@@ -180,7 +181,7 @@
         messagePlaceholder:'Describe the problem or feature you need.', contactLabel:'Contact or nickname', contactPlaceholder:'Optional',
         submit:'Submit', ready:'Submit the form to save it.', sending:'Submitting...', saved:'Saved. Thank you for the report.',
         failed:'Could not save feedback.', adminTitle:'Admin review', adminHelp:'Set ADMIN_TOKEN in Cloudflare, then use the same token to read recent feedback.',
-        tokenLabel:'Admin token', tokenPlaceholder:'ADMIN_TOKEN', load:'Load', empty:'No feedback yet.'
+        tokenLabel:'Admin token', tokenPlaceholder:'ADMIN_TOKEN', load:'Load', empty:'No feedback yet.', items:'items'
       },
       ko: {
         title:'\uc5c5\ub370\uc774\ud2b8 / \uc624\ub958 \uac74\uc758',
@@ -194,10 +195,58 @@
         ready:'\uc791\uc131 \ud6c4 \uc81c\ucd9c\ud558\uba74 \uc800\uc7a5\ub429\ub2c8\ub2e4.', sending:'\uc81c\ucd9c \uc911\uc785\ub2c8\ub2e4...',
         saved:'\uc800\uc7a5\ub418\uc5c8\uc2b5\ub2c8\ub2e4. \uc54c\ub824\uc918\uc11c \uace0\ub9c8\uc6cc\uc694.', failed:'\uc800\uc7a5\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4.',
         adminTitle:'\uc6b4\uc601\uc790 \ud655\uc778', adminHelp:'Cloudflare \ud658\uacbd \ubcc0\uc218 ADMIN_TOKEN\uc744 \uc124\uc815\ud55c \ub4a4, \uac19\uc740 \ud1a0\ud070\uc73c\ub85c \ucd5c\uadfc \uac74\uc758\ub97c \ud655\uc778\ud560 \uc218 \uc788\uc2b5\ub2c8\ub2e4.',
-        tokenLabel:'\uad00\ub9ac\uc790 \ud1a0\ud070', tokenPlaceholder:'ADMIN_TOKEN', load:'\ubd88\ub7ec\uc624\uae30', empty:'\uc544\uc9c1 \uac74\uc758\uac00 \uc5c6\uc2b5\ub2c8\ub2e4.'
+        tokenLabel:'\uad00\ub9ac\uc790 \ud1a0\ud070', tokenPlaceholder:'ADMIN_TOKEN', load:'\ubd88\ub7ec\uc624\uae30', empty:'\uc544\uc9c1 \uac74\uc758\uac00 \uc5c6\uc2b5\ub2c8\ub2e4.', items:'\uac1c \ud56d\ubaa9'
       }
     };
-    ['zh-CN','zh-TW','fr','de','th','id'].forEach((lang) => { I18N[lang] = I18N.en; });
+    ['zh-CN','zh-TW','fr','de','th','id'].forEach((lang) => { I18N[lang] = { ...I18N.en }; });
+    Object.assign(I18N['zh-CN'], {
+      title:'更新 / 错误反馈', subtitle:'提交功能建议、计算错误、翻译问题或移动端体验反馈。', back:'返回主页',
+      formTitle:'发送反馈', typeLabel:'类型', typeBug:'错误报告', typeUpdate:'功能建议', typeTranslation:'翻译问题', typeOther:'其他',
+      pageLabel:'相关页面', pageHub:'主页', pageCalculator:'计算器', pageMap:'地图规划器', pageLookup:'情报搜索', pageFort:'Fort / Sanc', pageOther:'其他',
+      messageLabel:'内容', messagePlaceholder:'请描述遇到的问题或需要的功能。', contactLabel:'联系方式或昵称', contactPlaceholder:'可选',
+      submit:'提交', ready:'提交表单后将保存。', sending:'提交中...', saved:'已保存。感谢反馈。', failed:'无法保存反馈。',
+      adminTitle:'管理员查看', adminHelp:'在 Cloudflare 设置 ADMIN_TOKEN，然后使用同一令牌查看最近反馈。', tokenLabel:'管理员令牌', load:'加载', empty:'暂无反馈。', items:'项'
+    });
+    Object.assign(I18N['zh-TW'], {
+      title:'更新 / 錯誤回饋', subtitle:'提交功能建議、計算錯誤、翻譯問題或手機版體驗回饋。', back:'返回首頁',
+      formTitle:'送出回饋', typeLabel:'類型', typeBug:'錯誤回報', typeUpdate:'功能建議', typeTranslation:'翻譯問題', typeOther:'其他',
+      pageLabel:'相關頁面', pageHub:'首頁', pageCalculator:'計算器', pageMap:'地圖規劃器', pageLookup:'情報搜尋', pageFort:'Fort / Sanc', pageOther:'其他',
+      messageLabel:'內容', messagePlaceholder:'請描述遇到的問題或需要的功能。', contactLabel:'聯絡方式或暱稱', contactPlaceholder:'選填',
+      submit:'提交', ready:'提交表單後將保存。', sending:'提交中...', saved:'已保存。感謝回饋。', failed:'無法保存回饋。',
+      adminTitle:'管理員查看', adminHelp:'在 Cloudflare 設定 ADMIN_TOKEN，然後使用同一令牌查看最近回饋。', tokenLabel:'管理員令牌', load:'載入', empty:'暫無回饋。', items:'項'
+    });
+    Object.assign(I18N.fr, {
+      title:'Mises à jour / bugs', subtitle:'Envoyez idées, erreurs de calcul, problèmes de traduction ou retours mobile.', back:'Retour au hub',
+      formTitle:'Envoyer un feedback', typeLabel:'Type', typeBug:'Bug', typeUpdate:'Demande de fonction', typeTranslation:'Traduction', typeOther:'Autre',
+      pageLabel:'Page concernée', pageHub:'Hub', pageCalculator:'Calculateur', pageMap:'Carte', pageLookup:'Intel', pageFort:'Fort / Sanc', pageOther:'Autre',
+      messageLabel:'Message', messagePlaceholder:'Décrivez le problème ou la fonction souhaitée.', contactLabel:'Contact ou pseudo', contactPlaceholder:'Optionnel',
+      submit:'Envoyer', ready:'Envoyez le formulaire pour le sauvegarder.', sending:'Envoi...', saved:'Sauvegardé. Merci.', failed:'Impossible de sauvegarder.',
+      adminTitle:'Revue admin', adminHelp:'Définissez ADMIN_TOKEN dans Cloudflare, puis utilisez ce token pour lire les retours récents.', tokenLabel:'Token admin', load:'Charger', empty:'Aucun feedback.', items:'éléments'
+    });
+    Object.assign(I18N.de, {
+      title:'Updates / Fehlerberichte', subtitle:'Sende Ideen, Rechenfehler, Übersetzungsprobleme oder mobiles Feedback.', back:'Zurück zum Hub',
+      formTitle:'Feedback senden', typeLabel:'Typ', typeBug:'Fehlerbericht', typeUpdate:'Funktionswunsch', typeTranslation:'Übersetzung', typeOther:'Andere',
+      pageLabel:'Betroffene Seite', pageHub:'Hub', pageCalculator:'Rechner', pageMap:'Kartenplaner', pageLookup:'Intel-Suche', pageFort:'Fort / Sanc', pageOther:'Andere',
+      messageLabel:'Nachricht', messagePlaceholder:'Beschreibe das Problem oder die gewünschte Funktion.', contactLabel:'Kontakt oder Nickname', contactPlaceholder:'Optional',
+      submit:'Senden', ready:'Formular senden, um es zu speichern.', sending:'Senden...', saved:'Gespeichert. Danke.', failed:'Feedback konnte nicht gespeichert werden.',
+      adminTitle:'Admin-Prüfung', adminHelp:'ADMIN_TOKEN in Cloudflare setzen und mit demselben Token neue Rückmeldungen lesen.', tokenLabel:'Admin-Token', load:'Laden', empty:'Noch kein Feedback.', items:'Einträge'
+    });
+    Object.assign(I18N.th, {
+      title:'อัปเดต / รายงานปัญหา', subtitle:'ส่งข้อเสนอแนะ ปัญหาการคำนวณ ปัญหาคำแปล หรือปัญหาการใช้งานบนมือถือ', back:'กลับหน้าหลัก',
+      formTitle:'ส่งข้อเสนอแนะ', typeLabel:'ประเภท', typeBug:'รายงานบั๊ก', typeUpdate:'ขอฟีเจอร์', typeTranslation:'ปัญหาคำแปล', typeOther:'อื่น ๆ',
+      pageLabel:'หน้าที่เกี่ยวข้อง', pageHub:'ฮับ', pageCalculator:'เครื่องคิดเลข', pageMap:'แผนที่', pageLookup:'ข้อมูลผู้เล่น', pageFort:'Fort / Sanc', pageOther:'อื่น ๆ',
+      messageLabel:'ข้อความ', messagePlaceholder:'อธิบายปัญหาหรือฟีเจอร์ที่ต้องการ', contactLabel:'ช่องทางติดต่อหรือชื่อเล่น', contactPlaceholder:'ไม่บังคับ',
+      submit:'ส่ง', ready:'ส่งแบบฟอร์มเพื่อบันทึก', sending:'กำลังส่ง...', saved:'บันทึกแล้ว ขอบคุณมาก', failed:'บันทึกข้อเสนอแนะไม่ได้',
+      adminTitle:'ตรวจสอบโดยแอดมิน', adminHelp:'ตั้งค่า ADMIN_TOKEN ใน Cloudflare แล้วใช้โทเคนเดียวกันเพื่อดูข้อเสนอแนะล่าสุด', tokenLabel:'โทเคนแอดมิน', load:'โหลด', empty:'ยังไม่มีข้อเสนอแนะ', items:'รายการ'
+    });
+    Object.assign(I18N.id, {
+      title:'Update / Laporan bug', subtitle:'Kirim ide fitur, bug kalkulasi, masalah terjemahan, atau masukan mobile.', back:'Kembali ke hub',
+      formTitle:'Kirim masukan', typeLabel:'Tipe', typeBug:'Laporan bug', typeUpdate:'Permintaan fitur', typeTranslation:'Masalah terjemahan', typeOther:'Lainnya',
+      pageLabel:'Halaman terkait', pageHub:'Hub', pageCalculator:'Kalkulator', pageMap:'Peta', pageLookup:'Intel', pageFort:'Fort / Sanc', pageOther:'Lainnya',
+      messageLabel:'Pesan', messagePlaceholder:'Jelaskan masalah atau fitur yang dibutuhkan.', contactLabel:'Kontak atau nickname', contactPlaceholder:'Opsional',
+      submit:'Kirim', ready:'Kirim formulir untuk menyimpan.', sending:'Mengirim...', saved:'Tersimpan. Terima kasih.', failed:'Gagal menyimpan masukan.',
+      adminTitle:'Tinjauan admin', adminHelp:'Atur ADMIN_TOKEN di Cloudflare, lalu gunakan token yang sama untuk membaca masukan terbaru.', tokenLabel:'Token admin', load:'Muat', empty:'Belum ada masukan.', items:'item'
+    });
     const LANGUAGE_LABELS = {
       ko:'\ud55c\uad6d\uc5b4', en:'English', 'zh-CN':'\u7b80\u4f53\u4e2d\u6587', 'zh-TW':'\u7e41\u9ad4\u4e2d\u6587',
       fr:'Francais', de:'Deutsch', th:'\u0e44\u0e17\u0e22', id:'Indonesia'
@@ -212,6 +261,13 @@
       document.querySelectorAll('#langSelect option').forEach((option) => { option.textContent = LANGUAGE_LABELS[option.value] || option.textContent; });
       document.querySelectorAll('[data-i18n]').forEach((node) => { node.textContent = tr(node.dataset.i18n); });
       document.querySelectorAll('[data-placeholder]').forEach((node) => { node.placeholder = tr(node.dataset.placeholder); });
+      document.querySelectorAll('[data-i18n-title]').forEach((node) => { node.title = tr(node.dataset.i18nTitle); });
+      document.querySelectorAll('[data-i18n-aria]').forEach((node) => {
+        (node.dataset.i18nAria || '').split(',').forEach((pair) => {
+          const [attr, key] = pair.split(':').map((value) => value && value.trim());
+          if (attr && key) node.setAttribute(attr, tr(key));
+        });
+      });
       $('langSelect').value = currentLang;
       $('backLink').href = `./index.html?lang=${encodeURIComponent(currentLang)}`;
       localStorage.setItem('lang', currentLang);
@@ -257,7 +313,7 @@
         const data = await response.json().catch(() => ({}));
         if (!response.ok || !data.ok) throw new Error(data.error || response.statusText);
         const items = data.items || [];
-        $('adminStatus').textContent = items.length ? `${items.length} items` : tr('empty');
+        $('adminStatus').textContent = items.length ? `${items.length} ${tr('items')}` : tr('empty');
         $('feedbackList').innerHTML = items.map((item) => `<article class="item"><div class="meta"><span class="pill">${escapeHtml(item.type)}</span><span class="pill">${escapeHtml(item.page || '-')}</span><span class="pill">${escapeHtml(item.lang || '-')}</span><span class="pill">${escapeHtml(item.createdAt || '')}</span></div><div class="message">${escapeHtml(item.message)}</div>${item.contact ? `<div class="meta"><span class="pill">${escapeHtml(item.contact)}</span></div>` : ''}</article>`).join('');
       } catch (error) {
         $('adminStatus').className = 'status bad';

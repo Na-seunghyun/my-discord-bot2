@@ -252,21 +252,22 @@
       .hero, .panel { border-radius: 18px; }
     }
   </style>
+  <link rel="stylesheet" href="./static/legend-ui.css?v=20260620-ui5">
 </head>
-<body>
+<body data-legend-page="fort">
   <div class="wrap">
     <nav class="nav">
       <a class="brand" id="backHome" href="./index.html"><span class="mark">885</span><span>885 LEGEND NASHSH</span></a>
       <div class="actions">
         <a class="back" id="hubLink" href="./index.html" data-i18n="back">Back to hub</a>
         <select id="langSelect" aria-label="Language">
-          <option value="ko">한국어</option>
+          <option value="ko">Korean</option>
           <option value="en">English</option>
-          <option value="zh-CN">简体中文</option>
-          <option value="zh-TW">繁體中文</option>
-          <option value="fr">Français</option>
+          <option value="zh-CN">Chinese Simplified</option>
+          <option value="zh-TW">Chinese Traditional</option>
+          <option value="fr">Francais</option>
           <option value="de">Deutsch</option>
-          <option value="th">ไทย</option>
+          <option value="th">Thai</option>
           <option value="id">Indonesia</option>
         </select>
         <a class="back support" href="https://buymeacoffee.com/nashsh" target="_blank" rel="noreferrer" data-i18n="support">Support page</a>
@@ -274,7 +275,7 @@
     </nav>
 
     <section class="hero">
-      <span class="eyebrow">ALLIANCE OPERATIONS</span>
+      <span class="eyebrow" data-i18n="tagAlliance">ALLIANCE OPERATIONS</span>
       <h1><span data-i18n="title">Fort / Sanc Distributor</span><br><span class="gradient">885 LEGEND NASHSH</span></h1>
       <p data-i18n="subtitle">Create a clean rotation plan for Fort and Sanctuary targets. This page is separated from the calculator because it is mainly an alliance management tool.</p>
     </section>
@@ -316,24 +317,74 @@
     const I18N = {
       ko: {
         back: '허브로 돌아가기', support: '후원 페이지', title: 'Fort / Sanc 분배기',
+        tagAlliance: '연맹 운영',
         subtitle: 'Fort와 Sanctuary 목표를 깔끔하게 배분하는 연맹 운영 도구입니다. 계산기 성격보다 운영 성격이 강해서 독립 페이지로 분리했습니다.',
         setup: '설정', setupHint: '연맹과 목표 수를 입력한 뒤 공정한 로테이션을 생성하세요.', alliances: '연맹 목록', rounds: '라운드', seed: '섞기 기준',
         fortCount: '라운드당 Fort', sancCount: '라운드당 Sanc', fortPoints: 'Fort 점수', sancPoints: 'Sanc 점수',
         generate: '생성', copy: '결과 복사', resultTitle: '분배 계획', resultHint: '누적 점수가 낮은 연맹부터 다음 슬롯에 우선 배정합니다.',
-        empty: '생성 버튼을 누르면 이곳에 로테이션이 표시됩니다.', round: '라운드', fort: 'Fort', sanc: 'Sanc', total: '총점',
+        empty: '생성 버튼을 누르면 이곳에 로테이션이 표시됩니다.', round: '라운드', fort: 'Fort', sanc: 'Sanc', total: '총점', slots: '슬롯',
         noAlliance: '연맹을 2개 이상 입력해주세요.', copied: '복사 완료'
       },
       en: {
         back: 'Back to hub', support: 'Support page', title: 'Fort / Sanc Distributor',
+        tagAlliance: 'Alliance Operations',
         subtitle: 'Create a clean rotation plan for Fort and Sanctuary targets. This page is separated from the calculator because it is mainly an alliance management tool.',
         setup: 'Setup', setupHint: 'Enter alliances and target counts, then generate a fair rotation.', alliances: 'Alliances', rounds: 'Rounds', seed: 'Shuffle seed',
         fortCount: 'Forts per round', sancCount: 'Sanc per round', fortPoints: 'Fort points', sancPoints: 'Sanc points',
         generate: 'Generate', copy: 'Copy result', resultTitle: 'Distribution Plan', resultHint: 'Lowest total score receives priority in the next slot.',
-        empty: 'Generate a plan to see the rotation here.', round: 'Round', fort: 'Fort', sanc: 'Sanc', total: 'Total',
+        empty: 'Generate a plan to see the rotation here.', round: 'Round', fort: 'Fort', sanc: 'Sanc', total: 'Total', slots: 'slots',
         noAlliance: 'Please enter at least 2 alliances.', copied: 'Copied'
       }
     };
-    ['zh-CN','zh-TW','fr','de','th','id'].forEach((lang) => { I18N[lang] = I18N.en; });
+    ['zh-CN','zh-TW','fr','de','th','id'].forEach((lang) => { I18N[lang] = { ...I18N.en }; });
+    Object.assign(I18N['zh-CN'], {
+      back:'返回主页', support:'支持页面', title:'Fort / Sanc 分配器', tagAlliance:'联盟运营',
+      subtitle:'为 Fort 和 Sanctuary 目标制作清晰的联盟轮换计划。它更像联盟运营工具，因此从计算器中独立出来。',
+      setup:'设置', setupHint:'输入联盟和目标数量，然后生成公平轮换。', alliances:'联盟列表', rounds:'轮次', seed:'随机种子',
+      fortCount:'每轮 Fort', sancCount:'每轮 Sanc', fortPoints:'Fort 分数', sancPoints:'Sanc 分数',
+      generate:'生成', copy:'复制结果', resultTitle:'分配计划', resultHint:'累计分数较低的联盟会优先获得下一个槽位。',
+      empty:'点击生成后，轮换计划会显示在这里。', round:'轮次', total:'总分', slots:'槽位', noAlliance:'请至少输入 2 个联盟。', copied:'已复制'
+    });
+    Object.assign(I18N['zh-TW'], {
+      back:'返回首頁', support:'支援頁面', title:'Fort / Sanc 分配器', tagAlliance:'聯盟營運',
+      subtitle:'為 Fort 和 Sanctuary 目標製作清晰的聯盟輪換計畫。它更像聯盟營運工具，因此從計算器中獨立出來。',
+      setup:'設定', setupHint:'輸入聯盟和目標數量，然後生成公平輪換。', alliances:'聯盟列表', rounds:'輪次', seed:'隨機種子',
+      fortCount:'每輪 Fort', sancCount:'每輪 Sanc', fortPoints:'Fort 分數', sancPoints:'Sanc 分數',
+      generate:'生成', copy:'複製結果', resultTitle:'分配計畫', resultHint:'累計分數較低的聯盟會優先獲得下一個槽位。',
+      empty:'點擊生成後，輪換計畫會顯示在這裡。', round:'輪次', total:'總分', slots:'槽位', noAlliance:'請至少輸入 2 個聯盟。', copied:'已複製'
+    });
+    Object.assign(I18N.fr, {
+      back:'Retour au hub', support:'Page de soutien', title:'Distributeur Fort / Sanc', tagAlliance:'Opérations alliance',
+      subtitle:'Créez un plan de rotation propre pour les Forts et Sanctuaires. Cette page est séparée des calculateurs car elle sert surtout à gérer l’alliance.',
+      setup:'Configuration', setupHint:'Saisissez les alliances et les cibles, puis générez une rotation équitable.', alliances:'Alliances', rounds:'Tours', seed:'Graine',
+      fortCount:'Forts par tour', sancCount:'Sanc par tour', fortPoints:'Points Fort', sancPoints:'Points Sanc',
+      generate:'Générer', copy:'Copier le résultat', resultTitle:'Plan de distribution', resultHint:'Le score total le plus bas reçoit la priorité au prochain slot.',
+      empty:'Générez un plan pour voir la rotation ici.', round:'Tour', total:'Total', slots:'slots', noAlliance:'Entrez au moins 2 alliances.', copied:'Copié'
+    });
+    Object.assign(I18N.de, {
+      back:'Zurück zum Hub', support:'Support-Seite', title:'Fort / Sanc Verteiler', tagAlliance:'Allianz-Betrieb',
+      subtitle:'Erstelle einen klaren Rotationsplan für Fort- und Sanctuary-Ziele. Diese Seite ist getrennt, weil sie vor allem Allianzverwaltung ist.',
+      setup:'Einstellungen', setupHint:'Allianzen und Zielzahlen eingeben, dann eine faire Rotation erzeugen.', alliances:'Allianzen', rounds:'Runden', seed:'Misch-Seed',
+      fortCount:'Forts pro Runde', sancCount:'Sanc pro Runde', fortPoints:'Fort-Punkte', sancPoints:'Sanc-Punkte',
+      generate:'Erzeugen', copy:'Ergebnis kopieren', resultTitle:'Verteilungsplan', resultHint:'Der niedrigste Gesamtwert erhält den nächsten Slot zuerst.',
+      empty:'Erzeuge einen Plan, um die Rotation hier zu sehen.', round:'Runde', total:'Gesamt', slots:'Slots', noAlliance:'Bitte mindestens 2 Allianzen eingeben.', copied:'Kopiert'
+    });
+    Object.assign(I18N.th, {
+      back:'กลับหน้าหลัก', support:'หน้าสนับสนุน', title:'ตัวแจก Fort / Sanc', tagAlliance:'ปฏิบัติการพันธมิตร',
+      subtitle:'สร้างแผนหมุนเวียน Fort และ Sanctuary ให้ชัดเจน หน้านี้แยกออกจากเครื่องคิดเลขเพราะเป็นเครื่องมือจัดการพันธมิตร',
+      setup:'ตั้งค่า', setupHint:'ใส่รายชื่อพันธมิตรและจำนวนเป้าหมาย แล้วสร้างรอบหมุนเวียนที่ยุติธรรม', alliances:'รายชื่อพันธมิตร', rounds:'รอบ', seed:'ค่า seed',
+      fortCount:'Fort ต่อรอบ', sancCount:'Sanc ต่อรอบ', fortPoints:'คะแนน Fort', sancPoints:'คะแนน Sanc',
+      generate:'สร้าง', copy:'คัดลอกผลลัพธ์', resultTitle:'แผนแบ่งสรร', resultHint:'พันธมิตรที่มีคะแนนรวมน้อยที่สุดจะได้สิทธิ์ก่อนในช่องถัดไป',
+      empty:'กดสร้างเพื่อดูแผนหมุนเวียนที่นี่', round:'รอบ', total:'รวม', slots:'ช่อง', noAlliance:'กรุณาใส่อย่างน้อย 2 พันธมิตร', copied:'คัดลอกแล้ว'
+    });
+    Object.assign(I18N.id, {
+      back:'Kembali ke hub', support:'Halaman dukungan', title:'Distributor Fort / Sanc', tagAlliance:'Operasi aliansi',
+      subtitle:'Buat rencana rotasi Fort dan Sanctuary yang rapi. Halaman ini dipisah karena lebih cocok sebagai alat manajemen aliansi.',
+      setup:'Pengaturan', setupHint:'Masukkan aliansi dan jumlah target, lalu buat rotasi yang adil.', alliances:'Aliansi', rounds:'Ronde', seed:'Seed acak',
+      fortCount:'Fort per ronde', sancCount:'Sanc per ronde', fortPoints:'Poin Fort', sancPoints:'Poin Sanc',
+      generate:'Buat', copy:'Salin hasil', resultTitle:'Rencana distribusi', resultHint:'Skor total terendah mendapat prioritas untuk slot berikutnya.',
+      empty:'Buat rencana untuk melihat rotasi di sini.', round:'Ronde', total:'Total', slots:'slot', noAlliance:'Masukkan minimal 2 aliansi.', copied:'Tersalin'
+    });
     const $ = (id) => document.getElementById(id);
     let lastText = '';
     function getLang() {
@@ -346,6 +397,15 @@
       document.documentElement.lang = lang;
       document.querySelectorAll('[data-i18n]').forEach((node) => {
         if (dict[node.dataset.i18n]) node.textContent = dict[node.dataset.i18n];
+      });
+      document.querySelectorAll('[data-i18n-title]').forEach((node) => {
+        if (dict[node.dataset.i18nTitle]) node.title = dict[node.dataset.i18nTitle];
+      });
+      document.querySelectorAll('[data-i18n-aria]').forEach((node) => {
+        (node.dataset.i18nAria || '').split(',').forEach((pair) => {
+          const [attr, key] = pair.split(':').map((value) => value && value.trim());
+          if (attr && key && dict[key]) node.setAttribute(attr, dict[key]);
+        });
       });
       const hub = `./index.html?lang=${encodeURIComponent(lang)}`;
       $('hubLink').href = hub;
@@ -423,7 +483,7 @@
       $('result').innerHTML = plan.map((round) => {
         const fortItems = round.forts.map((name, i) => `<div class="item"><b>${d.fort} ${i + 1}</b><span>${escapeHtml(name)}</span></div>`).join('');
         const sancItems = round.sancs.map((name, i) => `<div class="item"><b>${d.sanc} ${i + 1}</b><span>${escapeHtml(name)}</span></div>`).join('');
-        return `<article class="round"><div class="round-title"><span>${d.round} ${round.round}</span><span>${round.forts.length + round.sancs.length} slots</span></div><div class="items">${fortItems}${sancItems}</div></article>`;
+        return `<article class="round"><div class="round-title"><span>${d.round} ${round.round}</span><span>${round.forts.length + round.sancs.length} ${d.slots}</span></div><div class="items">${fortItems}${sancItems}</div></article>`;
       }).join('');
       lastText = plan.map((round) => {
         const fort = round.forts.length ? `${d.fort}: ${round.forts.join(', ')}` : `${d.fort}: -`;

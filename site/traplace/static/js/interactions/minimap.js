@@ -5,6 +5,7 @@
 
 import { state } from '../state.js';
 import { viewport } from '../dom.js';
+import { t } from '../i18n.js?v=legend-nash-5';
 
 const WIDTH = 196;
 const HEIGHT = 138;
@@ -26,7 +27,7 @@ function ensureMinimap() {
   wrap = document.createElement('div');
   wrap.id = 'minimap';
   wrap.className = 'minimap';
-  wrap.setAttribute('aria-label', 'Minimap');
+  wrap.setAttribute('aria-label', t('ui.minimap'));
 
   canvas = document.createElement('canvas');
   canvas.width = WIDTH;
@@ -41,7 +42,7 @@ function ensureMinimap() {
 
   const caption = document.createElement('div');
   caption.className = 'minimap-caption';
-  caption.textContent = 'Minimap';
+  caption.textContent = t('ui.minimap');
   wrap.appendChild(caption);
 
   document.body.appendChild(wrap);

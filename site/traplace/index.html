@@ -14,8 +14,8 @@
     <link rel="stylesheet" href="static/css/base.css?v=legend-nash-10" />
     <link rel="stylesheet" href="static/css/grid.css?v=legend-nash-10" />
     <link rel="stylesheet" href="static/css/blocks.css?v=legend-nash-10" />
-    <link rel="stylesheet" href="static/css/ui.css?v=legend-nash-10" />
-    <link rel="stylesheet" href="../static/legend-ui.css?v=885-nashsh-unified-1" />
+    <link rel="stylesheet" href="static/css/ui.css?v=legend-nash-11" />
+    <link rel="stylesheet" href="../static/legend-ui.css?v=885-nashsh-unified-3" />
   </head>
 
   <body data-legend-page="planner">
@@ -26,10 +26,10 @@
         <div class="brand-mark">LN</div>
         <div class="brand-copy">
           <strong>885 LEGEND NASHSH</strong>
-          <span>Warpath layout planner</span>
+          <span data-i18n="app.subtitle">War map planner</span>
         </div>
       </div>
-      <a class="hub-return" href="../index.html">Hub</a>
+      <a class="hub-return" href="../index.html" data-i18n="ui.homeHub">Hub</a>
       <!-- Hidden on mobile: usage block -->
       <div class="usage-section" data-mobile-hidden>
         <button id="usageToggle" class="usage-toggle" type="button" aria-expanded="false">
@@ -51,6 +51,7 @@
         role="listbox"
         tabindex="0"
         aria-label="Palette"
+        data-i18n-aria="aria-label:ui.paletteTitle"
       >
         <div
           class="palette-item"
@@ -131,7 +132,7 @@
               value="1"
               aria-label="Width"
             />
-            <span class="custom-separator">횞</span>
+            <span class="custom-separator">&times;</span>
             <input
               type="number"
               class="custom-height"
@@ -153,22 +154,24 @@
           href="https://buymeacoffee.com/nashsh"
           target="_blank"
           rel="noreferrer"
+          data-i18n="ui.footer.support"
         >
-          후원 페이지
+          Support page
         </a>
       </div>
     </aside>
 
     <!-- Top toolbar -->
-    <header id="toolbar" class="toolbar" role="toolbar" aria-label="Editor toolbar">
+    <header id="toolbar" class="toolbar" role="toolbar" aria-label="Editor toolbar" data-i18n-aria="aria-label:ui.toolbar.editor">
       <div class="tb-group">
         <button
           id="btnUndo"
           class="tb-btn"
           type="button"
-          title="Undo (?쁛 / Ctrl+Z)"
+          title="Undo (Ctrl+Z)"
           aria-label="Undo"
           data-i18n="ui.toolbar.undo"
+          data-i18n-aria="aria-label:ui.toolbar.undo"
         >
             Undo
           </button>
@@ -176,9 +179,10 @@
           id="btnRedo"
           class="tb-btn"
           type="button"
-          title="Redo (?㎮뙓Z / Ctrl+Y)"
+          title="Redo (Ctrl+Y)"
           aria-label="Redo"
           data-i18n="ui.toolbar.redo"
+          data-i18n-aria="aria-label:ui.toolbar.redo"
         >
             Redo
           </button>
@@ -191,9 +195,10 @@
           id="btnCityTrapDist"
           class="tb-btn"
           type="button"
-          title="Measure move time (?β뙓D / Ctrl+Alt+D)"
+          title="Measure move time (Ctrl+Alt+D)"
           aria-label="Measure move time"
           data-i18n="ui.toolbar.dist2label"
+          data-i18n-aria="aria-label:ui.toolbar.dist2label"
         >
             Measure move time
           </button>
@@ -204,6 +209,7 @@
           title="Measure selected objects"
           aria-label="Measure selected objects"
           data-i18n="ui.toolbar.pairDist"
+          data-i18n-aria="aria-label:ui.toolbar.pairDist"
         >
             Measure selected objects
           </button>
@@ -211,9 +217,10 @@
           id="btnReset"
           class="tb-btn danger"
           type="button"
-          title="Reset (?β뙓R / Ctrl+Alt+R)"
+          title="Reset (Ctrl+Alt+R)"
           aria-label="Reset"
           data-i18n="ui.toolbar.reset"
+          data-i18n-aria="aria-label:ui.toolbar.reset"
         >
             Reset
           </button>
@@ -221,9 +228,10 @@
           id="btnCopyURL"
           class="tb-btn"
           type="button"
-          title="Copy URL (?β뙓C / Ctrl+Alt+C)"
+          title="Copy URL (Ctrl+Alt+C)"
           aria-label="Copy URL"
           data-i18n="ui.toolbar.copy"
+          data-i18n-aria="aria-label:ui.toolbar.copy"
         >
             Copy short URL
           </button>
@@ -231,9 +239,10 @@
           id="btnExportPNG"
           class="tb-btn primary"
           type="button"
-          title="Export PNG (?β뙓E / Ctrl+Alt+E)"
+          title="Export PNG (Ctrl+Alt+E)"
           aria-label="Export PNG"
           data-i18n="ui.toolbar.export"
+          data-i18n-aria="aria-label:ui.toolbar.export"
         >
             Export PNG
           </button>
@@ -241,9 +250,10 @@
           id="btnImportPNG"
           class="tb-btn primary"
           type="button"
-          title="Import PNG (?β뙓I / Ctrl+Alt+I)"
+          title="Import PNG (Ctrl+Alt+I)"
           aria-label="Import PNG"
           data-i18n="ui.toolbar.import"
+          data-i18n-aria="aria-label:ui.toolbar.import"
         >
             Import PNG
           </button>
@@ -260,7 +270,7 @@
 
       <div class="tb-group">
         <label class="lang-label" for="langSelect" data-i18n="ui.toolbar.lang">Language</label>
-        <select id="langSelect" class="lang-select" aria-label="Language">
+        <select id="langSelect" class="lang-select" aria-label="Language" data-i18n-aria="aria-label:ui.toolbar.lang">
           <option value="en">English</option>
           <option value="ko">한국어</option>
           <option value="zh-CN">简体中文</option>
@@ -281,7 +291,7 @@
     </header>
 
     <!-- Viewport / World -->
-    <main id="viewport" class="viewport" aria-label="scrollable-viewport">
+    <main id="viewport" class="viewport" aria-label="Map viewport" data-i18n-aria="aria-label:ui.viewport">
       <div id="world" class="world">
         <div id="rot" class="rot">
           <div class="grid"></div>
@@ -295,13 +305,13 @@
         </div>
 
         <div id="badge" class="badge">
-          <button id="btnHome" class="home-btn" type="button" title="Home" aria-label="Home">
-            중앙
+          <button id="btnHome" class="home-btn" type="button" title="Home" aria-label="Home" data-i18n="ui.toolbar.home" data-i18n-title="ui.toolbar.home" data-i18n-aria="aria-label:ui.toolbar.home">
+            Home
           </button>
-          <button id="btnTrap" class="trap-btn" type="button" title="Find Trap" aria-label="Find Trap">
-            함정
+          <button id="btnTrap" class="trap-btn" type="button" title="Find Trap" aria-label="Find Trap" data-i18n="ui.toolbar.findTrap" data-i18n-title="ui.toolbar.findTrap" data-i18n-aria="aria-label:ui.toolbar.findTrap">
+            Trap
           </button>
-          <span id="badgeCoord" class="badge-coord-text" title="Click to jump to coordinates">x:-, y:-</span>
+          <span id="badgeCoord" class="badge-coord-text" title="Click to jump to coordinates" data-i18n-title="ui.toolbar.coordJump">x:-, y:-</span>
           <input id="badgeInput" class="badge-coord-input" type="text" style="display: none;" placeholder="x, y" />
           <span id="badgeZoom" aria-live="polite">100%</span>
         </div>
@@ -323,7 +333,7 @@
       <div class="url-modal-content">
         <div class="url-modal-header">
           <h3 data-i18n="modal.urlCopy.title">Copy URL</h3>
-          <button id="urlModalClose" class="url-modal-close" type="button" aria-label="Close">&times;</button>
+          <button id="urlModalClose" class="url-modal-close" type="button" aria-label="Close" data-i18n-aria="aria-label:modal.urlCopy.close">&times;</button>
         </div>
         <div class="url-modal-body">
           <p data-i18n="modal.urlCopy.message">Please copy the URL below.</p>
@@ -365,7 +375,7 @@
 
     <noscript>Please enable JavaScript to use this app.</noscript>
     <script src="static/js/i18n-inline.js?v=legend-nash-2"></script>
-    <script type="module" src="static/js/mainLegend.js?v=legend-nash-8"></script>
+    <script type="module" src="static/js/mainLegend.js?v=legend-nash-11"></script>
     <script>
       (function syncMinimapViewbox() {
         function update() {

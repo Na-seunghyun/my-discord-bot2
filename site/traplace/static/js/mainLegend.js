@@ -25,20 +25,20 @@ import { setupTileToggle } from './interactions/tileToggle.js';
 import { setupCursorBadge } from './interactions/cursor.js';
 import { setupCoordJump } from './interactions/coordJump.js';
 import { setupRemoteControl } from './interactions/remote.js';
-import { setupMinimap } from './interactions/minimapLegend.js?v=legend-nash-2';
+import { setupMinimap } from './interactions/minimapLegend.js?v=legend-nash-5';
 import { viewport } from './dom.js';
 import { validateAllObjects, createBlock } from './blocks.js';
 import { expand } from './interactions/expand.js';
 import { parseFromURL, saveToURLImmediate } from './urlState.js';
 import { state, cellPx, BASE_CELLS_X, BASE_CELLS_Y } from './state.js';
-import { setupActions, setTitles } from './actions.js?v=legend-nash-2';
+import { setupActions, setTitles } from './actions.js?v=legend-nash-5';
 import { initHistoryWithCurrent, saveCheckpoint } from './history.js';
 import {
   detectPreferredLang,
   loadLanguageOnline,
   currentLang,
   updateBlockLabelsForLocale,
-} from './i18n.js?v=legend-nash-3';
+} from './i18n.js?v=legend-nash-5';
 import { initCounters, updateAllCounts } from './counters.js';
 import { enableDragScroll } from './interactions/hscroll.js';
 import { initContextMenu } from './interactions/contextMenu.js?v=legend-nash-3';

@@ -13,7 +13,7 @@ import { state, cellPx } from './state.js';
 import { world } from './dom.js';
 import { PAINTER_KINDS, cellsForKindAt, areaBoundingBox } from './painter.js';
 import { posToCell } from './transform.js';
-import { t } from './i18n.js';
+import { t } from './i18n.js?v=legend-nash-5';
 
 /* ================= PNG metadata utils ================= */
 

@@ -806,23 +806,24 @@
       .modal-actions button { width: 100%; }
     }
   </style>
+  <link rel="stylesheet" href="./static/legend-ui.css?v=20260620-ui5">
 </head>
-<body>
+<body data-legend-page="intel">
   <main class="shell">
     <nav class="topbar">
-      <a class="link-button" href="./index.html" data-i18n="back">허브로 돌아가기</a>
+      <a class="link-button" href="./index.html" data-i18n="back">Back to hub</a>
       <div class="top-actions">
         <select id="langSelect" aria-label="Language">
-          <option value="ko">한국어</option>
+          <option value="ko">Korean</option>
           <option value="en">English</option>
-          <option value="zh-CN">简体中文</option>
-          <option value="zh-TW">繁體中文</option>
-          <option value="fr">Français</option>
+          <option value="zh-CN">Chinese Simplified</option>
+          <option value="zh-TW">Chinese Traditional</option>
+          <option value="fr">Francais</option>
           <option value="de">Deutsch</option>
-          <option value="th">ไทย</option>
+          <option value="th">Thai</option>
           <option value="id">Indonesia</option>
         </select>
-        <a class="link-button gold" href="https://buymeacoffee.com/nashsh" target="_blank" rel="noreferrer" data-i18n="support">후원 페이지</a>
+        <a class="link-button gold" href="https://buymeacoffee.com/nashsh" target="_blank" rel="noreferrer" data-i18n="support">Support page</a>
       </div>
     </nav>
 
@@ -831,44 +832,44 @@
         <div>
           <div class="brand">885 LEGEND NASHSH</div>
           <h1 data-i18n="title">Intel Command Deck</h1>
-          <p class="subtitle" data-i18n="subtitle">플레이어 검색, 왕국 요약, 영웅 장비를 한 화면에서 확인하는 독립형 인텔 허브입니다.</p>
+          <p class="subtitle" data-i18n="subtitle">An independent intel hub for player search, kingdom summaries, heroes, and gear.</p>
         </div>
         <div class="statline">
-          <div class="stat"><strong id="statPlayers">-</strong><span data-i18n="storedPlayers">저장된 플레이어</span></div>
-          <div class="stat"><strong id="statCache">-</strong><span data-i18n="cachedData">캐시 응답</span></div>
-          <div class="stat"><strong id="statSource">SUPA</strong><span data-i18n="storageState">저장소 상태</span></div>
+          <div class="stat"><strong id="statPlayers">-</strong><span data-i18n="storedPlayers">Stored players</span></div>
+          <div class="stat"><strong id="statCache">-</strong><span data-i18n="cachedData">Cached responses</span></div>
+          <div class="stat"><strong id="statSource">SUPA</strong><span data-i18n="storageState">Storage state</span></div>
         </div>
       </div>
       <div class="panel search-deck">
-        <h2 data-i18n="quickSearch">빠른 검색</h2>
+        <h2 data-i18n="quickSearch">Quick search</h2>
         <div class="search-box">
-          <input id="playerQuery" autocomplete="off" data-placeholder="playerPlaceholder" placeholder="닉네임 또는 플레이어 ID">
-          <button id="searchBtn" class="primary" type="button" data-i18n="search">검색</button>
-          <button id="directBtn" type="button" data-i18n="idDetail">ID 상세</button>
+          <input id="playerQuery" autocomplete="off" data-placeholder="playerPlaceholder" placeholder="Player name or ID">
+          <button id="searchBtn" class="primary" type="button" data-i18n="search">Search</button>
+          <button id="directBtn" type="button" data-i18n="idDetail">ID detail</button>
         </div>
         <div class="kingdom-box">
-          <input id="kingdomInput" inputmode="numeric" autocomplete="off" data-placeholder="kingdomPlaceholder" placeholder="왕국 번호 예: 885">
-          <button id="kingdomBtn" type="button" data-i18n="open">열기</button>
+          <input id="kingdomInput" inputmode="numeric" autocomplete="off" data-placeholder="kingdomPlaceholder" placeholder="Kingdom number, e.g. 885">
+          <button id="kingdomBtn" type="button" data-i18n="open">Open</button>
         </div>
-        <div id="status" class="status" data-i18n="ready">검색어 또는 왕국 번호를 입력하세요.</div>
+        <div id="status" class="status" data-i18n="ready">Enter a search term or kingdom number.</div>
       </div>
     </section>
 
     <section class="layout">
       <div class="panel">
         <div id="spotlightHead" class="section-head spotlight-head">
-          <h2 id="mainTitle" data-i18n="scoutBoard">스카우트 보드</h2>
-          <button id="shuffleBtn" type="button" data-i18n="shuffle">새로 보기</button>
+          <h2 id="mainTitle" data-i18n="scoutBoard">Scout board</h2>
+          <button id="shuffleBtn" type="button" data-i18n="shuffle">Shuffle</button>
         </div>
-        <div id="spotlight" class="scout-board"><div class="empty" data-i18n="loadingTiles">프로필 블록을 불러오는 중입니다.</div></div>
+        <div id="spotlight" class="scout-board"><div class="empty" data-i18n="loadingTiles">Loading profile blocks.</div></div>
         <div class="section-head">
-          <h2 id="resultTitle" data-i18n="resultsTitle">검색 결과</h2>
+          <h2 id="resultTitle" data-i18n="resultsTitle">Search results</h2>
         </div>
-        <div id="results" class="results"><div class="empty" data-i18n="emptyResults">아직 표시할 정보가 없습니다.</div></div>
+        <div id="results" class="results"><div class="empty" data-i18n="emptyResults">No information to show yet.</div></div>
       </div>
       <aside class="panel side">
-        <h2 id="sideTitle" data-i18n="kingdomInfo">왕국 정보</h2>
-        <div id="kingdomSummary" class="empty" data-i18n="emptyKingdom">왕국 번호를 조회하면 요약이 표시됩니다.</div>
+        <h2 id="sideTitle" data-i18n="kingdomInfo">Kingdom info</h2>
+        <div id="kingdomSummary" class="empty" data-i18n="emptyKingdom">Enter a kingdom number to load the summary.</div>
       </aside>
     </section>
   </main>
@@ -877,8 +878,8 @@
     <div class="modal-head">
       <div id="modalTitle" class="person"></div>
       <div class="modal-actions">
-        <button id="refreshPlayerBtn" class="gold" type="button" data-i18n="refresh">갱신</button>
-        <button id="closeModal" type="button" data-i18n="close">닫기</button>
+        <button id="refreshPlayerBtn" class="gold" type="button" data-i18n="refresh">Refresh</button>
+        <button id="closeModal" type="button" data-i18n="close">Close</button>
       </div>
     </div>
     <div id="modalBody" class="modal-body"></div>
@@ -888,29 +889,6 @@
     const REMOTE_ORIGIN = 'https://kingshot.jeab.dev';
     const PROXY_BASE = '/kingshot';
     const I18N = {
-      ko: {
-        back:'??? ????', support:'?? ???', title:'Intel Command Deck',
-        subtitle:'???? ??, ?? ??, ??? ?? ??? ? ???? ???? ?? ?????.',
-        storedPlayers:'??? ????', cachedData:'?? ??', storageState:'??? ??',
-        quickSearch:'?? ??', playerPlaceholder:'???? ?? ?? ID', search:'??', idDetail:'ID ??',
-        kingdomPlaceholder:'?? ?? ?: 885', open:'??', ready:'??? ?? ?? ??? ?????.',
-        scoutBoard:'???? ??', shuffle:'?? ??', loadingTiles:'??? ??? ???? ????.',
-        resultsTitle:'?? ??', emptyResults:'?? ??? ??? ????.', kingdomInfo:'?? ??',
-        emptyKingdom:'?? ??? ???? ??? ?????.', refresh:'????', close:'??',
-        enterSearch:'???? ?????.', enterKingdom:'?? ??? ?????.', noResults:'?? ??? ????.',
-        searchFail:'?? ??? ???? ?????.', kingdomFail:'?? ??? ???? ?????.',
-        detailFail:'???? ?? ??? ???? ?????.', loadingDetail:'???? ?? ??? ???? ????...',
-        noLoadout:'??? ??/?? ??? ????. ?? ???? ???? ??? ??? ? ????.',
-        searchStatus:'?? ?', found:'? ??', localCache:'?? ??', loadingKingdom:'?? ???? ?',
-        trackedPlayers:'?? ????', alliances:'??', loaded:'???', partialDetail:'?? ??', loadFailed:'???? ??',
-        retry:'?? ??', partialAlert:'?? ?? ??? ???? ???? ?????. ?? ??? ??/??? ?? ??? ??? ?????.',
-        power:'???', townCenter:'?? ??', lifeTree:'??? ??', mysticScore:'??? ??', mysticRank:'??? ??',
-        crowns:'??', kingdomsRuled:'?? ??', updated:'????', kingdom:'??', heroesGear:'??? ??',
-        fetched:'??', stale:'?? ???? ????? ? ????.', noGear:'?? ??', slot:'??', level:'??', stars:'?',
-        exclusive:'?? ??', forgeLevel:'?? ??', standings:'??', history:'??', codes:'??',
-        board:'??', rank:'??', score:'??', name:'??', alliance:'??', recorded:'???', code:'??', status:'??', time:'??',
-        grade:'??', tracked:'??', castle:'??', members:'??', weapon:'??', armor:'??', helmet:'??', boots:'??'
-      },
       en: {
         back:'Back to hub', support:'Support page', title:'Intel Command Deck',
         subtitle:'An independent intel hub for player search, kingdom summaries, heroes, and gear.',
@@ -926,6 +904,7 @@
         noLoadout:'No collected hero or gear information is available. Only data present in the source service can be shown.',
         searchStatus:'Searching', found:'players found', localCache:'local cache', loadingKingdom:'Loading kingdom',
         trackedPlayers:'tracked players', alliances:'alliances', loaded:'Loaded', partialDetail:'partial detail', loadFailed:'Load failed',
+        refreshing:'Refreshing...', refreshingPlayer:'Refreshing player',
         retry:'Retry', partialAlert:'Some detail panels could not load from the source. Basic profile data is still shown from the available response/cache.',
         power:'Power', townCenter:'Town Center', lifeTree:'Life Tree', mysticScore:'Mystic Score', mysticRank:'Mystic Rank',
         crowns:'Crowns', kingdomsRuled:'Kingdoms ruled', updated:'Updated', kingdom:'Kingdom', heroesGear:'Heroes & Gear',
@@ -933,138 +912,21 @@
         exclusive:'Exclusive', forgeLevel:'Forge Lv', standings:'Standings', history:'History', codes:'Codes',
         board:'Board', rank:'Rank', score:'Score', name:'Name', alliance:'Alliance', recorded:'Recorded', code:'Code', status:'Status', time:'Time',
         grade:'Grade', tracked:'Tracked', castle:'Castle', members:'members', weapon:'Weapon', armor:'Armor', helmet:'Helmet', boots:'Boots'
-      },
-      'zh-CN': {
-        back:'????', support:'????', title:'?????', subtitle:'?????????????????????????????',
-        storedPlayers:'????', cachedData:'????', storageState:'????', quickSearch:'????', playerPlaceholder:'????? ID', search:'??', idDetail:'ID ??',
-        kingdomPlaceholder:'??????? 885', open:'??', ready:'????????????', scoutBoard:'????', shuffle:'???', loadingTiles:'????????',
-        resultsTitle:'????', emptyResults:'????????', kingdomInfo:'????', emptyKingdom:'?????????????', refresh:'??', close:'??',
-        enterSearch:'???????', enterKingdom:'????????', noResults:'???????', searchFail:'?????????', kingdomFail:'?????????', detailFail:'?????????', loadingDetail:'????????...', noLoadout:'????????/????????????????????',
-        searchStatus:'???', found:'???', localCache:'????', loadingKingdom:'??????', trackedPlayers:'?????', alliances:'??', loaded:'???', partialDetail:'????', loadFailed:'????', retry:'??', partialAlert:'??????????????????????/?????????',
-        power:'??', townCenter:'????', lifeTree:'????', mysticScore:'????', mysticRank:'????', crowns:'??', kingdomsRuled:'????', updated:'????', kingdom:'??', heroesGear:'?????', fetched:'????', stale:'?????????', noGear:'???', slot:'??', level:'??', stars:'??', exclusive:'????', forgeLevel:'????', standings:'???', history:'??', codes:'???', board:'??', rank:'??', score:'??', name:'??', alliance:'??', recorded:'????', code:'??', status:'??', time:'??', grade:'??', tracked:'??', castle:'??', members:'??', weapon:'??', armor:'??', helmet:'??', boots:'??'
-      },
-      'zh-TW': {
-        back:'????', support:'????', title:'?????', subtitle:'?????????????????????????????',
-        storedPlayers:'????', cachedData:'????', storageState:'????', quickSearch:'????', playerPlaceholder:'????? ID', search:'??', idDetail:'ID ??',
-        kingdomPlaceholder:'??????? 885', open:'??', ready:'????????????', scoutBoard:'????', shuffle:'???', loadingTiles:'????????',
-        resultsTitle:'????', emptyResults:'????????', kingdomInfo:'????', emptyKingdom:'?????????????', refresh:'????', close:'??',
-        enterSearch:'???????', enterKingdom:'????????', noResults:'???????', searchFail:'?????????', kingdomFail:'?????????', detailFail:'?????????', loadingDetail:'????????...', noLoadout:'????????/????????????????????',
-        searchStatus:'???', found:'???', localCache:'????', loadingKingdom:'??????', trackedPlayers:'?????', alliances:'??', loaded:'???', partialDetail:'????', loadFailed:'????', retry:'??', partialAlert:'??????????????????????/?????????',
-        power:'??', townCenter:'????', lifeTree:'????', mysticScore:'????', mysticRank:'????', crowns:'??', kingdomsRuled:'????', updated:'????', kingdom:'??', heroesGear:'?????', fetched:'????', stale:'?????????', noGear:'???', slot:'??', level:'??', stars:'??', exclusive:'????', forgeLevel:'????', standings:'???', history:'??', codes:'???', board:'??', rank:'??', score:'??', name:'??', alliance:'??', recorded:'????', code:'??', status:'??', time:'??', grade:'??', tracked:'??', castle:'??', members:'??', weapon:'??', armor:'??', helmet:'??', boots:'??'
-      },
-      fr: {
-        back:'Retour au hub', support:'Page de soutien', title:'Centre Intel', subtitle:'Un hub intel pour chercher des joueurs, royaumes, heros et equipements.', storedPlayers:'Joueurs stockes', cachedData:'Reponses cache', storageState:'Stockage', quickSearch:'Recherche rapide', playerPlaceholder:'Nom ou ID du joueur', search:'Rechercher', idDetail:'Detail ID', kingdomPlaceholder:'Numero du royaume, ex. 885', open:'Ouvrir', ready:'Entrez une recherche ou un royaume.', scoutBoard:'Tableau scout', shuffle:'Melanger', loadingTiles:'Chargement des profils.', resultsTitle:'Resultats', emptyResults:'Aucune information pour le moment.', kingdomInfo:'Info royaume', emptyKingdom:'Entrez un royaume pour charger le resume.', refresh:'Actualiser', close:'Fermer', enterSearch:'Entrez une recherche.', enterKingdom:'Entrez un royaume.', noResults:'Aucun resultat.', searchFail:'Impossible de charger les resultats.', kingdomFail:'Impossible de charger le royaume.', detailFail:'Impossible de charger le joueur.', loadingDetail:'Chargement du joueur...', noLoadout:'Aucune information heros/equipement collectee. Seules les donnees disponibles a la source peuvent etre affichees.', searchStatus:'Recherche', found:'joueurs trouves', localCache:'cache local', loadingKingdom:'Chargement du royaume', trackedPlayers:'joueurs suivis', alliances:'alliances', loaded:'Charge', partialDetail:'detail partiel', loadFailed:'Echec du chargement', retry:'Reessayer', partialAlert:'Certains panneaux de detail ne sont pas disponibles. Les donnees de base disponibles/cachees sont affichees.', power:'Puissance', townCenter:'Centre-ville', lifeTree:'Arbre de vie', mysticScore:'Score mystique', mysticRank:'Rang mystique', crowns:'Couronnes', kingdomsRuled:'Royaumes gouvernes', updated:'Mis a jour', kingdom:'Royaume', heroesGear:'Heros et equipement', fetched:'Recupere', stale:'Les donnees cache peuvent etre anciennes', noGear:'Aucun equipement', slot:'Slot', level:'Niveau', stars:'Etoiles', exclusive:'Exclusif', forgeLevel:'Niv. forge', standings:'Classements', history:'Historique', codes:'Codes', board:'Tableau', rank:'Rang', score:'Score', name:'Nom', alliance:'Alliance', recorded:'Enregistre', code:'Code', status:'Statut', time:'Temps', grade:'Note', tracked:'Suivis', castle:'Chateau', members:'membres', weapon:'Arme', armor:'Armure', helmet:'Casque', boots:'Bottes'
-      },
-      de: {
-        back:'Zurueck zum Hub', support:'Support-Seite', title:'Intel Kommando', subtitle:'Ein Intel-Hub fuer Spielersuche, Koenigreichsuebersicht, Helden und Ausruestung.', storedPlayers:'Gespeicherte Spieler', cachedData:'Cache-Antworten', storageState:'Speicherstatus', quickSearch:'Schnellsuche', playerPlaceholder:'Spielername oder ID', search:'Suchen', idDetail:'ID-Details', kingdomPlaceholder:'Koenigreich, z. B. 885', open:'Oeffnen', ready:'Suchbegriff oder Koenigreich eingeben.', scoutBoard:'Scout-Board', shuffle:'Neu laden', loadingTiles:'Profilkarten werden geladen.', resultsTitle:'Suchergebnisse', emptyResults:'Noch keine Informationen.', kingdomInfo:'Koenigreich-Info', emptyKingdom:'Koenigreich eingeben, um die Zusammenfassung zu laden.', refresh:'Aktualisieren', close:'Schliessen', enterSearch:'Suchbegriff eingeben.', enterKingdom:'Koenigreich eingeben.', noResults:'Keine Ergebnisse.', searchFail:'Suchergebnisse konnten nicht geladen werden.', kingdomFail:'Koenigreich konnte nicht geladen werden.', detailFail:'Spielerdetails konnten nicht geladen werden.', loadingDetail:'Spielerdetails werden geladen...', noLoadout:'Keine gesammelten Helden-/Ausruestungsdaten vorhanden. Nur Quelldaten koennen angezeigt werden.', searchStatus:'Suche', found:'Spieler gefunden', localCache:'lokaler Cache', loadingKingdom:'Koenigreich wird geladen', trackedPlayers:'verfolgte Spieler', alliances:'Allianzen', loaded:'Geladen', partialDetail:'teilweise Details', loadFailed:'Laden fehlgeschlagen', retry:'Erneut versuchen', partialAlert:'Einige Detailbereiche konnten nicht geladen werden. Verfuegbare Basisdaten/Cache werden angezeigt.', power:'Macht', townCenter:'Stadtzentrum', lifeTree:'Lebensbaum', mysticScore:'Mystic-Punkte', mysticRank:'Mystic-Rang', crowns:'Kronen', kingdomsRuled:'Regierte Koenigreiche', updated:'Aktualisiert', kingdom:'Koenigreich', heroesGear:'Helden & Ausruestung', fetched:'Geladen', stale:'Cache-Daten koennen veraltet sein', noGear:'Keine Ausruestung', slot:'Slot', level:'Level', stars:'Sterne', exclusive:'Exklusiv', forgeLevel:'Schmiede-Lv', standings:'Ranglisten', history:'Verlauf', codes:'Codes', board:'Board', rank:'Rang', score:'Punkte', name:'Name', alliance:'Allianz', recorded:'Erfasst', code:'Code', status:'Status', time:'Zeit', grade:'Bewertung', tracked:'Verfolgt', castle:'Burg', members:'Mitglieder', weapon:'Waffe', armor:'Ruestung', helmet:'Helm', boots:'Stiefel'
-      },
-      th: {
-        back:'????????????', support:'????????????', title:'Intel Command Deck', subtitle:'????????????????????????????? ???????????? ????? ??????????', storedPlayers:'????????????????', cachedData:'????????', storageState:'????????????????', quickSearch:'?????????', playerPlaceholder:'??????????????? ID', search:'?????', idDetail:'?????????? ID', kingdomPlaceholder:'??????????????? ???? 885', open:'????', ready:'?????????????????????????????', scoutBoard:'????????????', shuffle:'????????', loadingTiles:'????????????????', resultsTitle:'??????????', emptyResults:'?????????????????????', kingdomInfo:'??????????????', emptyKingdom:'?????????????????????????????', refresh:'??????', close:'???', enterSearch:'??????????', enterKingdom:'??????????????????', noResults:'????????????', searchFail:'????????????????????', kingdomFail:'????????????????????????', detailFail:'???????????????????????????', loadingDetail:'??????????????????????????...', noLoadout:'????????????????/????????????????? ????????????????????????????????', searchStatus:'??????????', found:'????????????', localCache:'????????????', loadingKingdom:'?????????????????', trackedPlayers:'????????????????', alliances:'????????', loaded:'????????', partialDetail:'?????????????????', loadFailed:'???????????', retry:'???????????', partialAlert:'?????????????????????????? ?????????????????????????????????????/???', power:'????', townCenter:'??????????', lifeTree:'???????????', mysticScore:'????? Mystic', mysticRank:'?????? Mystic', crowns:'?????', kingdomsRuled:'?????????????????', updated:'??????', kingdom:'????????', heroesGear:'???????????????', fetched:'?????????', stale:'????????????????', noGear:'????????????', slot:'????', level:'?????', stars:'???', exclusive:'????????????', forgeLevel:'????? Forge', standings:'??????', history:'???????', codes:'????', board:'??????', rank:'??????', score:'?????', name:'????', alliance:'????????', recorded:'???????????', code:'????', status:'?????', time:'????', grade:'????', tracked:'??????', castle:'??????', members:'??????', weapon:'?????', armor:'?????', helmet:'????', boots:'???????'
-      },
-      id: {
-        back:'Kembali ke hub', support:'Halaman dukungan', title:'Intel Command Deck', subtitle:'Hub intel mandiri untuk pencarian pemain, ringkasan kingdom, hero, dan perlengkapan.', storedPlayers:'Pemain tersimpan', cachedData:'Respons cache', storageState:'Status penyimpanan', quickSearch:'Pencarian cepat', playerPlaceholder:'Nama pemain atau ID', search:'Cari', idDetail:'Detail ID', kingdomPlaceholder:'Nomor kingdom, contoh 885', open:'Buka', ready:'Masukkan kata pencarian atau nomor kingdom.', scoutBoard:'Scout board', shuffle:'Acak', loadingTiles:'Memuat blok profil.', resultsTitle:'Hasil pencarian', emptyResults:'Belum ada informasi.', kingdomInfo:'Info kingdom', emptyKingdom:'Masukkan nomor kingdom untuk memuat ringkasan.', refresh:'Refresh', close:'Tutup', enterSearch:'Masukkan kata pencarian.', enterKingdom:'Masukkan nomor kingdom.', noResults:'Tidak ada hasil.', searchFail:'Gagal memuat hasil pencarian.', kingdomFail:'Gagal memuat info kingdom.', detailFail:'Gagal memuat detail pemain.', loadingDetail:'Memuat detail pemain...', noLoadout:'Belum ada informasi hero/perlengkapan yang terkumpul. Hanya data dari sumber yang dapat ditampilkan.', searchStatus:'Mencari', found:'pemain ditemukan', localCache:'cache lokal', loadingKingdom:'Memuat kingdom', trackedPlayers:'pemain terlacak', alliances:'aliansi', loaded:'Dimuat', partialDetail:'detail sebagian', loadFailed:'Gagal memuat', retry:'Coba lagi', partialAlert:'Beberapa panel detail gagal dimuat dari sumber. Data profil dasar dari respons/cache tetap ditampilkan.', power:'Power', townCenter:'Town Center', lifeTree:'Life Tree', mysticScore:'Skor Mystic', mysticRank:'Rank Mystic', crowns:'Crown', kingdomsRuled:'Kingdom dikuasai', updated:'Diperbarui', kingdom:'Kingdom', heroesGear:'Hero & Gear', fetched:'Diambil', stale:'Data cache mungkin sudah lama', noGear:'Tidak ada gear', slot:'Slot', level:'Level', stars:'Bintang', exclusive:'Eksklusif', forgeLevel:'Forge Lv', standings:'Peringkat', history:'Riwayat', codes:'Kode', board:'Board', rank:'Rank', score:'Skor', name:'Nama', alliance:'Aliansi', recorded:'Tercatat', code:'Kode', status:'Status', time:'Waktu', grade:'Grade', tracked:'Terlacak', castle:'Castle', members:'anggota', weapon:'Senjata', armor:'Armor', helmet:'Helm', boots:'Sepatu'
       }
     };
-
-    Object.assign(I18N.ko, {
-      back:'허브로 돌아가기', support:'후원 페이지', title:'인텔 커맨드 덱',
-      subtitle:'플레이어 검색, 왕국 요약, 영웅과 장비 정보를 한 화면에서 확인하는 인텔 허브입니다.',
-      storedPlayers:'저장된 플레이어', cachedData:'캐시 응답', storageState:'저장소 상태',
-      quickSearch:'빠른 검색', playerPlaceholder:'플레이어 이름 또는 ID', search:'검색', idDetail:'ID 상세',
-      kingdomPlaceholder:'왕국 번호 예: 885', open:'열기', ready:'검색어 또는 왕국 번호를 입력하세요.',
-      scoutBoard:'스카우트 보드', shuffle:'새로 보기', loadingTiles:'프로필 블록을 불러오는 중입니다.',
-      resultsTitle:'검색 결과', emptyResults:'아직 표시할 정보가 없습니다.', kingdomInfo:'왕국 정보',
-      emptyKingdom:'왕국 번호를 조회하면 요약이 표시됩니다.', refresh:'새로고침', close:'닫기',
-      enterSearch:'검색어를 입력하세요.', enterKingdom:'왕국 번호를 입력하세요.', noResults:'검색 결과가 없습니다.',
-      searchFail:'검색 결과를 불러오지 못했습니다.', kingdomFail:'왕국 정보를 불러오지 못했습니다.',
-      detailFail:'플레이어 상세 정보를 불러오지 못했습니다.', loadingDetail:'플레이어 상세 정보를 불러오는 중입니다...',
-      noLoadout:'수집된 영웅/장비 정보가 없습니다. 원본 서비스에 존재하는 정보만 표시할 수 있습니다.',
-      searchStatus:'검색 중', found:'명 발견', localCache:'로컬 캐시', loadingKingdom:'왕국 불러오는 중',
-      trackedPlayers:'추적 플레이어', alliances:'연맹', loaded:'불러옴', partialDetail:'일부 정보', loadFailed:'불러오기 실패',
-      retry:'다시 시도', partialAlert:'일부 세부 패널을 원본에서 불러오지 못했습니다. 사용 가능한 응답/캐시의 기본 프로필 정보는 표시됩니다.',
-      power:'전투력', townCenter:'도시 레벨', lifeTree:'생명의 나무', mysticScore:'미스틱 점수', mysticRank:'미스틱 순위',
-      crowns:'왕관', kingdomsRuled:'통치 왕국', updated:'업데이트', kingdom:'왕국', heroesGear:'영웅과 장비',
-      fetched:'수집', stale:'캐시 데이터가 오래되었을 수 있습니다.', noGear:'장비 없음', slot:'슬롯', level:'레벨', stars:'별',
-      exclusive:'전용 장비', forgeLevel:'제련 레벨', standings:'순위', history:'기록', codes:'쿠폰',
-      board:'보드', rank:'순위', score:'점수', name:'이름', alliance:'연맹', recorded:'기록일', code:'코드', status:'상태', time:'시간',
-      grade:'등급', tracked:'추적', castle:'캐슬', members:'멤버', weapon:'무기', armor:'갑옷', helmet:'투구', boots:'신발'
-    });
-
-    Object.assign(I18N['zh-CN'], {
-      back:'返回主页', support:'赞助页面', title:'情报指挥台', subtitle:'用于搜索玩家、查看王国摘要、英雄和装备信息的独立情报中心。',
-      storedPlayers:'已存玩家', cachedData:'缓存响应', storageState:'存储状态', quickSearch:'快速搜索', playerPlaceholder:'玩家名称或 ID',
-      search:'搜索', idDetail:'ID 详情', kingdomPlaceholder:'王国编号，例如 885', open:'打开', ready:'请输入搜索词或王国编号。',
-      scoutBoard:'侦察看板', shuffle:'换一批', loadingTiles:'正在加载资料卡。', resultsTitle:'搜索结果', emptyResults:'暂无可显示信息。',
-      kingdomInfo:'王国信息', emptyKingdom:'输入王国编号后会显示摘要。', refresh:'刷新', close:'关闭',
-      enterSearch:'请输入搜索词。', enterKingdom:'请输入王国编号。', noResults:'没有找到结果。', searchFail:'无法加载搜索结果。',
-      kingdomFail:'无法加载王国信息。', detailFail:'无法加载玩家详情。', loadingDetail:'正在加载玩家详情...',
-      noLoadout:'没有已收集的英雄/装备信息。只能显示来源服务中存在的数据。', searchStatus:'搜索中', found:'名玩家',
-      localCache:'本地缓存', loadingKingdom:'正在加载王国', trackedPlayers:'已追踪玩家', alliances:'联盟',
-      loaded:'已加载', partialDetail:'部分详情', loadFailed:'加载失败', retry:'重试',
-      partialAlert:'部分详情面板无法从来源加载。仍会显示可用响应/缓存中的基础资料。',
-      power:'战力', townCenter:'城市等级', lifeTree:'生命之树', mysticScore:'秘境分数', mysticRank:'秘境排名',
-      crowns:'王冠', kingdomsRuled:'统治王国', updated:'更新时间', kingdom:'王国', heroesGear:'英雄与装备',
-      fetched:'获取时间', stale:'缓存数据可能已过期', noGear:'无装备', slot:'位置', level:'等级', stars:'星级',
-      exclusive:'专属装备', forgeLevel:'锻造等级', standings:'排行榜', history:'历史', codes:'兑换码',
-      board:'榜单', rank:'排名', score:'分数', name:'名称', alliance:'联盟', recorded:'记录时间', code:'代码',
-      status:'状态', time:'时间', grade:'评级', tracked:'追踪', castle:'城堡', members:'成员', weapon:'武器',
-      armor:'护甲', helmet:'头盔', boots:'靴子'
-    });
-
-    Object.assign(I18N['zh-TW'], {
-      back:'返回首頁', support:'贊助頁面', title:'情報指揮台', subtitle:'用於搜尋玩家、查看王國摘要、英雄與裝備資訊的獨立情報中心。',
-      storedPlayers:'已存玩家', cachedData:'快取回應', storageState:'儲存狀態', quickSearch:'快速搜尋', playerPlaceholder:'玩家名稱或 ID',
-      search:'搜尋', idDetail:'ID 詳情', kingdomPlaceholder:'王國編號，例如 885', open:'開啟', ready:'請輸入搜尋詞或王國編號。',
-      scoutBoard:'偵察看板', shuffle:'換一批', loadingTiles:'正在載入資料卡。', resultsTitle:'搜尋結果', emptyResults:'暫無可顯示資訊。',
-      kingdomInfo:'王國資訊', emptyKingdom:'輸入王國編號後會顯示摘要。', refresh:'重新整理', close:'關閉',
-      enterSearch:'請輸入搜尋詞。', enterKingdom:'請輸入王國編號。', noResults:'沒有找到結果。', searchFail:'無法載入搜尋結果。',
-      kingdomFail:'無法載入王國資訊。', detailFail:'無法載入玩家詳情。', loadingDetail:'正在載入玩家詳情...',
-      noLoadout:'沒有已收集的英雄/裝備資訊。只能顯示來源服務中存在的資料。', searchStatus:'搜尋中', found:'名玩家',
-      localCache:'本機快取', loadingKingdom:'正在載入王國', trackedPlayers:'已追蹤玩家', alliances:'聯盟',
-      loaded:'已載入', partialDetail:'部分詳情', loadFailed:'載入失敗', retry:'重試',
-      partialAlert:'部分詳情面板無法從來源載入。仍會顯示可用回應/快取中的基本資料。',
-      power:'戰力', townCenter:'城市等級', lifeTree:'生命之樹', mysticScore:'秘境分數', mysticRank:'秘境排名',
-      crowns:'王冠', kingdomsRuled:'統治王國', updated:'更新時間', kingdom:'王國', heroesGear:'英雄與裝備',
-      fetched:'取得時間', stale:'快取資料可能已過期', noGear:'無裝備', slot:'位置', level:'等級', stars:'星級',
-      exclusive:'專屬裝備', forgeLevel:'鍛造等級', standings:'排行榜', history:'歷史', codes:'兌換碼',
-      board:'榜單', rank:'排名', score:'分數', name:'名稱', alliance:'聯盟', recorded:'記錄時間', code:'代碼',
-      status:'狀態', time:'時間', grade:'評級', tracked:'追蹤', castle:'城堡', members:'成員', weapon:'武器',
-      armor:'護甲', helmet:'頭盔', boots:'靴子'
-    });
-
-    Object.assign(I18N.th, {
-      back:'กลับหน้าหลัก', support:'หน้าสนับสนุน', title:'Intel Command Deck',
-      subtitle:'ศูนย์ข้อมูลสำหรับค้นหาผู้เล่น สรุปอาณาจักร ฮีโร่ และอุปกรณ์',
-      storedPlayers:'ผู้เล่นที่บันทึก', cachedData:'คำตอบแคช', storageState:'สถานะพื้นที่เก็บ',
-      quickSearch:'ค้นหาด่วน', playerPlaceholder:'ชื่อผู้เล่นหรือ ID', search:'ค้นหา', idDetail:'รายละเอียด ID',
-      kingdomPlaceholder:'หมายเลขอาณาจักร เช่น 885', open:'เปิด', ready:'ใส่คำค้นหาหรือหมายเลขอาณาจักร',
-      scoutBoard:'กระดานสอดแนม', shuffle:'สุ่มใหม่', loadingTiles:'กำลังโหลดโปรไฟล์',
-      resultsTitle:'ผลการค้นหา', emptyResults:'ยังไม่มีข้อมูลให้แสดง', kingdomInfo:'ข้อมูลอาณาจักร',
-      emptyKingdom:'ใส่หมายเลขอาณาจักรเพื่อดูสรุป', refresh:'รีเฟรช', close:'ปิด',
-      enterSearch:'ใส่คำค้นหา', enterKingdom:'ใส่หมายเลขอาณาจักร', noResults:'ไม่พบผลลัพธ์',
-      searchFail:'โหลดผลการค้นหาไม่ได้', kingdomFail:'โหลดข้อมูลอาณาจักรไม่ได้', detailFail:'โหลดรายละเอียดผู้เล่นไม่ได้',
-      loadingDetail:'กำลังโหลดรายละเอียดผู้เล่น...', noLoadout:'ไม่มีข้อมูลฮีโร่/อุปกรณ์ที่เก็บไว้ แสดงได้เฉพาะข้อมูลจากแหล่งต้นทาง',
-      searchStatus:'กำลังค้นหา', found:'ผู้เล่นที่พบ', localCache:'แคชในเครื่อง', loadingKingdom:'กำลังโหลดอาณาจักร',
-      trackedPlayers:'ผู้เล่นที่ติดตาม', alliances:'พันธมิตร', loaded:'โหลดแล้ว', partialDetail:'รายละเอียดบางส่วน',
-      loadFailed:'โหลดล้มเหลว', retry:'ลองอีกครั้ง', partialAlert:'บางส่วนโหลดจากต้นทางไม่ได้ แต่ยังแสดงข้อมูลพื้นฐานจากข้อมูลที่มี/แคช',
-      power:'พลัง', townCenter:'ระดับเมือง', lifeTree:'ต้นไม้ชีวิต', mysticScore:'คะแนน Mystic', mysticRank:'อันดับ Mystic',
-      crowns:'มงกุฎ', kingdomsRuled:'อาณาจักรที่ปกครอง', updated:'อัปเดต', kingdom:'อาณาจักร', heroesGear:'ฮีโร่และอุปกรณ์',
-      fetched:'ดึงข้อมูล', stale:'ข้อมูลแคชอาจเก่า', noGear:'ไม่มีอุปกรณ์', slot:'ช่อง', level:'เลเวล', stars:'ดาว',
-      exclusive:'อุปกรณ์เฉพาะ', forgeLevel:'เลเวล Forge', standings:'อันดับ', history:'ประวัติ', codes:'โค้ด',
-      board:'กระดาน', rank:'อันดับ', score:'คะแนน', name:'ชื่อ', alliance:'พันธมิตร', recorded:'บันทึกเมื่อ',
-      code:'โค้ด', status:'สถานะ', time:'เวลา', grade:'เกรด', tracked:'ติดตาม', castle:'ปราสาท', members:'สมาชิก',
-      weapon:'อาวุธ', armor:'เกราะ', helmet:'หมวก', boots:'รองเท้า'
-    });
-
-
+    I18N.ko = { ...I18N.en };
+    I18N['zh-CN'] = { ...I18N.en };
+    I18N['zh-TW'] = { ...I18N.en };
+    I18N.fr = { ...I18N.en };
+    I18N.de = { ...I18N.en };
+    I18N.th = { ...I18N.en };
+    I18N.id = { ...I18N.en };
+    let currentLang = 'ko';
     const $ = (id) => document.getElementById(id);
-    const resultsEl = $('results');
-    const spotlightEl = $('spotlight');
     const statusEl = $('status');
     const modal = $('playerModal');
-    let currentLang = 'ko';
-    let currentPlayerId = '';
-
+    const resultsEl = $('results');
+    const spotlightEl = $('spotlight');
     const tr = (key) => (I18N[currentLang] && I18N[currentLang][key]) || I18N.en[key] || key;
     const fmt = (value) => Number(value || 0).toLocaleString(currentLang);
     const clean = (value) => String(value ?? '');
@@ -1074,13 +936,13 @@
     const heroBust = (id) => assetUrl(`/assets/heroes_bust/${encodeURIComponent(id)}.png`);
     const weaponArt = (id) => assetUrl(`/assets/exclusive_weapons/${encodeURIComponent(id)}.png`);
     const ago = (value) => {
-      if (!value || clean(value).startsWith('0001-')) return 'unknown';
+      if (!value || clean(value).startsWith('0001-')) return tr('unknown');
       const ts = new Date(value).getTime();
       if (!Number.isFinite(ts)) return value;
       const mins = Math.max(0, Math.floor((Date.now() - ts) / 60000));
-      if (mins < 60) return `${mins}m ago`;
+      if (mins < 60) return `${mins}${tr('minutesAgo')}`;
       const hours = Math.floor(mins / 60);
-      return hours < 48 ? `${hours}h ago` : `${Math.floor(hours / 24)}d ago`;
+      return hours < 48 ? `${hours}${tr('hoursAgo')}` : `${Math.floor(hours / 24)}${tr('daysAgo')}`;
     };
     function setStatus(html) {
       statusEl.innerHTML = html;
@@ -1097,6 +959,13 @@
       document.documentElement.lang = currentLang;
       document.querySelectorAll('[data-i18n]').forEach(node => node.textContent = tr(node.dataset.i18n));
       document.querySelectorAll('[data-placeholder]').forEach(node => node.placeholder = tr(node.dataset.placeholder));
+      document.querySelectorAll('[data-i18n-title]').forEach(node => node.title = tr(node.dataset.i18nTitle));
+      document.querySelectorAll('[data-i18n-aria]').forEach(node => {
+        (node.dataset.i18nAria || '').split(',').forEach(pair => {
+          const [attr, key] = pair.split(':').map(value => value && value.trim());
+          if (attr && key) node.setAttribute(attr, tr(key));
+        });
+      });
       $('langSelect').value = currentLang;
       localStorage.setItem('siteLang', currentLang);
       localStorage.setItem('lang', currentLang);
@@ -1150,7 +1019,7 @@
       const alliance = player.alliance_abbr || player.alliance_name ? `<span class="chip pink">${escapeHtml(player.alliance_abbr || player.alliance_name)}</span>` : '';
       return `<article class="card" data-player-id="${escapeHtml(player.id)}">
         <div class="person">${avatar(player)}<div><div class="name">${escapeHtml(player.username || player.id)}</div><div class="sub">ID ${escapeHtml(player.id || '-')} · K${escapeHtml(player.state || '-')}</div></div></div>
-        <div class="chips">${town}${power}${alliance}<span class="chip">Updated ${ago(player.last_refreshed_at)}</span></div>
+        <div class="chips">${town}${power}${alliance}<span class="chip">${tr('updated')} ${ago(player.last_refreshed_at)}</span></div>
       </article>`;
     }
     function profileTile(player) {
@@ -1210,7 +1079,7 @@
       try {
         const data = await api(`/players/search?q=${encodeURIComponent(q)}&limit=80`);
         renderPlayers(data.players || [], `${tr('resultsTitle')}: ${q}`);
-        setStatus(`<strong>${fmt(data.total || (data.players || []).length)}</strong> ${tr('found')}${data._cache ? ` ? ${tr('localCache')}` : ''}`);
+        setStatus(`<strong>${fmt(data.total || (data.players || []).length)}</strong> ${tr('found')}${data._cache ? ` · ${tr('localCache')}` : ''}`);
         await loadIntelStatus();
       } catch (error) {
         setStatus(`<span class="bad">${tr('searchFail')}: ${escapeHtml(error.message)}</span>`);
@@ -1227,8 +1096,8 @@
       try {
         const data = await api(`/kingdoms/${kid}`);
         renderKingdom(data);
-        renderPlayers(data.top_players || [], `K${kid} Top Players`);
-        setStatus(`K<strong>${escapeHtml(kid)}</strong> ? ${tr('trackedPlayers')} ${fmt(data.tracked_players || 0)} ? ${tr('alliances')} ${(data.alliances || []).length}`);
+        renderPlayers(data.top_players || [], `K${kid} ${tr('topPlayers')}`);
+        setStatus(`K<strong>${escapeHtml(kid)}</strong> · ${tr('trackedPlayers')} ${fmt(data.tracked_players || 0)} · ${tr('alliances')} ${(data.alliances || []).length}`);
         await loadIntelStatus();
       } catch (error) {
         setStatus(`<span class="bad">${tr('kingdomFail')}: ${escapeHtml(error.message)}</span>`);
@@ -1249,8 +1118,8 @@
         <div class="metric-item"><span>${tr('castle')}</span><strong>${escapeHtml(kvk.castle_name || '-')}</strong></div>
         <div class="metric-item"><span>${tr('alliances')}</span><strong>${fmt(alliances.length)}</strong></div>
       </div>
-      <div class="chips">${stats.slice(0, 6).map(item => `<span class="chip">${escapeHtml(item.label)} #${fmt(item.rank)} ? ${fmt(item.total)}</span>`).join('')}</div>
-      ${alliances.slice(0, 18).map(a => `<div class="alliance"><div><strong>${escapeHtml(a.abbr || '-')} ${escapeHtml(a.name || '')}</strong><div class="sub">${tr('members')} ${fmt(a.tracked_members || a.member_count || 0)} ? ${tr('rank')} ${escapeHtml(a.power_rank || '-')}</div></div><strong>${fmt(a.power || 0)}</strong></div>`).join('')}`;
+      <div class="chips">${stats.slice(0, 6).map(item => `<span class="chip">${escapeHtml(item.label)} #${fmt(item.rank)} · ${fmt(item.total)}</span>`).join('')}</div>
+      ${alliances.slice(0, 18).map(a => `<div class="alliance"><div><strong>${escapeHtml(a.abbr || '-')} ${escapeHtml(a.name || '')}</strong><div class="sub">${tr('members')} ${fmt(a.tracked_members || a.member_count || 0)} · ${tr('rank')} ${escapeHtml(a.power_rank || '-')}</div></div><strong>${fmt(a.power || 0)}</strong></div>`).join('')}`;
     }
     async function openPlayer(id) {
       if (!id) return;
@@ -1270,7 +1139,7 @@
           api(`/players/${encodeURIComponent(id)}/loadout?cached=1`).catch(() => null),
         ]);
         renderPlayerModal(player, history || [], redemptions || {}, kingdata, standings || {}, loadout);
-        setStatus(`Loaded <strong>${escapeHtml(player.username || player.id)}</strong>${player._cache ? ' · local cache' : ''}`);
+        setStatus(`${tr('loaded')} <strong>${escapeHtml(player.username || player.id)}</strong>${player._cache ? ` · ${tr('localCache')}` : ''}`);
         await loadIntelStatus();
       } catch (error) {
         $('modalTitle').innerHTML = `<div class="sub">${tr('loadFailed')}</div>`;
@@ -1324,7 +1193,7 @@
       if (!value) return '-';
       const rarity = Math.max(0, Math.floor((value - 1) / 5));
       const stars = ((value - 1) % 5) + 1;
-      return `R${rarity} · ${stars} stars`;
+      return `R${rarity} · ${stars} ${tr('stars')}`;
     }
     function renderLoadout(loadout) {
       const heroes = loadout && Array.isArray(loadout.heroes) ? loadout.heroes : [];
@@ -1339,7 +1208,7 @@
           const icon = art ? `<img src="${art}" alt="" onerror="this.style.visibility='hidden'">` : '<span></span>';
           return `<div class="gear-chip" style="--gear-bg:${visual.bg};--gear-accent:${visual.accent}"><span class="gear-enh">+${escapeHtml(visual.enhance.level)}</span>${icon}<div><strong>${equipmentName(item.sid)}</strong><span>${tr('forgeLevel')} ${escapeHtml(item.rlv ?? 0)}</span><em class="gear-rarity">${visual.label}</em></div></div>`;
         }).join('');
-        return `<article class="hero-card"><div class="hero-art"><img src="${heroBust(hero.id)}" alt="" onerror="this.style.visibility='hidden'"><span class="hero-id">Hero ${escapeHtml(hero.id)}</span></div><div class="hero-body"><div class="line"><span>${tr('slot')}</span><strong>${escapeHtml(hero.slot || hero.pos || '-')}</strong></div><div class="line"><span>${tr('level')}</span><strong>${escapeHtml(hero.lv ?? '-')}</strong></div><div class="line"><span>${tr('stars')}</span><strong>${escapeHtml(starText(hero.star))}</strong></div>${weapon}<div class="gear-list">${gear || `<div class="empty">${tr('noGear')}</div>`}</div></div></article>`;
+        return `<article class="hero-card"><div class="hero-art"><img src="${heroBust(hero.id)}" alt="" onerror="this.style.visibility='hidden'"><span class="hero-id">${tr('hero')} ${escapeHtml(hero.id)}</span></div><div class="hero-body"><div class="line"><span>${tr('slot')}</span><strong>${escapeHtml(hero.slot || hero.pos || '-')}</strong></div><div class="line"><span>${tr('level')}</span><strong>${escapeHtml(hero.lv ?? '-')}</strong></div><div class="line"><span>${tr('stars')}</span><strong>${escapeHtml(starText(hero.star))}</strong></div>${weapon}<div class="gear-list">${gear || `<div class="empty">${tr('noGear')}</div>`}</div></div></article>`;
       }).join('');
       return `<h2>${tr('heroesGear')}</h2><div class="chips">${tags}</div><div class="loadout-grid">${cards}</div>`;
     }
@@ -1407,8 +1276,8 @@
       const btn = $('refreshPlayerBtn');
       const originalText = btn.textContent;
       btn.disabled = true;
-      btn.textContent = 'Refreshing...';
-      setStatus(`Refreshing player <strong>${escapeHtml(currentPlayerId)}</strong>...`);
+      btn.textContent = tr('refreshing');
+      setStatus(`${tr('refreshingPlayer')} <strong>${escapeHtml(currentPlayerId)}</strong>...`);
       try {
         await api('/players', {
           method: 'POST',
@@ -1448,7 +1317,7 @@
         });
         const partial = detailResults.some(result => result.status === 'rejected');
         renderPlayerModal(player, history || [], redemptions || {}, kingdata, standings || {}, loadout, { partial });
-        setStatus(`${tr('loaded')} <strong>${escapeHtml(player.username || player.id)}</strong>${player._cache ? ` ? ${tr('localCache')}` : ''}${partial ? ` ? ${tr('partialDetail')}` : ''}`);
+        setStatus(`${tr('loaded')} <strong>${escapeHtml(player.username || player.id)}</strong>${player._cache ? ` · ${tr('localCache')}` : ''}${partial ? ` · ${tr('partialDetail')}` : ''}`);
         await loadIntelStatus();
       } catch (error) {
         $('modalTitle').innerHTML = `<div class="sub">${tr('loadFailed')}</div>`;
@@ -1492,7 +1361,7 @@
               <div class="intel-meta-line">ID ${escapeHtml(player.id)} · ${tr('kingdom')} ${escapeHtml(kingdom)} · ${escapeHtml(alliance)}</div>
               <div class="intel-badges">
                 <span class="intel-badge gold">${tr('power')} ${fmt(player.power)}</span>
-                <span class="intel-badge">TC ${escapeHtml(player.town_hall_level || '-')}</span>
+                <span class="intel-badge">${tr('townCenter')} ${escapeHtml(player.town_hall_level || '-')}</span>
                 <span class="intel-badge">${tr('mysticRank')} ${player.mystic_trial_rank ? `#${fmt(player.mystic_trial_rank)}` : '-'}</span>
                 <span class="intel-badge">${tr('updated')} ${ago(player.last_refreshed_at)}</span>
               </div>
@@ -1523,6 +1392,7 @@
         noLoadout:'수집된 영웅/장비 정보가 없습니다. 원본 서비스에 존재하는 정보만 표시할 수 있습니다.',
         searchStatus:'검색 중', found:'명 발견', localCache:'로컬 캐시', loadingKingdom:'왕국 불러오는 중',
         trackedPlayers:'추적 플레이어', alliances:'연맹', loaded:'불러옴', partialDetail:'일부 정보', loadFailed:'불러오기 실패',
+        refreshing:'갱신 중...', refreshingPlayer:'플레이어 갱신 중',
         retry:'다시 시도', partialAlert:'일부 세부 패널을 원본에서 불러오지 못했습니다. 사용 가능한 응답/캐시의 기본 프로필 정보는 표시됩니다.',
         power:'전투력', townCenter:'도시 레벨', lifeTree:'생명의 나무', mysticScore:'미스틱 점수', mysticRank:'미스틱 순위',
         crowns:'왕관', kingdomsRuled:'통치 왕국', updated:'업데이트', kingdom:'왕국', heroesGear:'영웅과 장비',
@@ -1546,7 +1416,7 @@
         kingdomFail:'无法加载王国信息。', detailFail:'无法加载玩家详情。', loadingDetail:'正在加载玩家详情...',
         noLoadout:'没有已收集的英雄/装备信息。只能显示来源服务中存在的数据。', searchStatus:'搜索中', found:'名玩家',
         localCache:'本地缓存', loadingKingdom:'正在加载王国', trackedPlayers:'已追踪玩家', alliances:'联盟',
-        loaded:'已加载', partialDetail:'部分详情', loadFailed:'加载失败', retry:'重试',
+        loaded:'已加载', partialDetail:'部分详情', loadFailed:'加载失败', refreshing:'正在刷新...', refreshingPlayer:'正在刷新玩家', retry:'重试',
         partialAlert:'部分详情面板无法从来源加载。仍会显示可用响应/缓存中的基础资料。',
         power:'战力', townCenter:'城市等级', lifeTree:'生命之树', mysticScore:'秘境分数', mysticRank:'秘境排名',
         crowns:'王冠', kingdomsRuled:'统治王国', updated:'更新时间', kingdom:'王国', heroesGear:'英雄与装备',
@@ -1567,7 +1437,7 @@
         kingdomFail:'無法載入王國資訊。', detailFail:'無法載入玩家詳情。', loadingDetail:'正在載入玩家詳情...',
         noLoadout:'沒有已收集的英雄/裝備資訊。只能顯示來源服務中存在的資料。', searchStatus:'搜尋中', found:'名玩家',
         localCache:'本機快取', loadingKingdom:'正在載入王國', trackedPlayers:'已追蹤玩家', alliances:'聯盟',
-        loaded:'已載入', partialDetail:'部分詳情', loadFailed:'載入失敗', retry:'重試',
+        loaded:'已載入', partialDetail:'部分詳情', loadFailed:'載入失敗', refreshing:'正在重新整理...', refreshingPlayer:'正在重新整理玩家', retry:'重試',
         partialAlert:'部分詳情面板無法從來源載入。仍會顯示可用回應/快取中的基本資料。',
         power:'戰力', townCenter:'城市等級', lifeTree:'生命之樹', mysticScore:'秘境分數', mysticRank:'秘境排名',
         crowns:'王冠', kingdomsRuled:'統治王國', updated:'更新時間', kingdom:'王國', heroesGear:'英雄與裝備',
@@ -1592,6 +1462,7 @@
         loadingDetail:'กำลังโหลดรายละเอียดผู้เล่น...', noLoadout:'ไม่มีข้อมูลฮีโร่/อุปกรณ์ที่เก็บไว้ แสดงได้เฉพาะข้อมูลจากแหล่งต้นทาง',
         searchStatus:'กำลังค้นหา', found:'ผู้เล่นที่พบ', localCache:'แคชในเครื่อง', loadingKingdom:'กำลังโหลดอาณาจักร',
         trackedPlayers:'ผู้เล่นที่ติดตาม', alliances:'พันธมิตร', loaded:'โหลดแล้ว', partialDetail:'รายละเอียดบางส่วน',
+        refreshing:'กำลังรีเฟรช...', refreshingPlayer:'กำลังรีเฟรชผู้เล่น',
         loadFailed:'โหลดล้มเหลว', retry:'ลองอีกครั้ง', partialAlert:'บางส่วนโหลดจากต้นทางไม่ได้ แต่ยังแสดงข้อมูลพื้นฐานจากข้อมูลที่มี/แคช',
         power:'พลัง', townCenter:'ระดับเมือง', lifeTree:'ต้นไม้ชีวิต', mysticScore:'คะแนน Mystic', mysticRank:'อันดับ Mystic',
         crowns:'มงกุฎ', kingdomsRuled:'อาณาจักรที่ปกครอง', updated:'อัปเดต', kingdom:'อาณาจักร', heroesGear:'ฮีโร่และอุปกรณ์',
@@ -1603,6 +1474,86 @@
       }
     });
 
+    Object.assign(I18N.fr, {
+      back:'Retour au hub', support:'Page de soutien', title:'Console Intel',
+      subtitle:'Un hub indépendant pour rechercher des joueurs, consulter les royaumes, les héros et l’équipement.',
+      storedPlayers:'Joueurs stockés', cachedData:'Réponses en cache', storageState:'État du stockage',
+      quickSearch:'Recherche rapide', playerPlaceholder:'Nom du joueur ou ID', search:'Rechercher', idDetail:'Détail ID',
+      kingdomPlaceholder:'Numéro de royaume, ex. 885', open:'Ouvrir', ready:'Saisissez une recherche ou un royaume.',
+      scoutBoard:'Tableau scout', shuffle:'Mélanger', loadingTiles:'Chargement des profils.',
+      resultsTitle:'Résultats', emptyResults:'Aucune information à afficher.', kingdomInfo:'Infos royaume',
+      emptyKingdom:'Saisissez un royaume pour voir le résumé.', refresh:'Actualiser', close:'Fermer',
+      enterSearch:'Saisissez une recherche.', enterKingdom:'Saisissez un royaume.', noResults:'Aucun résultat trouvé.',
+      searchFail:'Impossible de charger les résultats.', kingdomFail:'Impossible de charger le royaume.',
+      detailFail:'Impossible de charger le détail du joueur.', loadingDetail:'Chargement du détail du joueur...',
+      noLoadout:'Aucune information héros/équipement collectée. Seules les données disponibles à la source peuvent être affichées.',
+      searchStatus:'Recherche', found:'joueurs trouvés', localCache:'cache local', loadingKingdom:'Chargement du royaume',
+      trackedPlayers:'joueurs suivis', alliances:'alliances', loaded:'Chargé', partialDetail:'détail partiel', loadFailed:'Échec du chargement',
+      refreshing:'Actualisation...', refreshingPlayer:'Actualisation du joueur', retry:'Réessayer',
+      partialAlert:'Certains panneaux n’ont pas pu être chargés depuis la source. Les données de base disponibles restent affichées.',
+      power:'Puissance', townCenter:'Niveau ville', lifeTree:'Arbre de vie', mysticScore:'Score Mystic', mysticRank:'Rang Mystic',
+      crowns:'Couronnes', kingdomsRuled:'Royaumes gouvernés', updated:'Mise à jour', kingdom:'Royaume', heroesGear:'Héros et équipement',
+      fetched:'Récupéré', stale:'Les données en cache peuvent être anciennes', noGear:'Aucun équipement', slot:'Emplacement', level:'Niveau', stars:'Étoiles',
+      exclusive:'Équipement exclusif', forgeLevel:'Niveau forge', standings:'Classements', history:'Historique', codes:'Codes',
+      board:'Tableau', rank:'Rang', score:'Score', name:'Nom', alliance:'Alliance', recorded:'Enregistré', code:'Code', status:'Statut', time:'Heure',
+      grade:'Grade', tracked:'Suivi', castle:'Château', members:'membres', weapon:'Arme', armor:'Armure', helmet:'Casque', boots:'Bottes'
+    });
+    Object.assign(I18N.de, {
+      back:'Zurück zum Hub', support:'Support-Seite', title:'Intel-Kommando',
+      subtitle:'Ein unabhängiger Intel-Hub für Spielersuche, Königreiche, Helden und Ausrüstung.',
+      storedPlayers:'Gespeicherte Spieler', cachedData:'Cache-Antworten', storageState:'Speicherstatus',
+      quickSearch:'Schnellsuche', playerPlaceholder:'Spielername oder ID', search:'Suchen', idDetail:'ID-Detail',
+      kingdomPlaceholder:'Königreichsnummer, z. B. 885', open:'Öffnen', ready:'Suchbegriff oder Königreich eingeben.',
+      scoutBoard:'Scout-Board', shuffle:'Mischen', loadingTiles:'Profilblöcke werden geladen.',
+      resultsTitle:'Suchergebnisse', emptyResults:'Noch keine Informationen.', kingdomInfo:'Königreich-Info',
+      emptyKingdom:'Königreichsnummer eingeben, um die Übersicht zu laden.', refresh:'Aktualisieren', close:'Schließen',
+      enterSearch:'Suchbegriff eingeben.', enterKingdom:'Königreichsnummer eingeben.', noResults:'Keine Ergebnisse gefunden.',
+      searchFail:'Suchergebnisse konnten nicht geladen werden.', kingdomFail:'Königreich-Info konnte nicht geladen werden.',
+      detailFail:'Spielerdetails konnten nicht geladen werden.', loadingDetail:'Spielerdetails werden geladen...',
+      noLoadout:'Keine gesammelten Helden- oder Ausrüstungsdaten vorhanden. Angezeigt werden nur Quelldaten.',
+      searchStatus:'Suche läuft', found:'Spieler gefunden', localCache:'lokaler Cache', loadingKingdom:'Königreich wird geladen',
+      trackedPlayers:'verfolgte Spieler', alliances:'Allianzen', loaded:'Geladen', partialDetail:'Teildetails', loadFailed:'Laden fehlgeschlagen',
+      refreshing:'Aktualisieren...', refreshingPlayer:'Spieler wird aktualisiert', retry:'Erneut versuchen',
+      partialAlert:'Einige Detailbereiche konnten nicht aus der Quelle geladen werden. Verfügbare Basisdaten werden weiter angezeigt.',
+      power:'Macht', townCenter:'Stadtlevel', lifeTree:'Lebensbaum', mysticScore:'Mystic-Punkte', mysticRank:'Mystic-Rang',
+      crowns:'Kronen', kingdomsRuled:'Regierte Königreiche', updated:'Aktualisiert', kingdom:'Königreich', heroesGear:'Helden und Ausrüstung',
+      fetched:'Abgerufen', stale:'Cache-Daten können veraltet sein', noGear:'Keine Ausrüstung', slot:'Slot', level:'Level', stars:'Sterne',
+      exclusive:'Exklusive Ausrüstung', forgeLevel:'Schmiede-Level', standings:'Ranglisten', history:'Verlauf', codes:'Codes',
+      board:'Board', rank:'Rang', score:'Punkte', name:'Name', alliance:'Allianz', recorded:'Erfasst', code:'Code', status:'Status', time:'Zeit',
+      grade:'Stufe', tracked:'Verfolgt', castle:'Burg', members:'Mitglieder', weapon:'Waffe', armor:'Rüstung', helmet:'Helm', boots:'Stiefel'
+    });
+    Object.assign(I18N.id, {
+      back:'Kembali ke hub', support:'Halaman dukungan', title:'Dek Komando Intel',
+      subtitle:'Hub intel mandiri untuk mencari pemain, ringkasan kingdom, hero, dan perlengkapan.',
+      storedPlayers:'Pemain tersimpan', cachedData:'Respons cache', storageState:'Status penyimpanan',
+      quickSearch:'Pencarian cepat', playerPlaceholder:'Nama pemain atau ID', search:'Cari', idDetail:'Detail ID',
+      kingdomPlaceholder:'Nomor kingdom, mis. 885', open:'Buka', ready:'Masukkan kata kunci atau nomor kingdom.',
+      scoutBoard:'Papan scout', shuffle:'Acak', loadingTiles:'Memuat blok profil.',
+      resultsTitle:'Hasil pencarian', emptyResults:'Belum ada informasi.', kingdomInfo:'Info kingdom',
+      emptyKingdom:'Masukkan nomor kingdom untuk melihat ringkasan.', refresh:'Muat ulang', close:'Tutup',
+      enterSearch:'Masukkan kata kunci.', enterKingdom:'Masukkan nomor kingdom.', noResults:'Tidak ada hasil.',
+      searchFail:'Gagal memuat hasil pencarian.', kingdomFail:'Gagal memuat info kingdom.',
+      detailFail:'Gagal memuat detail pemain.', loadingDetail:'Memuat detail pemain...',
+      noLoadout:'Belum ada data hero/perlengkapan yang terkumpul. Hanya data dari sumber yang dapat ditampilkan.',
+      searchStatus:'Mencari', found:'pemain ditemukan', localCache:'cache lokal', loadingKingdom:'Memuat kingdom',
+      trackedPlayers:'pemain terlacak', alliances:'aliansi', loaded:'Dimuat', partialDetail:'detail sebagian', loadFailed:'Gagal memuat',
+      refreshing:'Memuat ulang...', refreshingPlayer:'Memuat ulang pemain', retry:'Coba lagi',
+      partialAlert:'Sebagian panel detail gagal dimuat dari sumber. Data dasar yang tersedia tetap ditampilkan.',
+      power:'Power', townCenter:'Level kota', lifeTree:'Pohon kehidupan', mysticScore:'Skor Mystic', mysticRank:'Peringkat Mystic',
+      crowns:'Mahkota', kingdomsRuled:'Kingdom dikuasai', updated:'Diperbarui', kingdom:'Kingdom', heroesGear:'Hero dan perlengkapan',
+      fetched:'Diambil', stale:'Data cache mungkin sudah lama', noGear:'Tidak ada gear', slot:'Slot', level:'Level', stars:'Bintang',
+      exclusive:'Perlengkapan eksklusif', forgeLevel:'Level forge', standings:'Peringkat', history:'Riwayat', codes:'Kode',
+      board:'Papan', rank:'Peringkat', score:'Skor', name:'Nama', alliance:'Aliansi', recorded:'Direkam', code:'Kode', status:'Status', time:'Waktu',
+      grade:'Grade', tracked:'Dilacak', castle:'Kastel', members:'anggota', weapon:'Senjata', armor:'Armor', helmet:'Helm', boots:'Sepatu'
+    });
+    Object.assign(I18N.en, { unknown:'unknown', minutesAgo:'m ago', hoursAgo:'h ago', daysAgo:'d ago', topPlayers:'Top Players', hero:'Hero' });
+    Object.assign(I18N.ko, { unknown:'알 수 없음', minutesAgo:'분 전', hoursAgo:'시간 전', daysAgo:'일 전', topPlayers:'상위 플레이어', hero:'영웅' });
+    Object.assign(I18N['zh-CN'], { unknown:'未知', minutesAgo:'分钟前', hoursAgo:'小时前', daysAgo:'天前', topPlayers:'顶级玩家', hero:'英雄' });
+    Object.assign(I18N['zh-TW'], { unknown:'未知', minutesAgo:'分鐘前', hoursAgo:'小時前', daysAgo:'天前', topPlayers:'頂級玩家', hero:'英雄' });
+    Object.assign(I18N.fr, { unknown:'inconnu', minutesAgo:' min', hoursAgo:' h', daysAgo:' j', topPlayers:'Meilleurs joueurs', hero:'Héros' });
+    Object.assign(I18N.de, { unknown:'unbekannt', minutesAgo:' Min.', hoursAgo:' Std.', daysAgo:' T.', topPlayers:'Top-Spieler', hero:'Held' });
+    Object.assign(I18N.th, { title:'ศูนย์บัญชาการข้อมูล', unknown:'ไม่ทราบ', minutesAgo:' นาทีที่แล้ว', hoursAgo:' ชั่วโมงที่แล้ว', daysAgo:' วันที่แล้ว', topPlayers:'ผู้เล่นอันดับสูง', hero:'ฮีโร่' });
+    Object.assign(I18N.id, { unknown:'tidak diketahui', minutesAgo:' m lalu', hoursAgo:' j lalu', daysAgo:' h lalu', topPlayers:'Pemain teratas', hero:'Hero' });
     I18N.zh = I18N['zh-CN'];
 
     $('searchBtn').addEventListener('click', searchPlayers);

@@ -13,7 +13,7 @@ import { setDragScrollLock } from './hscroll.js';
 import { PAINTER_KINDS } from '../painter.js';
 import { showPreview, clearPreview } from '../render.js';
 import { createBlock, updateBlockPosition, deleteBlock, updateBlockSize } from '../blocks.js';
-import { t } from '../i18n.js';
+import { t } from '../i18n.js?v=legend-nash-5';
 import { clearDistancePairLine } from '../distancePair.js';
 
 /* ---------------------------------------------

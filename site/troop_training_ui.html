@@ -595,7 +595,7 @@
       .nav { grid-template-columns: 1fr; }
     }
   </style>
-  <link rel="stylesheet" href="static/legend-ui.css?v=885-nashsh-unified-1">
+  <link rel="stylesheet" href="static/legend-ui.css?v=885-nashsh-unified-3">
 </head>
 <body data-legend-page="training">
   <main>
@@ -606,8 +606,8 @@
         <p class="subtitle" id="appSubtitle">디스코드 슬래시 명령어에서 열어 쓰는 개인용 통합 UI</p>
       </div>
       <div class="lang">
-        <a class="hub-link" href="./index.html">Hub</a>
-        <a class="coffee-link" href="https://buymeacoffee.com/nashsh" target="_blank" rel="noreferrer">Buy me a coffee</a>
+        <a class="hub-link" id="hubLink" href="./index.html">Hub</a>
+        <a class="coffee-link" id="supportLink" href="https://buymeacoffee.com/nashsh" target="_blank" rel="noreferrer">Support page</a>
         <label for="languageSelect" id="languageLabel">언어</label>
         <select id="languageSelect">
           <option value="ko">한국어</option>
@@ -662,6 +662,12 @@
       ko: {
         appTitle: "Kingshot 계산기 허브",
         appSubtitle: "디스코드 슬래시 명령어에서 열어 쓰는 개인용 통합 UI",
+        hub: "허브",
+        support: "후원 페이지",
+        visitorsLoading: "방문자 불러오는 중...",
+        visitorsOffline: "방문자 집계 오프라인",
+        visitors: "방문자",
+        today: "오늘",
         language: "언어",
         navTitle: "계산기",
         dataReady: "데이터 연결됨",
@@ -717,6 +723,12 @@
       en: {
         appTitle: "Kingshot Calculator Hub",
         appSubtitle: "Personal calculator UI opened from Discord slash commands",
+        hub: "Hub",
+        support: "Support page",
+        visitorsLoading: "Visitors loading...",
+        visitorsOffline: "Visitor tracking offline",
+        visitors: "Visitors",
+        today: "Today",
         language: "Language",
         navTitle: "Calculators",
         dataReady: "Data connected",
@@ -937,13 +949,182 @@
     };
 
     const supportedLangs = ["ko", "en", "de", "fr", "zh", "zh-CN", "zh-TW", "th", "id"];
+    I18N["zh-CN"] = { ...I18N.zh, calculators: I18N.zh.calculators };
+    I18N["zh-TW"] = {
+      ...I18N.zh,
+      appTitle: "Kingshot 計算器中心",
+      appSubtitle: "透過 Discord 斜線指令開啟的個人計算介面",
+      language: "語言",
+      navTitle: "計算器",
+      dataReady: "資料已連接",
+      dataPending: "詳細資料待提取",
+      source: "查看來源",
+      input: "輸入",
+      result: "結果",
+      calculate: "計算",
+      reset: "重置",
+      current: "目前",
+      target: "目標",
+      level: "等級",
+      quantity: "數量",
+      resources: "資源",
+      time: "時間",
+      power: "戰力",
+      summary: "Discord 摘要",
+      unsupported: "此分頁和來源頁面已連接。繼續提取詳細公式和資料後，這裡會顯示實際計算表單。",
+      troopModeTraining: "訓練",
+      troopModePromoting: "晉升",
+      troopType: "兵種",
+      trainingSpeed: "訓練速度加成 (%)",
+      kingdomSkill: "王國技能 30%",
+      kvkBonus: "KvK 加成 25%",
+      ministry: "官職加成",
+      speedups: "可用加速",
+      days: "天",
+      hours: "小時",
+      minutes: "分鐘",
+      possible: "可完成數量",
+      currentPasses: "目前通行證",
+      targetPasses: "目標通行證",
+      lastPackage: "最後購買禮包",
+      none: "無",
+      calculators: I18N.zh.calculators
+    };
+    I18N.th = {
+      ...I18N.en,
+      appTitle: "ศูนย์เครื่องคิดเลข Kingshot",
+      appSubtitle: "หน้ารวมเครื่องมือส่วนตัวจากคำสั่ง Discord",
+      language: "ภาษา",
+      navTitle: "เครื่องคิดเลข",
+      dataReady: "เชื่อมต่อข้อมูลแล้ว",
+      dataPending: "กำลังเตรียมข้อมูลละเอียด",
+      source: "เปิดแหล่งข้อมูล",
+      input: "ข้อมูลเข้า",
+      result: "ผลลัพธ์",
+      calculate: "คำนวณ",
+      reset: "รีเซ็ต",
+      current: "ปัจจุบัน",
+      target: "เป้าหมาย",
+      level: "เลเวล",
+      quantity: "จำนวน",
+      resources: "ทรัพยากร",
+      time: "เวลา",
+      power: "พลัง",
+      summary: "สรุป Discord",
+      unsupported: "แท็บนี้เชื่อมกับหน้าต้นทางแล้ว เมื่อดึงสูตรและข้อมูลครบจะใส่ฟอร์มคำนวณจริงที่นี่",
+      troopModeTraining: "ฝึก",
+      troopModePromoting: "เลื่อนขั้น",
+      troopType: "ประเภททหาร",
+      trainingSpeed: "โบนัสความเร็วฝึก (%)",
+      kingdomSkill: "สกิลอาณาจักร 30%",
+      kvkBonus: "โบนัส KvK 25%",
+      ministry: "โบนัสตำแหน่ง",
+      speedups: "สปีดอัพที่มี",
+      days: "วัน",
+      hours: "ชั่วโมง",
+      minutes: "นาที",
+      possible: "จำนวนที่ทำได้",
+      currentPasses: "พาสปัจจุบัน",
+      targetPasses: "พาสเป้าหมาย",
+      lastPackage: "แพ็กที่ซื้อล่าสุด",
+      none: "ไม่มี",
+      calculators: {
+        "governor-gear": ["Governor Gear", "อุปกรณ์ผู้ว่า"],
+        "governor-charm": ["Governor Charm", "เครื่องรางผู้ว่า"],
+        pet: ["Pet", "สัตว์เลี้ยง"],
+        "hero-shard": ["Hero Shard", "ชิ้นส่วนฮีโร่"],
+        "hero-exclusive-gear": ["Hero Exclusive Gear", "อุปกรณ์เฉพาะฮีโร่"],
+        forgehammer: ["Forgehammer", "Forgehammer"],
+        "hero-gear-xp": ["Hero Gear XP", "XP อุปกรณ์ฮีโร่"],
+        "hero-gear": ["Hero Gear", "อุปกรณ์ฮีโร่"],
+        "forgehammer-set": ["Forgehammer Set", "เซ็ต Forgehammer"],
+        vip: ["VIP", "VIP"],
+        pack: ["Pack", "แพ็ก"],
+        "troop-training": ["Troop Training", "ฝึกทหาร"],
+        "war-academy": ["War Academy", "สถาบันสงคราม"],
+        "fort-sanc": ["Fort / Sanc", "ตัวแจก Fort / Sanc"],
+        "transfer-pass": ["Transfer Pass", "พาสย้าย"]
+      }
+    };
+    I18N.id = {
+      ...I18N.en,
+      appTitle: "Hub Kalkulator Kingshot",
+      appSubtitle: "UI kalkulator pribadi dari perintah slash Discord",
+      language: "Bahasa",
+      navTitle: "Kalkulator",
+      dataReady: "Data terhubung",
+      dataPending: "Data detail sedang disiapkan",
+      source: "Buka sumber",
+      input: "Input",
+      result: "Hasil",
+      calculate: "Hitung",
+      reset: "Reset",
+      current: "Saat ini",
+      target: "Target",
+      level: "Level",
+      quantity: "Jumlah",
+      resources: "Resource",
+      time: "Waktu",
+      power: "Power",
+      summary: "Ringkasan Discord",
+      unsupported: "Tab ini sudah terhubung ke halaman sumber. Formula dan data detail dapat dilanjutkan di sini untuk mengisi form kalkulator.",
+      troopModeTraining: "Training",
+      troopModePromoting: "Promosi",
+      troopType: "Jenis pasukan",
+      trainingSpeed: "Bonus kecepatan training (%)",
+      kingdomSkill: "Skill kingdom 30%",
+      kvkBonus: "Bonus KvK 25%",
+      ministry: "Bonus menteri",
+      speedups: "Speedup tersedia",
+      days: "Hari",
+      hours: "Jam",
+      minutes: "Menit",
+      possible: "Jumlah mungkin",
+      currentPasses: "Pass saat ini",
+      targetPasses: "Pass target",
+      lastPackage: "Paket terakhir dibeli",
+      none: "Tidak ada",
+      calculators: {
+        "governor-gear": ["Governor Gear", "Gear gubernur"],
+        "governor-charm": ["Governor Charm", "Charm gubernur"],
+        pet: ["Pet", "Pet"],
+        "hero-shard": ["Hero Shard", "Shard hero"],
+        "hero-exclusive-gear": ["Hero Exclusive Gear", "Gear eksklusif hero"],
+        forgehammer: ["Forgehammer", "Forgehammer"],
+        "hero-gear-xp": ["Hero Gear XP", "XP gear hero"],
+        "hero-gear": ["Hero Gear", "Gear hero"],
+        "forgehammer-set": ["Forgehammer Set", "Set Forgehammer"],
+        vip: ["VIP", "VIP"],
+        pack: ["Pack", "Paket"],
+        "troop-training": ["Troop Training", "Training pasukan"],
+        "war-academy": ["War Academy", "Akademi perang"],
+        "fort-sanc": ["Fort / Sanc", "Distributor Fort / Sanc"],
+        "transfer-pass": ["Transfer Pass", "Transfer pass"]
+      }
+    };
+    const UI_PATCH = {
+      ko: { hub: "허브", support: "후원 페이지", visitorsLoading: "방문자 불러오는 중...", visitorsOffline: "방문자 집계 오프라인", visitors: "방문자", today: "오늘" },
+      en: { hub: "Hub", support: "Support page", visitorsLoading: "Visitors loading...", visitorsOffline: "Visitor tracking offline", visitors: "Visitors", today: "Today" },
+      de: { hub: "Hub", support: "Support-Seite", visitorsLoading: "Besucher werden geladen...", visitorsOffline: "Besucherzaehler offline", visitors: "Besucher", today: "Heute" },
+      fr: { hub: "Hub", support: "Page de soutien", visitorsLoading: "Chargement des visites...", visitorsOffline: "Suivi des visites hors ligne", visitors: "Visites", today: "Aujourd'hui" },
+      "zh-CN": { hub: "主页", support: "支持页面", visitorsLoading: "正在加载访问量...", visitorsOffline: "访问统计离线", visitors: "访问量", today: "今日" },
+      "zh-TW": { hub: "首頁", support: "支援頁面", visitorsLoading: "正在載入訪問量...", visitorsOffline: "訪問統計離線", visitors: "訪問量", today: "今日" },
+      th: { hub: "ฮับ", support: "หน้าสนับสนุน", visitorsLoading: "กำลังโหลดผู้เข้าชม...", visitorsOffline: "ตัวนับผู้เข้าชมออฟไลน์", visitors: "ผู้เข้าชม", today: "วันนี้" },
+      id: { hub: "Hub", support: "Halaman dukungan", visitorsLoading: "Memuat pengunjung...", visitorsOffline: "Pelacakan pengunjung offline", visitors: "Pengunjung", today: "Hari ini" }
+    };
+    Object.entries(UI_PATCH).forEach(([code, values]) => {
+      if (!I18N[code]) I18N[code] = { ...I18N.en, calculators: I18N.en.calculators };
+      Object.assign(I18N[code], values);
+    });
+    if (!I18N.zh) I18N.zh = I18N["zh-CN"];
     const normalizeLang = (value) => {
       const raw = String(value || "");
       const lower = raw.toLowerCase();
-      if (lower === "zh-cn") return "zh";
-      if (lower === "zh-tw") return "zh";
+      if (lower === "zh-cn") return "zh-CN";
+      if (lower === "zh-tw") return "zh-TW";
       const short = lower.split("-")[0];
-      if (short === "th" || short === "id") return "en";
+      if (short === "zh") return "zh-CN";
+      if (short === "th" || short === "id") return short;
       return supportedLangs.includes(raw) ? raw : supportedLangs.includes(short) ? short : "ko";
     };
     const params = new URLSearchParams(location.search);
@@ -951,9 +1132,9 @@
     let activeId = "governor-gear";
     let data = {};
     const $ = (id) => document.getElementById(id);
-    const t = (key) => I18N[lang][key] || I18N.ko[key] || key;
-    const nameOf = (id) => (I18N[lang].calculators[id] || I18N.ko.calculators[id])[1];
-    const localeOf = () => ({ ko: "ko-KR", en: "en-US", zh: "zh-CN", de: "de-DE", fr: "fr-FR" }[lang] || "en-US");
+    const t = (key) => I18N[lang]?.[key] || I18N.en[key] || I18N.ko[key] || key;
+    const nameOf = (id) => ((I18N[lang]?.calculators || I18N.en.calculators)[id] || I18N.en.calculators[id] || I18N.ko.calculators[id])[1];
+    const localeOf = () => ({ ko: "ko-KR", en: "en-US", zh: "zh-CN", "zh-CN": "zh-CN", "zh-TW": "zh-TW", de: "de-DE", fr: "fr-FR", th: "th-TH", id: "id-ID" }[lang] || "en-US");
     const fmt = (n) => Math.round(Number(n) || 0).toLocaleString(localeOf());
 
     function timeText(seconds) {
@@ -963,8 +1144,9 @@
       const m = Math.floor((seconds % 3600) / 60);
       const s = seconds % 60;
       if (lang === "en") return d ? `${d}d ${h}h ${m}m` : h ? `${h}h ${m}m` : m ? `${m}m ${s}s` : `${s}s`;
-      if (lang === "zh") return d ? `${d}天 ${h}小时 ${m}分钟` : h ? `${h}小时 ${m}分钟` : m ? `${m}分钟 ${s}秒` : `${s}秒`;
-      return d ? `${d}일 ${h}시간 ${m}분` : h ? `${h}시간 ${m}분` : m ? `${m}분 ${s}초` : `${s}초`;
+      if (lang.startsWith("zh")) return d ? `${d}天 ${h}小时 ${m}分钟` : h ? `${h}小时 ${m}分钟` : m ? `${m}分钟 ${s}秒` : `${s}秒`;
+      if (lang === "ko") return d ? `${d}일 ${h}시간 ${m}분` : h ? `${h}시간 ${m}분` : m ? `${m}분 ${s}초` : `${s}초`;
+      return d ? `${d} ${t("days")} ${h} ${t("hours")} ${m} ${t("minutes")}` : h ? `${h} ${t("hours")} ${m} ${t("minutes")}` : m ? `${m} ${t("minutes")} ${s}s` : `${s}s`;
     }
 
     function calcMeta(id) {
@@ -2012,6 +2194,9 @@
       document.documentElement.lang = localeOf();
       $("appTitle").textContent = t("appTitle");
       $("appSubtitle").textContent = t("appSubtitle");
+      $("hubLink").textContent = t("hub");
+      $("supportLink").textContent = t("support");
+      $("visitorCount").textContent = t("visitorsLoading");
       $("languageLabel").textContent = t("language");
       $("navTitle").textContent = t("navTitle");
       document.title = t("appTitle");
@@ -2061,13 +2246,13 @@
         if (!response.ok) throw new Error("visit tracking unavailable");
         const stats = await response.json();
         if (!stats.enabled) {
-          target.textContent = "Visitors tracking offline";
+          target.textContent = t("visitorsOffline");
           return;
         }
         if (!countedToday) localStorage.setItem(visitKey, "1");
-        target.textContent = `Visitors ${fmt(stats.total || 0)} · Today ${fmt(stats.today || 0)}`;
+        target.textContent = `${t("visitors")} ${fmt(stats.total || 0)} · ${t("today")} ${fmt(stats.today || 0)}`;
       } catch {
-        target.textContent = "Visitors tracking offline";
+        target.textContent = t("visitorsOffline");
       }
     }
 
