@@ -41,6 +41,19 @@ function closestViewportPoints(rectA, rectB) {
   };
 }
 
+function centerViewportPoints(rectA, rectB) {
+  return {
+    a: {
+      x: rectA.left + rectA.width / 2,
+      y: rectA.top + rectA.height / 2,
+    },
+    b: {
+      x: rectB.left + rectB.width / 2,
+      y: rectB.top + rectB.height / 2,
+    },
+  };
+}
+
 function getLineEl() {
   let line = document.getElementById(LINE_ID);
   if (line) return line;
@@ -79,7 +92,10 @@ export function renderDistancePairLine(value = lastValue) {
     return;
   }
 
-  const { a, b } = closestViewportPoints(fromRect, toRect);
+  const useCenterLine = from.kind === 'city' && to.kind === 'city';
+  const { a, b } = useCenterLine
+    ? centerViewportPoints(fromRect, toRect)
+    : closestViewportPoints(fromRect, toRect);
 
   const dx = b.x - a.x;
   const dy = b.y - a.y;

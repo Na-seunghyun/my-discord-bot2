@@ -31,7 +31,7 @@ import { validateAllObjects, createBlock } from './blocks.js';
 import { expand } from './interactions/expand.js';
 import { parseFromURL, saveToURLImmediate } from './urlState.js';
 import { state, cellPx, BASE_CELLS_X, BASE_CELLS_Y } from './state.js';
-import { setupActions, setTitles } from './actions.js?v=legend-nash-5';
+import { setupActions, setTitles } from './actions.js?v=legend-nash-8';
 import { initHistoryWithCurrent, saveCheckpoint } from './history.js';
 import {
   detectPreferredLang,

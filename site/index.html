@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Kingshot Command Hub</title>
   <style>
+    @property --flow-angle {
+      syntax: "<angle>";
+      inherits: false;
+      initial-value: 0deg;
+    }
     :root {
       color-scheme: dark;
       --bg: #070a12;
@@ -235,25 +240,89 @@
       margin-top: 18px;
     }
     .tool {
+      --flow-angle: 0deg;
       position: relative;
       display: grid;
       min-height: 250px;
       padding: 22px;
-      border: 1px solid var(--line);
+      border: 1px solid rgba(154, 183, 255, .2);
       border-radius: 22px;
-      background: linear-gradient(180deg, rgba(255,255,255,.075), rgba(255,255,255,.028)), var(--panel2);
-      box-shadow: var(--shadow);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.085), rgba(255,255,255,.03)),
+        var(--panel2);
+      box-shadow:
+        var(--shadow),
+        0 0 34px rgba(67, 246, 215, .08);
       overflow: hidden;
-      transition: transform .18s ease, border-color .18s ease, background .18s ease;
+      isolation: isolate;
+      transition: transform .18s ease, border-color .18s ease, background .18s ease, box-shadow .18s ease;
     }
     .tool:hover {
       transform: translateY(-3px);
       border-color: rgba(67, 246, 215, .46);
-      background: linear-gradient(180deg, rgba(67,246,215,.12), rgba(255,255,255,.035)), var(--panel2);
+      background:
+        linear-gradient(180deg, rgba(67,246,215,.12), rgba(255,255,255,.035)),
+        var(--panel2);
+      box-shadow:
+        var(--shadow),
+        0 0 42px rgba(67, 246, 215, .16),
+        0 0 54px rgba(255, 127, 182, .11);
     }
     .tool.large { grid-column: span 6; min-height: 292px; }
     .tool.mid { grid-column: span 4; }
-    .tool::after { content: none; }
+    .tool::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      padding: 1px;
+      border-radius: inherit;
+      background:
+        conic-gradient(
+          from var(--flow-angle),
+          rgba(67, 246, 215, .12),
+          rgba(67, 246, 215, .9) 10%,
+          rgba(246, 207, 114, .98) 23%,
+          rgba(255, 127, 182, .9) 36%,
+          rgba(156, 177, 255, .32) 48%,
+          rgba(67, 246, 215, .12) 62%,
+          rgba(67, 246, 215, .08)
+        );
+      -webkit-mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      opacity: .72;
+      animation: toolBorderFlow 4.8s linear infinite;
+      pointer-events: none;
+    }
+    .tool::after {
+      content: "";
+      position: absolute;
+      inset: 1px;
+      z-index: 0;
+      border-radius: inherit;
+      background:
+        linear-gradient(120deg, transparent 12%, rgba(67,246,215,.11) 34%, transparent 58%),
+        linear-gradient(300deg, transparent 16%, rgba(255,127,182,.09) 46%, transparent 70%);
+      opacity: .7;
+      pointer-events: none;
+    }
+    .tool:hover::before {
+      opacity: 1;
+      animation-duration: 2.9s;
+    }
+    .tool > * {
+      position: relative;
+      z-index: 1;
+    }
+    @keyframes toolBorderFlow {
+      to { --flow-angle: 360deg; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .tool::before { animation: none; }
+    }
     .tag {
       width: fit-content;
       height: 30px;

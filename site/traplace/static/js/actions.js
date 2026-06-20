@@ -42,7 +42,11 @@ import { undo, redo, onHistoryChange, saveCheckpoint } from './history.js';
 import { posToCell } from './transform.js';
 import { makeMovable } from './interactions/drag.js';
 import { t } from './i18n.js?v=legend-nash-5';
-import { renderDistancePairLine } from './distancePair.js';
+import { renderDistancePairLine } from './distancePair.js?v=legend-nash-8';
+
+const DEFAULT_PAIR_SECONDS_PER_CELL = 3.19;
+const CITY_PAIR_BASE_SECONDS = 4;
+const CITY_PAIR_SECONDS_PER_CELL = 2;
 
 /** Platform detection (used for shortcut hint labels). */
 function isMac() {
@@ -107,9 +111,20 @@ function centerDistance(a, b) {
 
 function pairDistanceCells(a, b) {
   if (a.kind === 'city' && b.kind === 'city') {
-    return centerDistance(a, b) + 1;
+    return centerDistance(a, b);
   }
   return rectGapDistance(blockRectInCells(a), blockRectInCells(b));
+}
+
+function cityPairMarchSeconds(a, b) {
+  return Math.round(CITY_PAIR_BASE_SECONDS + centerDistance(a, b) * CITY_PAIR_SECONDS_PER_CELL);
+}
+
+function pairMarchSeconds(a, b) {
+  if (a.kind === 'city' && b.kind === 'city') {
+    return cityPairMarchSeconds(a, b);
+  }
+  return Math.round(pairDistanceCells(a, b) * DEFAULT_PAIR_SECONDS_PER_CELL);
 }
 
 function needsSpecialMarchFormula(block) {
@@ -159,7 +174,7 @@ function applyCityLabelsWithTrapDistance() {
       const dx = c.x - tc.x;
       const dy = c.y - tc.y;
       const d = Math.hypot(dx, dy);
-      return Math.round(d * 3.19);
+      return Math.round(d * DEFAULT_PAIR_SECONDS_PER_CELL);
     });
     const valuesStr = values.join(',');
 
@@ -190,7 +205,7 @@ function applySelectedPairDistance() {
     return;
   }
 
-  const value = Math.round(pairDistanceCells(from, to) * 3.19);
+  const value = pairMarchSeconds(from, to);
   renderDistancePairLine(value);
 
   saveToURLImmediate();
