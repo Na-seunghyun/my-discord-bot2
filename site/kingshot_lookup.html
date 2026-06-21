@@ -1049,7 +1049,8 @@
         const data = await fetchJson('/api/intel/status');
         $('statPlayers').textContent = fmt(data.supabasePlayers || data.players || 0);
         $('statCache').textContent = fmt(data.supabaseCachedResponses || data.cachedResponses || 0);
-        $('statSource').textContent = data.supabase ? 'SUPA' : data.d1 ? 'D1' : 'LIVE';
+        const collector = data.collector && data.collector.enabled && data.collector.nextKingdom ? ` K${data.collector.nextKingdom}` : '';
+        $('statSource').textContent = `${data.supabase ? 'SUPA' : data.d1 ? 'D1' : 'LIVE'}${collector}`;
       } catch {
         $('statPlayers').textContent = '-';
         $('statCache').textContent = '-';

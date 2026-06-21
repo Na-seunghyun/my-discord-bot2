@@ -66,9 +66,53 @@ Expected:
 }
 ```
 
-Numbers increase after successful intel searches while the upstream data source is alive.
+Numbers increase after successful intel searches and after the slow background collector runs.
 
-## 6. Free plan maintenance
+## 6. Slow background collector
+
+The Worker now includes a Cloudflare Cron Trigger:
+
+```toml
+[triggers]
+crons = ["*/10 * * * *"]
+```
+
+Every 10 minutes it slowly checks the next kingdom, stores valid player summaries, and refreshes stale player details. Failed or empty upstream responses do **not** overwrite existing player data.
+
+Optional Cloudflare plain text variables:
+
+```text
+INTEL_COLLECT_ENABLED=true
+INTEL_COLLECT_MIN_KINGDOM=1
+INTEL_COLLECT_MAX_KINGDOM=2000
+INTEL_COLLECT_KINGDOM_BATCH=1
+INTEL_COLLECT_PLAYER_DETAILS=20
+INTEL_COLLECT_STALE_HOURS=72
+INTEL_COLLECT_DELAY_MS=1000
+```
+
+Recommended free-plan defaults:
+
+- Keep `INTEL_COLLECT_KINGDOM_BATCH=1`.
+- Use `INTEL_COLLECT_PLAYER_DETAILS=20` if the upstream site stays stable.
+- Drop to `10` temporarily if 502/503/504 errors become frequent.
+- If Supabase reaches 300MB, slow the collector down.
+
+Manual test:
+
+```text
+POST /api/intel/collect?token=YOUR_ADMIN_TOKEN
+```
+
+Status check:
+
+```text
+GET /api/intel/status
+```
+
+The status response includes `collector.nextKingdom`, `collector.runs`, and the last small run summary.
+
+## 7. Free plan maintenance
 
 To delete old cached API responses while keeping thin player indexes:
 
@@ -83,4 +127,3 @@ Recommended free-plan behavior:
 - Do not store images in Supabase.
 - Store avatar URLs, not avatar files.
 - Avoid full 370k detailed refresh jobs.
-

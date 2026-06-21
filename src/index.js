@@ -8,6 +8,13 @@ const MAX_FEEDBACK_CONTACT = 160;
 const SUPABASE_MAX_CACHE_BYTES = 120000;
 const VISIT_DAILY_COUNT_CAP = 400;
 const UPSTREAM_TIMEOUT_MS = 15000;
+const COLLECTOR_STATE_KEY = "intel:collector:state";
+const COLLECTOR_DEFAULT_MIN_KINGDOM = 1;
+const COLLECTOR_DEFAULT_MAX_KINGDOM = 2000;
+const COLLECTOR_DEFAULT_KINGDOM_BATCH = 1;
+const COLLECTOR_DEFAULT_DETAIL_LIMIT = 20;
+const COLLECTOR_DEFAULT_STALE_HOURS = 72;
+const COLLECTOR_DEFAULT_DELAY_MS = 1000;
 
 let cachedToken = "";
 let cachedTokenExpires = 0;
@@ -121,6 +128,131 @@ function parseJsonObject(value) {
   }
 }
 
+function numberOrNull(value) {
+  if (value === null || value === undefined || value === "") return null;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
+function isPlainObject(value) {
+  return Boolean(value && typeof value === "object" && !Array.isArray(value));
+}
+
+function meaningfulText(value, maxLength) {
+  const text = cleanText(value, maxLength);
+  if (!text || text === "-" || text.toLowerCase() === "null" || text.toLowerCase() === "undefined") return "";
+  if (/^<!doctype\s+html/i.test(text) || /^<html[\s>]/i.test(text)) return "";
+  return text;
+}
+
+function isMeaningfulValue(value) {
+  if (value === null || value === undefined) return false;
+  if (typeof value === "string") return Boolean(meaningfulText(value, 2000));
+  if (typeof value === "number") return Number.isFinite(value);
+  if (typeof value === "boolean") return true;
+  if (Array.isArray(value)) return value.length > 0;
+  if (isPlainObject(value)) return Object.keys(value).length > 0 && !isIntelErrorPayload(value);
+  return false;
+}
+
+function mergeMeaningful(existing, incoming) {
+  if (!isPlainObject(existing)) existing = {};
+  if (!isPlainObject(incoming)) return { ...existing };
+  const merged = { ...existing };
+  Object.entries(incoming).forEach(([key, value]) => {
+    if (!isMeaningfulValue(value)) return;
+    if (isPlainObject(value) && isPlainObject(merged[key])) {
+      merged[key] = mergeMeaningful(merged[key], value);
+    } else {
+      merged[key] = value;
+    }
+  });
+  return merged;
+}
+
+function firstText(source, keys, maxLength) {
+  for (const key of keys) {
+    const text = meaningfulText(source && source[key], maxLength);
+    if (text) return text;
+  }
+  return "";
+}
+
+function firstNumber(source, keys) {
+  for (const key of keys) {
+    const n = numberOrNull(source && source[key]);
+    if (n !== null) return n;
+  }
+  return null;
+}
+
+function playerIdFrom(value) {
+  const id = firstText(value, ["id", "player_id", "playerId", "uid", "fid"], 80);
+  return id ? String(id) : "";
+}
+
+function isIntelErrorPayload(payload) {
+  if (!payload) return true;
+  if (typeof payload === "string") return !meaningfulText(payload, 2000);
+  if (Array.isArray(payload)) return false;
+  if (!isPlainObject(payload)) return false;
+  if (!Object.keys(payload).length) return true;
+  if (payload.error || payload.upstreamStatus || payload.statusCode >= 400 || payload.status >= 400) return true;
+  const text = JSON.stringify(payload).slice(0, 600).toLowerCase();
+  return text.includes("<!doctype html") || text.includes("<title>error response</title>");
+}
+
+function looksLikePlayer(value) {
+  if (!isPlainObject(value) || isIntelErrorPayload(value)) return false;
+  const id = playerIdFrom(value);
+  if (!id) return false;
+  return Boolean(
+    firstText(value, ["username", "name", "nickname"], 160) ||
+    firstNumber(value, ["state", "kid", "kingdom"]) !== null ||
+    firstNumber(value, ["power", "town_hall_level", "townhall", "tc", "life_tree_level"]) !== null ||
+    firstText(value, ["alliance_name", "alliance", "alliance_abbr", "alliance_tag", "avatar_url", "avatar"], 500) ||
+    Array.isArray(value.heroes),
+  );
+}
+
+function collectPlayersFromPayload(payload, out = [], seen = new Set(), depth = 0) {
+  if (depth > 4 || payload == null || isIntelErrorPayload(payload)) return out;
+  if (Array.isArray(payload)) {
+    payload.forEach((item) => collectPlayersFromPayload(item, out, seen, depth + 1));
+    return out;
+  }
+  if (!isPlainObject(payload)) return out;
+  if (looksLikePlayer(payload)) {
+    const id = playerIdFrom(payload);
+    if (id && !seen.has(id)) {
+      seen.add(id);
+      out.push(payload);
+    }
+  }
+  ["player", "profile", "data", "result", "players", "top_players", "results", "items"].forEach((key) => {
+    if (payload[key] !== undefined) collectPlayersFromPayload(payload[key], out, seen, depth + 1);
+  });
+  return out;
+}
+
+function normalizePlayerSummary(player, existingSummary = {}) {
+  if (!isPlainObject(player) || isIntelErrorPayload(player)) return null;
+  const id = playerIdFrom(player);
+  if (!id || !looksLikePlayer(player)) return null;
+  const merged = mergeMeaningful(existingSummary, player);
+  merged.id = id;
+  const username = firstText(merged, ["username", "name", "nickname"], 160) || id;
+  merged.username = username;
+  merged.state = firstNumber(merged, ["state", "kid", "kingdom"]);
+  merged.alliance_name = firstText(merged, ["alliance_name", "alliance"], 160);
+  merged.alliance_abbr = firstText(merged, ["alliance_abbr", "alliance_tag"], 40);
+  merged.power = firstNumber(merged, ["power"]);
+  merged.town_hall_level = firstNumber(merged, ["town_hall_level", "townhall", "tc"]);
+  merged.avatar_url = firstText(merged, ["avatar_url", "avatar"], 500);
+  merged.last_refreshed_at = firstText(merged, ["last_refreshed_at", "updated_at", "recorded_at"], 80);
+  return merged;
+}
+
 function apiPathFromRequest(request) {
   const incoming = new URL(request.url);
   return incoming.pathname.replace(/^\/kingshot\/?/, "");
@@ -187,29 +319,20 @@ async function ensureIntelSchema(env) {
   return true;
 }
 
-function normalizePlayerSummary(player) {
-  if (!player || !player.id) return null;
-  const username = cleanText(player.username || player.name || player.nickname || player.id, 160);
-  return {
-    ...player,
-    id: String(player.id),
-    username,
-    state: numberValue(player.state || player.kid || player.kingdom) || null,
-    alliance_name: cleanText(player.alliance_name || player.alliance || "", 160),
-    alliance_abbr: cleanText(player.alliance_abbr || player.alliance_tag || "", 40),
-    power: numberValue(player.power) || null,
-    town_hall_level: numberValue(player.town_hall_level || player.townhall || player.tc) || null,
-    avatar_url: cleanText(player.avatar_url || player.avatar || "", 500),
-    last_refreshed_at: cleanText(player.last_refreshed_at || player.updated_at || "", 80),
-  };
-}
-
 async function savePlayerSummariesD1(env, players) {
   if (!hasIntelDb(env) || !Array.isArray(players) || !players.length) return;
   await ensureIntelSchema(env);
   const now = Date.now();
-  const statements = players.map(normalizePlayerSummary).filter(Boolean).map((player) =>
-    env.INTEL_DB.prepare("INSERT OR REPLACE INTO intel_players (id, username, username_lc, state, alliance_name, alliance_abbr, power, town_hall_level, avatar_url, last_refreshed_at, updated_at, summary_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)").bind(
+  const incoming = players.map((player) => ({ raw: player, id: playerIdFrom(player) })).filter((item) => item.id);
+  if (!incoming.length) return;
+  const uniqueIds = [...new Set(incoming.map((item) => item.id))].slice(0, 100);
+  const placeholders = uniqueIds.map(() => "?").join(",");
+  const existing = placeholders
+    ? await env.INTEL_DB.prepare(`SELECT id, summary_json FROM intel_players WHERE id IN (${placeholders})`).bind(...uniqueIds).all().catch(() => ({ results: [] }))
+    : { results: [] };
+  const existingMap = new Map((existing.results || []).map((row) => [String(row.id), parseJsonObject(row.summary_json)]));
+  const statements = incoming.map(({ raw, id }) => normalizePlayerSummary(raw, existingMap.get(id))).filter(Boolean).map((player) =>
+    env.INTEL_DB.prepare("INSERT INTO intel_players (id, username, username_lc, state, alliance_name, alliance_abbr, power, town_hall_level, avatar_url, last_refreshed_at, updated_at, summary_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET username = excluded.username, username_lc = excluded.username_lc, state = COALESCE(excluded.state, intel_players.state), alliance_name = COALESCE(NULLIF(excluded.alliance_name, ''), intel_players.alliance_name), alliance_abbr = COALESCE(NULLIF(excluded.alliance_abbr, ''), intel_players.alliance_abbr), power = COALESCE(excluded.power, intel_players.power), town_hall_level = COALESCE(excluded.town_hall_level, intel_players.town_hall_level), avatar_url = COALESCE(NULLIF(excluded.avatar_url, ''), intel_players.avatar_url), last_refreshed_at = COALESCE(NULLIF(excluded.last_refreshed_at, ''), intel_players.last_refreshed_at), updated_at = excluded.updated_at, summary_json = excluded.summary_json").bind(
       player.id,
       player.username,
       player.username.toLowerCase(),
@@ -230,7 +353,13 @@ async function savePlayerSummariesD1(env, players) {
 async function savePlayerSummariesSupabase(env, players) {
   if (!supabaseConfig(env).enabled || !Array.isArray(players) || !players.length) return;
   const now = Date.now();
-  const rows = players.map(normalizePlayerSummary).filter(Boolean).map((player) => ({
+  const incoming = players.map((player) => ({ raw: player, id: playerIdFrom(player) })).filter((item) => item.id).slice(0, 100);
+  if (!incoming.length) return;
+  const ids = [...new Set(incoming.map((item) => item.id))];
+  const encodedIds = encodeURIComponent(`(${ids.map((id) => `"${String(id).replace(/"/g, '\\"')}"`).join(",")})`);
+  const existingRows = await supabaseJson(env, `/intel_players?id=in.${encodedIds}&select=id,summary_json`).catch(() => []);
+  const existingMap = new Map((existingRows || []).map((row) => [String(row.id), row.summary_json || {}]));
+  const rows = incoming.map(({ raw, id }) => normalizePlayerSummary(raw, existingMap.get(id))).filter(Boolean).map((player) => ({
     id: player.id,
     username: player.username,
     username_lc: player.username.toLowerCase(),
@@ -268,21 +397,20 @@ async function saveIntelCacheSupabase(env, cacheKey, apiPath, responseJson, now)
 }
 
 async function saveIntelCache(env, request, payload) {
-  if (request.method !== "GET" || payload == null) return;
+  if (payload == null || isIntelErrorPayload(payload)) return;
   const apiPath = apiPathFromRequest(request);
   const cacheKey = cacheKeyFromRequest(request);
   const responseJson = JSON.stringify(payload);
   const now = Date.now();
-  const players = [];
-  if (payload.id) players.push(payload);
-  if (Array.isArray(payload.players)) players.push(...payload.players);
-  if (Array.isArray(payload.top_players)) players.push(...payload.top_players);
+  const players = collectPlayersFromPayload(payload);
 
   await Promise.all([
     savePlayerSummariesD1(env, players).catch(() => {}),
     savePlayerSummariesSupabase(env, players).catch(() => {}),
-    saveIntelCacheSupabase(env, cacheKey, apiPath, responseJson, now).catch(() => {}),
+    request.method === "GET" ? saveIntelCacheSupabase(env, cacheKey, apiPath, responseJson, now).catch(() => {}) : null,
   ]);
+
+  if (request.method !== "GET") return;
 
   if (hasIntelDb(env)) {
     await ensureIntelSchema(env);
@@ -318,6 +446,26 @@ async function readIntelCacheSupabase(env, request) {
   return data;
 }
 
+async function readStoredPlayer(env, id) {
+  const playerId = meaningfulText(id, 80);
+  if (!playerId) return null;
+  const encoded = encodeURIComponent(playerId);
+  if (supabaseConfig(env).enabled) {
+    const rows = await supabaseJson(env, `/intel_players?id=eq.${encoded}&select=summary_json,updated_at_ms&limit=1`).catch(() => null);
+    const row = rows && rows[0];
+    if (row && row.summary_json && row.summary_json.id) {
+      return { ...row.summary_json, _cache: { source: "supabase-player", updated_at: numberValue(row.updated_at_ms) } };
+    }
+  }
+  if (hasIntelDb(env)) {
+    await ensureIntelSchema(env);
+    const row = await env.INTEL_DB.prepare("SELECT summary_json, updated_at FROM intel_players WHERE id = ?").bind(playerId).first().catch(() => null);
+    const data = row && row.summary_json ? parseJsonObject(row.summary_json) : null;
+    if (data && data.id) return { ...data, _cache: { source: "local-player", updated_at: numberValue(row.updated_at) } };
+  }
+  return null;
+}
+
 async function searchIntelPlayers(env, request) {
   if (!hasIntelDb(env) || request.method !== "GET") return null;
   const url = new URL(request.url);
@@ -348,10 +496,16 @@ async function fallbackIntelResponse(env, request) {
   if (/^players\/search\/?$/.test(apiPath)) {
     return (await searchIntelPlayersSupabase(env, request).catch(() => null)) || (await searchIntelPlayers(env, request).catch(() => null));
   }
+  const playerMatch = apiPath.match(/^players\/([^/?#]+)\/?$/);
+  if (playerMatch) {
+    const stored = await readStoredPlayer(env, decodeURIComponent(playerMatch[1])).catch(() => null);
+    if (stored) return stored;
+  }
   return (await readIntelCacheSupabase(env, request).catch(() => null)) || (await readIntelCache(env, request).catch(() => null));
 }
 
 async function intelStatus(env) {
+  const cfg = collectorConfig(env);
   const status = {
     d1: hasIntelDb(env),
     r2: Boolean(env.INTEL_BUCKET && typeof env.INTEL_BUCKET.put === "function"),
@@ -360,6 +514,14 @@ async function intelStatus(env) {
     cachedResponses: 0,
     supabasePlayers: 0,
     supabaseCachedResponses: 0,
+    collector: {
+      enabled: cfg.enabled,
+      minKingdom: cfg.minKingdom,
+      maxKingdom: cfg.maxKingdom,
+      kingdomBatch: cfg.kingdomBatch,
+      detailLimit: cfg.detailLimit,
+      staleHours: Math.round(cfg.staleMs / 60 / 60 / 1000),
+    },
   };
   if (status.d1) {
     await ensureIntelSchema(env);
@@ -377,6 +539,13 @@ async function intelStatus(env) {
     ]);
     status.supabasePlayers = players;
     status.supabaseCachedResponses = cached;
+  }
+  const collectorState = await readCollectorState(env, cfg).catch(() => null);
+  if (collectorState) {
+    status.collector.nextKingdom = collectorState.nextKingdom;
+    status.collector.runs = numberValue(collectorState.runs);
+    status.collector.lastRunAt = collectorState.lastRunAt || "";
+    status.collector.lastResult = collectorState.lastResult || null;
   }
   return status;
 }
@@ -482,6 +651,222 @@ async function getToken(force = false) {
     tokenPromise = null;
   });
   return tokenPromise;
+}
+
+function collectorStore(env) {
+  return env.FEEDBACK || env.VISITS || null;
+}
+
+function envBool(value, fallback = true) {
+  if (value === undefined || value === null || value === "") return fallback;
+  return !["0", "false", "off", "no"].includes(String(value).trim().toLowerCase());
+}
+
+function envNumber(value, fallback, min, max) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return fallback;
+  return Math.min(max, Math.max(min, Math.floor(n)));
+}
+
+function collectorConfig(env) {
+  const minKingdom = envNumber(env.INTEL_COLLECT_MIN_KINGDOM, COLLECTOR_DEFAULT_MIN_KINGDOM, 1, 9999);
+  const maxKingdom = envNumber(env.INTEL_COLLECT_MAX_KINGDOM, COLLECTOR_DEFAULT_MAX_KINGDOM, minKingdom, 9999);
+  return {
+    enabled: envBool(env.INTEL_COLLECT_ENABLED, true),
+    minKingdom,
+    maxKingdom,
+    kingdomBatch: envNumber(env.INTEL_COLLECT_KINGDOM_BATCH, COLLECTOR_DEFAULT_KINGDOM_BATCH, 1, 3),
+    detailLimit: envNumber(env.INTEL_COLLECT_PLAYER_DETAILS, COLLECTOR_DEFAULT_DETAIL_LIMIT, 0, 25),
+    staleMs: envNumber(env.INTEL_COLLECT_STALE_HOURS, COLLECTOR_DEFAULT_STALE_HOURS, 1, 720) * 60 * 60 * 1000,
+    delayMs: envNumber(env.INTEL_COLLECT_DELAY_MS, COLLECTOR_DEFAULT_DELAY_MS, 100, 5000),
+  };
+}
+
+function collectorRequest(apiPath) {
+  const cleanPath = String(apiPath || "").replace(/^\/+/, "");
+  return new Request(`https://collector.local/kingshot/${cleanPath}`, { method: "GET" });
+}
+
+async function readCollectorState(env, cfg) {
+  const store = collectorStore(env);
+  if (store) {
+    const raw = await store.get(COLLECTOR_STATE_KEY).catch(() => null);
+    const state = parseJsonObject(raw);
+    if (state && state.nextKingdom) return state;
+  }
+  if (supabaseConfig(env).enabled) {
+    const rows = await supabaseJson(env, `/intel_cache?cache_key=eq.${encodeURIComponent(COLLECTOR_STATE_KEY)}&select=response_json&limit=1`).catch(() => null);
+    const state = rows && rows[0] && rows[0].response_json;
+    if (state && state.nextKingdom) return state;
+  }
+  return { nextKingdom: cfg.minKingdom, runs: 0, savedPlayers: 0, errors: [] };
+}
+
+async function writeCollectorState(env, state) {
+  const compact = {
+    ...state,
+    errors: (state.errors || []).slice(-8),
+    updatedAt: new Date().toISOString(),
+  };
+  const store = collectorStore(env);
+  if (store) await store.put(COLLECTOR_STATE_KEY, JSON.stringify(compact)).catch(() => {});
+  if (supabaseConfig(env).enabled) {
+    const now = Date.now();
+    await supabaseJson(env, "/intel_cache?on_conflict=cache_key", {
+      method: "POST",
+      headers: { prefer: "resolution=merge-duplicates" },
+      body: JSON.stringify([{
+        cache_key: COLLECTOR_STATE_KEY,
+        api_path: "collector/state",
+        response_json: compact,
+        updated_at_ms: now,
+        byte_size: JSON.stringify(compact).length,
+      }]),
+    }).catch(() => {});
+  }
+}
+
+function nextKingdom(current, cfg) {
+  const n = Number(current) || cfg.minKingdom;
+  return n >= cfg.maxKingdom ? cfg.minKingdom : n + 1;
+}
+
+function upstreamApiUrl(apiPath) {
+  const [pathPart, queryPart = ""] = String(apiPath || "").split("?");
+  const safePath = pathPart.split("/").filter(Boolean).map((part) => encodeURIComponent(decodeURIComponent(part))).join("/");
+  const url = new URL(`/api/${safePath}`, UPSTREAM);
+  if (queryPart) {
+    const params = new URLSearchParams(queryPart);
+    params.forEach((value, key) => url.searchParams.append(key, value));
+  }
+  return url;
+}
+
+async function fetchUpstreamJson(apiPath, options = {}) {
+  const token = await getToken(Boolean(options.forceToken));
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), UPSTREAM_TIMEOUT_MS);
+  try {
+    const response = await fetch(upstreamApiUrl(apiPath).toString(), {
+      method: options.method || "GET",
+      headers: {
+        accept: "application/json,text/plain,*/*",
+        "accept-language": options.acceptLanguage || "en-US,en;q=0.9,ko;q=0.8",
+        ...(options.bodyText ? { "content-type": options.contentType || "application/json" } : {}),
+        origin: UPSTREAM,
+        referer: `${UPSTREAM}/`,
+        "x-api-token": token,
+      },
+      body: options.bodyText,
+      signal: controller.signal,
+      cf: { cacheTtl: 0 },
+    });
+    const text = await response.text();
+    if (!response.ok) {
+      const error = new Error(text || `Upstream ${response.status}`);
+      error.status = response.status;
+      throw error;
+    }
+    const payload = JSON.parse(text);
+    if (isIntelErrorPayload(payload)) throw new Error("invalid upstream payload");
+    return payload;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function recentlyStoredPlayerIds(env, ids, staleMs) {
+  const uniqueIds = [...new Set(ids.map(String).filter(Boolean))].slice(0, 80);
+  if (!uniqueIds.length) return new Set();
+  const cutoff = Date.now() - staleMs;
+  const recent = new Set();
+  if (supabaseConfig(env).enabled) {
+    const encodedIds = encodeURIComponent(`(${uniqueIds.map((id) => `"${id.replace(/"/g, '\\"')}"`).join(",")})`);
+    const rows = await supabaseJson(env, `/intel_players?id=in.${encodedIds}&select=id,updated_at_ms`).catch(() => []);
+    (rows || []).forEach((row) => {
+      if (numberValue(row.updated_at_ms) >= cutoff) recent.add(String(row.id));
+    });
+  }
+  if (hasIntelDb(env)) {
+    await ensureIntelSchema(env);
+    const placeholders = uniqueIds.map(() => "?").join(",");
+    const rows = placeholders
+      ? await env.INTEL_DB.prepare(`SELECT id, updated_at FROM intel_players WHERE id IN (${placeholders})`).bind(...uniqueIds).all().catch(() => ({ results: [] }))
+      : { results: [] };
+    (rows.results || []).forEach((row) => {
+      if (numberValue(row.updated_at) >= cutoff) recent.add(String(row.id));
+    });
+  }
+  return recent;
+}
+
+async function runIntelCollector(env, reason = "manual") {
+  const cfg = collectorConfig(env);
+  const result = {
+    ok: true,
+    reason,
+    enabled: cfg.enabled,
+    checkedKingdoms: [],
+    savedPlayers: 0,
+    refreshedDetails: 0,
+    errors: [],
+  };
+  if (!cfg.enabled) return { ...result, ok: false, skipped: "INTEL_COLLECT_ENABLED is off." };
+  if (!supabaseConfig(env).enabled && !hasIntelDb(env)) return { ...result, ok: false, skipped: "No Intel storage is configured." };
+
+  const state = await readCollectorState(env, cfg);
+  let cursor = Number(state.nextKingdom) || cfg.minKingdom;
+
+  for (let batch = 0; batch < cfg.kingdomBatch; batch += 1) {
+    const kid = cursor;
+    result.checkedKingdoms.push(kid);
+    try {
+      const kingdomPayload = await fetchUpstreamJson(`kingdoms/${kid}`);
+      const players = collectPlayersFromPayload(kingdomPayload);
+      const candidateIds = players.map(playerIdFrom).filter(Boolean).slice(0, Math.max(cfg.detailLimit * 4, cfg.detailLimit));
+      const recent = await recentlyStoredPlayerIds(env, candidateIds, cfg.staleMs).catch(() => new Set());
+      const detailIds = candidateIds.filter((id) => !recent.has(id)).slice(0, cfg.detailLimit);
+
+      await saveIntelCache(env, collectorRequest(`kingdoms/${kid}`), kingdomPayload);
+      result.savedPlayers += players.length;
+
+      for (const id of detailIds) {
+        await delay(cfg.delayMs);
+        try {
+          const detail = await fetchUpstreamJson(`players/${encodeURIComponent(id)}`);
+          await saveIntelCache(env, collectorRequest(`players/${encodeURIComponent(id)}`), detail);
+          result.refreshedDetails += 1;
+          await delay(cfg.delayMs);
+          const loadout = await fetchUpstreamJson(`players/${encodeURIComponent(id)}/loadout?cached=1`).catch(() => null);
+          if (loadout && !isIntelErrorPayload(loadout)) {
+            await saveIntelCache(env, collectorRequest(`players/${encodeURIComponent(id)}/loadout?cached=1`), loadout);
+          }
+        } catch (error) {
+          result.errors.push(`player ${id}: ${error.status || ""} ${cleanText(error.message, 120)}`);
+        }
+      }
+    } catch (error) {
+      result.errors.push(`K${kid}: ${error.status || ""} ${cleanText(error.message, 120)}`);
+    }
+    cursor = nextKingdom(cursor, cfg);
+  }
+
+  const nextState = {
+    nextKingdom: cursor,
+    runs: numberValue(state.runs) + 1,
+    lastRunAt: new Date().toISOString(),
+    lastReason: reason,
+    lastResult: {
+      checkedKingdoms: result.checkedKingdoms,
+      savedPlayers: result.savedPlayers,
+      refreshedDetails: result.refreshedDetails,
+      errors: result.errors.slice(-5),
+    },
+    errors: [...(state.errors || []), ...result.errors].slice(-8),
+  };
+  await writeCollectorState(env, nextState);
+  result.nextKingdom = cursor;
+  return result;
 }
 
 function corsHeaders(origin) {
@@ -629,6 +1014,11 @@ export default {
     if (url.pathname === "/api/visit" && request.method === "POST") return json(await incrementVisit(env));
     if (url.pathname === "/api/stats" && request.method === "GET") return json(await readStats(env));
     if (url.pathname === "/api/intel/status" && request.method === "GET") return json(await intelStatus(env));
+    if (url.pathname === "/api/intel/collect" && request.method === "POST") {
+      const admin = requireAdmin(request, env);
+      if (!admin.ok) return admin.response;
+      return json(await runIntelCollector(env, "manual"));
+    }
     if (url.pathname === "/api/intel/cleanup" && request.method === "POST") return cleanupIntel(request, env);
     if (url.pathname === "/api/feedback" && request.method === "POST") return submitFeedback(request, env);
     if (url.pathname === "/api/feedback" && request.method === "GET") return listFeedback(request, env);
@@ -642,5 +1032,8 @@ export default {
     if (url.pathname === "/") return env.ASSETS.fetch(assetRequest(request, "/site/index.html"));
     if (url.pathname === "/troop_training_ui.html") return transformedTroopCalculator(request, env);
     return env.ASSETS.fetch(assetRequest(request, `/site${url.pathname}`));
+  },
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(runIntelCollector(env, "cron").catch(() => null));
   },
 };

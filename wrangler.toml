@@ -6,6 +6,9 @@ compatibility_date = "2025-06-18"
 directory = "."
 binding = "ASSETS"
 
+[triggers]
+crons = ["*/10 * * * *"]
+
 [[kv_namespaces]]
 binding = "FEEDBACK"
 id = "08261076ead3448a96bf924729adb01d"
@@ -32,3 +35,12 @@ id = "59330ca6081448d8bd6d3a70445e8501"
 #
 # Example:
 # SUPABASE_URL = "https://YOUR_PROJECT_REF.supabase.co"
+#
+# Optional slow Intel collector controls.
+# INTEL_COLLECT_ENABLED = "true"
+# INTEL_COLLECT_MIN_KINGDOM = "1"
+# INTEL_COLLECT_MAX_KINGDOM = "2000"
+# INTEL_COLLECT_KINGDOM_BATCH = "1"
+# INTEL_COLLECT_PLAYER_DETAILS = "20"
+# INTEL_COLLECT_STALE_HOURS = "72"
+# INTEL_COLLECT_DELAY_MS = "1000"
