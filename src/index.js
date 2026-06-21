@@ -8,6 +8,13 @@ const MAX_FEEDBACK_CONTACT = 160;
 const SUPABASE_MAX_CACHE_BYTES = 120000;
 const VISIT_DAILY_COUNT_CAP = 400;
 const UPSTREAM_TIMEOUT_MS = 15000;
+const OFFICIAL_GIFT_PLAYER_API = "https://kingshot-giftcode.centurygame.com/api/player";
+const OFFICIAL_GIFT_REDEEM_API = "https://kingshot-giftcode.centurygame.com/api/gift_code";
+const OFFICIAL_GIFT_ORIGIN = "https://ks-giftcode.centurygame.com";
+const OFFICIAL_GIFT_SIGN_SALT = "mN4!pQs6JrYwV9";
+const OFFICIAL_GIFT_TIMEOUT_MS = 10000;
+const AUTO_REDEEM_DEFAULT_BATCH_SIZE = 12;
+const AUTO_REDEEM_DEFAULT_DELAY_MS = 1200;
 const COLLECTOR_STATE_KEY = "intel:collector:state";
 const COLLECTOR_DEFAULT_MIN_KINGDOM = 1;
 const COLLECTOR_DEFAULT_MAX_KINGDOM = 2000;
@@ -36,6 +43,118 @@ const json = (payload, status = 200) =>
 function numberValue(value) {
   const n = Number(value);
   return Number.isFinite(n) ? n : 0;
+}
+
+function md5Hex(input) {
+  const bytes = new TextEncoder().encode(String(input));
+  const words = [];
+  for (let i = 0; i < bytes.length; i += 1) {
+    words[i >> 2] = (words[i >> 2] || 0) | (bytes[i] << ((i % 4) * 8));
+  }
+  const bitLength = bytes.length * 8;
+  words[bitLength >> 5] = (words[bitLength >> 5] || 0) | (0x80 << (bitLength % 32));
+  words[(((bitLength + 64) >>> 9) << 4) + 14] = bitLength;
+
+  const add = (a, b) => (a + b) | 0;
+  const rol = (value, shift) => (value << shift) | (value >>> (32 - shift));
+  const cmn = (q, a, b, x, s, t) => add(rol(add(add(a, q), add(x || 0, t)), s), b);
+  const ff = (a, b, c, d, x, s, t) => cmn((b & c) | (~b & d), a, b, x, s, t);
+  const gg = (a, b, c, d, x, s, t) => cmn((b & d) | (c & ~d), a, b, x, s, t);
+  const hh = (a, b, c, d, x, s, t) => cmn(b ^ c ^ d, a, b, x, s, t);
+  const ii = (a, b, c, d, x, s, t) => cmn(c ^ (b | ~d), a, b, x, s, t);
+
+  let a = 1732584193;
+  let b = -271733879;
+  let c = -1732584194;
+  let d = 271733878;
+
+  for (let i = 0; i < words.length; i += 16) {
+    const oldA = a;
+    const oldB = b;
+    const oldC = c;
+    const oldD = d;
+
+    a = ff(a, b, c, d, words[i], 7, -680876936);
+    d = ff(d, a, b, c, words[i + 1], 12, -389564586);
+    c = ff(c, d, a, b, words[i + 2], 17, 606105819);
+    b = ff(b, c, d, a, words[i + 3], 22, -1044525330);
+    a = ff(a, b, c, d, words[i + 4], 7, -176418897);
+    d = ff(d, a, b, c, words[i + 5], 12, 1200080426);
+    c = ff(c, d, a, b, words[i + 6], 17, -1473231341);
+    b = ff(b, c, d, a, words[i + 7], 22, -45705983);
+    a = ff(a, b, c, d, words[i + 8], 7, 1770035416);
+    d = ff(d, a, b, c, words[i + 9], 12, -1958414417);
+    c = ff(c, d, a, b, words[i + 10], 17, -42063);
+    b = ff(b, c, d, a, words[i + 11], 22, -1990404162);
+    a = ff(a, b, c, d, words[i + 12], 7, 1804603682);
+    d = ff(d, a, b, c, words[i + 13], 12, -40341101);
+    c = ff(c, d, a, b, words[i + 14], 17, -1502002290);
+    b = ff(b, c, d, a, words[i + 15], 22, 1236535329);
+
+    a = gg(a, b, c, d, words[i + 1], 5, -165796510);
+    d = gg(d, a, b, c, words[i + 6], 9, -1069501632);
+    c = gg(c, d, a, b, words[i + 11], 14, 643717713);
+    b = gg(b, c, d, a, words[i], 20, -373897302);
+    a = gg(a, b, c, d, words[i + 5], 5, -701558691);
+    d = gg(d, a, b, c, words[i + 10], 9, 38016083);
+    c = gg(c, d, a, b, words[i + 15], 14, -660478335);
+    b = gg(b, c, d, a, words[i + 4], 20, -405537848);
+    a = gg(a, b, c, d, words[i + 9], 5, 568446438);
+    d = gg(d, a, b, c, words[i + 14], 9, -1019803690);
+    c = gg(c, d, a, b, words[i + 3], 14, -187363961);
+    b = gg(b, c, d, a, words[i + 8], 20, 1163531501);
+    a = gg(a, b, c, d, words[i + 13], 5, -1444681467);
+    d = gg(d, a, b, c, words[i + 2], 9, -51403784);
+    c = gg(c, d, a, b, words[i + 7], 14, 1735328473);
+    b = gg(b, c, d, a, words[i + 12], 20, -1926607734);
+
+    a = hh(a, b, c, d, words[i + 5], 4, -378558);
+    d = hh(d, a, b, c, words[i + 8], 11, -2022574463);
+    c = hh(c, d, a, b, words[i + 11], 16, 1839030562);
+    b = hh(b, c, d, a, words[i + 14], 23, -35309556);
+    a = hh(a, b, c, d, words[i + 1], 4, -1530992060);
+    d = hh(d, a, b, c, words[i + 4], 11, 1272893353);
+    c = hh(c, d, a, b, words[i + 7], 16, -155497632);
+    b = hh(b, c, d, a, words[i + 10], 23, -1094730640);
+    a = hh(a, b, c, d, words[i + 13], 4, 681279174);
+    d = hh(d, a, b, c, words[i], 11, -358537222);
+    c = hh(c, d, a, b, words[i + 3], 16, -722521979);
+    b = hh(b, c, d, a, words[i + 6], 23, 76029189);
+    a = hh(a, b, c, d, words[i + 9], 4, -640364487);
+    d = hh(d, a, b, c, words[i + 12], 11, -421815835);
+    c = hh(c, d, a, b, words[i + 15], 16, 530742520);
+    b = hh(b, c, d, a, words[i + 2], 23, -995338651);
+
+    a = ii(a, b, c, d, words[i], 6, -198630844);
+    d = ii(d, a, b, c, words[i + 7], 10, 1126891415);
+    c = ii(c, d, a, b, words[i + 14], 15, -1416354905);
+    b = ii(b, c, d, a, words[i + 5], 21, -57434055);
+    a = ii(a, b, c, d, words[i + 12], 6, 1700485571);
+    d = ii(d, a, b, c, words[i + 3], 10, -1894986606);
+    c = ii(c, d, a, b, words[i + 10], 15, -1051523);
+    b = ii(b, c, d, a, words[i + 1], 21, -2054922799);
+    a = ii(a, b, c, d, words[i + 8], 6, 1873313359);
+    d = ii(d, a, b, c, words[i + 15], 10, -30611744);
+    c = ii(c, d, a, b, words[i + 6], 15, -1560198380);
+    b = ii(b, c, d, a, words[i + 13], 21, 1309151649);
+    a = ii(a, b, c, d, words[i + 4], 6, -145523070);
+    d = ii(d, a, b, c, words[i + 11], 10, -1120210379);
+    c = ii(c, d, a, b, words[i + 2], 15, 718787259);
+    b = ii(b, c, d, a, words[i + 9], 21, -343485551);
+
+    a = add(a, oldA);
+    b = add(b, oldB);
+    c = add(c, oldC);
+    d = add(d, oldD);
+  }
+
+  const hex = [];
+  [a, b, c, d].forEach((word) => {
+    for (let i = 0; i < 4; i += 1) {
+      hex.push(((word >>> (i * 8)) & 0xff).toString(16).padStart(2, "0"));
+    }
+  });
+  return hex.join("");
 }
 
 async function incrementVisit(env) {
@@ -251,6 +370,376 @@ function normalizePlayerSummary(player, existingSummary = {}) {
   merged.avatar_url = firstText(merged, ["avatar_url", "avatar"], 500);
   merged.last_refreshed_at = firstText(merged, ["last_refreshed_at", "updated_at", "recorded_at"], 80);
   return merged;
+}
+
+function officialGiftSign(params) {
+  const payload = Object.keys(params).sort().reduce((text, key) => {
+    const value = isPlainObject(params[key]) || Array.isArray(params[key]) ? JSON.stringify(params[key]) : params[key];
+    return `${text}${text ? "&" : ""}${key}=${value}`;
+  }, "");
+  return md5Hex(`${payload}${OFFICIAL_GIFT_SIGN_SALT}`);
+}
+
+function normalizeOfficialGiftProfile(payload) {
+  const profile = payload && payload.code === 0 && isPlainObject(payload.data) ? payload.data : null;
+  if (!profile || !profile.fid) return null;
+  const id = String(profile.fid);
+  return normalizePlayerSummary({
+    id,
+    fid: id,
+    username: profile.nickname,
+    nickname: profile.nickname,
+    state: numberOrNull(profile.kid),
+    kid: numberOrNull(profile.kid),
+    town_hall_level: numberOrNull(profile.stove_lv),
+    stove_lv: numberOrNull(profile.stove_lv),
+    stove_lv_content: profile.stove_lv_content,
+    avatar_url: profile.avatar_image,
+    avatar_image: profile.avatar_image,
+    source: "official-giftcode",
+    last_refreshed_at: new Date().toISOString(),
+  });
+}
+
+async function fetchOfficialGiftProfile(playerId) {
+  const fid = meaningfulText(playerId, 40);
+  if (!/^\d{3,12}$/.test(fid)) return null;
+  const data = { fid, time: Date.now() };
+  data.sign = officialGiftSign(data);
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), OFFICIAL_GIFT_TIMEOUT_MS);
+  try {
+    const response = await fetch(OFFICIAL_GIFT_PLAYER_API, {
+      method: "POST",
+      headers: {
+        "content-type": "application/x-www-form-urlencoded",
+        accept: "application/json, text/plain, */*",
+        origin: OFFICIAL_GIFT_ORIGIN,
+        referer: `${OFFICIAL_GIFT_ORIGIN}/`,
+      },
+      body: new URLSearchParams(data).toString(),
+      signal: controller.signal,
+      cf: { cacheTtl: 0 },
+    });
+    if (!response.ok) return null;
+    const payload = await response.json().catch(() => null);
+    return normalizeOfficialGiftProfile(payload);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function saveOfficialProfile(env, profile) {
+  if (!profile || !profile.id) return;
+  await Promise.all([
+    savePlayerSummariesD1(env, [profile]).catch(() => {}),
+    savePlayerSummariesSupabase(env, [profile]).catch(() => {}),
+  ]);
+}
+
+function normalizeGiftCode(value) {
+  const code = meaningfulText(value, 80).toUpperCase().replace(/[^A-Z0-9_-]/g, "");
+  return /^[A-Z0-9_-]{3,64}$/.test(code) ? code : "";
+}
+
+function collectGiftCodesFromPayload(payload, out = new Set(), keyHint = "", depth = 0) {
+  if (depth > 5 || payload == null) return out;
+  if (typeof payload === "string") {
+    const text = payload.toUpperCase();
+    if (/CODE|CDK|GIFT|REDEEM/.test(keyHint.toUpperCase())) {
+      const direct = normalizeGiftCode(text);
+      if (direct) out.add(direct);
+    }
+    const matches = text.matchAll(/(?:GIFT\s*CODE|CODE|CDK|REDEEM)\s*[:：#-]?\s*`?([A-Z0-9_-]{3,64})`?/g);
+    for (const match of matches) {
+      const code = normalizeGiftCode(match[1]);
+      if (code) out.add(code);
+    }
+    return out;
+  }
+  if (Array.isArray(payload)) {
+    payload.forEach((item) => collectGiftCodesFromPayload(item, out, keyHint, depth + 1));
+    return out;
+  }
+  if (!isPlainObject(payload)) return out;
+  Object.entries(payload).forEach(([key, value]) => {
+    const keyText = String(key || "");
+    if (/^(code|gift_code|cdk)$/i.test(keyText)) {
+      const code = normalizeGiftCode(value);
+      if (code) out.add(code);
+    }
+    collectGiftCodesFromPayload(value, out, keyText || keyHint, depth + 1);
+  });
+  return out;
+}
+
+function autoRedeemConfig(env) {
+  return {
+    enabled: envBool(env.AUTO_REDEEM_ENABLED, true),
+    batchSize: envNumber(env.AUTO_REDEEM_BATCH_SIZE, AUTO_REDEEM_DEFAULT_BATCH_SIZE, 1, 30),
+    delayMs: envNumber(env.AUTO_REDEEM_DELAY_MS, AUTO_REDEEM_DEFAULT_DELAY_MS, 300, 8000),
+  };
+}
+
+function requireSupabase(env) {
+  if (!supabaseConfig(env).enabled) return { ok: false, response: json({ ok: false, error: "Supabase is not configured." }, 503) };
+  return { ok: true };
+}
+
+async function hashManageToken(token) {
+  const bytes = new TextEncoder().encode(String(token));
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return [...new Uint8Array(digest)].map((value) => value.toString(16).padStart(2, "0")).join("");
+}
+
+function newManageToken() {
+  const bytes = new Uint8Array(24);
+  crypto.getRandomValues(bytes);
+  return [...bytes].map((value) => value.toString(16).padStart(2, "0")).join("");
+}
+
+async function registerRedeemPlayer(request, env) {
+  const ready = requireSupabase(env);
+  if (!ready.ok) return ready.response;
+  const body = await request.json().catch(() => ({}));
+  if (!body.consent) return json({ ok: false, error: "Consent is required before saving a player ID." }, 400);
+  const playerId = meaningfulText(body.playerId || body.fid || body.id, 40);
+  const profile = await fetchOfficialGiftProfile(playerId).catch(() => null);
+  if (!profile) return json({ ok: false, error: "Player ID could not be verified." }, 404);
+  const manageToken = newManageToken();
+  const tokenHash = await hashManageToken(manageToken);
+  const now = Date.now();
+  await saveOfficialProfile(env, profile);
+  await supabaseJson(env, "/redeem_players?on_conflict=id", {
+    method: "POST",
+    headers: { prefer: "resolution=merge-duplicates" },
+    body: JSON.stringify([{
+      id: profile.id,
+      nickname: profile.username,
+      state: profile.state,
+      town_hall_level: profile.town_hall_level,
+      avatar_url: profile.avatar_url,
+      lang: cleanText(body.lang, 16),
+      enabled: true,
+      consent: true,
+      manage_token_hash: tokenHash,
+      created_at_ms: now,
+      updated_at_ms: now,
+      profile_json: profile,
+    }]),
+  });
+  return json({ ok: true, player: profile, manageToken });
+}
+
+async function unregisterRedeemPlayer(request, env) {
+  const ready = requireSupabase(env);
+  if (!ready.ok) return ready.response;
+  const body = await request.json().catch(() => ({}));
+  const playerId = meaningfulText(body.playerId || body.fid || body.id, 40);
+  const manageToken = meaningfulText(body.manageToken || body.token, 120);
+  if (!playerId || !manageToken) return json({ ok: false, error: "Player ID and manage token are required." }, 400);
+  const rows = await supabaseJson(env, `/redeem_players?id=eq.${encodeURIComponent(playerId)}&select=id,manage_token_hash&limit=1`);
+  const row = rows && rows[0];
+  if (!row || row.manage_token_hash !== await hashManageToken(manageToken)) return json({ ok: false, error: "Invalid manage token." }, 403);
+  await supabaseJson(env, `/redeem_players?id=eq.${encodeURIComponent(playerId)}`, {
+    method: "PATCH",
+    body: JSON.stringify({ enabled: false, consent: false, updated_at_ms: Date.now() }),
+  });
+  return json({ ok: true });
+}
+
+async function saveRedeemCode(env, code, source = "manual", raw = null) {
+  const giftCode = normalizeGiftCode(code);
+  if (!giftCode || !supabaseConfig(env).enabled) return false;
+  const now = Date.now();
+  const sourceText = cleanText(source, 80) || "unknown";
+  await supabaseJson(env, "/redeem_codes?on_conflict=code", {
+    method: "POST",
+    headers: { prefer: "resolution=merge-duplicates" },
+    body: JSON.stringify([{
+      code: giftCode,
+      source: sourceText,
+      status: "active",
+      discovered_at_ms: now,
+      updated_at_ms: now,
+      raw_json: raw ? { source: sourceText, saved_at_ms: now } : {},
+    }]),
+  });
+  return true;
+}
+
+async function createRedeemJobsForCode(env, code) {
+  const giftCode = normalizeGiftCode(code);
+  if (!giftCode || !supabaseConfig(env).enabled) return 0;
+  const players = await supabaseJson(env, "/redeem_players?enabled=eq.true&consent=eq.true&select=id&limit=1000").catch(() => []);
+  if (!players || !players.length) return 0;
+  const now = Date.now();
+  const rows = players.map((player) => ({
+    job_key: `${giftCode}:${player.id}`,
+    player_id: String(player.id),
+    gift_code: giftCode,
+    status: "pending",
+    attempts: 0,
+    created_at_ms: now,
+    updated_at_ms: now,
+  }));
+  await supabaseJson(env, "/redeem_jobs?on_conflict=job_key", {
+    method: "POST",
+    headers: { prefer: "resolution=ignore-duplicates" },
+    body: JSON.stringify(rows),
+  }).catch(() => null);
+  return rows.length;
+}
+
+async function discoverRedeemCodes(env) {
+  const result = { ok: true, discovered: [], errors: [] };
+  const sources = ["codes", "redemptions/recent"];
+  for (const apiPath of sources) {
+    try {
+      const payload = await fetchUpstreamJson(apiPath);
+      const codes = [...collectGiftCodesFromPayload(payload)];
+      for (const code of codes) {
+        await saveRedeemCode(env, code, `jeab:${apiPath}`, payload).catch(() => {});
+        await createRedeemJobsForCode(env, code).catch(() => {});
+        result.discovered.push(code);
+      }
+    } catch (error) {
+      result.errors.push(`${apiPath}: ${cleanText(error.message, 120)}`);
+    }
+  }
+  result.discovered = [...new Set(result.discovered)];
+  return result;
+}
+
+async function addRedeemCode(request, env) {
+  const ready = requireSupabase(env);
+  if (!ready.ok) return ready.response;
+  const admin = requireAdmin(request, env);
+  if (!admin.ok) return admin.response;
+  const body = await request.json().catch(() => ({}));
+  const code = normalizeGiftCode(body.code || body.giftCode || body.cdk);
+  if (!code) return json({ ok: false, error: "Valid gift code is required." }, 400);
+  await saveRedeemCode(env, code, "manual", body);
+  const jobsCreated = await createRedeemJobsForCode(env, code);
+  return json({ ok: true, code, jobsCreated });
+}
+
+async function listRedeemCodes(request, env) {
+  const ready = requireSupabase(env);
+  if (!ready.ok) return ready.response;
+  const url = new URL(request.url);
+  const limit = Math.min(50, Math.max(1, Number(url.searchParams.get("limit")) || 20));
+  const [codes, players] = await Promise.all([
+    supabaseJson(env, `/redeem_codes?select=code,source,status,discovered_at_ms,updated_at_ms&order=discovered_at_ms.desc&limit=${limit}`).catch(() => []),
+    supabaseCount(env, "redeem_players").catch(() => 0),
+  ]);
+  return json({ ok: true, codes: codes || [], registeredPlayers: players });
+}
+
+async function runRedeemJobs(env, reason = "manual") {
+  const cfg = autoRedeemConfig(env);
+  const result = { ok: true, reason, enabled: cfg.enabled, processed: 0, success: 0, failed: 0, pending: 0, results: [] };
+  if (!cfg.enabled) return { ...result, ok: false, skipped: "AUTO_REDEEM_ENABLED is off." };
+  if (!supabaseConfig(env).enabled) return { ...result, ok: false, skipped: "Supabase is not configured." };
+  const jobs = await supabaseJson(env, `/redeem_jobs?status=eq.pending&select=job_key,player_id,gift_code,attempts&order=created_at_ms.asc&limit=${cfg.batchSize}`).catch(() => []);
+  result.pending = (jobs || []).length;
+  for (const job of jobs || []) {
+    await delay(cfg.delayMs);
+    const now = Date.now();
+    await supabaseJson(env, `/redeem_jobs?job_key=eq.${encodeURIComponent(job.job_key)}`, {
+      method: "PATCH",
+      body: JSON.stringify({ status: "running", attempts: numberValue(job.attempts) + 1, updated_at_ms: now }),
+    }).catch(() => {});
+    try {
+      const redeem = await redeemOfficialGiftCode(job.player_id, job.gift_code);
+      const doneAt = Date.now();
+      const finalStatus = redeem.ok ? "success" : redeem.status;
+      await supabaseJson(env, `/redeem_jobs?job_key=eq.${encodeURIComponent(job.job_key)}`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          status: finalStatus,
+          attempts: numberValue(job.attempts) + 1,
+          last_error: redeem.ok ? "" : redeem.message,
+          response_json: redeem.response || redeem,
+          redeemed_at_ms: redeem.ok ? doneAt : null,
+          updated_at_ms: doneAt,
+        }),
+      }).catch(() => {});
+      if (redeem.player) await saveOfficialProfile(env, redeem.player);
+      result.processed += 1;
+      if (redeem.ok) result.success += 1;
+      else result.failed += 1;
+      result.results.push({ playerId: job.player_id, code: job.gift_code, status: finalStatus, message: redeem.message });
+    } catch (error) {
+      const doneAt = Date.now();
+      await supabaseJson(env, `/redeem_jobs?job_key=eq.${encodeURIComponent(job.job_key)}`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          status: "failed",
+          attempts: numberValue(job.attempts) + 1,
+          last_error: cleanText(error.message, 240),
+          updated_at_ms: doneAt,
+        }),
+      }).catch(() => {});
+      result.processed += 1;
+      result.failed += 1;
+      result.results.push({ playerId: job.player_id, code: job.gift_code, status: "failed", message: cleanText(error.message, 160) });
+    }
+  }
+  return result;
+}
+
+async function runAutoRedeemCycle(env, reason = "cron") {
+  const discovery = await discoverRedeemCodes(env).catch((error) => ({ ok: false, discovered: [], errors: [cleanText(error.message, 120)] }));
+  const jobs = await runRedeemJobs(env, reason).catch((error) => ({ ok: false, error: cleanText(error.message, 120) }));
+  return { ok: Boolean(discovery.ok !== false && jobs.ok !== false), discovery, jobs };
+}
+
+function classifyRedeemPayload(payload) {
+  const errCode = numberValue(payload && payload.err_code);
+  const message = meaningfulText(payload && (payload.msg || payload.message), 240);
+  if (payload && payload.code === 0) return { status: "success", ok: true, message: message || "success" };
+  if (errCode === 40102) return { status: "captcha_required", ok: false, message: message || "captcha required" };
+  if (errCode === 40014) return { status: "invalid_code", ok: false, message: message || "code not found" };
+  if (errCode === 40009) return { status: "not_logged_in", ok: false, message: message || "not logged in" };
+  if (/already|claimed|used/i.test(message)) return { status: "already_claimed", ok: false, message };
+  if (/expired/i.test(message)) return { status: "expired", ok: false, message };
+  return { status: "failed", ok: false, message: message || "redeem failed" };
+}
+
+async function redeemOfficialGiftCode(playerId, giftCode) {
+  const fid = meaningfulText(playerId, 40);
+  const cdk = meaningfulText(giftCode, 80).toUpperCase();
+  if (!/^\d{3,12}$/.test(fid) || !/^[A-Z0-9_-]{3,64}$/.test(cdk)) {
+    return { ok: false, status: "invalid_input", message: "Invalid player ID or gift code." };
+  }
+
+  const profile = await fetchOfficialGiftProfile(fid);
+  if (!profile) return { ok: false, status: "player_not_found", message: "Player ID could not be verified." };
+
+  const data = { fid, cdk, time: Date.now() };
+  data.sign = officialGiftSign(data);
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), OFFICIAL_GIFT_TIMEOUT_MS);
+  try {
+    const response = await fetch(OFFICIAL_GIFT_REDEEM_API, {
+      method: "POST",
+      headers: {
+        "content-type": "application/x-www-form-urlencoded",
+        accept: "application/json, text/plain, */*",
+        origin: OFFICIAL_GIFT_ORIGIN,
+        referer: `${OFFICIAL_GIFT_ORIGIN}/`,
+      },
+      body: new URLSearchParams(data).toString(),
+      signal: controller.signal,
+      cf: { cacheTtl: 0 },
+    });
+    const payload = await response.json().catch(() => ({ code: 1, msg: `HTTP ${response.status}` }));
+    const result = classifyRedeemPayload(payload);
+    return { ...result, player: profile, response: payload };
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 function apiPathFromRequest(request) {
@@ -494,12 +983,26 @@ async function searchIntelPlayersSupabase(env, request) {
 async function fallbackIntelResponse(env, request) {
   const apiPath = apiPathFromRequest(request);
   if (/^players\/search\/?$/.test(apiPath)) {
-    return (await searchIntelPlayersSupabase(env, request).catch(() => null)) || (await searchIntelPlayers(env, request).catch(() => null));
+    const local = (await searchIntelPlayersSupabase(env, request).catch(() => null)) || (await searchIntelPlayers(env, request).catch(() => null));
+    if (local && Array.isArray(local.players) && local.players.length) return local;
+    const q = cleanText(new URL(request.url).searchParams.get("q"), 40);
+    const official = await fetchOfficialGiftProfile(q).catch(() => null);
+    if (official) {
+      await saveOfficialProfile(env, official);
+      return { players: [official], total: 1, _cache: { source: "official-giftcode", updated_at: Date.now() } };
+    }
+    if (local) return local;
   }
   const playerMatch = apiPath.match(/^players\/([^/?#]+)\/?$/);
   if (playerMatch) {
-    const stored = await readStoredPlayer(env, decodeURIComponent(playerMatch[1])).catch(() => null);
+    const playerId = decodeURIComponent(playerMatch[1]);
+    const stored = await readStoredPlayer(env, playerId).catch(() => null);
     if (stored) return stored;
+    const official = await fetchOfficialGiftProfile(playerId).catch(() => null);
+    if (official) {
+      await saveOfficialProfile(env, official);
+      return { ...official, _cache: { source: "official-giftcode", updated_at: Date.now() } };
+    }
   }
   return (await readIntelCacheSupabase(env, request).catch(() => null)) || (await readIntelCache(env, request).catch(() => null));
 }
@@ -510,6 +1013,7 @@ async function intelStatus(env) {
     d1: hasIntelDb(env),
     r2: Boolean(env.INTEL_BUCKET && typeof env.INTEL_BUCKET.put === "function"),
     supabase: supabaseConfig(env).enabled,
+    officialGiftProfileSource: true,
     players: 0,
     cachedResponses: 0,
     supabasePlayers: 0,
@@ -842,7 +1346,13 @@ async function runIntelCollector(env, reason = "manual") {
             await saveIntelCache(env, collectorRequest(`players/${encodeURIComponent(id)}/loadout?cached=1`), loadout);
           }
         } catch (error) {
-          result.errors.push(`player ${id}: ${error.status || ""} ${cleanText(error.message, 120)}`);
+          const official = await fetchOfficialGiftProfile(id).catch(() => null);
+          if (official) {
+            await saveOfficialProfile(env, official);
+            result.refreshedDetails += 1;
+          } else {
+            result.errors.push(`player ${id}: ${error.status || ""} ${cleanText(error.message, 120)}`);
+          }
         }
       }
     } catch (error) {
@@ -1020,6 +1530,24 @@ export default {
       return json(await runIntelCollector(env, "manual"));
     }
     if (url.pathname === "/api/intel/cleanup" && request.method === "POST") return cleanupIntel(request, env);
+    if (url.pathname === "/api/redeem/register" && request.method === "POST") return registerRedeemPlayer(request, env);
+    if (url.pathname === "/api/redeem/unregister" && request.method === "POST") return unregisterRedeemPlayer(request, env);
+    if (url.pathname === "/api/redeem/codes" && request.method === "GET") return listRedeemCodes(request, env);
+    if (url.pathname === "/api/redeem/code" && request.method === "POST") return addRedeemCode(request, env);
+    if (url.pathname === "/api/redeem/discover" && request.method === "POST") {
+      const ready = requireSupabase(env);
+      if (!ready.ok) return ready.response;
+      const admin = requireAdmin(request, env);
+      if (!admin.ok) return admin.response;
+      return json(await discoverRedeemCodes(env));
+    }
+    if (url.pathname === "/api/redeem/run" && request.method === "POST") {
+      const ready = requireSupabase(env);
+      if (!ready.ok) return ready.response;
+      const admin = requireAdmin(request, env);
+      if (!admin.ok) return admin.response;
+      return json(await runAutoRedeemCycle(env, "manual"));
+    }
     if (url.pathname === "/api/feedback" && request.method === "POST") return submitFeedback(request, env);
     if (url.pathname === "/api/feedback" && request.method === "GET") return listFeedback(request, env);
 
@@ -1035,5 +1563,6 @@ export default {
   },
   async scheduled(event, env, ctx) {
     ctx.waitUntil(runIntelCollector(env, "cron").catch(() => null));
+    ctx.waitUntil(runAutoRedeemCycle(env, "cron").catch(() => null));
   },
 };

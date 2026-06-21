@@ -127,3 +127,48 @@ Recommended free-plan behavior:
 - Do not store images in Supabase.
 - Store avatar URLs, not avatar files.
 - Avoid full 370k detailed refresh jobs.
+
+## 8. Auto redeem storage
+
+The same SQL file also creates:
+
+- `redeem_players`
+- `redeem_codes`
+- `redeem_jobs`
+
+These tables power the hub page:
+
+```text
+/auto_redeem.html
+```
+
+Public endpoints:
+
+```text
+POST /api/redeem/register
+POST /api/redeem/unregister
+GET  /api/redeem/codes
+```
+
+Admin endpoints:
+
+```text
+POST /api/redeem/code?token=YOUR_ADMIN_TOKEN
+POST /api/redeem/discover?token=YOUR_ADMIN_TOKEN
+POST /api/redeem/run?token=YOUR_ADMIN_TOKEN
+```
+
+Optional Cloudflare plain text variables:
+
+```text
+AUTO_REDEEM_ENABLED=true
+AUTO_REDEEM_BATCH_SIZE=12
+AUTO_REDEEM_DELAY_MS=1200
+```
+
+Recommended free-plan behavior:
+
+- Keep `AUTO_REDEEM_BATCH_SIZE` between `5` and `20`.
+- Keep a delay of at least `1000ms`.
+- If the official gift-code API asks for captcha, the job is marked `captcha_required`; the Worker does not bypass captcha.
+- Registered users receive a manage token in the browser. They need that token to remove their ID later.

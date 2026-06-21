@@ -43,7 +43,59 @@ create index if not exists intel_cache_updated_at_idx
 alter table public.intel_players enable row level security;
 alter table public.intel_cache enable row level security;
 
+create table if not exists public.redeem_players (
+  id text primary key,
+  nickname text,
+  state integer,
+  town_hall_level integer,
+  avatar_url text,
+  lang text,
+  enabled boolean not null default true,
+  consent boolean not null default true,
+  manage_token_hash text,
+  created_at_ms bigint not null default 0,
+  updated_at_ms bigint not null default 0,
+  profile_json jsonb not null default '{}'::jsonb
+);
+
+create index if not exists redeem_players_enabled_idx
+  on public.redeem_players using btree (enabled, consent);
+
+create table if not exists public.redeem_codes (
+  code text primary key,
+  source text,
+  status text not null default 'active',
+  discovered_at_ms bigint not null default 0,
+  updated_at_ms bigint not null default 0,
+  raw_json jsonb not null default '{}'::jsonb
+);
+
+create index if not exists redeem_codes_discovered_idx
+  on public.redeem_codes using btree (discovered_at_ms desc);
+
+create table if not exists public.redeem_jobs (
+  job_key text primary key,
+  player_id text not null,
+  gift_code text not null,
+  status text not null default 'pending',
+  attempts integer not null default 0,
+  last_error text,
+  response_json jsonb not null default '{}'::jsonb,
+  created_at_ms bigint not null default 0,
+  updated_at_ms bigint not null default 0,
+  redeemed_at_ms bigint
+);
+
+create index if not exists redeem_jobs_status_idx
+  on public.redeem_jobs using btree (status, created_at_ms);
+
+create index if not exists redeem_jobs_player_idx
+  on public.redeem_jobs using btree (player_id);
+
+alter table public.redeem_players enable row level security;
+alter table public.redeem_codes enable row level security;
+alter table public.redeem_jobs enable row level security;
+
 -- No public policies are required because the Cloudflare Worker uses the
 -- Supabase service role key server-side. Do not expose the service role key
 -- in browser JavaScript.
-
