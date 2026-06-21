@@ -65,10 +65,22 @@ create table if not exists public.redeem_codes (
   code text primary key,
   source text,
   status text not null default 'active',
+  is_active boolean,
+  last_redeem_status text,
+  last_redeemed_at_ms bigint,
   discovered_at_ms bigint not null default 0,
   updated_at_ms bigint not null default 0,
   raw_json jsonb not null default '{}'::jsonb
 );
+
+alter table public.redeem_codes
+  add column if not exists is_active boolean;
+
+alter table public.redeem_codes
+  add column if not exists last_redeem_status text;
+
+alter table public.redeem_codes
+  add column if not exists last_redeemed_at_ms bigint;
 
 create index if not exists redeem_codes_discovered_idx
   on public.redeem_codes using btree (discovered_at_ms desc);

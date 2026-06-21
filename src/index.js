@@ -442,6 +442,46 @@ function normalizeGiftCode(value) {
   return /^[A-Z0-9_-]{3,64}$/.test(code) ? code : "";
 }
 
+function timeMs(value, fallback = Date.now()) {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  const parsed = Date.parse(String(value || ""));
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function normalizeSourceCodeRow(row, source = "jeab:codes") {
+  if (!isPlainObject(row)) return null;
+  const code = normalizeGiftCode(row.Code || row.code || row.gift_code || row.cdk);
+  if (!code) return null;
+  const isActive = row.IsActive === undefined && row.is_active === undefined
+    ? null
+    : Boolean(row.IsActive ?? row.is_active);
+  const discoveredAt = timeMs(row.DiscoveredAt || row.discovered_at || row.discovered_at_ms);
+  return {
+    code,
+    source,
+    status: isActive === false ? "expired" : "active",
+    isActive,
+    discoveredAt,
+    updatedAt: Date.now(),
+    raw: {
+      source,
+      is_active: isActive,
+      discovered_at: row.DiscoveredAt || row.discovered_at || "",
+    },
+  };
+}
+
+function normalizeRecentRedemptionRow(row) {
+  if (!isPlainObject(row)) return null;
+  const code = normalizeGiftCode(row.Code || row.code || row.gift_code || row.cdk);
+  if (!code) return null;
+  return {
+    code,
+    lastRedeemStatus: cleanText(row.Status || row.status, 80),
+    lastRedeemedAt: timeMs(row.RedeemedAt || row.redeemed_at || row.redeemed_at_ms),
+  };
+}
+
 function collectGiftCodesFromPayload(payload, out = new Set(), keyHint = "", depth = 0) {
   if (depth > 5 || payload == null) return out;
   if (typeof payload === "string") {
@@ -498,18 +538,50 @@ function newManageToken() {
   return [...bytes].map((value) => value.toString(16).padStart(2, "0")).join("");
 }
 
-async function registerRedeemPlayer(request, env) {
-  const ready = requireSupabase(env);
-  if (!ready.ok) return ready.response;
-  const body = await request.json().catch(() => ({}));
-  if (!body.consent) return json({ ok: false, error: "Consent is required before saving a player ID." }, 400);
-  const playerId = meaningfulText(body.playerId || body.fid || body.id, 40);
+function extractPlayerIds(value, max = 100) {
+  const raw = Array.isArray(value) ? value.join("\n") : String(value || "");
+  const ids = raw.match(/\d{3,12}/g) || [];
+  return [...new Set(ids.map(String))].slice(0, max);
+}
+
+async function countRedeemPlayers(env) {
+  if (!supabaseConfig(env).enabled) return 0;
+  const response = await supabaseFetch(env, "/redeem_players?enabled=eq.true&consent=eq.true&select=id&limit=1", {
+    headers: { prefer: "count=exact", range: "0-0" },
+  }).catch(() => null);
+  if (!response) return 0;
+  const range = response.headers.get("content-range") || "";
+  const total = Number(range.split("/")[1]);
+  return Number.isFinite(total) ? total : 0;
+}
+
+async function upsertRedeemPlayer(env, playerId, options = {}) {
   const profile = await fetchOfficialGiftProfile(playerId).catch(() => null);
-  if (!profile) return json({ ok: false, error: "Player ID could not be verified." }, 404);
+  if (!profile) return { ok: false, status: "invalid", playerId };
+
+  const now = Date.now();
+  const existingRows = await supabaseJson(env, `/redeem_players?id=eq.${encodeURIComponent(profile.id)}&select=id,enabled,consent,manage_token_hash,created_at_ms&limit=1`).catch(() => []);
+  const existing = existingRows && existingRows[0];
+  await saveOfficialProfile(env, profile);
+
+  if (existing && existing.enabled && existing.consent) {
+    await supabaseJson(env, `/redeem_players?id=eq.${encodeURIComponent(profile.id)}`, {
+      method: "PATCH",
+      body: JSON.stringify({
+        nickname: profile.username,
+        state: profile.state,
+        town_hall_level: profile.town_hall_level,
+        avatar_url: profile.avatar_url,
+        lang: cleanText(options.lang, 16),
+        updated_at_ms: now,
+        profile_json: profile,
+      }),
+    }).catch(() => {});
+    return { ok: true, status: "duplicate", player: profile };
+  }
+
   const manageToken = newManageToken();
   const tokenHash = await hashManageToken(manageToken);
-  const now = Date.now();
-  await saveOfficialProfile(env, profile);
   await supabaseJson(env, "/redeem_players?on_conflict=id", {
     method: "POST",
     headers: { prefer: "resolution=merge-duplicates" },
@@ -519,16 +591,57 @@ async function registerRedeemPlayer(request, env) {
       state: profile.state,
       town_hall_level: profile.town_hall_level,
       avatar_url: profile.avatar_url,
-      lang: cleanText(body.lang, 16),
+      lang: cleanText(options.lang, 16),
       enabled: true,
       consent: true,
       manage_token_hash: tokenHash,
-      created_at_ms: now,
+      created_at_ms: existing && existing.created_at_ms ? existing.created_at_ms : now,
       updated_at_ms: now,
       profile_json: profile,
     }]),
   });
-  return json({ ok: true, player: profile, manageToken });
+  return { ok: true, status: existing ? "reactivated" : "created", player: profile, manageToken };
+}
+
+async function registerRedeemPlayer(request, env) {
+  const ready = requireSupabase(env);
+  if (!ready.ok) return ready.response;
+  const body = await request.json().catch(() => ({}));
+  if (!body.consent) return json({ ok: false, error: "Consent is required before saving a player ID." }, 400);
+  const playerId = meaningfulText(body.playerId || body.fid || body.id, 40);
+  const result = await upsertRedeemPlayer(env, playerId, { lang: body.lang });
+  if (!result.ok) return json({ ok: false, error: "Player ID could not be verified." }, 404);
+  return json({ ok: true, ...result, registeredPlayers: await countRedeemPlayers(env) });
+}
+
+async function registerRedeemPlayersBulk(request, env) {
+  const ready = requireSupabase(env);
+  if (!ready.ok) return ready.response;
+  const body = await request.json().catch(() => ({}));
+  if (!body.consent) return json({ ok: false, error: "Consent is required before saving player IDs." }, 400);
+  const ids = extractPlayerIds(body.ids || body.text || body.playerIds, 100);
+  if (!ids.length) return json({ ok: false, error: "No valid player IDs were found." }, 400);
+
+  const result = { ok: true, submitted: ids.length, created: 0, reactivated: 0, duplicate: 0, invalid: 0, players: [] };
+  for (const id of ids) {
+    const saved = await upsertRedeemPlayer(env, id, { lang: body.lang }).catch(() => ({ ok: false, status: "invalid", playerId: id }));
+    if (!saved.ok) {
+      result.invalid += 1;
+      continue;
+    }
+    if (saved.status === "created") result.created += 1;
+    else if (saved.status === "reactivated") result.reactivated += 1;
+    else if (saved.status === "duplicate") result.duplicate += 1;
+    result.players.push({
+      id: saved.player.id,
+      username: saved.player.username,
+      state: saved.player.state,
+      status: saved.status,
+    });
+    await delay(250);
+  }
+  result.registeredPlayers = await countRedeemPlayers(env);
+  return json(result);
 }
 
 async function unregisterRedeemPlayer(request, env) {
@@ -549,22 +662,71 @@ async function unregisterRedeemPlayer(request, env) {
 }
 
 async function saveRedeemCode(env, code, source = "manual", raw = null) {
-  const giftCode = normalizeGiftCode(code);
+  const row = isPlainObject(code) ? code : {
+    code: normalizeGiftCode(code),
+    source,
+    status: "active",
+    isActive: true,
+    discoveredAt: Date.now(),
+    updatedAt: Date.now(),
+    raw,
+  };
+  const giftCode = normalizeGiftCode(row.code);
   if (!giftCode || !supabaseConfig(env).enabled) return false;
   const now = Date.now();
-  const sourceText = cleanText(source, 80) || "unknown";
+  const sourceText = cleanText(row.source || source, 80) || "unknown";
+  const isActive = row.isActive === null || row.isActive === undefined ? null : Boolean(row.isActive);
+  const payload = {
+    code: giftCode,
+    source: sourceText,
+    status: cleanText(row.status, 40) || "active",
+    is_active: isActive,
+    discovered_at_ms: numberValue(row.discoveredAt) || now,
+    updated_at_ms: now,
+    raw_json: row.raw ? { ...row.raw, saved_at_ms: now } : { source: sourceText, saved_at_ms: now },
+  };
+  const redeemStatus = cleanText(row.lastRedeemStatus, 80);
+  if (redeemStatus) payload.last_redeem_status = redeemStatus;
+  if (numberValue(row.lastRedeemedAt)) payload.last_redeemed_at_ms = numberValue(row.lastRedeemedAt);
   await supabaseJson(env, "/redeem_codes?on_conflict=code", {
     method: "POST",
     headers: { prefer: "resolution=merge-duplicates" },
-    body: JSON.stringify([{
-      code: giftCode,
-      source: sourceText,
-      status: "active",
-      discovered_at_ms: now,
-      updated_at_ms: now,
-      raw_json: raw ? { source: sourceText, saved_at_ms: now } : {},
-    }]),
+    body: JSON.stringify([payload]),
   });
+  return true;
+}
+
+async function updateRedeemCodeUsage(env, usage) {
+  if (!usage || !usage.code || !supabaseConfig(env).enabled) return false;
+  const now = Date.now();
+  const encoded = encodeURIComponent(usage.code);
+  const existing = await supabaseJson(env, `/redeem_codes?code=eq.${encoded}&select=code&limit=1`).catch(() => []);
+  if (existing && existing.length) {
+    await supabaseJson(env, `/redeem_codes?code=eq.${encoded}`, {
+      method: "PATCH",
+      body: JSON.stringify({
+        last_redeem_status: usage.lastRedeemStatus,
+        last_redeemed_at_ms: usage.lastRedeemedAt,
+        updated_at_ms: now,
+      }),
+    });
+  } else {
+    await saveRedeemCode(env, {
+      code: usage.code,
+      source: "jeab:redemptions/recent",
+      status: "observed",
+      isActive: null,
+      discoveredAt: now,
+      updatedAt: now,
+      lastRedeemStatus: usage.lastRedeemStatus,
+      lastRedeemedAt: usage.lastRedeemedAt,
+      raw: {
+        source: "jeab:redemptions/recent",
+        last_redeem_status: usage.lastRedeemStatus,
+        last_redeemed_at_ms: usage.lastRedeemedAt,
+      },
+    });
+  }
   return true;
 }
 
@@ -592,22 +754,56 @@ async function createRedeemJobsForCode(env, code) {
 }
 
 async function discoverRedeemCodes(env) {
-  const result = { ok: true, discovered: [], errors: [] };
-  const sources = ["codes", "redemptions/recent"];
-  for (const apiPath of sources) {
-    try {
-      const payload = await fetchUpstreamJson(apiPath);
-      const codes = [...collectGiftCodesFromPayload(payload)];
-      for (const code of codes) {
-        await saveRedeemCode(env, code, `jeab:${apiPath}`, payload).catch(() => {});
-        await createRedeemJobsForCode(env, code).catch(() => {});
-        result.discovered.push(code);
+  const result = { ok: true, discovered: [], active: [], expired: [], usageUpdated: 0, jobsCreated: 0, errors: [] };
+  try {
+    const payload = await fetchUpstreamJson("codes");
+    const rows = Array.isArray(payload) ? payload : [];
+    for (const sourceRow of rows) {
+      const row = normalizeSourceCodeRow(sourceRow, "jeab:codes");
+      if (!row) continue;
+      await saveRedeemCode(env, row).catch(() => {});
+      result.discovered.push(row.code);
+      if (row.status === "active") {
+        result.active.push(row.code);
+        result.jobsCreated += await createRedeemJobsForCode(env, row.code).catch(() => 0);
+      } else {
+        result.expired.push(row.code);
       }
-    } catch (error) {
-      result.errors.push(`${apiPath}: ${cleanText(error.message, 120)}`);
     }
+  } catch (error) {
+    result.errors.push(`codes: ${cleanText(error.message, 120)}`);
+  }
+
+  try {
+    const payload = await fetchUpstreamJson("redemptions/recent");
+    const rows = Array.isArray(payload) ? payload : [];
+    for (const sourceRow of rows) {
+      const usage = normalizeRecentRedemptionRow(sourceRow);
+      if (!usage) continue;
+      if (await updateRedeemCodeUsage(env, usage).catch(() => false)) result.usageUpdated += 1;
+    }
+    if (!result.active.length) {
+      const fallbackCodes = [...collectGiftCodesFromPayload(payload)].slice(0, 8);
+      for (const code of fallbackCodes) {
+        await saveRedeemCode(env, {
+          code,
+          source: "jeab:redemptions/recent",
+          status: "observed",
+          isActive: null,
+          discoveredAt: Date.now(),
+          updatedAt: Date.now(),
+          raw: { source: "jeab:redemptions/recent", fallback: true },
+        }).catch(() => {});
+        result.discovered.push(code);
+        result.jobsCreated += await createRedeemJobsForCode(env, code).catch(() => 0);
+      }
+    }
+  } catch (error) {
+    result.errors.push(`redemptions/recent: ${cleanText(error.message, 120)}`);
   }
   result.discovered = [...new Set(result.discovered)];
+  result.active = [...new Set(result.active)];
+  result.expired = [...new Set(result.expired)];
   return result;
 }
 
@@ -619,7 +815,15 @@ async function addRedeemCode(request, env) {
   const body = await request.json().catch(() => ({}));
   const code = normalizeGiftCode(body.code || body.giftCode || body.cdk);
   if (!code) return json({ ok: false, error: "Valid gift code is required." }, 400);
-  await saveRedeemCode(env, code, "manual", body);
+  await saveRedeemCode(env, {
+    code,
+    source: "manual",
+    status: "active",
+    isActive: true,
+    discoveredAt: Date.now(),
+    updatedAt: Date.now(),
+    raw: { source: "manual" },
+  });
   const jobsCreated = await createRedeemJobsForCode(env, code);
   return json({ ok: true, code, jobsCreated });
 }
@@ -630,10 +834,23 @@ async function listRedeemCodes(request, env) {
   const url = new URL(request.url);
   const limit = Math.min(50, Math.max(1, Number(url.searchParams.get("limit")) || 20));
   const [codes, players] = await Promise.all([
-    supabaseJson(env, `/redeem_codes?select=code,source,status,discovered_at_ms,updated_at_ms&order=discovered_at_ms.desc&limit=${limit}`).catch(() => []),
-    supabaseCount(env, "redeem_players").catch(() => 0),
+    supabaseJson(env, `/redeem_codes?select=code,source,status,is_active,last_redeem_status,last_redeemed_at_ms,discovered_at_ms,updated_at_ms&order=discovered_at_ms.desc&limit=${limit}`).catch(() => []),
+    countRedeemPlayers(env).catch(() => 0),
   ]);
   return json({ ok: true, codes: codes || [], registeredPlayers: players });
+}
+
+async function redeemStatus(env) {
+  if (!supabaseConfig(env).enabled) return json({ ok: true, supabase: false, registeredPlayers: 0, activeCodes: 0 });
+  const [players, codes] = await Promise.all([
+    countRedeemPlayers(env).catch(() => 0),
+    supabaseFetch(env, "/redeem_codes?status=eq.active&select=code&limit=1", {
+      headers: { prefer: "count=exact", range: "0-0" },
+    }).catch(() => null),
+  ]);
+  const range = codes ? codes.headers.get("content-range") || "" : "";
+  const activeCodes = Number(range.split("/")[1]);
+  return json({ ok: true, supabase: true, registeredPlayers: players, activeCodes: Number.isFinite(activeCodes) ? activeCodes : 0 });
 }
 
 async function runRedeemJobs(env, reason = "manual") {
@@ -1531,7 +1748,9 @@ export default {
     }
     if (url.pathname === "/api/intel/cleanup" && request.method === "POST") return cleanupIntel(request, env);
     if (url.pathname === "/api/redeem/register" && request.method === "POST") return registerRedeemPlayer(request, env);
+    if (url.pathname === "/api/redeem/register-bulk" && request.method === "POST") return registerRedeemPlayersBulk(request, env);
     if (url.pathname === "/api/redeem/unregister" && request.method === "POST") return unregisterRedeemPlayer(request, env);
+    if (url.pathname === "/api/redeem/status" && request.method === "GET") return redeemStatus(env);
     if (url.pathname === "/api/redeem/codes" && request.method === "GET") return listRedeemCodes(request, env);
     if (url.pathname === "/api/redeem/code" && request.method === "POST") return addRedeemCode(request, env);
     if (url.pathname === "/api/redeem/discover" && request.method === "POST") {

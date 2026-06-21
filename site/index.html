@@ -316,6 +316,187 @@
       font-size: 11px;
       line-height: 1.45;
     }
+    .core-tools {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+      margin-top: 18px;
+    }
+    .core-card {
+      position: relative;
+      isolation: isolate;
+      display: grid;
+      align-content: space-between;
+      min-height: 326px;
+      padding: clamp(22px, 3vw, 30px);
+      border: 1px solid rgba(154, 183, 255, .24);
+      border-radius: 28px;
+      background:
+        linear-gradient(135deg, rgba(255,255,255,.11), rgba(255,255,255,.035)),
+        rgba(9, 14, 27, .9);
+      box-shadow:
+        0 26px 80px rgba(0,0,0,.38),
+        0 0 56px rgba(67, 246, 215, .14);
+      overflow: hidden;
+      transform: translateZ(0);
+      transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+    }
+    .core-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(255, 232, 166, .5);
+      box-shadow:
+        0 30px 92px rgba(0,0,0,.42),
+        0 0 62px rgba(67, 246, 215, .2),
+        0 0 74px rgba(255, 127, 182, .14);
+    }
+    .core-card::before {
+      content: "";
+      position: absolute;
+      inset: -1px;
+      z-index: 0;
+      padding: 1px;
+      border-radius: inherit;
+      background:
+        conic-gradient(
+          from 0deg,
+          rgba(67,246,215,.18),
+          rgba(67,246,215,.98),
+          rgba(246,207,114,.98),
+          rgba(255,127,182,.92),
+          rgba(126,153,255,.8),
+          rgba(67,246,215,.18)
+        );
+      -webkit-mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      animation: coreBorderSweep 4.2s linear infinite;
+      pointer-events: none;
+    }
+    .core-card::after {
+      content: "";
+      position: absolute;
+      inset: 1px;
+      z-index: 0;
+      border-radius: inherit;
+      background:
+        linear-gradient(120deg, transparent 18%, rgba(255,255,255,.16) 34%, transparent 52%),
+        linear-gradient(90deg, rgba(67,246,215,.12), transparent 42%, rgba(255,127,182,.11));
+      background-size: 240% 100%, 100% 100%;
+      opacity: .86;
+      animation: coreLightRun 5.5s ease-in-out infinite;
+      pointer-events: none;
+    }
+    .core-card > * {
+      position: relative;
+      z-index: 1;
+    }
+    .core-card.intel {
+      background:
+        linear-gradient(135deg, rgba(67,246,215,.18), transparent 38%),
+        linear-gradient(315deg, rgba(126,153,255,.22), transparent 48%),
+        rgba(8, 14, 28, .94);
+    }
+    .core-card.redeem {
+      background:
+        linear-gradient(135deg, rgba(246,207,114,.21), transparent 34%),
+        linear-gradient(315deg, rgba(255,127,182,.22), transparent 48%),
+        rgba(13, 11, 24, .94);
+    }
+    .core-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .core-kicker {
+      display: inline-flex;
+      align-items: center;
+      min-height: 32px;
+      padding: 0 11px;
+      border: 1px solid rgba(255, 232, 166, .42);
+      border-radius: 999px;
+      background: rgba(255,255,255,.08);
+      color: #fff0b8;
+      font-size: 11px;
+      font-weight: 1000;
+      text-transform: uppercase;
+    }
+    .core-icon {
+      display: inline-grid;
+      place-items: center;
+      width: 52px;
+      height: 52px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,.22);
+      background:
+        linear-gradient(135deg, rgba(255,255,255,.19), rgba(255,255,255,.045));
+      color: #fff6cc;
+      font-size: 12px;
+      font-weight: 1000;
+      box-shadow:
+        0 0 24px rgba(246,207,114,.18),
+        0 0 30px rgba(67,246,215,.12) inset;
+    }
+    .core-card h2 {
+      margin: 0;
+      max-width: 680px;
+      font-size: clamp(30px, 3.4vw, 44px);
+      line-height: 1.02;
+      letter-spacing: 0;
+    }
+    .core-card p {
+      max-width: 620px;
+      margin: 14px 0 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.65;
+    }
+    .core-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+      margin-top: 22px;
+    }
+    .core-meta span {
+      display: inline-flex;
+      align-items: center;
+      min-height: 32px;
+      padding: 0 11px;
+      border: 1px solid rgba(154,183,255,.23);
+      border-radius: 999px;
+      background: rgba(7,10,18,.36);
+      color: rgba(236,243,255,.88);
+      font-size: 12px;
+      font-weight: 900;
+    }
+    .core-open {
+      align-self: end;
+      justify-self: start;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 48px;
+      margin-top: 26px;
+      padding: 0 18px;
+      border: 1px solid rgba(255, 232, 166, .52);
+      border-radius: 15px;
+      background:
+        linear-gradient(135deg, rgba(255,232,166,.92), rgba(67,246,215,.86));
+      color: #08101b;
+      font-size: 14px;
+      font-weight: 1000;
+      box-shadow: 0 16px 42px rgba(67,246,215,.18);
+    }
+    .redeem .core-open {
+      background:
+        linear-gradient(135deg, rgba(255,232,166,.95), rgba(255,127,182,.88), rgba(67,246,215,.78));
+      box-shadow:
+        0 16px 42px rgba(255,127,182,.2),
+        0 0 28px rgba(246,207,114,.16);
+    }
     .tools {
       display: grid;
       grid-template-columns: repeat(12, 1fr);
@@ -353,6 +534,7 @@
     }
     .tool.large { grid-column: span 6; min-height: 292px; }
     .tool.mid { grid-column: span 4; }
+    .tool.standard { grid-column: span 3; min-height: 238px; }
     .tool::before {
       content: "";
       position: absolute;
@@ -456,8 +638,18 @@
       64% { opacity: .9; }
       86%, 100% { transform: translateX(78%) rotate(8deg); opacity: 0; }
     }
+    @keyframes coreBorderSweep {
+      to { transform: rotate(1turn); }
+    }
+    @keyframes coreLightRun {
+      0%, 42% { background-position: -120% 0, 0 0; opacity: .6; }
+      58% { opacity: 1; }
+      100% { background-position: 160% 0, 0 0; opacity: .72; }
+    }
     @media (prefers-reduced-motion: reduce) {
-      .tool::before { animation: none; }
+      .tool::before,
+      .core-card::before,
+      .core-card::after { animation: none; }
       .brand strong,
       .gradient,
       .support::after { animation: none; }
@@ -529,7 +721,8 @@
     }
     @media (max-width: 980px) {
       .hero { grid-template-columns: 1fr; }
-      .tool.large, .tool.mid { grid-column: span 6; }
+      .core-tools { grid-template-columns: 1fr; }
+      .tool.large, .tool.mid, .tool.standard { grid-column: span 6; }
       .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
     @media (max-width: 720px) {
@@ -540,8 +733,12 @@
       .hero-main { min-height: auto; border-radius: 20px; }
       .metrics { grid-template-columns: 1fr 1fr; border-radius: 20px; }
       .metric { padding: 13px; min-height: 82px; }
+      .core-card { min-height: 292px; border-radius: 22px; }
+      .core-head { margin-bottom: 18px; }
+      .core-icon { width: 46px; height: 46px; border-radius: 15px; }
+      .core-open { width: 100%; }
       .tools { grid-template-columns: 1fr; }
-      .tool.large, .tool.mid { grid-column: span 1; min-height: 218px; }
+      .tool.large, .tool.mid, .tool.standard { grid-column: span 1; min-height: 218px; }
       .hero-buttons { display: grid; grid-template-columns: 1fr; }
       h1 { font-size: clamp(30px, 8vw, 42px); }
     }
@@ -577,7 +774,7 @@
         <p class="subtitle" data-i18n="subtitle">A cleaner command hub for map planning, player intel, calculators, and alliance coordination. Built for fast use on desktop and mobile.</p>
         <div class="hero-buttons">
           <a class="primary" data-link-base="./kingshot_lookup.html" href="./kingshot_lookup.html" data-i18n="primary">Open Intel Lookup</a>
-          <a class="secondary" data-link-base="./traplace/" href="./traplace/" data-i18n="secondary">Open War Map Planner</a>
+          <a class="secondary" data-link-base="./auto_redeem.html" href="./auto_redeem.html" data-i18n="secondaryRedeem">Open Auto Redeem</a>
         </div>
       </div>
       <aside class="metrics" aria-label="Site status">
@@ -588,38 +785,59 @@
       </aside>
     </section>
 
+    <section class="core-tools" aria-label="Core tools">
+      <a class="core-card intel" data-link-base="./kingshot_lookup.html" href="./kingshot_lookup.html">
+        <div>
+          <div class="core-head">
+            <span class="core-kicker" data-i18n="coreIntelTag">Core Feature</span>
+            <span class="core-icon">ID</span>
+          </div>
+          <h2 data-i18n="coreIntelTitle">Kingshot Intel Lookup</h2>
+          <p data-i18n="coreIntelBody">Search player profiles, kingdoms, hero gear, and saved local intel first.</p>
+          <div class="core-meta">
+            <span data-i18n="coreIntelMetaA">Player Intel</span>
+            <span data-i18n="coreIntelMetaB">Saved Database</span>
+          </div>
+        </div>
+        <span class="core-open" data-i18n="coreIntelButton">Open Intel Lookup</span>
+      </a>
+      <a class="core-card redeem" data-link-base="./auto_redeem.html" href="./auto_redeem.html">
+        <div>
+          <div class="core-head">
+            <span class="core-kicker" data-i18n="coreRedeemTag">Core Feature</span>
+            <span class="core-icon">CODE</span>
+          </div>
+          <h2 data-i18n="coreRedeemTitle">Auto Redeem Center</h2>
+          <p data-i18n="coreRedeemBody">Check the latest gift codes and prepare automatic redemption for registered player IDs.</p>
+          <div class="core-meta">
+            <span data-i18n="coreRedeemMetaA">Gift Codes</span>
+            <span data-i18n="coreRedeemMetaB">Auto Claim</span>
+          </div>
+        </div>
+        <span class="core-open" data-i18n="coreRedeemButton">Open Auto Redeem</span>
+      </a>
+    </section>
+
     <section class="tools" aria-label="Tools">
-      <a class="tool large" data-link-base="./fort_sanc.html" href="./fort_sanc.html">
+      <a class="tool standard" data-link-base="./fort_sanc.html" href="./fort_sanc.html">
         <span class="tag" data-i18n="tagAlliance">Alliance Operations</span>
         <h2 data-i18n="fortTitle">Fort / Sanc Distributor</h2>
         <p data-i18n="fortBody">Moved to the front because it is an alliance coordination tool, not just a calculator. Build fair rotation plans quickly.</p>
         <span class="open" data-i18n="fortButton">Open distributor</span>
       </a>
-      <a class="tool large" data-link-base="./kingshot_lookup.html" href="./kingshot_lookup.html">
-        <span class="tag" data-i18n="tagIntel">Player Intel</span>
-        <h2 data-i18n="intelTitle">Kingshot Intel Lookup</h2>
-        <p data-i18n="intelBody">Search players, kingdoms, hero sets, and saved local intel when the upstream service is unstable.</p>
-        <span class="open" data-i18n="intelButton">Open intel</span>
-      </a>
-      <a class="tool mid" data-link-base="./auto_redeem.html" href="./auto_redeem.html">
-        <span class="tag">Gift Codes</span>
-        <h2>Auto Redeem Center</h2>
-        <p>Register a player ID for automatic gift-code redemption when new codes are saved.</p>
-        <span class="open">Open auto redeem</span>
-      </a>
-      <a class="tool mid" data-link-base="./traplace/" href="./traplace/">
+      <a class="tool standard" data-link-base="./traplace/" href="./traplace/">
         <span class="tag" data-i18n="tagMap">War Map</span>
         <h2 data-i18n="mapTitle">War Map Planner</h2>
         <p data-i18n="mapBody">Plan cities, traps, castles, turrets, distance lines, and march timing.</p>
         <span class="open" data-i18n="mapButton">Open planner</span>
       </a>
-      <a class="tool mid" data-link-base="./troop_training_ui.html" href="./troop_training_ui.html">
+      <a class="tool standard" data-link-base="./troop_training_ui.html" href="./troop_training_ui.html">
         <span class="tag" data-i18n="tagCalc">Calculator Vault</span>
         <h2 data-i18n="calcTitle">Kingshot Calculators</h2>
         <p data-i18n="calcBody">Training, gear, VIP, pack value, and other resource planning calculators.</p>
         <span class="open" data-i18n="calcButton">Open calculators</span>
       </a>
-      <a class="tool mid" data-link-base="./feedback.html" href="./feedback.html">
+      <a class="tool standard" data-link-base="./feedback.html" href="./feedback.html">
         <span class="tag" data-i18n="tagFeedback">Feedback</span>
         <h2 data-i18n="feedbackTitle">Updates / Bug Reports</h2>
         <p data-i18n="feedbackBody">Send suggestions, calculation issues, translation fixes, or mobile feedback.</p>
@@ -818,6 +1036,140 @@
       tagMap: '\uc804\uc7c1 \uc9c0\ub3c4',
       tagCalc: '\uacc4\uc0b0\uae30 \ubcf4\uad00\ud568',
       tagFeedback: '\uac74\uc758\ud568'
+    });
+    const CORE_FEATURE_I18N = {
+      ko: {
+        secondaryRedeem: '\uc624\ud1a0\ub9ac\ub524 \uc5f4\uae30',
+        toolHint: '\uc778\ud154, \uc624\ud1a0\ub9ac\ub524, \uc9c0\ub3c4, \uacc4\uc0b0\uae30.',
+        coreIntelTag: '\ud575\uc2ec \uae30\ub2a5',
+        coreIntelTitle: '\u004b\u0069\u006e\u0067\u0073\u0068\u006f\u0074 \uc778\ud154 \uac80\uc0c9',
+        coreIntelBody: '\ud50c\ub808\uc774\uc5b4, \uc655\uad6d, \uc601\uc6c5 \uc7a5\ube44\uc640 \uc800\uc7a5\ub41c \ub85c\uceec \uc815\ubcf4\ub97c \uac00\uc7a5 \uba3c\uc800 \ud655\uc778\ud569\ub2c8\ub2e4.',
+        coreIntelMetaA: '\ud50c\ub808\uc774\uc5b4 \uc815\ubcf4',
+        coreIntelMetaB: '\ub85c\uceec \uc800\uc7a5',
+        coreIntelButton: '\uc778\ud154 \uac80\uc0c9 \uc5f4\uae30',
+        coreRedeemTag: '\ud575\uc2ec \uae30\ub2a5',
+        coreRedeemTitle: '\uc624\ud1a0\ub9ac\ub524 \uc13c\ud130',
+        coreRedeemBody: '\ucd5c\uc2e0 \uae30\ud504\ud2b8\ucf54\ub4dc\ub97c \ud655\uc778\ud558\uace0 \ub4f1\ub85d\ub41c ID\uc5d0 \uc790\ub3d9 \uc9c0\uae09\uc744 \uc900\ube44\ud569\ub2c8\ub2e4.',
+        coreRedeemMetaA: '\uae30\ud504\ud2b8 \ucf54\ub4dc',
+        coreRedeemMetaB: '\uc790\ub3d9 \uc9c0\uae09',
+        coreRedeemButton: '\uc624\ud1a0\ub9ac\ub524 \uc5f4\uae30'
+      },
+      en: {
+        secondaryRedeem: 'Open Auto Redeem',
+        toolHint: 'Intel, auto redeem, planner, calculators.',
+        coreIntelTag: 'Core Feature',
+        coreIntelTitle: 'Kingshot Intel Lookup',
+        coreIntelBody: 'Search player profiles, kingdoms, hero gear, and saved local intel first.',
+        coreIntelMetaA: 'Player Intel',
+        coreIntelMetaB: 'Saved Database',
+        coreIntelButton: 'Open Intel Lookup',
+        coreRedeemTag: 'Core Feature',
+        coreRedeemTitle: 'Auto Redeem Center',
+        coreRedeemBody: 'Check the latest gift codes and prepare automatic redemption for registered player IDs.',
+        coreRedeemMetaA: 'Gift Codes',
+        coreRedeemMetaB: 'Auto Claim',
+        coreRedeemButton: 'Open Auto Redeem'
+      },
+      'zh-CN': {
+        secondaryRedeem: '打开自动兑换',
+        toolHint: '情报、自动兑换、地图、计算器。',
+        coreIntelTag: '核心功能',
+        coreIntelTitle: 'Kingshot 情报搜索',
+        coreIntelBody: '优先查看玩家、王国、英雄装备和已保存的本地情报。',
+        coreIntelMetaA: '玩家情报',
+        coreIntelMetaB: '本地保存',
+        coreIntelButton: '打开情报搜索',
+        coreRedeemTag: '核心功能',
+        coreRedeemTitle: '自动兑换中心',
+        coreRedeemBody: '查看最新礼包码，并为已登记的玩家ID准备自动领取。',
+        coreRedeemMetaA: '礼包码',
+        coreRedeemMetaB: '自动领取',
+        coreRedeemButton: '打开自动兑换'
+      },
+      'zh-TW': {
+        secondaryRedeem: '開啟自動兌換',
+        toolHint: '情報、自動兌換、地圖、計算器。',
+        coreIntelTag: '核心功能',
+        coreIntelTitle: 'Kingshot 情報搜尋',
+        coreIntelBody: '優先查看玩家、王國、英雄裝備與已儲存的本地情報。',
+        coreIntelMetaA: '玩家情報',
+        coreIntelMetaB: '本地儲存',
+        coreIntelButton: '開啟情報搜尋',
+        coreRedeemTag: '核心功能',
+        coreRedeemTitle: '自動兌換中心',
+        coreRedeemBody: '查看最新禮包碼，並為已登記的玩家ID準備自動領取。',
+        coreRedeemMetaA: '禮包碼',
+        coreRedeemMetaB: '自動領取',
+        coreRedeemButton: '開啟自動兌換'
+      },
+      fr: {
+        secondaryRedeem: 'Ouvrir Auto Redeem',
+        toolHint: 'Intel, auto redeem, carte, calculateurs.',
+        coreIntelTag: 'Fonction cle',
+        coreIntelTitle: 'Recherche Intel Kingshot',
+        coreIntelBody: 'Consultez en premier les joueurs, royaumes, equipements de heros et donnees locales sauvegardees.',
+        coreIntelMetaA: 'Intel joueur',
+        coreIntelMetaB: 'Base locale',
+        coreIntelButton: 'Ouvrir Intel',
+        coreRedeemTag: 'Fonction cle',
+        coreRedeemTitle: 'Centre Auto Redeem',
+        coreRedeemBody: 'Verifiez les derniers codes cadeau et preparez la redemption automatique pour les IDs enregistres.',
+        coreRedeemMetaA: 'Codes cadeau',
+        coreRedeemMetaB: 'Auto claim',
+        coreRedeemButton: 'Ouvrir Auto Redeem'
+      },
+      de: {
+        secondaryRedeem: 'Auto Redeem oeffnen',
+        toolHint: 'Intel, Auto Redeem, Karte, Rechner.',
+        coreIntelTag: 'Kernfunktion',
+        coreIntelTitle: 'Kingshot Intel-Suche',
+        coreIntelBody: 'Spielerprofile, Koenigreiche, Heldenausruestung und gespeicherte lokale Intel zuerst pruefen.',
+        coreIntelMetaA: 'Spieler-Intel',
+        coreIntelMetaB: 'Lokale Datenbank',
+        coreIntelButton: 'Intel oeffnen',
+        coreRedeemTag: 'Kernfunktion',
+        coreRedeemTitle: 'Auto Redeem Center',
+        coreRedeemBody: 'Neueste Geschenkcodes anzeigen und automatische Einloesung fuer registrierte Spieler-IDs vorbereiten.',
+        coreRedeemMetaA: 'Geschenkcodes',
+        coreRedeemMetaB: 'Auto Claim',
+        coreRedeemButton: 'Auto Redeem oeffnen'
+      },
+      th: {
+        secondaryRedeem: 'เปิด Auto Redeem',
+        toolHint: 'อินเทล, Auto Redeem, แผนที่, เครื่องคำนวณ',
+        coreIntelTag: 'ฟีเจอร์หลัก',
+        coreIntelTitle: 'ค้นหา Intel Kingshot',
+        coreIntelBody: 'ค้นหาโปรไฟล์ผู้เล่น อาณาจักร อุปกรณ์ฮีโร่ และข้อมูลที่บันทึกไว้ก่อน',
+        coreIntelMetaA: 'ข้อมูลผู้เล่น',
+        coreIntelMetaB: 'ฐานข้อมูลที่บันทึก',
+        coreIntelButton: 'เปิด Intel',
+        coreRedeemTag: 'ฟีเจอร์หลัก',
+        coreRedeemTitle: 'ศูนย์ Auto Redeem',
+        coreRedeemBody: 'ตรวจสอบ gift code ล่าสุด และเตรียมรับรางวัลอัตโนมัติสำหรับ ID ที่ลงทะเบียน',
+        coreRedeemMetaA: 'Gift Codes',
+        coreRedeemMetaB: 'Auto Claim',
+        coreRedeemButton: 'เปิด Auto Redeem'
+      },
+      id: {
+        secondaryRedeem: 'Buka Auto Redeem',
+        toolHint: 'Intel, auto redeem, peta, kalkulator.',
+        coreIntelTag: 'Fitur utama',
+        coreIntelTitle: 'Pencarian Intel Kingshot',
+        coreIntelBody: 'Cari profil pemain, kingdom, gear hero, dan intel lokal tersimpan terlebih dahulu.',
+        coreIntelMetaA: 'Intel pemain',
+        coreIntelMetaB: 'Database lokal',
+        coreIntelButton: 'Buka Intel',
+        coreRedeemTag: 'Fitur utama',
+        coreRedeemTitle: 'Pusat Auto Redeem',
+        coreRedeemBody: 'Cek gift code terbaru dan siapkan redeem otomatis untuk ID pemain yang terdaftar.',
+        coreRedeemMetaA: 'Gift Codes',
+        coreRedeemMetaB: 'Auto Claim',
+        coreRedeemButton: 'Buka Auto Redeem'
+      }
+    };
+    Object.entries(CORE_FEATURE_I18N).forEach(([code, values]) => {
+      if (!I18N[code]) I18N[code] = {};
+      Object.assign(I18N[code], values);
     });
     const LANGUAGE_LABELS = {
       ko: '\ud55c\uad6d\uc5b4',

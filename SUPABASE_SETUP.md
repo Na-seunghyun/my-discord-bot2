@@ -146,7 +146,9 @@ Public endpoints:
 
 ```text
 POST /api/redeem/register
+POST /api/redeem/register-bulk
 POST /api/redeem/unregister
+GET  /api/redeem/status
 GET  /api/redeem/codes
 ```
 
@@ -172,3 +174,5 @@ Recommended free-plan behavior:
 - Keep a delay of at least `1000ms`.
 - If the official gift-code API asks for captcha, the job is marked `captcha_required`; the Worker does not bypass captcha.
 - Registered users receive a manage token in the browser. They need that token to remove their ID later.
+- Duplicate registrations never overwrite an existing manage token.
+- Bulk registration validates each ID through the official player lookup, saves only valid IDs, and skips duplicates safely.

@@ -14,7 +14,6 @@
       --muted: #aab8d5;
       --cyan: #43f6d7;
       --gold: #f6cf72;
-      --pink: #ff7fb6;
       --danger: #ff726d;
       --ok: #80f6a8;
       font-family: Inter, Pretendard, "Noto Sans KR", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -25,12 +24,12 @@
       min-height: 100vh;
       color: var(--text);
       background:
-        radial-gradient(circle at 15% 10%, rgba(67,246,215,.18), transparent 32%),
-        radial-gradient(circle at 85% 12%, rgba(246,207,114,.16), transparent 30%),
+        radial-gradient(circle at 16% 8%, rgba(67,246,215,.18), transparent 32%),
+        radial-gradient(circle at 86% 12%, rgba(246,207,114,.16), transparent 30%),
         linear-gradient(180deg, #070a12, #0b1020);
     }
     a { color: inherit; text-decoration: none; }
-    .wrap { width: min(1080px, calc(100% - 32px)); margin: 0 auto; padding: 24px 0 44px; }
+    .wrap { width: min(1120px, calc(100% - 32px)); margin: 0 auto; padding: 24px 0 44px; }
     .topbar, .card {
       border: 1px solid var(--line);
       background: linear-gradient(180deg, rgba(255,255,255,.075), rgba(255,255,255,.026)), var(--panel);
@@ -43,16 +42,28 @@
     .mark { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 14px; color: #111; background: linear-gradient(135deg, var(--gold), var(--cyan)); font-weight: 1000; }
     .brand strong { display: block; color: var(--gold); text-shadow: 0 0 16px rgba(246,207,114,.4); }
     .brand span span { color: var(--muted); font-size: 12px; font-weight: 800; }
-    .back { min-height: 40px; display: inline-flex; align-items: center; padding: 0 13px; border: 1px solid var(--line); border-radius: 13px; color: var(--muted); font-weight: 900; }
+    .top-actions { display: flex; gap: 10px; align-items: center; }
+    select, .back {
+      min-height: 40px;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      padding: 0 12px;
+      font: inherit;
+      font-weight: 900;
+    }
+    select option { background: #12192b; color: var(--text); }
+    .back { display: inline-flex; align-items: center; color: var(--muted); }
     .hero { padding: 30px 0 16px; }
     h1 { margin: 0 0 10px; font-size: clamp(30px, 5vw, 54px); line-height: 1.02; letter-spacing: 0; }
     .gold { color: var(--gold); text-shadow: 0 0 22px rgba(246,207,114,.34), 0 0 34px rgba(67,246,215,.22); }
-    .hero p { max-width: 760px; color: var(--muted); margin: 0; line-height: 1.65; font-weight: 700; }
-    .grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(320px, .9fr); gap: 16px; align-items: start; }
+    .hero p { max-width: 780px; color: var(--muted); margin: 0; line-height: 1.65; font-weight: 700; }
+    .grid { display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(320px, .92fr); gap: 16px; align-items: start; }
     .card { padding: 18px; }
     .card h2 { margin: 0 0 12px; font-size: 18px; }
     label { display: block; margin: 14px 0 7px; color: var(--muted); font-size: 13px; font-weight: 900; }
-    input {
+    input, textarea {
       width: 100%;
       min-height: 48px;
       border: 1px solid rgba(154,183,255,.28);
@@ -63,6 +74,7 @@
       font: inherit;
       font-weight: 850;
     }
+    textarea { min-height: 118px; padding-top: 12px; resize: vertical; line-height: 1.5; }
     .check { display: flex; gap: 10px; align-items: flex-start; margin-top: 14px; color: var(--muted); line-height: 1.5; font-weight: 750; }
     .check input { width: 18px; min-height: 18px; margin-top: 3px; accent-color: var(--cyan); }
     .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
@@ -78,22 +90,50 @@
     .primary { color: #071014; background: linear-gradient(135deg, var(--cyan), var(--gold)); box-shadow: 0 0 26px rgba(67,246,215,.2); }
     .ghost { color: var(--text); background: rgba(255,255,255,.07); border: 1px solid var(--line); }
     .danger { color: #1d0708; background: linear-gradient(135deg, #ffb3b0, var(--danger)); }
-    .status { margin-top: 14px; padding: 13px; border-radius: 14px; background: rgba(255,255,255,.055); color: var(--muted); line-height: 1.55; font-weight: 800; white-space: pre-wrap; }
+    .status { margin-top: 14px; padding: 13px; border-radius: 14px; background: rgba(255,255,255,.055); color: var(--muted); line-height: 1.55; font-weight: 800; white-space: pre-wrap; overflow-wrap: anywhere; }
     .profile { display: none; margin-top: 14px; gap: 12px; align-items: center; padding: 12px; border: 1px solid rgba(67,246,215,.24); border-radius: 16px; background: rgba(67,246,215,.07); }
     .profile img { width: 58px; height: 58px; border-radius: 16px; object-fit: cover; background: rgba(255,255,255,.06); }
     .profile strong { display: block; }
     .profile span { display: block; margin-top: 3px; color: var(--muted); font-size: 13px; font-weight: 800; }
-    .codes { display: grid; gap: 10px; }
-    .code-row { display: flex; justify-content: space-between; gap: 12px; padding: 12px; border: 1px solid rgba(154,183,255,.18); border-radius: 14px; background: rgba(255,255,255,.05); }
-    .code-row strong { color: var(--gold); }
-    .code-row span { color: var(--muted); font-size: 12px; font-weight: 800; text-align: right; }
+    .latest-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+    .latest-head p { margin: 0; color: var(--muted); font-size: 13px; font-weight: 800; }
+    .codes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .code-row { padding: 13px; border: 1px solid rgba(154,183,255,.18); border-radius: 16px; background: rgba(255,255,255,.05); }
+    .code-line { display: flex; justify-content: space-between; gap: 10px; align-items: center; }
+    .code-row strong { color: var(--gold); font-size: 16px; overflow-wrap: anywhere; }
+    .badge { display: inline-flex; min-height: 24px; align-items: center; border-radius: 999px; padding: 0 9px; font-size: 11px; font-weight: 1000; white-space: nowrap; }
+    .badge.active { color: #061512; background: var(--ok); }
+    .badge.expired { color: #1b0908; background: #ffb5b2; }
+    .badge.observed { color: #111; background: var(--gold); }
+    .meta { margin-top: 9px; color: var(--muted); font-size: 12px; font-weight: 800; line-height: 1.55; }
     .note { color: var(--muted); font-size: 13px; line-height: 1.55; font-weight: 750; }
+    .trust {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+    .trust span {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 36px;
+      border: 1px solid rgba(246,207,114,.28);
+      border-radius: 999px;
+      padding: 0 12px;
+      color: var(--gold);
+      background: rgba(246,207,114,.08);
+      font-weight: 1000;
+      font-size: 13px;
+    }
     @media (max-width: 820px) {
-      .wrap { width: min(100% - 22px, 1080px); padding-top: 12px; }
-      .topbar { align-items: flex-start; }
+      .wrap { width: min(100% - 22px, 1120px); padding-top: 12px; }
+      .topbar { align-items: flex-start; flex-direction: column; }
+      .top-actions { width: 100%; display: grid; grid-template-columns: 1fr 1fr; }
       .grid { grid-template-columns: 1fr; }
       .actions { display: grid; grid-template-columns: 1fr; }
-      button, .back { width: 100%; justify-content: center; }
+      .codes { grid-template-columns: 1fr; }
+      button, .back, select { width: 100%; justify-content: center; }
     }
   </style>
 </head>
@@ -102,63 +142,238 @@
     <header class="topbar">
       <a class="brand" id="hubLink" href="./index.html">
         <span class="mark">885</span>
-        <span><strong>885 LEGEND NASHSH</strong><span>Kingshot Auto Redeem</span></span>
+        <span><strong>885 LEGEND NASHSH</strong><span data-i18n="brandSub">Kingshot Auto Redeem</span></span>
       </a>
-      <a class="back" id="backLink" href="./index.html">Back to hub</a>
+      <div class="top-actions">
+        <select id="langSelect" aria-label="Language">
+          <option value="ko">한국어</option>
+          <option value="en">English</option>
+          <option value="zh-CN">简体中文</option>
+          <option value="zh-TW">繁體中文</option>
+          <option value="fr">Français</option>
+          <option value="de">Deutsch</option>
+          <option value="th">ไทย</option>
+          <option value="id">Indonesia</option>
+        </select>
+        <a class="back" id="backLink" href="./index.html" data-i18n="back">Back to hub</a>
+      </div>
     </header>
 
     <section class="hero">
-      <h1><span class="gold">Auto Redeem</span><br>Gift Code Center</h1>
-      <p>Register your Kingshot player ID once. When a new gift code is found, this hub can queue a slow, safe redeem job for registered IDs. You can remove your ID later with the manage token shown after registration.</p>
+      <h1><span class="gold" data-i18n="heroA">Auto Redeem</span><br><span data-i18n="heroB">Gift Code Center</span></h1>
+      <p data-i18n="subtitle">Register your Kingshot player ID once. When a new gift code is found, this hub queues a slow, safe redeem job for registered IDs.</p>
+      <div class="trust">
+        <span id="registeredBadge">0</span>
+        <span id="activeCodeBadge">0</span>
+      </div>
     </section>
 
     <main class="grid">
       <section class="card">
-        <h2>Register Player ID</h2>
-        <label for="playerId">Kingshot Player ID</label>
-        <input id="playerId" inputmode="numeric" maxlength="12" placeholder="Example: 123185474">
+        <h2 data-i18n="registerTitle">Register Player ID</h2>
+        <label for="playerId" data-i18n="playerId">Kingshot Player ID</label>
+        <input id="playerId" inputmode="numeric" maxlength="12" data-placeholder="playerPlaceholder" placeholder="Example: 123185474">
         <label class="check">
           <input id="consent" type="checkbox">
-          <span>I agree to save this player ID for automatic gift-code redemption. Only my player ID and public profile summary will be stored.</span>
+          <span data-i18n="consent">I agree to save this player ID for automatic gift-code redemption. Only my player ID and public profile summary will be stored.</span>
         </label>
         <div class="actions">
-          <button class="primary" id="registerBtn">Register</button>
-          <button class="ghost" id="loadBtn">Show saved token</button>
+          <button class="primary" id="registerBtn" data-i18n="register">Register</button>
+          <button class="ghost" id="loadBtn" data-i18n="loadToken">Show saved token</button>
+        </div>
+        <label for="bulkIds" data-i18n="bulkLabel">Bulk Player IDs</label>
+        <textarea id="bulkIds" data-placeholder="bulkPlaceholder" placeholder="Paste IDs separated by spaces, commas, or new lines."></textarea>
+        <div class="actions">
+          <button class="ghost" id="bulkBtn" data-i18n="bulkRegister">Register bulk IDs</button>
         </div>
         <div class="profile" id="profileBox">
           <img id="profileAvatar" alt="">
           <div><strong id="profileName">-</strong><span id="profileMeta">-</span></div>
         </div>
-        <div class="status" id="registerStatus">Ready.</div>
+        <div class="status" id="registerStatus" data-i18n="ready">Ready.</div>
       </section>
 
       <section class="card">
-        <h2>Manage Registration</h2>
-        <p class="note">The manage token is stored only in this browser after registration. Keep it if you want to remove the ID later.</p>
-        <label for="manageToken">Manage Token</label>
-        <input id="manageToken" placeholder="Token appears after registration">
+        <h2 data-i18n="manageTitle">Manage Registration</h2>
+        <p class="note" data-i18n="manageHelp">The manage token is stored only in this browser after registration. Keep it if you want to remove the ID later.</p>
+        <label for="manageToken" data-i18n="manageToken">Manage Token</label>
+        <input id="manageToken" data-placeholder="tokenPlaceholder" placeholder="Token appears after registration">
         <div class="actions">
-          <button class="danger" id="removeBtn">Remove my ID</button>
-          <button class="ghost" id="refreshCodesBtn">Refresh codes</button>
+          <button class="danger" id="removeBtn" data-i18n="remove">Remove my ID</button>
+          <button class="ghost" id="refreshCodesBtn" data-i18n="refreshCodes">Refresh codes</button>
         </div>
-        <div class="status" id="manageStatus">No action yet.</div>
+        <div class="status" id="manageStatus" data-i18n="noAction">No action yet.</div>
       </section>
 
       <section class="card" style="grid-column: 1 / -1;">
-        <h2>Recent Gift Codes</h2>
-        <div class="codes" id="codesBox"><div class="note">Loading codes...</div></div>
+        <div class="latest-head">
+          <div>
+            <h2 data-i18n="codesTitle">Latest Gift Codes</h2>
+            <p id="codeSummary" data-i18n="codesHelp">Active and expired states are synced from the source site.</p>
+          </div>
+        </div>
+        <div class="codes" id="codesBox"><div class="note" data-i18n="loadingCodes">Loading codes...</div></div>
       </section>
     </main>
   </div>
 
   <script>
-    const lang = new URL(location.href).searchParams.get('lang') || localStorage.getItem('siteLang') || localStorage.getItem('lang') || 'ko';
+    const I18N = {
+      en: {
+        brandSub:'Kingshot Auto Redeem', back:'Back to hub', heroA:'Auto Redeem', heroB:'Gift Code Center',
+        subtitle:'Register your Kingshot player ID once. When a new gift code is found, this hub queues a slow, safe redeem job for registered IDs.',
+        registerTitle:'Register Player ID', playerId:'Kingshot Player ID', playerPlaceholder:'Example: 123185474',
+        consent:'I agree to save this player ID for automatic gift-code redemption. Only my player ID and public profile summary will be stored.',
+        bulkLabel:'Bulk Player IDs', bulkPlaceholder:'Paste IDs separated by spaces, commas, or new lines.', bulkRegister:'Register bulk IDs',
+        register:'Register', loadToken:'Show saved token', ready:'Ready.', manageTitle:'Manage Registration',
+        manageHelp:'The manage token is stored only in this browser after registration. Keep it if you want to remove the ID later.',
+        manageToken:'Manage Token', tokenPlaceholder:'Token appears after registration', remove:'Remove my ID',
+        refreshCodes:'Refresh codes', noAction:'No action yet.', codesTitle:'Latest Gift Codes',
+        codesHelp:'Active and expired states are synced from the source site.', loadingCodes:'Loading codes...',
+        noCodes:'No codes saved yet.', enterId:'Enter your player ID first.', needConsent:'Consent is required before saving an ID.',
+        checking:'Checking official profile...', registered:'Registered.', savedToken:'Saved token loaded.', noToken:'No saved token in this browser.',
+        needToken:'Player ID and manage token are required.', removing:'Removing registration...', removed:'Registration removed.',
+        active:'Active', expired:'Expired', observed:'Observed', unknown:'Unknown', discovered:'Discovered', recent:'Recent use',
+        registeredPlayers:'Registered IDs', activeCodes:'Active codes', bulkDone:'Bulk registration finished.',
+        created:'New', duplicate:'Duplicate', invalid:'Invalid', reactivated:'Reactivated', duplicateNote:'Already registered. Existing manage token was kept.'
+      },
+      ko: {
+        brandSub:'킹샷 자동 리딤', back:'허브로 돌아가기', heroA:'자동 리딤', heroB:'기프트 코드 센터',
+        subtitle:'킹샷 플레이어 ID를 한 번 등록해두면, 새 기프트 코드가 발견될 때 등록된 ID에 천천히 안전하게 리딤 작업을 생성합니다.',
+        registerTitle:'플레이어 ID 등록', playerId:'킹샷 플레이어 ID', playerPlaceholder:'예: 123185474',
+        consent:'자동 기프트 코드 리딤을 위해 이 플레이어 ID를 저장하는 것에 동의합니다. 플레이어 ID와 공개 프로필 요약만 저장됩니다.',
+        bulkLabel:'대량 플레이어 ID', bulkPlaceholder:'ID를 공백, 쉼표, 줄바꿈으로 구분해서 붙여넣으세요.', bulkRegister:'대량 ID 등록',
+        register:'등록하기', loadToken:'저장된 토큰 보기', ready:'준비됨.', manageTitle:'등록 관리',
+        manageHelp:'관리 토큰은 등록 후 이 브라우저에만 저장됩니다. 나중에 ID를 삭제하려면 이 토큰이 필요합니다.',
+        manageToken:'관리 토큰', tokenPlaceholder:'등록 후 토큰이 표시됩니다', remove:'내 ID 삭제', refreshCodes:'코드 새로고침',
+        noAction:'아직 작업 없음.', codesTitle:'최신 기프트 코드', codesHelp:'활성/만료 상태는 원본 사이트 기준으로 동기화됩니다.',
+        loadingCodes:'코드를 불러오는 중...', noCodes:'아직 저장된 코드가 없습니다.', enterId:'먼저 플레이어 ID를 입력하세요.',
+        needConsent:'ID 저장 전 동의가 필요합니다.', checking:'공식 프로필 확인 중...', registered:'등록 완료.',
+        savedToken:'저장된 토큰을 불러왔습니다.', noToken:'이 브라우저에 저장된 토큰이 없습니다.', needToken:'플레이어 ID와 관리 토큰이 필요합니다.',
+        removing:'등록 삭제 중...', removed:'등록이 삭제되었습니다.', active:'활성', expired:'만료', observed:'확인됨', unknown:'알 수 없음',
+        discovered:'발견 시간', recent:'최근 사용', registeredPlayers:'등록된 ID', activeCodes:'활성 코드',
+        bulkDone:'대량 등록 완료.', created:'신규', duplicate:'중복', invalid:'무효', reactivated:'재활성', duplicateNote:'이미 등록된 ID입니다. 기존 관리 토큰은 유지되었습니다.'
+      },
+      'zh-CN': {
+        brandSub:'Kingshot 自动兑换', back:'返回中心', heroA:'自动兑换', heroB:'礼包码中心',
+        subtitle:'登记一次玩家 ID 后，当发现新的礼包码时，系统会为已登记 ID 建立慢速安全的兑换任务。',
+        registerTitle:'登记玩家 ID', playerId:'Kingshot 玩家 ID', playerPlaceholder:'例如: 123185474',
+        consent:'我同意保存此玩家 ID 用于自动兑换礼包码。只会保存玩家 ID 和公开资料摘要。',
+        bulkLabel:'批量玩家 ID', bulkPlaceholder:'粘贴 ID，可用空格、逗号或换行分隔。', bulkRegister:'批量登记 ID',
+        register:'登记', loadToken:'显示已保存令牌', ready:'已准备。', manageTitle:'管理登记',
+        manageHelp:'管理令牌只保存在此浏览器中。以后删除 ID 时需要它。',
+        manageToken:'管理令牌', tokenPlaceholder:'登记后显示令牌', remove:'删除我的 ID', refreshCodes:'刷新代码',
+        noAction:'尚无操作。', codesTitle:'最新礼包码', codesHelp:'启用和过期状态会从来源站点同步。',
+        loadingCodes:'正在加载代码...', noCodes:'还没有保存的代码。', enterId:'请先输入玩家 ID。', needConsent:'保存 ID 前需要同意。',
+        checking:'正在验证官方资料...', registered:'登记完成。', savedToken:'已加载保存的令牌。', noToken:'此浏览器没有保存的令牌。',
+        needToken:'需要玩家 ID 和管理令牌。', removing:'正在删除登记...', removed:'登记已删除。', active:'可用', expired:'过期',
+        observed:'已发现', unknown:'未知', discovered:'发现时间', recent:'最近使用', registeredPlayers:'已登记 ID',
+        activeCodes:'可用代码', bulkDone:'批量登记完成。', created:'新增', duplicate:'重复', invalid:'无效', reactivated:'重新启用', duplicateNote:'已登记，原管理令牌已保留。'
+      },
+      'zh-TW': {
+        brandSub:'Kingshot 自動兌換', back:'返回中心', heroA:'自動兌換', heroB:'禮包碼中心',
+        subtitle:'登記一次玩家 ID 後，發現新的禮包碼時，系統會為已登記 ID 建立慢速安全的兌換任務。',
+        registerTitle:'登記玩家 ID', playerId:'Kingshot 玩家 ID', playerPlaceholder:'例如: 123185474',
+        consent:'我同意保存此玩家 ID 用於自動兌換禮包碼。只會保存玩家 ID 和公開資料摘要。',
+        bulkLabel:'批量玩家 ID', bulkPlaceholder:'貼上 ID，可用空格、逗號或換行分隔。', bulkRegister:'批量登記 ID',
+        register:'登記', loadToken:'顯示已保存令牌', ready:'已準備。', manageTitle:'管理登記',
+        manageHelp:'管理令牌只保存在此瀏覽器中。之後刪除 ID 時需要它。',
+        manageToken:'管理令牌', tokenPlaceholder:'登記後顯示令牌', remove:'刪除我的 ID', refreshCodes:'刷新代碼',
+        noAction:'尚無操作。', codesTitle:'最新禮包碼', codesHelp:'啟用和過期狀態會從來源站點同步。',
+        loadingCodes:'正在載入代碼...', noCodes:'還沒有保存的代碼。', enterId:'請先輸入玩家 ID。', needConsent:'保存 ID 前需要同意。',
+        checking:'正在驗證官方資料...', registered:'登記完成。', savedToken:'已載入保存的令牌。', noToken:'此瀏覽器沒有保存的令牌。',
+        needToken:'需要玩家 ID 和管理令牌。', removing:'正在刪除登記...', removed:'登記已刪除。', active:'可用', expired:'過期',
+        observed:'已發現', unknown:'未知', discovered:'發現時間', recent:'最近使用', registeredPlayers:'已登記 ID',
+        activeCodes:'可用代碼', bulkDone:'批量登記完成。', created:'新增', duplicate:'重複', invalid:'無效', reactivated:'重新啟用', duplicateNote:'已登記，原管理令牌已保留。'
+      },
+      fr: {
+        brandSub:'Rédemption auto Kingshot', back:'Retour au hub', heroA:'Auto Redeem', heroB:'Centre des codes',
+        subtitle:'Enregistrez votre ID Kingshot une fois. Quand un nouveau code est trouvé, le hub crée une tâche lente et prudente pour les ID inscrits.',
+        registerTitle:'Enregistrer un ID', playerId:'ID joueur Kingshot', playerPlaceholder:'Exemple : 123185474',
+        consent:"J'accepte d'enregistrer cet ID pour la rédemption automatique. Seuls l'ID et le résumé public seront stockés.",
+        bulkLabel:'IDs joueurs en lot', bulkPlaceholder:'Collez les IDs séparés par espaces, virgules ou lignes.', bulkRegister:'Enregistrer en lot',
+        register:'Enregistrer', loadToken:'Afficher le token', ready:'Prêt.', manageTitle:'Gérer l’inscription',
+        manageHelp:'Le token de gestion est stocké uniquement dans ce navigateur après inscription.',
+        manageToken:'Token de gestion', tokenPlaceholder:'Le token apparaît après inscription', remove:'Supprimer mon ID',
+        refreshCodes:'Actualiser les codes', noAction:'Aucune action.', codesTitle:'Derniers codes', codesHelp:'Les états actif/expiré sont synchronisés depuis la source.',
+        loadingCodes:'Chargement des codes...', noCodes:'Aucun code enregistré.', enterId:"Saisissez d'abord l'ID joueur.", needConsent:'Consentement requis.',
+        checking:'Vérification du profil officiel...', registered:'Enregistré.', savedToken:'Token chargé.', noToken:'Aucun token dans ce navigateur.',
+        needToken:'ID joueur et token requis.', removing:'Suppression...', removed:'Inscription supprimée.', active:'Actif', expired:'Expiré',
+        observed:'Observé', unknown:'Inconnu', discovered:'Découvert', recent:'Utilisation récente', registeredPlayers:'ID enregistrés',
+        activeCodes:'Codes actifs', bulkDone:'Enregistrement en lot terminé.', created:'Nouveau', duplicate:'Doublon', invalid:'Invalide', reactivated:'Réactivé', duplicateNote:'Déjà enregistré. Le token existant a été conservé.'
+      },
+      de: {
+        brandSub:'Kingshot Auto Redeem', back:'Zurück zum Hub', heroA:'Auto Redeem', heroB:'Giftcode-Zentrale',
+        subtitle:'Registriere deine Kingshot-ID einmal. Wenn ein neuer Code gefunden wird, erstellt der Hub langsame, sichere Einlöseaufgaben.',
+        registerTitle:'Spieler-ID registrieren', playerId:'Kingshot Spieler-ID', playerPlaceholder:'Beispiel: 123185474',
+        consent:'Ich stimme zu, diese Spieler-ID für automatische Giftcode-Einlösung zu speichern. Nur ID und öffentliches Profil werden gespeichert.',
+        bulkLabel:'Mehrere Spieler-IDs', bulkPlaceholder:'IDs mit Leerzeichen, Kommas oder Zeilenumbrüchen einfügen.', bulkRegister:'Mehrere IDs registrieren',
+        register:'Registrieren', loadToken:'Token anzeigen', ready:'Bereit.', manageTitle:'Registrierung verwalten',
+        manageHelp:'Der Verwaltungstoken wird nur in diesem Browser gespeichert.',
+        manageToken:'Verwaltungstoken', tokenPlaceholder:'Token erscheint nach Registrierung', remove:'Meine ID entfernen',
+        refreshCodes:'Codes aktualisieren', noAction:'Noch keine Aktion.', codesTitle:'Neueste Giftcodes', codesHelp:'Aktiv/abgelaufen wird von der Quelle synchronisiert.',
+        loadingCodes:'Codes werden geladen...', noCodes:'Noch keine Codes gespeichert.', enterId:'Bitte zuerst Spieler-ID eingeben.', needConsent:'Zustimmung ist erforderlich.',
+        checking:'Offizielles Profil wird geprüft...', registered:'Registriert.', savedToken:'Token geladen.', noToken:'Kein Token in diesem Browser.',
+        needToken:'Spieler-ID und Token erforderlich.', removing:'Registrierung wird entfernt...', removed:'Registrierung entfernt.', active:'Aktiv',
+        expired:'Abgelaufen', observed:'Beobachtet', unknown:'Unbekannt', discovered:'Entdeckt', recent:'Letzte Nutzung', registeredPlayers:'Registrierte IDs',
+        activeCodes:'Aktive Codes', bulkDone:'Mehrfachregistrierung abgeschlossen.', created:'Neu', duplicate:'Duplikat', invalid:'Ungültig', reactivated:'Reaktiviert', duplicateNote:'Bereits registriert. Der vorhandene Token bleibt erhalten.'
+      },
+      th: {
+        brandSub:'Kingshot Auto Redeem', back:'กลับไปฮับ', heroA:'แลกรางวัลอัตโนมัติ', heroB:'ศูนย์โค้ดของขวัญ',
+        subtitle:'ลงทะเบียน ID ผู้เล่นครั้งเดียว เมื่อพบโค้ดใหม่ ระบบจะสร้างงานแลกรางวัลแบบช้าและปลอดภัยให้ ID ที่ลงทะเบียนไว้',
+        registerTitle:'ลงทะเบียน ID ผู้เล่น', playerId:'ID ผู้เล่น Kingshot', playerPlaceholder:'ตัวอย่าง: 123185474',
+        consent:'ฉันยินยอมให้บันทึก ID นี้สำหรับการแลกโค้ดอัตโนมัติ โดยเก็บเฉพาะ ID และข้อมูลโปรไฟล์สาธารณะ',
+        bulkLabel:'ID ผู้เล่นจำนวนมาก', bulkPlaceholder:'วาง ID โดยคั่นด้วยช่องว่าง จุลภาค หรือขึ้นบรรทัดใหม่', bulkRegister:'ลงทะเบียนหลาย ID',
+        register:'ลงทะเบียน', loadToken:'แสดงโทเคนที่บันทึก', ready:'พร้อม', manageTitle:'จัดการการลงทะเบียน',
+        manageHelp:'โทเคนจัดการจะถูกเก็บไว้ในเบราว์เซอร์นี้เท่านั้นหลังลงทะเบียน',
+        manageToken:'โทเคนจัดการ', tokenPlaceholder:'โทเคนจะแสดงหลังลงทะเบียน', remove:'ลบ ID ของฉัน', refreshCodes:'รีเฟรชโค้ด',
+        noAction:'ยังไม่มีการทำงาน', codesTitle:'โค้ดล่าสุด', codesHelp:'สถานะใช้งาน/หมดอายุซิงก์จากแหล่งข้อมูล',
+        loadingCodes:'กำลังโหลดโค้ด...', noCodes:'ยังไม่มีโค้ดที่บันทึก', enterId:'กรุณาใส่ ID ผู้เล่นก่อน', needConsent:'ต้องยินยอมก่อนบันทึก ID',
+        checking:'กำลังตรวจสอบโปรไฟล์ทางการ...', registered:'ลงทะเบียนแล้ว', savedToken:'โหลดโทเคนแล้ว', noToken:'ไม่มีโทเคนที่บันทึกในเบราว์เซอร์นี้',
+        needToken:'ต้องมี ID ผู้เล่นและโทเคนจัดการ', removing:'กำลังลบการลงทะเบียน...', removed:'ลบการลงทะเบียนแล้ว', active:'ใช้งานได้',
+        expired:'หมดอายุ', observed:'พบแล้ว', unknown:'ไม่ทราบ', discovered:'เวลาที่พบ', recent:'ใช้ล่าสุด', registeredPlayers:'ID ที่ลงทะเบียน',
+        activeCodes:'โค้ดที่ใช้ได้', bulkDone:'ลงทะเบียนหลาย ID เสร็จแล้ว', created:'ใหม่', duplicate:'ซ้ำ', invalid:'ไม่ถูกต้อง', reactivated:'เปิดใช้อีกครั้ง', duplicateNote:'ลงทะเบียนไว้แล้ว โทเคนเดิมถูกเก็บไว้'
+      },
+      id: {
+        brandSub:'Kingshot Auto Redeem', back:'Kembali ke hub', heroA:'Auto Redeem', heroB:'Pusat Gift Code',
+        subtitle:'Daftarkan ID Kingshot sekali. Saat kode baru ditemukan, hub membuat antrean redeem perlahan dan aman untuk ID terdaftar.',
+        registerTitle:'Daftarkan ID Player', playerId:'ID Player Kingshot', playerPlaceholder:'Contoh: 123185474',
+        consent:'Saya setuju menyimpan ID ini untuk redeem otomatis. Hanya ID dan ringkasan profil publik yang disimpan.',
+        bulkLabel:'Banyak ID Player', bulkPlaceholder:'Tempel ID dipisahkan spasi, koma, atau baris baru.', bulkRegister:'Daftarkan banyak ID',
+        register:'Daftar', loadToken:'Tampilkan token', ready:'Siap.', manageTitle:'Kelola pendaftaran',
+        manageHelp:'Token kelola hanya disimpan di browser ini setelah pendaftaran.',
+        manageToken:'Token Kelola', tokenPlaceholder:'Token muncul setelah pendaftaran', remove:'Hapus ID saya', refreshCodes:'Muat ulang kode',
+        noAction:'Belum ada aksi.', codesTitle:'Gift Code terbaru', codesHelp:'Status aktif/kedaluwarsa disinkronkan dari sumber.',
+        loadingCodes:'Memuat kode...', noCodes:'Belum ada kode tersimpan.', enterId:'Masukkan ID player dulu.', needConsent:'Persetujuan diperlukan.',
+        checking:'Memeriksa profil resmi...', registered:'Terdaftar.', savedToken:'Token tersimpan dimuat.', noToken:'Tidak ada token di browser ini.',
+        needToken:'ID player dan token diperlukan.', removing:'Menghapus pendaftaran...', removed:'Pendaftaran dihapus.', active:'Aktif',
+        expired:'Kedaluwarsa', observed:'Terlihat', unknown:'Tidak diketahui', discovered:'Ditemukan', recent:'Penggunaan terbaru', registeredPlayers:'ID terdaftar',
+        activeCodes:'Kode aktif', bulkDone:'Pendaftaran massal selesai.', created:'Baru', duplicate:'Duplikat', invalid:'Tidak valid', reactivated:'Diaktifkan lagi', duplicateNote:'Sudah terdaftar. Token lama tetap dipertahankan.'
+      }
+    };
+
+    let currentLang = new URL(location.href).searchParams.get('lang') || localStorage.getItem('siteLang') || localStorage.getItem('lang') || 'ko';
+    if (!I18N[currentLang]) currentLang = 'ko';
     const saved = JSON.parse(localStorage.getItem('autoRedeemRegistration') || '{}');
     const $ = (id) => document.getElementById(id);
-    $('hubLink').href = `./index.html?lang=${encodeURIComponent(lang)}`;
-    $('backLink').href = `./index.html?lang=${encodeURIComponent(lang)}`;
-    if (saved.playerId) $('playerId').value = saved.playerId;
-    if (saved.manageToken) $('manageToken').value = saved.manageToken;
+    const tr = (key) => (I18N[currentLang] && I18N[currentLang][key]) || I18N.en[key] || key;
+    const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (ch) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+
+    function applyI18n() {
+      document.documentElement.lang = currentLang;
+      document.querySelectorAll('[data-i18n]').forEach((node) => { node.textContent = tr(node.dataset.i18n); });
+      document.querySelectorAll('[data-placeholder]').forEach((node) => { node.placeholder = tr(node.dataset.placeholder); });
+      $('hubLink').href = `./index.html?lang=${encodeURIComponent(currentLang)}`;
+      $('backLink').href = `./index.html?lang=${encodeURIComponent(currentLang)}`;
+      $('langSelect').value = currentLang;
+      localStorage.setItem('lang', currentLang);
+      localStorage.setItem('siteLang', currentLang);
+      const url = new URL(location.href);
+      url.searchParams.set('lang', currentLang);
+      history.replaceState(null, '', url.toString());
+      $('registeredBadge').textContent = `${tr('registeredPlayers')}: -`;
+      $('activeCodeBadge').textContent = `${tr('activeCodes')}: -`;
+    }
 
     function setStatus(id, text) { $(id).textContent = text; }
     function showProfile(player) {
@@ -176,21 +391,79 @@
       if (!response.ok || data.ok === false) throw new Error(data.error || `HTTP ${response.status}`);
       return data;
     }
+    function formatTime(ms) {
+      const n = Number(ms);
+      if (!Number.isFinite(n) || n <= 0) return '-';
+      return new Intl.DateTimeFormat(currentLang, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(n));
+    }
+    function statusClass(row) {
+      if (row.status === 'expired' || row.is_active === false) return 'expired';
+      if (row.status === 'observed') return 'observed';
+      return 'active';
+    }
+    function statusLabel(row) {
+      const cls = statusClass(row);
+      return tr(cls) || tr('unknown');
+    }
+    async function loadStatus() {
+      try {
+        const data = await api('/api/redeem/status');
+        $('registeredBadge').textContent = `${tr('registeredPlayers')}: ${data.registeredPlayers || 0}`;
+        $('activeCodeBadge').textContent = `${tr('activeCodes')}: ${data.activeCodes || 0}`;
+      } catch {
+        $('registeredBadge').textContent = `${tr('registeredPlayers')}: -`;
+        $('activeCodeBadge').textContent = `${tr('activeCodes')}: -`;
+      }
+    }
+
+    $('langSelect').addEventListener('change', (event) => {
+      currentLang = event.target.value;
+      applyI18n();
+      loadStatus();
+      loadCodes();
+    });
+    if (saved.playerId) $('playerId').value = saved.playerId;
+    if (saved.manageToken) $('manageToken').value = saved.manageToken;
 
     $('registerBtn').addEventListener('click', async () => {
       const playerId = $('playerId').value.replace(/\D/g, '');
-      if (!playerId) return setStatus('registerStatus', 'Enter your player ID first.');
-      if (!$('consent').checked) return setStatus('registerStatus', 'Consent is required before saving an ID.');
-      setStatus('registerStatus', 'Checking official profile...');
+      if (!playerId) return setStatus('registerStatus', tr('enterId'));
+      if (!$('consent').checked) return setStatus('registerStatus', tr('needConsent'));
+      setStatus('registerStatus', tr('checking'));
       try {
         const data = await api('/api/redeem/register', {
           method: 'POST',
-          body: JSON.stringify({ playerId, lang, consent: true }),
+          body: JSON.stringify({ playerId, lang: currentLang, consent: true }),
         });
-        localStorage.setItem('autoRedeemRegistration', JSON.stringify({ playerId, manageToken: data.manageToken }));
-        $('manageToken').value = data.manageToken;
         showProfile(data.player);
-        setStatus('registerStatus', `Registered.\nManage token:\n${data.manageToken}`);
+        if (data.manageToken) {
+          localStorage.setItem('autoRedeemRegistration', JSON.stringify({ playerId, manageToken: data.manageToken }));
+          $('manageToken').value = data.manageToken;
+          setStatus('registerStatus', `${tr('registered')}\n${tr('manageToken')}:\n${data.manageToken}`);
+        } else {
+          setStatus('registerStatus', `${tr('duplicateNote')}\n${data.player.username || data.player.id}`);
+        }
+        loadStatus();
+      } catch (error) {
+        setStatus('registerStatus', error.message);
+      }
+    });
+
+    $('bulkBtn').addEventListener('click', async () => {
+      const text = $('bulkIds').value.trim();
+      if (!text) return setStatus('registerStatus', tr('enterId'));
+      if (!$('consent').checked) return setStatus('registerStatus', tr('needConsent'));
+      setStatus('registerStatus', tr('checking'));
+      try {
+        const data = await api('/api/redeem/register-bulk', {
+          method: 'POST',
+          body: JSON.stringify({ text, lang: currentLang, consent: true }),
+        });
+        setStatus(
+          'registerStatus',
+          `${tr('bulkDone')}\n${tr('created')}: ${data.created || 0} / ${tr('reactivated')}: ${data.reactivated || 0} / ${tr('duplicate')}: ${data.duplicate || 0} / ${tr('invalid')}: ${data.invalid || 0}`
+        );
+        loadStatus();
       } catch (error) {
         setStatus('registerStatus', error.message);
       }
@@ -200,21 +473,21 @@
       const current = JSON.parse(localStorage.getItem('autoRedeemRegistration') || '{}');
       $('playerId').value = current.playerId || $('playerId').value;
       $('manageToken').value = current.manageToken || '';
-      setStatus('registerStatus', current.manageToken ? `Saved token loaded.\n${current.manageToken}` : 'No saved token in this browser.');
+      setStatus('registerStatus', current.manageToken ? `${tr('savedToken')}\n${current.manageToken}` : tr('noToken'));
     });
 
     $('removeBtn').addEventListener('click', async () => {
       const playerId = $('playerId').value.replace(/\D/g, '');
       const manageToken = $('manageToken').value.trim();
-      if (!playerId || !manageToken) return setStatus('manageStatus', 'Player ID and manage token are required.');
-      setStatus('manageStatus', 'Removing registration...');
+      if (!playerId || !manageToken) return setStatus('manageStatus', tr('needToken'));
+      setStatus('manageStatus', tr('removing'));
       try {
         await api('/api/redeem/unregister', {
           method: 'POST',
           body: JSON.stringify({ playerId, manageToken }),
         });
         localStorage.removeItem('autoRedeemRegistration');
-        setStatus('manageStatus', 'Registration removed.');
+        setStatus('manageStatus', tr('removed'));
       } catch (error) {
         setStatus('manageStatus', error.message);
       }
@@ -222,24 +495,37 @@
 
     async function loadCodes() {
       const box = $('codesBox');
-      box.innerHTML = '<div class="note">Loading codes...</div>';
+      box.innerHTML = `<div class="note">${escapeHtml(tr('loadingCodes'))}</div>`;
       try {
-        const data = await api('/api/redeem/codes?limit=20');
+        const data = await api('/api/redeem/codes?limit=24');
+        $('codeSummary').textContent = `${tr('registeredPlayers')}: ${data.registeredPlayers || 0}`;
         if (!data.codes || !data.codes.length) {
-          box.innerHTML = '<div class="note">No codes saved yet.</div>';
+          box.innerHTML = `<div class="note">${escapeHtml(tr('noCodes'))}</div>`;
           return;
         }
-        box.innerHTML = data.codes.map((row) => `
-          <div class="code-row">
-            <strong>${String(row.code || '').replace(/[<>&]/g, '')}</strong>
-            <span>${row.status || '-'}<br>${row.source || '-'}</span>
-          </div>
-        `).join('');
+        box.innerHTML = data.codes.map((row) => {
+          const cls = statusClass(row);
+          const recent = row.last_redeem_status ? `<br>${escapeHtml(tr('recent'))}: ${escapeHtml(row.last_redeem_status)}` : '';
+          return `
+            <div class="code-row">
+              <div class="code-line">
+                <strong>${escapeHtml(row.code || '')}</strong>
+                <span class="badge ${cls}">${escapeHtml(statusLabel(row))}</span>
+              </div>
+              <div class="meta">
+                ${escapeHtml(tr('discovered'))}: ${escapeHtml(formatTime(row.discovered_at_ms))}
+                ${recent}
+              </div>
+            </div>`;
+        }).join('');
       } catch (error) {
-        box.innerHTML = `<div class="note">${error.message}</div>`;
+        box.innerHTML = `<div class="note">${escapeHtml(error.message)}</div>`;
       }
     }
+
     $('refreshCodesBtn').addEventListener('click', loadCodes);
+    applyI18n();
+    loadStatus();
     loadCodes();
   </script>
 </body>
