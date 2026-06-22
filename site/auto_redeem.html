@@ -250,11 +250,51 @@
       border-color: rgba(128,246,168,.24);
       background: rgba(128,246,168,.075);
     }
-    .code-dock .mini-row {
+    .code-dock .mini-row,
+    .code-panel .mini-row {
       grid-template-columns: minmax(0, 1fr) auto;
+      align-items: start;
     }
-    .code-dock .mini-title {
+    .code-dock .mini-title,
+    .code-panel .mini-title {
       display: block;
+    }
+    .code-panel .mini-title span:first-child {
+      overflow: visible;
+      text-overflow: clip;
+      white-space: normal;
+    }
+    .code-value {
+      display: block;
+      color: var(--gold);
+      font-size: 14px;
+      line-height: 1.35;
+      letter-spacing: .02em;
+      overflow-wrap: anywhere;
+      word-break: break-all;
+      user-select: all;
+    }
+    .code-actions {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+    }
+    .copy-code {
+      min-height: 30px;
+      border: 1px solid rgba(246,207,114,.34);
+      border-radius: 10px;
+      padding: 0 10px;
+      color: #071014;
+      background: linear-gradient(135deg, var(--gold), var(--cyan));
+      box-shadow: 0 0 18px rgba(246,207,114,.16);
+      font-size: 12px;
+      line-height: 1;
+      white-space: nowrap;
+    }
+    .copy-code:focus-visible {
+      outline: 2px solid var(--cyan);
+      outline-offset: 2px;
     }
     .live-card {
       position: relative;
@@ -619,7 +659,9 @@
       success: 'Success',
       redeemed: 'Redeemed',
       code: 'Code',
-      unknownPlayer: 'Unknown player'
+      unknownPlayer: 'Unknown player',
+      copyCode: 'Copy',
+      copiedCode: 'Copied'
     });
     Object.assign(I18N.ko, {
       brandSub: 'Kingshot 오토리딤',
@@ -683,7 +725,9 @@
       success: '성공',
       redeemed: '지급됨',
       code: '코드',
-      unknownPlayer: '알 수 없는 유저'
+      unknownPlayer: '알 수 없는 유저',
+      copyCode: '복사',
+      copiedCode: '복사됨'
     });
 
     let currentLang = new URL(location.href).searchParams.get('lang') || localStorage.getItem('siteLang') || localStorage.getItem('lang') || 'ko';
@@ -784,12 +828,32 @@
         return `
           <div class="mini-row">
             <div class="mini-main">
-              <div class="mini-title"><span>${escapeHtml(row.code || '-')}</span></div>
+              <div class="mini-title"><span class="code-value">${escapeHtml(row.code || '-')}</span></div>
               <div class="mini-sub">${escapeHtml(formatTime(row.discovered_at_ms))}${escapeHtml(recent)}</div>
             </div>
-            <span class="badge ${cls}">${escapeHtml(statusLabel(row))}</span>
+            <div class="code-actions">
+              <span class="badge ${cls}">${escapeHtml(statusLabel(row))}</span>
+              <button class="copy-code" type="button" data-code="${escapeHtml(row.code || '-')}">${escapeHtml(tr('copyCode'))}</button>
+            </div>
           </div>`;
       }).join('');
+    }
+
+    async function copyText(text) {
+      if (!text || text === '-') return;
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+        return;
+      }
+      const area = document.createElement('textarea');
+      area.value = text;
+      area.setAttribute('readonly', '');
+      area.style.position = 'fixed';
+      area.style.left = '-9999px';
+      document.body.appendChild(area);
+      area.select();
+      document.execCommand('copy');
+      area.remove();
     }
 
     function renderActivity(data) {
@@ -828,6 +892,18 @@
         $('successDockCount').textContent = '-';
       }
     }
+
+    $('codeDockList').addEventListener('click', async (event) => {
+      const button = event.target.closest('.copy-code');
+      if (!button) return;
+      try {
+        await copyText(button.dataset.code || '');
+        button.textContent = tr('copiedCode');
+        setTimeout(() => { button.textContent = tr('copyCode'); }, 1200);
+      } catch {
+        button.textContent = tr('copyCode');
+      }
+    });
 
     $('langSelect').addEventListener('change', (event) => {
       currentLang = event.target.value;
