@@ -440,7 +440,7 @@
       <div class="trust">
         <span id="registeredBadge">0</span>
         <span id="activeCodeBadge">0</span>
-        <span id="daemonBadge" class="daemon-badge unknown" data-i18n="daemonChecking">PuTTY server checking...</span>
+        <span id="daemonBadge" class="daemon-badge unknown" data-i18n="automationUnknown">Auto redeem engine checking...</span>
       </div>
     </section>
 
@@ -695,7 +695,13 @@
       daemonError: 'PuTTY server error',
       daemonUnknown: 'PuTTY server unknown',
       daemonNever: 'No heartbeat yet',
-      daemonJobs: 'jobs'
+      daemonJobs: 'jobs',
+      automationStable: 'Auto redeem engine stable',
+      automationWarning: 'Auto redeem engine warning',
+      automationOffline: 'Auto redeem engine needs check',
+      automationUnknown: 'Auto redeem engine checking',
+      automationCloudflare: 'Cloudflare schedule',
+      automationPutty: 'Oracle/PuTTY backup'
     });
     Object.assign(I18N.ko, {
       brandSub: 'Kingshot 오토리딤',
@@ -769,6 +775,45 @@
       daemonError: 'PuTTY 서버 오류',
       daemonUnknown: 'PuTTY 서버 알 수 없음',
       daemonNever: '아직 신호 없음',
+      daemonJobs: '작업'
+    });
+
+    Object.assign(I18N.ko, {
+      brandSub: 'Kingshot 자동 리딤',
+      back: '허브로 돌아가기',
+      heroA: '자동 리딤',
+      heroB: '기프트 코드 센터',
+      subtitle: 'Kingshot 플레이어 ID를 한 번 등록하면 새 기프트 코드가 발견될 때 등록된 ID에 천천히 안전하게 지급 작업을 생성합니다.',
+      registerTitle: '플레이어 ID 등록',
+      playerId: 'Kingshot 플레이어 ID',
+      consent: '자동 기프트 코드 지급을 위해 이 플레이어 ID를 저장하는 것에 동의합니다. 플레이어 ID와 공개 프로필 요약만 저장됩니다.',
+      bulkLabel: '여러 플레이어 ID',
+      bulkPlaceholder: 'ID를 공백, 쉼표, 줄바꿈으로 구분해서 붙여넣으세요.',
+      bulkRegister: '여러 ID 등록',
+      register: '등록하기',
+      refreshCodes: '상태 새로고침',
+      codesTitle: '최신 기프트 코드',
+      codesHelp: '활성/만료 상태와 최근 지급 기록을 함께 보여줍니다.',
+      loadingCodes: '코드를 불러오는 중...',
+      noCodes: '아직 저장된 코드가 없습니다.',
+      active: '활성',
+      expired: '만료',
+      observed: '확인됨',
+      registeredPlayers: '등록된 ID',
+      activeCodes: '활성 코드',
+      codeDockTitle: '코드 상황',
+      userDockTitle: '최근 등록 유저',
+      successTitle: '지금 성공 내역',
+      noRecentUsers: '아직 등록된 유저가 없습니다.',
+      noSuccess: '아직 지급 성공 기록이 없습니다.',
+      copyCode: '복사',
+      copiedCode: '복사됨',
+      automationStable: '자동 지급 엔진 안정',
+      automationWarning: '자동 지급 엔진 주의',
+      automationOffline: '자동 지급 엔진 확인 필요',
+      automationUnknown: '자동 지급 엔진 확인 중',
+      automationCloudflare: 'Cloudflare 자동 실행',
+      automationPutty: 'Oracle/PuTTY 백업',
       daemonJobs: '작업'
     });
 
@@ -862,34 +907,40 @@
         const data = await api('/api/redeem/status');
         $('registeredBadge').textContent = `${tr('registeredPlayers')}: ${data.registeredPlayers || 0}`;
         $('activeCodeBadge').textContent = `${tr('activeCodes')}: ${data.activeCodes || 0}`;
-        renderDaemonStatus(data.daemon);
+        renderAutomationStatus(data.automation || data.daemon);
       } catch {
         $('registeredBadge').textContent = `${tr('registeredPlayers')}: -`;
         $('activeCodeBadge').textContent = `${tr('activeCodes')}: -`;
-        renderDaemonStatus(null);
+        renderAutomationStatus(null);
       }
     }
-    function renderDaemonStatus(daemon) {
+    function renderAutomationStatus(daemon) {
       const badge = $('daemonBadge');
       if (!badge) return;
       if (!daemon || !daemon.lastSeenAtMs) {
         badge.className = 'daemon-badge unknown';
-        badge.textContent = tr('daemonUnknown');
+        badge.textContent = tr('automationUnknown');
         return;
       }
       const state = daemon.state || (daemon.stale ? 'offline' : daemon.ok === false ? 'error' : 'online');
-      const label = state === 'online'
-        ? tr('daemonOnline')
-        : state === 'warning'
-          ? tr('daemonWarning')
-          : state === 'error'
-            ? tr('daemonError')
-            : tr('daemonOffline');
+      const uiState = state === 'stable' ? 'online' : state === 'error' ? 'warning' : state;
+      const label = state === 'stable' || state === 'online'
+        ? tr('automationStable')
+        : state === 'warning' || state === 'error'
+          ? tr('automationWarning')
+          : tr('automationOffline');
       const jobs = Number(daemon.jobsProcessed || 0);
       const extra = jobs ? ` / ${jobs} ${tr('daemonJobs')}` : '';
-      badge.className = `daemon-badge ${state}`;
+      const primarySource = daemon.primary && daemon.primary.source ? daemon.primary.source : daemon.source;
+      const source = primarySource === 'cloudflare-cron' ? tr('automationCloudflare') : tr('automationPutty');
+      badge.className = `daemon-badge ${uiState}`;
       badge.textContent = `${label} · ${formatAgo(daemon.lastSeenAtMs)}${extra}`;
       badge.title = daemon.error || '';
+      badge.textContent = `${label} · ${source} · ${formatAgo(daemon.lastSeenAtMs)}${extra}`;
+    }
+
+    function renderDaemonStatus(daemon) {
+      renderAutomationStatus(daemon);
     }
 
     function renderCodeDock(codes) {
@@ -941,7 +992,7 @@
       $('successDockCount').textContent = `${recentSuccess.length || 0}`;
       $('registeredBadge').textContent = `${tr('registeredPlayers')}: ${data.registeredPlayers || 0}`;
       if (data.activeCodes !== undefined) $('activeCodeBadge').textContent = `${tr('activeCodes')}: ${data.activeCodes || 0}`;
-      if (data.daemon !== undefined) renderDaemonStatus(data.daemon);
+      if (data.automation !== undefined || data.daemon !== undefined) renderAutomationStatus(data.automation || data.daemon);
 
       $('recentUsersList').innerHTML = recentPlayers.length ? recentPlayers.map((player) => `
         <div class="mini-row">

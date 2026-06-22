@@ -16,6 +16,21 @@ const OFFICIAL_GIFT_TIMEOUT_MS = 10000;
 const AUTO_REDEEM_DEFAULT_BATCH_SIZE = 12;
 const AUTO_REDEEM_DEFAULT_DELAY_MS = 1200;
 const AUTO_REDEEM_DEFAULT_MAX_ATTEMPTS = 3;
+const AUTO_REDEEM_RUNNER_STALE_MS = 25 * 60 * 1000;
+const PUBLIC_GIFT_CODE_SOURCES = [
+  { source: "kingshot.net", url: "https://kingshot.net/gift-codes" },
+  { source: "kingshot.net/redeem", url: "https://kingshot.net/gift-codes/redeem" },
+  { source: "ks-rewards", url: "https://ks-rewards.com/" },
+  { source: "ksredeem", url: "https://ksredeem.com/" },
+];
+const GIFT_CODE_DENYLIST = new Set([
+  "ABOUT", "ACTIVE", "AUTOMATIC", "BROWSE", "BUTTON", "CLAIM", "CODES", "CODE", "COMMUNITY",
+  "DATABASE", "DISCORD", "EXPIRED", "FEEDBACK", "GIFT", "GIFTCODE", "HOME", "IMAGE", "KINGS",
+  "KINGSHOT", "LOADING", "LOGIN", "PLAYER", "PLAYERS", "PROFILE", "REDEEM", "REDEMPTION",
+  "REGISTER", "REWARDS", "SERVER", "STATUS", "TOOLS", "UNKNOWN", "WAITING",
+  "AUTO-REDEEM", "AUTO_REDEEM", "GIFT-CODE", "GIFT-CODES", "GIFT_CODE", "GIFT_CODES",
+  "KSREDEEM", "KINGSREDEEM", "REDEEMER",
+]);
 const COLLECTOR_STATE_KEY = "intel:collector:state";
 const COLLECTOR_DEFAULT_MIN_KINGDOM = 1;
 const COLLECTOR_DEFAULT_MAX_KINGDOM = 2000;
@@ -524,7 +539,7 @@ function autoRedeemConfig(env) {
 }
 
 function isRetryableRedeemStatus(status) {
-  return new Set(["failed", "timeout", "network_error", "server_error", "rate_limited"]).has(String(status || ""));
+  return new Set(["failed", "timeout", "network_error", "server_error", "rate_limited", "server_busy"]).has(String(status || ""));
 }
 
 function isDaemonRequest(request) {
@@ -533,26 +548,103 @@ function isDaemonRequest(request) {
   return /NashshAutoRedeem|auto.?redeem.?daemon|putty/i.test(`${ua} ${runner}`);
 }
 
-function publicDaemonStatus(row) {
+function publicDaemonStatus(row, staleMs = 12 * 60 * 1000, fallbackSource = "putty") {
   const value = (row && (row.value_json || row.response_json)) || {};
-  const lastSeenAtMs = numberValue(value.lastSeenAtMs || row && row.updated_at_ms);
+  const lastSeenAtMs = numberValue(value.lastSeenAtMs || (row && row.updated_at_ms));
   const ageMs = lastSeenAtMs ? Math.max(0, Date.now() - lastSeenAtMs) : 0;
-  const stale = !lastSeenAtMs || ageMs > 12 * 60 * 1000;
+  const stale = !lastSeenAtMs || ageMs > staleMs;
   const error = meaningfulText(value.error || (value.discoveryErrors || [])[0], 180);
   const state = stale ? "offline" : value.ok === false ? "error" : error ? "warning" : "online";
   return {
     state,
     ok: value.ok !== false && !stale,
     stale,
-    source: cleanText(value.source || "putty", 40),
+    source: cleanText(value.source || fallbackSource, 40),
     lastSeenAtMs,
     ageMs,
     jobsProcessed: numberValue(value.jobsProcessed),
     success: numberValue(value.success),
     failed: numberValue(value.failed),
+    retrying: numberValue(value.retrying),
     active: numberValue(value.active),
     discovered: numberValue(value.discovered),
     error,
+  };
+}
+
+function redeemHeartbeatFromResult(source, result, error = null, startedAtMs = Date.now()) {
+  const now = Date.now();
+  const discovery = (result && result.discovery) || {};
+  const jobs = (result && result.jobs) || {};
+  const errors = [
+    ...((discovery && discovery.errors) || []),
+    error && error.message,
+    result && result.error,
+    jobs && jobs.error,
+  ].filter(Boolean).map((item) => cleanText(item, 180)).slice(0, 4);
+  return {
+    source,
+    ok: !error && result && result.ok !== false,
+    lastSeenAtMs: now,
+    startedAtMs,
+    durationMs: now - startedAtMs,
+    active: Array.isArray(discovery.active) ? discovery.active.length : 0,
+    discovered: Array.isArray(discovery.discovered) ? discovery.discovered.length : 0,
+    jobsProcessed: numberValue(jobs.processed),
+    success: numberValue(jobs.success),
+    failed: numberValue(jobs.failed),
+    retrying: numberValue(jobs.retrying),
+    discoveryErrors: errors,
+  };
+}
+
+async function saveRedeemRunnerStatus(env, key, heartbeat) {
+  if (!supabaseConfig(env).enabled || !key || !heartbeat) return false;
+  await supabaseJson(env, "/intel_cache?on_conflict=cache_key", {
+    method: "POST",
+    headers: { prefer: "resolution=merge-duplicates" },
+    body: JSON.stringify([{
+      cache_key: key,
+      api_path: `redeem/runner/${cleanText(heartbeat.source, 40) || "unknown"}`,
+      response_json: heartbeat,
+      updated_at_ms: numberValue(heartbeat.lastSeenAtMs) || Date.now(),
+      byte_size: JSON.stringify(heartbeat).length,
+    }]),
+  });
+  return true;
+}
+
+async function readRedeemRunnerStatus(env, key, fallbackSource) {
+  if (!supabaseConfig(env).enabled) return null;
+  const rows = await supabaseJson(env, `/intel_cache?cache_key=eq.${encodeURIComponent(key)}&select=cache_key,response_json,updated_at_ms&limit=1`).catch(() => []);
+  if (!rows || !rows[0]) return null;
+  return publicDaemonStatus(rows[0], AUTO_REDEEM_RUNNER_STALE_MS, fallbackSource);
+}
+
+async function readRedeemAutomationStatus(env) {
+  if (!supabaseConfig(env).enabled) return null;
+  const [cloudflare, putty, legacyDaemon] = await Promise.all([
+    readRedeemRunnerStatus(env, "redeem_engine_cloudflare", "cloudflare-cron").catch(() => null),
+    readRedeemRunnerStatus(env, "redeem_engine_putty", "putty").catch(() => null),
+    readRedeemDaemonStatus(env).catch(() => null),
+  ]);
+  const candidates = [cloudflare, putty, legacyDaemon].filter(Boolean);
+  const primary = candidates.find((item) => item.state === "online" || item.state === "warning") || candidates[0] || null;
+  const stable = Boolean(candidates.find((item) => item.state === "online"));
+  const warning = Boolean(candidates.find((item) => item.state === "warning" || item.state === "error"));
+  const lastSeenAtMs = Math.max(0, ...candidates.map((item) => numberValue(item.lastSeenAtMs)));
+  return {
+    state: stable ? "stable" : warning ? "warning" : "offline",
+    ok: stable,
+    lastSeenAtMs,
+    primary,
+    cloudflare,
+    putty: putty || legacyDaemon,
+    jobsProcessed: primary ? primary.jobsProcessed : 0,
+    success: primary ? primary.success : 0,
+    failed: primary ? primary.failed : 0,
+    retrying: primary ? primary.retrying : 0,
+    error: primary ? primary.error : "",
   };
 }
 
@@ -566,32 +658,11 @@ async function readRedeemDaemonStatus(env) {
 }
 
 async function saveRedeemDaemonStatus(env, request, result, error = null, startedAtMs = Date.now(), force = false) {
-  const writeStatus = { skipped: false, metaOk: false, cacheOk: false, errors: [] };
+  const writeStatus = { skipped: false, metaOk: false, cacheOk: false, runnerOk: false, errors: [] };
   if (!supabaseConfig(env).enabled) return { ...writeStatus, skipped: true, errors: ["Supabase is not configured."] };
   if (!force && !isDaemonRequest(request)) return { ...writeStatus, skipped: true, errors: ["Not a daemon request."] };
   const now = Date.now();
-  const discovery = result && result.discovery || {};
-  const jobs = result && result.jobs || {};
-  const errors = [
-    ...((discovery && discovery.errors) || []),
-    error && error.message,
-    result && result.error,
-    jobs && jobs.error,
-  ].filter(Boolean).map((item) => cleanText(item, 180)).slice(0, 4);
-  const heartbeat = {
-    source: "putty",
-    ok: !error && result && result.ok !== false,
-    lastSeenAtMs: now,
-    startedAtMs,
-    durationMs: now - startedAtMs,
-    active: Array.isArray(discovery.active) ? discovery.active.length : 0,
-    discovered: Array.isArray(discovery.discovered) ? discovery.discovered.length : 0,
-    jobsProcessed: numberValue(jobs.processed),
-    success: numberValue(jobs.success),
-    failed: numberValue(jobs.failed),
-    retrying: numberValue(jobs.retrying),
-    discoveryErrors: errors,
-  };
+  const heartbeat = redeemHeartbeatFromResult("putty", result, error, startedAtMs);
   await supabaseJson(env, "/redeem_meta?on_conflict=key", {
     method: "POST",
     headers: { prefer: "resolution=merge-duplicates" },
@@ -616,6 +687,11 @@ async function saveRedeemDaemonStatus(env, request, result, error = null, starte
   }).then(() => { writeStatus.cacheOk = true; }).catch((writeError) => {
     writeStatus.errors.push(`intel_cache: ${cleanText(writeError.message, 180)}`);
   });
+  await saveRedeemRunnerStatus(env, "redeem_engine_putty", heartbeat)
+    .then(() => { writeStatus.runnerOk = true; })
+    .catch((writeError) => {
+      writeStatus.errors.push(`runner: ${cleanText(writeError.message, 180)}`);
+    });
   return { ...writeStatus, heartbeat };
 }
 
@@ -709,7 +785,8 @@ async function registerRedeemPlayer(request, env) {
   const playerId = meaningfulText(body.playerId || body.fid || body.id, 40);
   const result = await upsertRedeemPlayer(env, playerId, { lang: body.lang });
   if (!result.ok) return json({ ok: false, error: "Player ID could not be verified." }, 404);
-  return json({ ok: true, ...result, registeredPlayers: await countRedeemPlayers(env) });
+  const jobsCreated = await createRedeemJobsForPlayer(env, result.player && result.player.id).catch(() => 0);
+  return json({ ok: true, ...result, jobsCreated, registeredPlayers: await countRedeemPlayers(env) });
 }
 
 async function registerRedeemPlayersBulk(request, env) {
@@ -720,7 +797,7 @@ async function registerRedeemPlayersBulk(request, env) {
   const ids = extractPlayerIds(body.ids || body.text || body.playerIds, 100);
   if (!ids.length) return json({ ok: false, error: "No valid player IDs were found." }, 400);
 
-  const result = { ok: true, submitted: ids.length, created: 0, reactivated: 0, duplicate: 0, invalid: 0, players: [] };
+  const result = { ok: true, submitted: ids.length, created: 0, reactivated: 0, duplicate: 0, invalid: 0, jobsCreated: 0, players: [] };
   for (const id of ids) {
     const saved = await upsertRedeemPlayer(env, id, { lang: body.lang }).catch(() => ({ ok: false, status: "invalid", playerId: id }));
     if (!saved.ok) {
@@ -730,11 +807,14 @@ async function registerRedeemPlayersBulk(request, env) {
     if (saved.status === "created") result.created += 1;
     else if (saved.status === "reactivated") result.reactivated += 1;
     else if (saved.status === "duplicate") result.duplicate += 1;
+    const jobsCreated = await createRedeemJobsForPlayer(env, saved.player.id).catch(() => 0);
+    result.jobsCreated += jobsCreated;
     result.players.push({
       id: saved.player.id,
       username: saved.player.username,
       state: saved.player.state,
       status: saved.status,
+      jobsCreated,
     });
     await delay(250);
   }
@@ -851,6 +931,130 @@ async function createRedeemJobsForCode(env, code) {
   return rows.length;
 }
 
+async function createRedeemJobsForPlayer(env, playerId) {
+  const id = meaningfulText(playerId, 40);
+  if (!/^\d{3,12}$/.test(id) || !supabaseConfig(env).enabled) return 0;
+  const codes = await supabaseJson(env, "/redeem_codes?status=in.(active,observed)&select=code&limit=100").catch(() => []);
+  if (!codes || !codes.length) return 0;
+  const now = Date.now();
+  const rows = codes
+    .map((row) => normalizeGiftCode(row && row.code))
+    .filter(Boolean)
+    .map((giftCode) => ({
+      job_key: `${giftCode}:${id}`,
+      player_id: id,
+      gift_code: giftCode,
+      status: "pending",
+      attempts: 0,
+      created_at_ms: now,
+      updated_at_ms: now,
+    }));
+  if (!rows.length) return 0;
+  await supabaseJson(env, "/redeem_jobs?on_conflict=job_key", {
+    method: "POST",
+    headers: { prefer: "resolution=ignore-duplicates" },
+    body: JSON.stringify(rows),
+  }).catch(() => null);
+  return rows.length;
+}
+
+function plainTextFromHtml(html) {
+  return String(html || "")
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(Number(code) || 32))
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function giftCodeCandidateAllowed(candidate, context) {
+  const code = normalizeGiftCode(candidate);
+  if (!code || code.length < 5 || code.length > 32) return false;
+  if (GIFT_CODE_DENYLIST.has(code)) return false;
+  if (/^\d+$/.test(code)) return false;
+  if (!/[A-Z]/.test(code)) return false;
+  if (!/CODE|CDK|GIFT|REDEEM|ACTIVE|EXPIRED|NEW|REWARD|PROMO/i.test(context)) return false;
+  if (/^(HTTP|HTTPS|WWW|MAIL|EMAIL|INPUT|IMAGE|LOGIN|BUTTON|PROFILE|PLAYER|REGISTER)/i.test(code)) return false;
+  return true;
+}
+
+function collectGiftCodesFromPublicText(text, source, url) {
+  const plain = plainTextFromHtml(text);
+  const upper = plain.toUpperCase();
+  const rows = [];
+  const seen = new Set();
+  const matches = upper.matchAll(/\b[A-Z0-9][A-Z0-9_-]{4,31}\b/g);
+  for (const match of matches) {
+    const raw = match[0];
+    const start = Math.max(0, match.index - 100);
+    const end = Math.min(upper.length, match.index + raw.length + 100);
+    const context = upper.slice(start, end);
+    const code = normalizeGiftCode(raw);
+    if (!giftCodeCandidateAllowed(code, context) || seen.has(code)) continue;
+    seen.add(code);
+    const expired = /EXPIRED|ENDED|INVALID|NOT\s+ACTIVE|만료|期限切れ|หมดอายุ/i.test(context);
+    rows.push({
+      code,
+      source: `public:${source}`,
+      status: expired ? "expired" : "active",
+      isActive: expired ? false : true,
+      discoveredAt: Date.now(),
+      updatedAt: Date.now(),
+      raw: { source: `public:${source}`, url, context: cleanText(context, 220) },
+    });
+  }
+  return rows;
+}
+
+async function fetchPublicGiftCodePage(source) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 9000);
+  try {
+    const response = await fetch(source.url, {
+      headers: {
+        accept: "text/html,application/xhtml+xml,text/plain,*/*",
+        "accept-language": "en-US,en;q=0.9,ko;q=0.8",
+        "user-agent": "Mozilla/5.0 NashshGiftCodeScout/1.0",
+      },
+      signal: controller.signal,
+      cf: { cacheTtl: 0 },
+    });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return await response.text();
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function discoverRedeemCodesFromPublicPages(env) {
+  const result = { discovered: [], active: [], expired: [], jobsCreated: 0, errors: [] };
+  for (const source of PUBLIC_GIFT_CODE_SOURCES) {
+    try {
+      const text = await fetchPublicGiftCodePage(source);
+      const rows = collectGiftCodesFromPublicText(text, source.source, source.url).slice(0, 12);
+      for (const row of rows) {
+        await saveRedeemCode(env, row).catch(() => {});
+        result.discovered.push(row.code);
+        if (row.status === "active") {
+          result.active.push(row.code);
+          result.jobsCreated += await createRedeemJobsForCode(env, row.code).catch(() => 0);
+        } else {
+          result.expired.push(row.code);
+        }
+      }
+    } catch (error) {
+      result.errors.push(`${source.source}: ${cleanText(error.message, 120)}`);
+    }
+  }
+  result.discovered = [...new Set(result.discovered)];
+  result.active = [...new Set(result.active)];
+  result.expired = [...new Set(result.expired)];
+  return result;
+}
+
 async function discoverRedeemCodes(env) {
   const result = { ok: true, discovered: [], active: [], expired: [], usageUpdated: 0, jobsCreated: 0, errors: [] };
   try {
@@ -899,6 +1103,20 @@ async function discoverRedeemCodes(env) {
   } catch (error) {
     result.errors.push(`redemptions/recent: ${cleanText(error.message, 120)}`);
   }
+
+  const publicDiscovery = await discoverRedeemCodesFromPublicPages(env).catch((error) => ({
+    discovered: [],
+    active: [],
+    expired: [],
+    jobsCreated: 0,
+    errors: [cleanText(error.message, 120)],
+  }));
+  result.discovered.push(...(publicDiscovery.discovered || []));
+  result.active.push(...(publicDiscovery.active || []));
+  result.expired.push(...(publicDiscovery.expired || []));
+  result.jobsCreated += numberValue(publicDiscovery.jobsCreated);
+  result.errors.push(...(publicDiscovery.errors || []).map((item) => `public: ${cleanText(item, 120)}`));
+
   result.discovered = [...new Set(result.discovered)];
   result.active = [...new Set(result.active)];
   result.expired = [...new Set(result.expired)];
@@ -939,17 +1157,18 @@ async function listRedeemCodes(request, env) {
 }
 
 async function redeemStatus(env) {
-  if (!supabaseConfig(env).enabled) return json({ ok: true, supabase: false, registeredPlayers: 0, activeCodes: 0, daemon: null });
-  const [players, codes, daemon] = await Promise.all([
+  if (!supabaseConfig(env).enabled) return json({ ok: true, supabase: false, registeredPlayers: 0, activeCodes: 0, daemon: null, automation: null });
+  const [players, codes, daemon, automation] = await Promise.all([
     countRedeemPlayers(env).catch(() => 0),
     supabaseFetch(env, "/redeem_codes?status=eq.active&select=code&limit=1", {
       headers: { prefer: "count=exact", range: "0-0" },
     }).catch(() => null),
     readRedeemDaemonStatus(env).catch(() => null),
+    readRedeemAutomationStatus(env).catch(() => null),
   ]);
   const range = codes ? codes.headers.get("content-range") || "" : "";
   const activeCodes = Number(range.split("/")[1]);
-  return json({ ok: true, supabase: true, registeredPlayers: players, activeCodes: Number.isFinite(activeCodes) ? activeCodes : 0, daemon });
+  return json({ ok: true, supabase: true, registeredPlayers: players, activeCodes: Number.isFinite(activeCodes) ? activeCodes : 0, daemon, automation });
 }
 
 async function countSupabaseRows(env, path) {
@@ -998,7 +1217,7 @@ async function redeemActivity(request, env) {
   const playerLimit = Math.min(12, Math.max(3, Number(url.searchParams.get("players")) || 6));
   const successLimit = Math.min(30, Math.max(5, Number(url.searchParams.get("success")) || 14));
 
-  const [recentPlayersRaw, recentSuccessRaw, pendingJobs, successJobs, activeCodes, registeredPlayers, daemon] = await Promise.all([
+  const [recentPlayersRaw, recentSuccessRaw, pendingJobs, successJobs, activeCodes, registeredPlayers, daemon, automation] = await Promise.all([
     supabaseJson(env, `/redeem_players?enabled=eq.true&consent=eq.true&select=id,nickname,state,town_hall_level,avatar_url,created_at_ms,updated_at_ms,profile_json&order=created_at_ms.desc&limit=${playerLimit}`).catch(() => []),
     supabaseJson(env, `/redeem_jobs?status=eq.success&select=player_id,gift_code,status,redeemed_at_ms,updated_at_ms&order=redeemed_at_ms.desc&limit=${successLimit}`).catch(() => []),
     countSupabaseRows(env, "/redeem_jobs?status=in.(pending,running)&select=job_key&limit=1").catch(() => 0),
@@ -1006,6 +1225,7 @@ async function redeemActivity(request, env) {
     countSupabaseRows(env, "/redeem_codes?status=eq.active&select=code&limit=1").catch(() => 0),
     countRedeemPlayers(env).catch(() => 0),
     readRedeemDaemonStatus(env).catch(() => null),
+    readRedeemAutomationStatus(env).catch(() => null),
   ]);
 
   const recentPlayers = (recentPlayersRaw || []).map(publicRedeemPlayer);
@@ -1029,6 +1249,7 @@ async function redeemActivity(request, env) {
     pendingJobs,
     successJobs,
     daemon,
+    automation,
     recentPlayers,
     recentSuccess: (recentSuccessRaw || []).map((row) => publicRedeemJob(row, playerMap)),
   });
@@ -1103,10 +1324,26 @@ async function runAutoRedeemCycle(env, reason = "cron") {
   return { ok: Boolean(discovery.ok !== false && jobs.ok !== false), discovery, jobs };
 }
 
+async function runTrackedAutoRedeemCycle(env, source = "cloudflare-cron") {
+  const startedAtMs = Date.now();
+  try {
+    const result = await runAutoRedeemCycle(env, source);
+    await saveRedeemRunnerStatus(env, source === "cloudflare-cron" ? "redeem_engine_cloudflare" : "redeem_engine_putty", redeemHeartbeatFromResult(source, result, null, startedAtMs)).catch(() => {});
+    return result;
+  } catch (error) {
+    const result = { ok: false, error: cleanText(error.message, 180), discovery: { errors: [cleanText(error.message, 120)] }, jobs: {} };
+    await saveRedeemRunnerStatus(env, source === "cloudflare-cron" ? "redeem_engine_cloudflare" : "redeem_engine_putty", redeemHeartbeatFromResult(source, result, error, startedAtMs)).catch(() => {});
+    throw error;
+  }
+}
+
 function classifyRedeemPayload(payload) {
   const errCode = numberValue(payload && payload.err_code);
-  const message = meaningfulText(payload && (payload.msg || payload.message), 240);
-  if (payload && payload.code === 0) return { status: "success", ok: true, message: message || "success" };
+  const message = meaningfulText(payload && (payload.msg || payload.message || payload.err_msg), 240);
+  const lower = message.toLowerCase();
+  if ((payload && payload.code === 0) || errCode === 0 || /redeemed,?\s*please\s*claim|claim\s+the\s+rewards\s+in\s+your\s+mail/i.test(message)) {
+    return { status: "success", ok: true, message: message || "success" };
+  }
   if (errCode === 40102) return { status: "captcha_required", ok: false, message: message || "captcha required" };
   if (errCode === 40014) return { status: "invalid_code", ok: false, message: message || "code not found" };
   if (errCode === 40009) return { status: "not_logged_in", ok: false, message: message || "not logged in" };
@@ -1115,6 +1352,36 @@ function classifyRedeemPayload(payload) {
   }
   if (/already|claimed|used/i.test(message)) return { status: "already_claimed", ok: false, message };
   if (/expired/i.test(message)) return { status: "expired", ok: false, message };
+  return { status: "failed", ok: false, message: message || "redeem failed" };
+}
+
+function classifyRedeemPayloadV2(payload) {
+  const errCode = numberValue(payload && payload.err_code);
+  const message = meaningfulText(payload && (payload.msg || payload.message || payload.err_msg), 240);
+  const lower = message.toLowerCase();
+  if ((payload && payload.code === 0) || errCode === 0 || /redeemed,?\s*please\s*claim|claim\s+the\s+rewards\s+in\s+your\s+mail/i.test(message)) {
+    return { status: "success", ok: true, message: message || "success" };
+  }
+  if (errCode === 40102 || /captcha|verification|verify|40102|验证码|驗證碼|인증/i.test(message)) {
+    return { status: "captcha_required", ok: false, message: message || "captcha required" };
+  }
+  if (errCode === 40014 || /gift\s*code\s*not\s*found|code\s*not\s*found|case-sensitive|invalid\s+gift|invalid\s+code|cdk\s*error/i.test(message)) {
+    return { status: "invalid_code", ok: false, message: message || "invalid code" };
+  }
+  if (errCode === 40009) return { status: "not_logged_in", ok: false, message: message || "not logged in" };
+  if (/time\s*error|redemption\s*time|exchange\s*time|time\s*limit|not\s+open|not\s+started|not\s+available|兑换时间|兌換時間|교환\s*시간|交換.*時間/i.test(message)) {
+    return { status: "time_window_closed", ok: false, message: message || "time window closed" };
+  }
+  if (/same\s+gift\s+code|only\s+be\s+redeemed\s+once|already|claimed|used|received/i.test(message)) {
+    return { status: "already_claimed", ok: false, message: message || "already claimed" };
+  }
+  if (/expired|ended|no\s+longer\s+valid/i.test(message)) return { status: "expired", ok: false, message: message || "expired" };
+  if (/server\s+busy|try\s+again\s+later|too\s+many|too\s+frequent|frequently|rate\s*limit/i.test(message)) {
+    return { status: lower.includes("rate") || lower.includes("frequent") ? "rate_limited" : "server_busy", ok: false, message: message || "server busy" };
+  }
+  if (/player\s+not\s+found|invalid\s+player|double\s+check\s+player|problem\s+with\s+logging\s+in/i.test(message)) {
+    return { status: "player_not_found", ok: false, message: message || "player not found" };
+  }
   return { status: "failed", ok: false, message: message || "redeem failed" };
 }
 
@@ -1148,15 +1415,19 @@ async function redeemOfficialGiftCode(playerId, giftCode) {
     const payload = await response.json().catch(() => ({ code: 1, msg: `HTTP ${response.status}` }));
     if (!response.ok) {
       const retryable = response.status === 408 || response.status === 429 || response.status >= 500;
+      const classified = classifyRedeemPayloadV2(payload);
+      const status = classified.status !== "failed"
+        ? classified.status
+        : response.status === 429 ? "rate_limited" : retryable ? "server_error" : "failed";
       return {
         ok: false,
-        status: response.status === 429 ? "rate_limited" : retryable ? "server_error" : "failed",
-        message: meaningfulText(payload && (payload.msg || payload.message), 160) || `HTTP ${response.status}`,
+        status,
+        message: classified.message || meaningfulText(payload && (payload.msg || payload.message), 160) || `HTTP ${response.status}`,
         player: profile,
         response: payload,
       };
     }
-    const result = classifyRedeemPayload(payload);
+    const result = classifyRedeemPayloadV2(payload);
     return { ...result, player: profile, response: payload };
   } catch (error) {
     const status = error && error.name === "AbortError" ? "timeout" : "network_error";
@@ -1979,7 +2250,8 @@ export default {
         jobs: { processed: 0, success: 0, failed: 0, retrying: 0 },
       }, null, startedAtMs, true);
       const daemon = await readRedeemDaemonStatus(env).catch(() => null);
-      return json({ ok: Boolean(write && (write.metaOk || write.cacheOk)), write, daemon });
+      const automation = await readRedeemAutomationStatus(env).catch(() => null);
+      return json({ ok: Boolean(write && (write.metaOk || write.cacheOk || write.runnerOk)), write, daemon, automation });
     }
     if (url.pathname === "/api/redeem/discover" && request.method === "POST") {
       const ready = requireSupabase(env);
@@ -2019,6 +2291,6 @@ export default {
   },
   async scheduled(event, env, ctx) {
     ctx.waitUntil(runIntelCollector(env, "cron").catch(() => null));
-    ctx.waitUntil(runAutoRedeemCycle(env, "cron").catch(() => null));
+    ctx.waitUntil(runTrackedAutoRedeemCycle(env, "cloudflare-cron").catch(() => null));
   },
 };
