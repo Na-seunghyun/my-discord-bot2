@@ -1089,6 +1089,9 @@ function classifyRedeemPayload(payload) {
   if (errCode === 40102) return { status: "captcha_required", ok: false, message: message || "captcha required" };
   if (errCode === 40014) return { status: "invalid_code", ok: false, message: message || "code not found" };
   if (errCode === 40009) return { status: "not_logged_in", ok: false, message: message || "not logged in" };
+  if (/time\s*error|redemption\s*time|exchange\s*time|time\s*limit|超出兑换时间|교환\s*시간이\s*초과|交換.*時間/i.test(message)) {
+    return { status: "time_window_closed", ok: false, message: message || "time window closed" };
+  }
   if (/already|claimed|used/i.test(message)) return { status: "already_claimed", ok: false, message };
   if (/expired/i.test(message)) return { status: "expired", ok: false, message };
   return { status: "failed", ok: false, message: message || "redeem failed" };
