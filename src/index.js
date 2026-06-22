@@ -853,6 +853,86 @@ async function redeemStatus(env) {
   return json({ ok: true, supabase: true, registeredPlayers: players, activeCodes: Number.isFinite(activeCodes) ? activeCodes : 0 });
 }
 
+async function countSupabaseRows(env, path) {
+  const response = await supabaseFetch(env, path, {
+    headers: { prefer: "count=exact", range: "0-0" },
+  }).catch(() => null);
+  if (!response) return 0;
+  const range = response.headers.get("content-range") || "";
+  const total = Number(range.split("/")[1]);
+  return Number.isFinite(total) ? total : 0;
+}
+
+function publicRedeemPlayer(row) {
+  const profile = isPlainObject(row && row.profile_json) ? row.profile_json : {};
+  return {
+    id: String((row && row.id) || profile.id || ""),
+    nickname: cleanText((row && row.nickname) || profile.username || profile.nickname, 80),
+    state: numberOrNull((row && row.state) || profile.state || profile.kid),
+    town_hall_level: numberOrNull((row && row.town_hall_level) || profile.town_hall_level || profile.stove_lv),
+    avatar_url: cleanText((row && row.avatar_url) || profile.avatar_url || profile.avatar_image, 500),
+    created_at_ms: numberValue(row && row.created_at_ms),
+    updated_at_ms: numberValue(row && row.updated_at_ms),
+  };
+}
+
+function publicRedeemJob(row, playerMap = new Map()) {
+  const playerId = String((row && row.player_id) || "");
+  const player = playerMap.get(playerId) || {};
+  return {
+    player_id: playerId,
+    nickname: cleanText(player.nickname, 80),
+    state: numberOrNull(player.state),
+    town_hall_level: numberOrNull(player.town_hall_level),
+    avatar_url: cleanText(player.avatar_url, 500),
+    gift_code: normalizeGiftCode(row && row.gift_code),
+    status: cleanText(row && row.status, 40),
+    redeemed_at_ms: numberValue(row && row.redeemed_at_ms),
+    updated_at_ms: numberValue(row && row.updated_at_ms),
+  };
+}
+
+async function redeemActivity(request, env) {
+  const ready = requireSupabase(env);
+  if (!ready.ok) return ready.response;
+  const url = new URL(request.url);
+  const playerLimit = Math.min(12, Math.max(3, Number(url.searchParams.get("players")) || 6));
+  const successLimit = Math.min(30, Math.max(5, Number(url.searchParams.get("success")) || 14));
+
+  const [recentPlayersRaw, recentSuccessRaw, pendingJobs, successJobs, activeCodes, registeredPlayers] = await Promise.all([
+    supabaseJson(env, `/redeem_players?enabled=eq.true&consent=eq.true&select=id,nickname,state,town_hall_level,avatar_url,created_at_ms,updated_at_ms,profile_json&order=created_at_ms.desc&limit=${playerLimit}`).catch(() => []),
+    supabaseJson(env, `/redeem_jobs?status=eq.success&select=player_id,gift_code,status,redeemed_at_ms,updated_at_ms&order=redeemed_at_ms.desc&limit=${successLimit}`).catch(() => []),
+    countSupabaseRows(env, "/redeem_jobs?status=in.(pending,running)&select=job_key&limit=1").catch(() => 0),
+    countSupabaseRows(env, "/redeem_jobs?status=eq.success&select=job_key&limit=1").catch(() => 0),
+    countSupabaseRows(env, "/redeem_codes?status=eq.active&select=code&limit=1").catch(() => 0),
+    countRedeemPlayers(env).catch(() => 0),
+  ]);
+
+  const recentPlayers = (recentPlayersRaw || []).map(publicRedeemPlayer);
+  const successIds = [...new Set((recentSuccessRaw || []).map((row) => String(row.player_id || "")).filter(Boolean))];
+  let successProfiles = [];
+  if (successIds.length) {
+    successProfiles = await supabaseJson(
+      env,
+      `/redeem_players?id=in.(${successIds.map(encodeURIComponent).join(",")})&select=id,nickname,state,town_hall_level,avatar_url,profile_json`
+    ).catch(() => []);
+  }
+  const playerMap = new Map((successProfiles || []).map((row) => {
+    const player = publicRedeemPlayer(row);
+    return [player.id, player];
+  }));
+
+  return json({
+    ok: true,
+    registeredPlayers,
+    activeCodes,
+    pendingJobs,
+    successJobs,
+    recentPlayers,
+    recentSuccess: (recentSuccessRaw || []).map((row) => publicRedeemJob(row, playerMap)),
+  });
+}
+
 async function runRedeemJobs(env, reason = "manual") {
   const cfg = autoRedeemConfig(env);
   const result = { ok: true, reason, enabled: cfg.enabled, processed: 0, success: 0, failed: 0, pending: 0, results: [] };
@@ -1751,6 +1831,7 @@ export default {
     if (url.pathname === "/api/redeem/register-bulk" && request.method === "POST") return registerRedeemPlayersBulk(request, env);
     if (url.pathname === "/api/redeem/unregister" && request.method === "POST") return unregisterRedeemPlayer(request, env);
     if (url.pathname === "/api/redeem/status" && request.method === "GET") return redeemStatus(env);
+    if (url.pathname === "/api/redeem/activity" && request.method === "GET") return redeemActivity(request, env);
     if (url.pathname === "/api/redeem/codes" && request.method === "GET") return listRedeemCodes(request, env);
     if (url.pathname === "/api/redeem/code" && request.method === "POST") return addRedeemCode(request, env);
     if (url.pathname === "/api/redeem/discover" && request.method === "POST") {

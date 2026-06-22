@@ -126,6 +126,136 @@
       font-weight: 1000;
       font-size: 13px;
     }
+    .activity-docks {
+      position: fixed;
+      z-index: 30;
+      inset: auto 18px 18px 18px;
+      display: grid;
+      grid-template-columns: minmax(260px, 360px) minmax(280px, 420px);
+      justify-content: space-between;
+      gap: 16px;
+      pointer-events: none;
+    }
+    .dock {
+      pointer-events: auto;
+      border: 1px solid rgba(154,183,255,.24);
+      border-radius: 22px;
+      background:
+        linear-gradient(135deg, rgba(255,255,255,.12), rgba(255,255,255,.035)),
+        rgba(8, 13, 25, .92);
+      box-shadow:
+        0 24px 70px rgba(0,0,0,.46),
+        0 0 42px rgba(67,246,215,.12);
+      backdrop-filter: blur(18px);
+      overflow: hidden;
+    }
+    .dock[open] {
+      border-color: rgba(246,207,114,.36);
+    }
+    .dock summary {
+      min-height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 0 15px;
+      cursor: pointer;
+      color: var(--text);
+      font-weight: 1000;
+      list-style: none;
+    }
+    .dock summary::-webkit-details-marker { display: none; }
+    .dock summary::after {
+      content: "+";
+      min-height: 26px;
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid rgba(255,255,255,.16);
+      border-radius: 999px;
+      padding: 0 9px;
+      color: var(--gold);
+      background: rgba(246,207,114,.09);
+      font-size: 16px;
+      font-weight: 1000;
+    }
+    .dock[open] summary::after { content: "-"; }
+    .dock-body {
+      max-height: 330px;
+      overflow: auto;
+      padding: 0 14px 14px;
+    }
+    .dock-grid {
+      display: grid;
+      gap: 9px;
+    }
+    .mini-row {
+      display: grid;
+      grid-template-columns: 42px minmax(0, 1fr);
+      gap: 10px;
+      align-items: center;
+      padding: 10px;
+      border: 1px solid rgba(154,183,255,.18);
+      border-radius: 16px;
+      background: rgba(255,255,255,.055);
+    }
+    .mini-avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      object-fit: cover;
+      background:
+        linear-gradient(135deg, rgba(67,246,215,.24), rgba(246,207,114,.2)),
+        rgba(255,255,255,.06);
+    }
+    .avatar-letter {
+      display: grid;
+      place-items: center;
+      color: #071014;
+      font-size: 15px;
+      font-weight: 1000;
+    }
+    .mini-main {
+      min-width: 0;
+    }
+    .mini-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 1000;
+    }
+    .mini-title span:first-child {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .mini-sub {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      line-height: 1.35;
+    }
+    .dock-section-title {
+      margin: 14px 0 8px;
+      color: var(--gold);
+      font-size: 12px;
+      font-weight: 1000;
+      text-transform: uppercase;
+    }
+    .success-row {
+      grid-template-columns: minmax(0, 1fr);
+      border-color: rgba(128,246,168,.24);
+      background: rgba(128,246,168,.075);
+    }
+    .code-dock .mini-row {
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+    .code-dock .mini-title {
+      display: block;
+    }
     @media (max-width: 820px) {
       .wrap { width: min(100% - 22px, 1120px); padding-top: 12px; }
       .topbar { align-items: flex-start; flex-direction: column; }
@@ -133,6 +263,13 @@
       .grid { grid-template-columns: 1fr; }
       .actions { display: grid; grid-template-columns: 1fr; }
       .codes { grid-template-columns: 1fr; }
+      .activity-docks {
+        position: static;
+        width: min(100% - 22px, 1120px);
+        margin: 0 auto 24px;
+        grid-template-columns: 1fr;
+      }
+      .dock-body { max-height: none; }
       button, .back, select { width: 100%; justify-content: center; }
     }
   </style>
@@ -215,6 +352,30 @@
         <div class="codes" id="codesBox"><div class="note" data-i18n="loadingCodes">Loading codes...</div></div>
       </section>
     </main>
+
+    <section class="activity-docks" aria-label="Auto redeem live activity">
+      <details class="dock code-dock" open>
+        <summary><span data-i18n="codeDockTitle">Code Situation</span><span id="codeDockCount">-</span></summary>
+        <div class="dock-body">
+          <div class="dock-grid" id="codeDockList">
+            <div class="note" data-i18n="loadingCodes">Loading codes...</div>
+          </div>
+        </div>
+      </details>
+      <details class="dock user-dock" open>
+        <summary><span data-i18n="userDockTitle">Recent Registered Users</span><span id="userDockCount">-</span></summary>
+        <div class="dock-body">
+          <div class="dock-section-title" data-i18n="recentUsers">Recent users</div>
+          <div class="dock-grid" id="recentUsersList">
+            <div class="note" data-i18n="loadingActivity">Loading activity...</div>
+          </div>
+          <div class="dock-section-title" data-i18n="successTitle">Redeem success</div>
+          <div class="dock-grid" id="successList">
+            <div class="note" data-i18n="loadingActivity">Loading activity...</div>
+          </div>
+        </div>
+      </details>
+    </section>
   </div>
 
   <script>
@@ -352,6 +513,96 @@
       }
     };
 
+    const LANGUAGE_LABELS = {
+      ko: '한국어',
+      en: 'English',
+      'zh-CN': '简体中文',
+      'zh-TW': '繁體中文',
+      fr: 'Francais',
+      de: 'Deutsch',
+      th: 'ไทย',
+      id: 'Indonesia'
+    };
+    Object.assign(I18N.en, {
+      codeDockTitle: 'Code Situation',
+      userDockTitle: 'Recent Registered Users',
+      recentUsers: 'Recent users',
+      successTitle: 'Redeem success',
+      loadingActivity: 'Loading activity...',
+      noRecentUsers: 'No registered users yet.',
+      noSuccess: 'No successful redeem records yet.',
+      pendingJobs: 'Queued jobs',
+      successJobs: 'Success records',
+      success: 'Success',
+      redeemed: 'Redeemed',
+      code: 'Code',
+      unknownPlayer: 'Unknown player'
+    });
+    Object.assign(I18N.ko, {
+      brandSub: 'Kingshot 오토리딤',
+      back: '허브로 돌아가기',
+      heroA: '오토리딤',
+      heroB: '기프트 코드 센터',
+      subtitle: 'Kingshot 플레이어 ID를 한 번 등록해두면, 새 기프트 코드가 발견될 때 등록된 ID에 천천히 안전하게 지급 작업을 생성합니다.',
+      registerTitle: '플레이어 ID 등록',
+      playerId: 'Kingshot 플레이어 ID',
+      playerPlaceholder: '예: 123185474',
+      consent: '자동 기프트 코드 지급을 위해 이 플레이어 ID를 저장하는 데 동의합니다. 플레이어 ID와 공개 프로필 요약만 저장됩니다.',
+      bulkLabel: '대량 플레이어 ID',
+      bulkPlaceholder: 'ID를 공백, 쉼표, 줄바꿈으로 구분해서 붙여넣으세요.',
+      bulkRegister: '대량 ID 등록',
+      register: '등록하기',
+      loadToken: '저장된 토큰 보기',
+      ready: '준비됨.',
+      manageTitle: '등록 관리',
+      manageHelp: '관리 토큰은 등록 후 이 브라우저에만 저장됩니다. 나중에 ID를 제거하려면 이 토큰이 필요합니다.',
+      manageToken: '관리 토큰',
+      tokenPlaceholder: '등록 후 토큰이 표시됩니다',
+      remove: '내 ID 제거',
+      refreshCodes: '상태 새로고침',
+      noAction: '아직 작업 없음.',
+      codesTitle: '최신 기프트 코드',
+      codesHelp: '활성/만료 상태는 원본 사이트 기준으로 동기화됩니다.',
+      loadingCodes: '코드를 불러오는 중...',
+      noCodes: '아직 저장된 코드가 없습니다.',
+      enterId: '먼저 플레이어 ID를 입력하세요.',
+      needConsent: 'ID 저장에는 동의가 필요합니다.',
+      checking: '공식 프로필 확인 중...',
+      registered: '등록 완료.',
+      savedToken: '저장된 토큰을 불러왔습니다.',
+      noToken: '이 브라우저에는 저장된 토큰이 없습니다.',
+      needToken: '플레이어 ID와 관리 토큰이 필요합니다.',
+      removing: '등록 제거 중...',
+      removed: '등록이 제거되었습니다.',
+      active: '활성',
+      expired: '만료',
+      observed: '확인됨',
+      unknown: '알 수 없음',
+      discovered: '발견 시간',
+      recent: '최근 사용',
+      registeredPlayers: '등록된 ID',
+      activeCodes: '활성 코드',
+      bulkDone: '대량 등록 완료.',
+      created: '신규',
+      duplicate: '중복',
+      invalid: '무효',
+      reactivated: '재활성',
+      duplicateNote: '이미 등록된 ID입니다. 기존 관리 토큰은 유지했습니다.',
+      codeDockTitle: '코드 상황',
+      userDockTitle: '최근 등록 유저',
+      recentUsers: '최근 등록',
+      successTitle: '지급 성공',
+      loadingActivity: '활동 내역을 불러오는 중...',
+      noRecentUsers: '아직 등록된 유저가 없습니다.',
+      noSuccess: '아직 지급 성공 기록이 없습니다.',
+      pendingJobs: '대기 작업',
+      successJobs: '성공 기록',
+      success: '성공',
+      redeemed: '지급됨',
+      code: '코드',
+      unknownPlayer: '알 수 없는 유저'
+    });
+
     let currentLang = new URL(location.href).searchParams.get('lang') || localStorage.getItem('siteLang') || localStorage.getItem('lang') || 'ko';
     if (!I18N[currentLang]) currentLang = 'ko';
     const saved = JSON.parse(localStorage.getItem('autoRedeemRegistration') || '{}');
@@ -363,6 +614,7 @@
       document.documentElement.lang = currentLang;
       document.querySelectorAll('[data-i18n]').forEach((node) => { node.textContent = tr(node.dataset.i18n); });
       document.querySelectorAll('[data-placeholder]').forEach((node) => { node.placeholder = tr(node.dataset.placeholder); });
+      document.querySelectorAll('#langSelect option').forEach((option) => { option.textContent = LANGUAGE_LABELS[option.value] || option.textContent; });
       $('hubLink').href = `./index.html?lang=${encodeURIComponent(currentLang)}`;
       $('backLink').href = `./index.html?lang=${encodeURIComponent(currentLang)}`;
       $('langSelect').value = currentLang;
@@ -396,6 +648,25 @@
       if (!Number.isFinite(n) || n <= 0) return '-';
       return new Intl.DateTimeFormat(currentLang, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(n));
     }
+    function maskId(id) {
+      const text = String(id || '');
+      if (text.length <= 5) return text || '-';
+      return `${text.slice(0, 3)}***${text.slice(-2)}`;
+    }
+    function playerName(player) {
+      return player.nickname || player.username || player.id || player.player_id || tr('unknownPlayer');
+    }
+    function playerMeta(player) {
+      const state = player.state || player.kid || '-';
+      const level = player.town_hall_level || player.stove_lv || '-';
+      return `K${state} · Lv ${level}`;
+    }
+    function avatarNode(player) {
+      const name = playerName(player);
+      const src = player.avatar_url || player.avatar_image || '';
+      if (src) return `<img class="mini-avatar" src="${escapeHtml(src)}" alt="">`;
+      return `<div class="mini-avatar avatar-letter">${escapeHtml(name.slice(0, 1).toUpperCase() || 'K')}</div>`;
+    }
     function statusClass(row) {
       if (row.status === 'expired' || row.is_active === false) return 'expired';
       if (row.status === 'observed') return 'observed';
@@ -416,11 +687,69 @@
       }
     }
 
+    function renderCodeDock(codes) {
+      const rows = Array.isArray(codes) ? codes : [];
+      const active = rows.filter((row) => statusClass(row) === 'active').length;
+      $('codeDockCount').textContent = `${active}/${rows.length || 0}`;
+      if (!rows.length) {
+        $('codeDockList').innerHTML = `<div class="note">${escapeHtml(tr('noCodes'))}</div>`;
+        return;
+      }
+      $('codeDockList').innerHTML = rows.slice(0, 7).map((row) => {
+        const cls = statusClass(row);
+        const recent = row.last_redeem_status ? ` · ${tr('recent')}: ${row.last_redeem_status}` : '';
+        return `
+          <div class="mini-row">
+            <div class="mini-main">
+              <div class="mini-title"><span>${escapeHtml(row.code || '-')}</span></div>
+              <div class="mini-sub">${escapeHtml(formatTime(row.discovered_at_ms))}${escapeHtml(recent)}</div>
+            </div>
+            <span class="badge ${cls}">${escapeHtml(statusLabel(row))}</span>
+          </div>`;
+      }).join('');
+    }
+
+    function renderActivity(data) {
+      const recentPlayers = Array.isArray(data.recentPlayers) ? data.recentPlayers : [];
+      const recentSuccess = Array.isArray(data.recentSuccess) ? data.recentSuccess : [];
+      $('userDockCount').textContent = `${data.registeredPlayers || recentPlayers.length || 0}`;
+      $('registeredBadge').textContent = `${tr('registeredPlayers')}: ${data.registeredPlayers || 0}`;
+      if (data.activeCodes !== undefined) $('activeCodeBadge').textContent = `${tr('activeCodes')}: ${data.activeCodes || 0}`;
+
+      $('recentUsersList').innerHTML = recentPlayers.length ? recentPlayers.map((player) => `
+        <div class="mini-row">
+          ${avatarNode(player)}
+          <div class="mini-main">
+            <div class="mini-title"><span>${escapeHtml(playerName(player))}</span><span>${escapeHtml(maskId(player.id))}</span></div>
+            <div class="mini-sub">${escapeHtml(playerMeta(player))} · ${escapeHtml(formatTime(player.created_at_ms || player.updated_at_ms))}</div>
+          </div>
+        </div>`).join('') : `<div class="note">${escapeHtml(tr('noRecentUsers'))}</div>`;
+
+      $('successList').innerHTML = recentSuccess.length ? recentSuccess.map((row) => `
+        <div class="mini-row success-row">
+          <div class="mini-main">
+            <div class="mini-title"><span>${escapeHtml(playerName(row))}</span><span>${escapeHtml(tr('success'))}</span></div>
+            <div class="mini-sub">ID ${escapeHtml(maskId(row.player_id))} · ${escapeHtml(tr('code'))} ${escapeHtml(row.gift_code || '-')} · ${escapeHtml(formatTime(row.redeemed_at_ms || row.updated_at_ms))}</div>
+          </div>
+        </div>`).join('') : `<div class="note">${escapeHtml(tr('noSuccess'))}</div>`;
+    }
+
+    async function loadActivity() {
+      try {
+        const data = await api('/api/redeem/activity?players=6&success=14');
+        renderActivity(data);
+      } catch (error) {
+        $('recentUsersList').innerHTML = `<div class="note">${escapeHtml(error.message)}</div>`;
+        $('successList').innerHTML = `<div class="note">${escapeHtml(error.message)}</div>`;
+      }
+    }
+
     $('langSelect').addEventListener('change', (event) => {
       currentLang = event.target.value;
       applyI18n();
       loadStatus();
       loadCodes();
+      loadActivity();
     });
     if (saved.playerId) $('playerId').value = saved.playerId;
     if (saved.manageToken) $('manageToken').value = saved.manageToken;
@@ -444,6 +773,7 @@
           setStatus('registerStatus', `${tr('duplicateNote')}\n${data.player.username || data.player.id}`);
         }
         loadStatus();
+        loadActivity();
       } catch (error) {
         setStatus('registerStatus', error.message);
       }
@@ -464,6 +794,7 @@
           `${tr('bulkDone')}\n${tr('created')}: ${data.created || 0} / ${tr('reactivated')}: ${data.reactivated || 0} / ${tr('duplicate')}: ${data.duplicate || 0} / ${tr('invalid')}: ${data.invalid || 0}`
         );
         loadStatus();
+        loadActivity();
       } catch (error) {
         setStatus('registerStatus', error.message);
       }
@@ -488,6 +819,8 @@
         });
         localStorage.removeItem('autoRedeemRegistration');
         setStatus('manageStatus', tr('removed'));
+        loadStatus();
+        loadActivity();
       } catch (error) {
         setStatus('manageStatus', error.message);
       }
@@ -499,6 +832,7 @@
       try {
         const data = await api('/api/redeem/codes?limit=24');
         $('codeSummary').textContent = `${tr('registeredPlayers')}: ${data.registeredPlayers || 0}`;
+        renderCodeDock(data.codes || []);
         if (!data.codes || !data.codes.length) {
           box.innerHTML = `<div class="note">${escapeHtml(tr('noCodes'))}</div>`;
           return;
@@ -520,13 +854,24 @@
         }).join('');
       } catch (error) {
         box.innerHTML = `<div class="note">${escapeHtml(error.message)}</div>`;
+        $('codeDockList').innerHTML = `<div class="note">${escapeHtml(error.message)}</div>`;
       }
     }
 
-    $('refreshCodesBtn').addEventListener('click', loadCodes);
+    $('refreshCodesBtn').addEventListener('click', () => {
+      loadStatus();
+      loadCodes();
+      loadActivity();
+    });
     applyI18n();
     loadStatus();
     loadCodes();
+    loadActivity();
+    setInterval(() => {
+      loadStatus();
+      loadCodes();
+      loadActivity();
+    }, 60000);
   </script>
 </body>
 </html>

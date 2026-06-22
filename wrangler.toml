@@ -44,3 +44,9 @@ id = "59330ca6081448d8bd6d3a70445e8501"
 # INTEL_COLLECT_PLAYER_DETAILS = "20"
 # INTEL_COLLECT_STALE_HOURS = "72"
 # INTEL_COLLECT_DELAY_MS = "1000"
+
+# Optional Auto Redeem controls. The Worker cron above runs every 10 minutes.
+# A separate tmux runner can also call /api/redeem/run as a backup.
+# AUTO_REDEEM_ENABLED = "true"
+# AUTO_REDEEM_BATCH_SIZE = "12"
+# AUTO_REDEEM_DELAY_MS = "1200"

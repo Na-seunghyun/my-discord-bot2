@@ -150,6 +150,7 @@ POST /api/redeem/register-bulk
 POST /api/redeem/unregister
 GET  /api/redeem/status
 GET  /api/redeem/codes
+GET  /api/redeem/activity
 ```
 
 Admin endpoints:
@@ -176,3 +177,19 @@ Recommended free-plan behavior:
 - Registered users receive a manage token in the browser. They need that token to remove their ID later.
 - Duplicate registrations never overwrite an existing manage token.
 - Bulk registration validates each ID through the official player lookup, saves only valid IDs, and skips duplicates safely.
+
+Optional tmux backup runner:
+
+```bash
+export HUB_BASE_URL="https://my-discord-bot2.looloo90.workers.dev"
+export ADMIN_TOKEN="YOUR_ADMIN_TOKEN"
+export AUTO_REDEEM_DAEMON_INTERVAL="600"
+tmux new -s auto-redeem
+python3 auto_redeem_daemon.py
+```
+
+Detach from tmux with `Ctrl+B`, then `D`. Reopen it later with:
+
+```bash
+tmux attach -t auto-redeem
+```
