@@ -949,6 +949,23 @@
         rgba(5, 18, 18, .74);
       font-weight: 1000;
       line-height: 1.45;
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+    .engine-card.unknown {
+      color: #dbe7ff;
+      border-color: rgba(168,197,255,.30);
+      background:
+        linear-gradient(180deg, rgba(168,197,255,.13), rgba(168,197,255,.04)),
+        rgba(7, 13, 28, .74);
+    }
+    .engine-card.online,
+    .engine-card.stable {
+      color: #d7ffe5;
+      border-color: rgba(126,255,178,.38);
+      background:
+        linear-gradient(180deg, rgba(126,255,178,.16), rgba(126,255,178,.05)),
+        rgba(5, 18, 18, .76);
     }
     .engine-card.warning,
     .engine-card.offline,
@@ -1189,6 +1206,21 @@
     .redeem-redesign .live-panel .dock-body {
       max-height: 430px;
     }
+    .redeem-redesign .console-card,
+    .redeem-redesign .live-command-center,
+    .redeem-redesign .live-panel,
+    .redeem-redesign .mini-row,
+    .redeem-redesign .mini-main,
+    .redeem-redesign .mini-title,
+    .redeem-redesign .mini-sub {
+      min-width: 0;
+    }
+    @media (max-width: 1180px) {
+      .redeem-redesign .live-columns,
+      .mission-grid {
+        grid-template-columns: 1fr;
+      }
+    }
     @media (max-width: 1080px) {
       .redeem-shell {
         grid-template-columns: 1fr;
@@ -1254,6 +1286,16 @@
       .success-meter {
         min-width: 0;
         text-align: left;
+      }
+      .code-dock .mini-row,
+      .code-panel .mini-row {
+        grid-template-columns: 1fr;
+      }
+      .code-actions {
+        width: 100%;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
       }
     }
   </style>
@@ -1885,7 +1927,7 @@
       const badge = $('daemonBadge');
       if (!badge) return;
       if (!daemon || !daemon.lastSeenAtMs) {
-        badge.className = 'daemon-badge unknown';
+        badge.className = 'engine-card daemon-badge unknown';
         badge.textContent = tr('automationUnknown');
         return;
       }
@@ -1900,7 +1942,7 @@
       const extra = jobs ? ` / ${jobs} ${tr('daemonJobs')}` : '';
       const primarySource = daemon.primary && daemon.primary.source ? daemon.primary.source : daemon.source;
       const source = primarySource === 'cloudflare-cron' ? tr('automationCloudflare') : tr('automationPutty');
-      badge.className = `daemon-badge ${uiState}`;
+      badge.className = `engine-card daemon-badge ${uiState}`;
       badge.textContent = `${label} · ${formatAgo(daemon.lastSeenAtMs)}${extra}`;
       badge.title = daemon.error || '';
       badge.textContent = `${label} · ${source} · ${formatAgo(daemon.lastSeenAtMs)}${extra}`;
