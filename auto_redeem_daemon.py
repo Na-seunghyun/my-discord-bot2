@@ -39,6 +39,7 @@ def post_json(path: str) -> dict:
             "content-type": "application/json",
             "user-agent": USER_AGENT,
             "x-admin-token": ADMIN_TOKEN,
+            "x-auto-redeem-runner": "putty-daemon",
         },
     )
     with urllib.request.urlopen(request, timeout=45) as response:

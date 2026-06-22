@@ -104,9 +104,16 @@ create index if not exists redeem_jobs_status_idx
 create index if not exists redeem_jobs_player_idx
   on public.redeem_jobs using btree (player_id);
 
+create table if not exists public.redeem_meta (
+  key text primary key,
+  value_json jsonb not null default '{}'::jsonb,
+  updated_at_ms bigint not null default 0
+);
+
 alter table public.redeem_players enable row level security;
 alter table public.redeem_codes enable row level security;
 alter table public.redeem_jobs enable row level security;
+alter table public.redeem_meta enable row level security;
 
 -- No public policies are required because the Cloudflare Worker uses the
 -- Supabase service role key server-side. Do not expose the service role key

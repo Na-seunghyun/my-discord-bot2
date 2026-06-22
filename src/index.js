@@ -15,6 +15,7 @@ const OFFICIAL_GIFT_SIGN_SALT = "mN4!pQs6JrYwV9";
 const OFFICIAL_GIFT_TIMEOUT_MS = 10000;
 const AUTO_REDEEM_DEFAULT_BATCH_SIZE = 12;
 const AUTO_REDEEM_DEFAULT_DELAY_MS = 1200;
+const AUTO_REDEEM_DEFAULT_MAX_ATTEMPTS = 3;
 const COLLECTOR_STATE_KEY = "intel:collector:state";
 const COLLECTOR_DEFAULT_MIN_KINGDOM = 1;
 const COLLECTOR_DEFAULT_MAX_KINGDOM = 2000;
@@ -518,7 +519,83 @@ function autoRedeemConfig(env) {
     enabled: envBool(env.AUTO_REDEEM_ENABLED, true),
     batchSize: envNumber(env.AUTO_REDEEM_BATCH_SIZE, AUTO_REDEEM_DEFAULT_BATCH_SIZE, 1, 30),
     delayMs: envNumber(env.AUTO_REDEEM_DELAY_MS, AUTO_REDEEM_DEFAULT_DELAY_MS, 300, 8000),
+    maxAttempts: envNumber(env.AUTO_REDEEM_MAX_ATTEMPTS, AUTO_REDEEM_DEFAULT_MAX_ATTEMPTS, 1, 8),
   };
+}
+
+function isRetryableRedeemStatus(status) {
+  return new Set(["failed", "timeout", "network_error", "server_error", "rate_limited"]).has(String(status || ""));
+}
+
+function isDaemonRequest(request) {
+  const ua = request.headers.get("user-agent") || "";
+  const runner = request.headers.get("x-auto-redeem-runner") || "";
+  return /NashshAutoRedeem|auto.?redeem.?daemon|putty/i.test(`${ua} ${runner}`);
+}
+
+function publicDaemonStatus(row) {
+  const value = (row && row.value_json) || {};
+  const lastSeenAtMs = numberValue(value.lastSeenAtMs || row && row.updated_at_ms);
+  const ageMs = lastSeenAtMs ? Math.max(0, Date.now() - lastSeenAtMs) : 0;
+  const stale = !lastSeenAtMs || ageMs > 12 * 60 * 1000;
+  const error = meaningfulText(value.error || (value.discoveryErrors || [])[0], 180);
+  const state = stale ? "offline" : value.ok === false ? "error" : error ? "warning" : "online";
+  return {
+    state,
+    ok: value.ok !== false && !stale,
+    stale,
+    source: cleanText(value.source || "putty", 40),
+    lastSeenAtMs,
+    ageMs,
+    jobsProcessed: numberValue(value.jobsProcessed),
+    success: numberValue(value.success),
+    failed: numberValue(value.failed),
+    active: numberValue(value.active),
+    discovered: numberValue(value.discovered),
+    error,
+  };
+}
+
+async function readRedeemDaemonStatus(env) {
+  if (!supabaseConfig(env).enabled) return null;
+  const rows = await supabaseJson(env, "/redeem_meta?key=eq.auto_redeem_daemon&select=key,value_json,updated_at_ms&limit=1").catch(() => []);
+  if (!rows || !rows[0]) return null;
+  return publicDaemonStatus(rows[0]);
+}
+
+async function saveRedeemDaemonStatus(env, request, result, error = null, startedAtMs = Date.now()) {
+  if (!supabaseConfig(env).enabled || !isDaemonRequest(request)) return;
+  const now = Date.now();
+  const discovery = result && result.discovery || {};
+  const jobs = result && result.jobs || {};
+  const errors = [
+    ...((discovery && discovery.errors) || []),
+    error && error.message,
+    result && result.error,
+    jobs && jobs.error,
+  ].filter(Boolean).map((item) => cleanText(item, 180)).slice(0, 4);
+  await supabaseJson(env, "/redeem_meta?on_conflict=key", {
+    method: "POST",
+    headers: { prefer: "resolution=merge-duplicates" },
+    body: JSON.stringify([{
+      key: "auto_redeem_daemon",
+      value_json: {
+        source: "putty",
+        ok: !error && result && result.ok !== false,
+        lastSeenAtMs: now,
+        startedAtMs,
+        durationMs: now - startedAtMs,
+        active: Array.isArray(discovery.active) ? discovery.active.length : 0,
+        discovered: Array.isArray(discovery.discovered) ? discovery.discovered.length : 0,
+        jobsProcessed: numberValue(jobs.processed),
+        success: numberValue(jobs.success),
+        failed: numberValue(jobs.failed),
+        retrying: numberValue(jobs.retrying),
+        discoveryErrors: errors,
+      },
+      updated_at_ms: now,
+    }]),
+  }).catch(() => {});
 }
 
 function requireSupabase(env) {
@@ -841,16 +918,17 @@ async function listRedeemCodes(request, env) {
 }
 
 async function redeemStatus(env) {
-  if (!supabaseConfig(env).enabled) return json({ ok: true, supabase: false, registeredPlayers: 0, activeCodes: 0 });
-  const [players, codes] = await Promise.all([
+  if (!supabaseConfig(env).enabled) return json({ ok: true, supabase: false, registeredPlayers: 0, activeCodes: 0, daemon: null });
+  const [players, codes, daemon] = await Promise.all([
     countRedeemPlayers(env).catch(() => 0),
     supabaseFetch(env, "/redeem_codes?status=eq.active&select=code&limit=1", {
       headers: { prefer: "count=exact", range: "0-0" },
     }).catch(() => null),
+    readRedeemDaemonStatus(env).catch(() => null),
   ]);
   const range = codes ? codes.headers.get("content-range") || "" : "";
   const activeCodes = Number(range.split("/")[1]);
-  return json({ ok: true, supabase: true, registeredPlayers: players, activeCodes: Number.isFinite(activeCodes) ? activeCodes : 0 });
+  return json({ ok: true, supabase: true, registeredPlayers: players, activeCodes: Number.isFinite(activeCodes) ? activeCodes : 0, daemon });
 }
 
 async function countSupabaseRows(env, path) {
@@ -899,13 +977,14 @@ async function redeemActivity(request, env) {
   const playerLimit = Math.min(12, Math.max(3, Number(url.searchParams.get("players")) || 6));
   const successLimit = Math.min(30, Math.max(5, Number(url.searchParams.get("success")) || 14));
 
-  const [recentPlayersRaw, recentSuccessRaw, pendingJobs, successJobs, activeCodes, registeredPlayers] = await Promise.all([
+  const [recentPlayersRaw, recentSuccessRaw, pendingJobs, successJobs, activeCodes, registeredPlayers, daemon] = await Promise.all([
     supabaseJson(env, `/redeem_players?enabled=eq.true&consent=eq.true&select=id,nickname,state,town_hall_level,avatar_url,created_at_ms,updated_at_ms,profile_json&order=created_at_ms.desc&limit=${playerLimit}`).catch(() => []),
     supabaseJson(env, `/redeem_jobs?status=eq.success&select=player_id,gift_code,status,redeemed_at_ms,updated_at_ms&order=redeemed_at_ms.desc&limit=${successLimit}`).catch(() => []),
     countSupabaseRows(env, "/redeem_jobs?status=in.(pending,running)&select=job_key&limit=1").catch(() => 0),
     countSupabaseRows(env, "/redeem_jobs?status=eq.success&select=job_key&limit=1").catch(() => 0),
     countSupabaseRows(env, "/redeem_codes?status=eq.active&select=code&limit=1").catch(() => 0),
     countRedeemPlayers(env).catch(() => 0),
+    readRedeemDaemonStatus(env).catch(() => null),
   ]);
 
   const recentPlayers = (recentPlayersRaw || []).map(publicRedeemPlayer);
@@ -928,6 +1007,7 @@ async function redeemActivity(request, env) {
     activeCodes,
     pendingJobs,
     successJobs,
+    daemon,
     recentPlayers,
     recentSuccess: (recentSuccessRaw || []).map((row) => publicRedeemJob(row, playerMap)),
   });
@@ -935,27 +1015,34 @@ async function redeemActivity(request, env) {
 
 async function runRedeemJobs(env, reason = "manual") {
   const cfg = autoRedeemConfig(env);
-  const result = { ok: true, reason, enabled: cfg.enabled, processed: 0, success: 0, failed: 0, pending: 0, results: [] };
+  const result = { ok: true, reason, enabled: cfg.enabled, processed: 0, success: 0, failed: 0, retrying: 0, pending: 0, results: [] };
   if (!cfg.enabled) return { ...result, ok: false, skipped: "AUTO_REDEEM_ENABLED is off." };
   if (!supabaseConfig(env).enabled) return { ...result, ok: false, skipped: "Supabase is not configured." };
+  const staleRunningCutoff = Date.now() - 15 * 60 * 1000;
+  await supabaseJson(env, `/redeem_jobs?status=eq.running&updated_at_ms=lt.${staleRunningCutoff}&attempts=lt.${cfg.maxAttempts}`, {
+    method: "PATCH",
+    body: JSON.stringify({ status: "pending", updated_at_ms: Date.now(), last_error: "Recovered stale running job for retry." }),
+  }).catch(() => {});
   const jobs = await supabaseJson(env, `/redeem_jobs?status=eq.pending&select=job_key,player_id,gift_code,attempts&order=created_at_ms.asc&limit=${cfg.batchSize}`).catch(() => []);
   result.pending = (jobs || []).length;
   for (const job of jobs || []) {
     await delay(cfg.delayMs);
     const now = Date.now();
+    const attemptNumber = numberValue(job.attempts) + 1;
     await supabaseJson(env, `/redeem_jobs?job_key=eq.${encodeURIComponent(job.job_key)}`, {
       method: "PATCH",
-      body: JSON.stringify({ status: "running", attempts: numberValue(job.attempts) + 1, updated_at_ms: now }),
+      body: JSON.stringify({ status: "running", attempts: attemptNumber, updated_at_ms: now }),
     }).catch(() => {});
     try {
       const redeem = await redeemOfficialGiftCode(job.player_id, job.gift_code);
       const doneAt = Date.now();
-      const finalStatus = redeem.ok ? "success" : redeem.status;
+      const retrying = !redeem.ok && isRetryableRedeemStatus(redeem.status) && attemptNumber < cfg.maxAttempts;
+      const finalStatus = retrying ? "pending" : redeem.ok ? "success" : redeem.status;
       await supabaseJson(env, `/redeem_jobs?job_key=eq.${encodeURIComponent(job.job_key)}`, {
         method: "PATCH",
         body: JSON.stringify({
           status: finalStatus,
-          attempts: numberValue(job.attempts) + 1,
+          attempts: attemptNumber,
           last_error: redeem.ok ? "" : redeem.message,
           response_json: redeem.response || redeem,
           redeemed_at_ms: redeem.ok ? doneAt : null,
@@ -965,22 +1052,25 @@ async function runRedeemJobs(env, reason = "manual") {
       if (redeem.player) await saveOfficialProfile(env, redeem.player);
       result.processed += 1;
       if (redeem.ok) result.success += 1;
+      else if (retrying) result.retrying += 1;
       else result.failed += 1;
       result.results.push({ playerId: job.player_id, code: job.gift_code, status: finalStatus, message: redeem.message });
     } catch (error) {
       const doneAt = Date.now();
+      const retrying = attemptNumber < cfg.maxAttempts;
       await supabaseJson(env, `/redeem_jobs?job_key=eq.${encodeURIComponent(job.job_key)}`, {
         method: "PATCH",
         body: JSON.stringify({
-          status: "failed",
-          attempts: numberValue(job.attempts) + 1,
+          status: retrying ? "pending" : "failed",
+          attempts: attemptNumber,
           last_error: cleanText(error.message, 240),
           updated_at_ms: doneAt,
         }),
       }).catch(() => {});
       result.processed += 1;
-      result.failed += 1;
-      result.results.push({ playerId: job.player_id, code: job.gift_code, status: "failed", message: cleanText(error.message, 160) });
+      if (retrying) result.retrying += 1;
+      else result.failed += 1;
+      result.results.push({ playerId: job.player_id, code: job.gift_code, status: retrying ? "pending" : "failed", message: cleanText(error.message, 160) });
     }
   }
   return result;
@@ -1032,8 +1122,27 @@ async function redeemOfficialGiftCode(playerId, giftCode) {
       cf: { cacheTtl: 0 },
     });
     const payload = await response.json().catch(() => ({ code: 1, msg: `HTTP ${response.status}` }));
+    if (!response.ok) {
+      const retryable = response.status === 408 || response.status === 429 || response.status >= 500;
+      return {
+        ok: false,
+        status: response.status === 429 ? "rate_limited" : retryable ? "server_error" : "failed",
+        message: meaningfulText(payload && (payload.msg || payload.message), 160) || `HTTP ${response.status}`,
+        player: profile,
+        response: payload,
+      };
+    }
     const result = classifyRedeemPayload(payload);
     return { ...result, player: profile, response: payload };
+  } catch (error) {
+    const status = error && error.name === "AbortError" ? "timeout" : "network_error";
+    return {
+      ok: false,
+      status,
+      message: status === "timeout" ? "Official gift API timed out." : cleanText(error.message, 160) || "Network error.",
+      player: profile,
+      response: { error: cleanText(error.message, 240), name: cleanText(error.name, 80) },
+    };
   } finally {
     clearTimeout(timer);
   }
@@ -1846,7 +1955,16 @@ export default {
       if (!ready.ok) return ready.response;
       const admin = requireAdmin(request, env);
       if (!admin.ok) return admin.response;
-      return json(await runAutoRedeemCycle(env, "manual"));
+      const startedAtMs = Date.now();
+      try {
+        const result = await runAutoRedeemCycle(env, isDaemonRequest(request) ? "putty-daemon" : "manual");
+        await saveRedeemDaemonStatus(env, request, result, null, startedAtMs);
+        return json(result);
+      } catch (error) {
+        const result = { ok: false, error: cleanText(error.message, 180) };
+        await saveRedeemDaemonStatus(env, request, result, error, startedAtMs);
+        return json(result, 500);
+      }
     }
     if (url.pathname === "/api/feedback" && request.method === "POST") return submitFeedback(request, env);
     if (url.pathname === "/api/feedback" && request.method === "GET") return listFeedback(request, env);

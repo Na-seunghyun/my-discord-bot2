@@ -13,6 +13,7 @@ crons = ["*/10 * * * *"]
 AUTO_REDEEM_ENABLED = "true"
 AUTO_REDEEM_BATCH_SIZE = "12"
 AUTO_REDEEM_DELAY_MS = "1200"
+AUTO_REDEEM_MAX_ATTEMPTS = "3"
 
 [[kv_namespaces]]
 binding = "FEEDBACK"

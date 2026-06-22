@@ -126,6 +126,31 @@
       font-weight: 1000;
       font-size: 13px;
     }
+    .trust .daemon-badge {
+      border-color: rgba(154,183,255,.24);
+      color: var(--muted);
+      background: rgba(255,255,255,.06);
+      transition: border-color .2s ease, color .2s ease, background .2s ease, box-shadow .2s ease;
+    }
+    .trust .daemon-badge.online {
+      border-color: rgba(128,246,168,.38);
+      color: var(--ok);
+      background: rgba(128,246,168,.10);
+      box-shadow: 0 0 22px rgba(128,246,168,.12);
+    }
+    .trust .daemon-badge.warning {
+      border-color: rgba(246,207,114,.42);
+      color: var(--gold);
+      background: rgba(246,207,114,.10);
+      box-shadow: 0 0 22px rgba(246,207,114,.12);
+    }
+    .trust .daemon-badge.error,
+    .trust .daemon-badge.offline {
+      border-color: rgba(255,114,109,.42);
+      color: #ffaaa7;
+      background: rgba(255,114,109,.10);
+      box-shadow: 0 0 22px rgba(255,114,109,.12);
+    }
     .activity-docks {
       position: fixed;
       z-index: 30;
@@ -415,6 +440,7 @@
       <div class="trust">
         <span id="registeredBadge">0</span>
         <span id="activeCodeBadge">0</span>
+        <span id="daemonBadge" class="daemon-badge unknown" data-i18n="daemonChecking">PuTTY server checking...</span>
       </div>
     </section>
 
@@ -661,7 +687,15 @@
       code: 'Code',
       unknownPlayer: 'Unknown player',
       copyCode: 'Copy',
-      copiedCode: 'Copied'
+      copiedCode: 'Copied',
+      daemonChecking: 'PuTTY server checking...',
+      daemonOnline: 'PuTTY server online',
+      daemonWarning: 'PuTTY server warning',
+      daemonOffline: 'PuTTY server offline',
+      daemonError: 'PuTTY server error',
+      daemonUnknown: 'PuTTY server unknown',
+      daemonNever: 'No heartbeat yet',
+      daemonJobs: 'jobs'
     });
     Object.assign(I18N.ko, {
       brandSub: 'Kingshot 오토리딤',
@@ -727,7 +761,15 @@
       code: '코드',
       unknownPlayer: '알 수 없는 유저',
       copyCode: '복사',
-      copiedCode: '복사됨'
+      copiedCode: '복사됨',
+      daemonChecking: 'PuTTY 서버 확인 중...',
+      daemonOnline: 'PuTTY 서버 정상',
+      daemonWarning: 'PuTTY 서버 주의',
+      daemonOffline: 'PuTTY 서버 오프라인',
+      daemonError: 'PuTTY 서버 오류',
+      daemonUnknown: 'PuTTY 서버 알 수 없음',
+      daemonNever: '아직 신호 없음',
+      daemonJobs: '작업'
     });
 
     let currentLang = new URL(location.href).searchParams.get('lang') || localStorage.getItem('siteLang') || localStorage.getItem('lang') || 'ko';
@@ -775,6 +817,18 @@
       if (!Number.isFinite(n) || n <= 0) return '-';
       return new Intl.DateTimeFormat(currentLang, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(n));
     }
+    function formatAgo(ms) {
+      const n = Number(ms);
+      if (!Number.isFinite(n) || n <= 0) return tr('daemonNever');
+      const diff = Math.max(0, Date.now() - n);
+      const minutes = Math.floor(diff / 60000);
+      if (minutes < 1) return currentLang === 'ko' ? '방금 전' : 'just now';
+      if (minutes < 60) return currentLang === 'ko' ? `${minutes}분 전` : `${minutes}m ago`;
+      const hours = Math.floor(minutes / 60);
+      if (hours < 24) return currentLang === 'ko' ? `${hours}시간 전` : `${hours}h ago`;
+      const days = Math.floor(hours / 24);
+      return currentLang === 'ko' ? `${days}일 전` : `${days}d ago`;
+    }
     function maskId(id) {
       const text = String(id || '');
       if (text.length <= 5) return text || '-';
@@ -808,10 +862,34 @@
         const data = await api('/api/redeem/status');
         $('registeredBadge').textContent = `${tr('registeredPlayers')}: ${data.registeredPlayers || 0}`;
         $('activeCodeBadge').textContent = `${tr('activeCodes')}: ${data.activeCodes || 0}`;
+        renderDaemonStatus(data.daemon);
       } catch {
         $('registeredBadge').textContent = `${tr('registeredPlayers')}: -`;
         $('activeCodeBadge').textContent = `${tr('activeCodes')}: -`;
+        renderDaemonStatus(null);
       }
+    }
+    function renderDaemonStatus(daemon) {
+      const badge = $('daemonBadge');
+      if (!badge) return;
+      if (!daemon || !daemon.lastSeenAtMs) {
+        badge.className = 'daemon-badge unknown';
+        badge.textContent = tr('daemonUnknown');
+        return;
+      }
+      const state = daemon.state || (daemon.stale ? 'offline' : daemon.ok === false ? 'error' : 'online');
+      const label = state === 'online'
+        ? tr('daemonOnline')
+        : state === 'warning'
+          ? tr('daemonWarning')
+          : state === 'error'
+            ? tr('daemonError')
+            : tr('daemonOffline');
+      const jobs = Number(daemon.jobsProcessed || 0);
+      const extra = jobs ? ` / ${jobs} ${tr('daemonJobs')}` : '';
+      badge.className = `daemon-badge ${state}`;
+      badge.textContent = `${label} · ${formatAgo(daemon.lastSeenAtMs)}${extra}`;
+      badge.title = daemon.error || '';
     }
 
     function renderCodeDock(codes) {
@@ -863,6 +941,7 @@
       $('successDockCount').textContent = `${recentSuccess.length || 0}`;
       $('registeredBadge').textContent = `${tr('registeredPlayers')}: ${data.registeredPlayers || 0}`;
       if (data.activeCodes !== undefined) $('activeCodeBadge').textContent = `${tr('activeCodes')}: ${data.activeCodes || 0}`;
+      if (data.daemon !== undefined) renderDaemonStatus(data.daemon);
 
       $('recentUsersList').innerHTML = recentPlayers.length ? recentPlayers.map((player) => `
         <div class="mini-row">
