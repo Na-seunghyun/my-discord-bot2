@@ -534,7 +534,7 @@ function isDaemonRequest(request) {
 }
 
 function publicDaemonStatus(row) {
-  const value = (row && row.value_json) || {};
+  const value = (row && (row.value_json || row.response_json)) || {};
   const lastSeenAtMs = numberValue(value.lastSeenAtMs || row && row.updated_at_ms);
   const ageMs = lastSeenAtMs ? Math.max(0, Date.now() - lastSeenAtMs) : 0;
   const stale = !lastSeenAtMs || ageMs > 12 * 60 * 1000;
@@ -559,12 +559,16 @@ function publicDaemonStatus(row) {
 async function readRedeemDaemonStatus(env) {
   if (!supabaseConfig(env).enabled) return null;
   const rows = await supabaseJson(env, "/redeem_meta?key=eq.auto_redeem_daemon&select=key,value_json,updated_at_ms&limit=1").catch(() => []);
-  if (!rows || !rows[0]) return null;
-  return publicDaemonStatus(rows[0]);
+  if (rows && rows[0]) return publicDaemonStatus(rows[0]);
+  const fallbackRows = await supabaseJson(env, "/intel_cache?cache_key=eq.redeem_daemon_status&select=cache_key,response_json,updated_at_ms&limit=1").catch(() => []);
+  if (fallbackRows && fallbackRows[0]) return publicDaemonStatus(fallbackRows[0]);
+  return null;
 }
 
-async function saveRedeemDaemonStatus(env, request, result, error = null, startedAtMs = Date.now()) {
-  if (!supabaseConfig(env).enabled || !isDaemonRequest(request)) return;
+async function saveRedeemDaemonStatus(env, request, result, error = null, startedAtMs = Date.now(), force = false) {
+  const writeStatus = { skipped: false, metaOk: false, cacheOk: false, errors: [] };
+  if (!supabaseConfig(env).enabled) return { ...writeStatus, skipped: true, errors: ["Supabase is not configured."] };
+  if (!force && !isDaemonRequest(request)) return { ...writeStatus, skipped: true, errors: ["Not a daemon request."] };
   const now = Date.now();
   const discovery = result && result.discovery || {};
   const jobs = result && result.jobs || {};
@@ -574,28 +578,45 @@ async function saveRedeemDaemonStatus(env, request, result, error = null, starte
     result && result.error,
     jobs && jobs.error,
   ].filter(Boolean).map((item) => cleanText(item, 180)).slice(0, 4);
+  const heartbeat = {
+    source: "putty",
+    ok: !error && result && result.ok !== false,
+    lastSeenAtMs: now,
+    startedAtMs,
+    durationMs: now - startedAtMs,
+    active: Array.isArray(discovery.active) ? discovery.active.length : 0,
+    discovered: Array.isArray(discovery.discovered) ? discovery.discovered.length : 0,
+    jobsProcessed: numberValue(jobs.processed),
+    success: numberValue(jobs.success),
+    failed: numberValue(jobs.failed),
+    retrying: numberValue(jobs.retrying),
+    discoveryErrors: errors,
+  };
   await supabaseJson(env, "/redeem_meta?on_conflict=key", {
     method: "POST",
     headers: { prefer: "resolution=merge-duplicates" },
     body: JSON.stringify([{
       key: "auto_redeem_daemon",
-      value_json: {
-        source: "putty",
-        ok: !error && result && result.ok !== false,
-        lastSeenAtMs: now,
-        startedAtMs,
-        durationMs: now - startedAtMs,
-        active: Array.isArray(discovery.active) ? discovery.active.length : 0,
-        discovered: Array.isArray(discovery.discovered) ? discovery.discovered.length : 0,
-        jobsProcessed: numberValue(jobs.processed),
-        success: numberValue(jobs.success),
-        failed: numberValue(jobs.failed),
-        retrying: numberValue(jobs.retrying),
-        discoveryErrors: errors,
-      },
+      value_json: heartbeat,
       updated_at_ms: now,
     }]),
-  }).catch(() => {});
+  }).then(() => { writeStatus.metaOk = true; }).catch((writeError) => {
+    writeStatus.errors.push(`redeem_meta: ${cleanText(writeError.message, 180)}`);
+  });
+  await supabaseJson(env, "/intel_cache?on_conflict=cache_key", {
+    method: "POST",
+    headers: { prefer: "resolution=merge-duplicates" },
+    body: JSON.stringify([{
+      cache_key: "redeem_daemon_status",
+      api_path: "redeem/daemon/status",
+      response_json: heartbeat,
+      updated_at_ms: now,
+      byte_size: JSON.stringify(heartbeat).length,
+    }]),
+  }).then(() => { writeStatus.cacheOk = true; }).catch((writeError) => {
+    writeStatus.errors.push(`intel_cache: ${cleanText(writeError.message, 180)}`);
+  });
+  return { ...writeStatus, heartbeat };
 }
 
 function requireSupabase(env) {
@@ -1946,6 +1967,20 @@ export default {
     if (url.pathname === "/api/redeem/activity" && request.method === "GET") return redeemActivity(request, env);
     if (url.pathname === "/api/redeem/codes" && request.method === "GET") return listRedeemCodes(request, env);
     if (url.pathname === "/api/redeem/code" && request.method === "POST") return addRedeemCode(request, env);
+    if (url.pathname === "/api/redeem/daemon-test" && request.method === "POST") {
+      const ready = requireSupabase(env);
+      if (!ready.ok) return ready.response;
+      const admin = requireAdmin(request, env);
+      if (!admin.ok) return admin.response;
+      const startedAtMs = Date.now();
+      const write = await saveRedeemDaemonStatus(env, request, {
+        ok: true,
+        discovery: { active: [], discovered: [], errors: [] },
+        jobs: { processed: 0, success: 0, failed: 0, retrying: 0 },
+      }, null, startedAtMs, true);
+      const daemon = await readRedeemDaemonStatus(env).catch(() => null);
+      return json({ ok: Boolean(write && (write.metaOk || write.cacheOk)), write, daemon });
+    }
     if (url.pathname === "/api/redeem/discover" && request.method === "POST") {
       const ready = requireSupabase(env);
       if (!ready.ok) return ready.response;

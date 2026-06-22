@@ -63,6 +63,7 @@ def run_once() -> None:
                     "jobsProcessed": jobs.get("processed", 0),
                     "success": jobs.get("success", 0),
                     "failed": jobs.get("failed", 0),
+                    "retrying": jobs.get("retrying", 0),
                     "errors": discovery.get("errors") or [],
                 },
                 ensure_ascii=False,
