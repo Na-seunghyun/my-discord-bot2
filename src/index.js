@@ -30,6 +30,14 @@ const GIFT_CODE_DENYLIST = new Set([
   "REGISTER", "REWARDS", "SERVER", "STATUS", "TOOLS", "UNKNOWN", "WAITING",
   "AUTO-REDEEM", "AUTO_REDEEM", "GIFT-CODE", "GIFT-CODES", "GIFT_CODE", "GIFT_CODES",
   "KSREDEEM", "KINGSREDEEM", "REDEEMER",
+  "CALCULATOR", "CALCULATORS", "CHANGE", "LANGUAGE", "TOGGLE", "QUICK", "THEME", "MASTER",
+  "HISTORY", "TRACKER", "BULK", "NOTICE", "SIGN", "SHARE", "LINK", "VIEW", "MORE", "BLOG",
+  "CONTACT", "CONTRIBUTORS", "ANNOUNCEMENTS", "RESOURCES", "POPULAR", "GUIDES", "GUIDE",
+  "DATABASES", "PLANNER", "SIMULATOR", "TEMPLATES", "CALENDAR", "MAP", "TRANSFER", "KINGDOM",
+  "KINGDOMS", "RANKING", "RANKINGS", "COMPARE", "COMPARISON", "SCOUT", "SCOUTING", "DIRECTORY",
+  "AMBASSADOR", "NETWORK", "COLONIES", "RECRUIT", "RECRUITING", "RESULTS", "MATCHUPS",
+  "HISTORY", "CALCULATE", "COUNTDOWN", "EXPLORATION", "EXPLORER", "ANALYTICS", "ANALYSIS",
+  "PERFORMANCE", "DATABASED", "TREES", "KVK", "TOTAL", "SPECIFIED", "YET", "MADE", "RIGHTS", "RESERVED",
 ]);
 const COLLECTOR_STATE_KEY = "intel:collector:state";
 const COLLECTOR_DEFAULT_MIN_KINGDOM = 1;
@@ -458,6 +466,17 @@ function normalizeGiftCode(value) {
   return /^[A-Z0-9_-]{3,64}$/.test(code) ? code : "";
 }
 
+function isLikelyGiftCodeValue(value) {
+  const code = normalizeGiftCode(value);
+  if (!code || code.length < 5 || code.length > 32) return false;
+  if (GIFT_CODE_DENYLIST.has(code)) return false;
+  if (/^\d+$/.test(code)) return false;
+  if (!/[A-Z]/.test(code)) return false;
+  if (/^(HTTP|HTTPS|WWW|MAIL|EMAIL|INPUT|IMAGE|LOGIN|BUTTON|PROFILE|PLAYER|REGISTER|DISCORD|GITHUB)/i.test(code)) return false;
+  if (/^[A-Z]{1,4}$/.test(code)) return false;
+  return true;
+}
+
 function timeMs(value, fallback = Date.now()) {
   if (typeof value === "number" && Number.isFinite(value)) return value;
   const parsed = Date.parse(String(value || ""));
@@ -467,7 +486,7 @@ function timeMs(value, fallback = Date.now()) {
 function normalizeSourceCodeRow(row, source = "jeab:codes") {
   if (!isPlainObject(row)) return null;
   const code = normalizeGiftCode(row.Code || row.code || row.gift_code || row.cdk);
-  if (!code) return null;
+  if (!isLikelyGiftCodeValue(code)) return null;
   const isActive = row.IsActive === undefined && row.is_active === undefined
     ? null
     : Boolean(row.IsActive ?? row.is_active);
@@ -490,7 +509,7 @@ function normalizeSourceCodeRow(row, source = "jeab:codes") {
 function normalizeRecentRedemptionRow(row) {
   if (!isPlainObject(row)) return null;
   const code = normalizeGiftCode(row.Code || row.code || row.gift_code || row.cdk);
-  if (!code) return null;
+  if (!isLikelyGiftCodeValue(code)) return null;
   return {
     code,
     lastRedeemStatus: cleanText(row.Status || row.status, 80),
@@ -504,12 +523,12 @@ function collectGiftCodesFromPayload(payload, out = new Set(), keyHint = "", dep
     const text = payload.toUpperCase();
     if (/CODE|CDK|GIFT|REDEEM/.test(keyHint.toUpperCase())) {
       const direct = normalizeGiftCode(text);
-      if (direct) out.add(direct);
+      if (isLikelyGiftCodeValue(direct)) out.add(direct);
     }
     const matches = text.matchAll(/(?:GIFT\s*CODE|CODE|CDK|REDEEM)\s*[:：#-]?\s*`?([A-Z0-9_-]{3,64})`?/g);
     for (const match of matches) {
       const code = normalizeGiftCode(match[1]);
-      if (code) out.add(code);
+      if (isLikelyGiftCodeValue(code)) out.add(code);
     }
     return out;
   }
@@ -522,7 +541,7 @@ function collectGiftCodesFromPayload(payload, out = new Set(), keyHint = "", dep
     const keyText = String(key || "");
     if (/^(code|gift_code|cdk)$/i.test(keyText)) {
       const code = normalizeGiftCode(value);
-      if (code) out.add(code);
+      if (isLikelyGiftCodeValue(code)) out.add(code);
     }
     collectGiftCodesFromPayload(value, out, keyText || keyHint, depth + 1);
   });
@@ -712,7 +731,7 @@ function newManageToken() {
   return [...bytes].map((value) => value.toString(16).padStart(2, "0")).join("");
 }
 
-function extractPlayerIds(value, max = 100) {
+function extractPlayerIds(value, max = 250) {
   const raw = Array.isArray(value) ? value.join("\n") : String(value || "");
   const ids = raw.match(/\d{3,12}/g) || [];
   return [...new Set(ids.map(String))].slice(0, max);
@@ -794,7 +813,7 @@ async function registerRedeemPlayersBulk(request, env) {
   if (!ready.ok) return ready.response;
   const body = await request.json().catch(() => ({}));
   if (!body.consent) return json({ ok: false, error: "Consent is required before saving player IDs." }, 400);
-  const ids = extractPlayerIds(body.ids || body.text || body.playerIds, 100);
+  const ids = extractPlayerIds(body.ids || body.text || body.playerIds, 250);
   if (!ids.length) return json({ ok: false, error: "No valid player IDs were found." }, 400);
 
   const result = { ok: true, submitted: ids.length, created: 0, reactivated: 0, duplicate: 0, invalid: 0, jobsCreated: 0, players: [] };
@@ -853,6 +872,8 @@ async function saveRedeemCode(env, code, source = "manual", raw = null) {
   if (!giftCode || !supabaseConfig(env).enabled) return false;
   const now = Date.now();
   const sourceText = cleanText(row.source || source, 80) || "unknown";
+  if (!isLikelyGiftCodeValue(giftCode)) return false;
+  if (sourceText.startsWith("public:") && !/\d/.test(giftCode)) return false;
   const isActive = row.isActive === null || row.isActive === undefined ? null : Boolean(row.isActive);
   const payload = {
     code: giftCode,
@@ -911,6 +932,8 @@ async function updateRedeemCodeUsage(env, usage) {
 async function createRedeemJobsForCode(env, code) {
   const giftCode = normalizeGiftCode(code);
   if (!giftCode || !supabaseConfig(env).enabled) return 0;
+  const sourceRows = await supabaseJson(env, `/redeem_codes?code=eq.${encodeURIComponent(giftCode)}&select=code,source&limit=1`).catch(() => []);
+  if (sourceRows && sourceRows.length && !redeemCodeAllowedForPublicUseStrict(sourceRows[0])) return 0;
   const players = await supabaseJson(env, "/redeem_players?enabled=eq.true&consent=eq.true&select=id&limit=1000").catch(() => []);
   if (!players || !players.length) return 0;
   const now = Date.now();
@@ -934,10 +957,11 @@ async function createRedeemJobsForCode(env, code) {
 async function createRedeemJobsForPlayer(env, playerId) {
   const id = meaningfulText(playerId, 40);
   if (!/^\d{3,12}$/.test(id) || !supabaseConfig(env).enabled) return 0;
-  const codes = await supabaseJson(env, "/redeem_codes?status=in.(active,observed)&select=code&limit=100").catch(() => []);
+  const codes = await supabaseJson(env, "/redeem_codes?status=in.(active,observed)&select=code,source&limit=100").catch(() => []);
   if (!codes || !codes.length) return 0;
   const now = Date.now();
   const rows = codes
+    .filter(redeemCodeAllowedForPublicUseStrict)
     .map((row) => normalizeGiftCode(row && row.code))
     .filter(Boolean)
     .map((giftCode) => ({
@@ -976,8 +1000,17 @@ function giftCodeCandidateAllowed(candidate, context) {
   if (GIFT_CODE_DENYLIST.has(code)) return false;
   if (/^\d+$/.test(code)) return false;
   if (!/[A-Z]/.test(code)) return false;
+  if (!/\d/.test(code)) return false;
   if (!/CODE|CDK|GIFT|REDEEM|ACTIVE|EXPIRED|NEW|REWARD|PROMO/i.test(context)) return false;
   if (/^(HTTP|HTTPS|WWW|MAIL|EMAIL|INPUT|IMAGE|LOGIN|BUTTON|PROFILE|PLAYER|REGISTER)/i.test(code)) return false;
+  return true;
+}
+
+function redeemCodeAllowedForPublicUse(row) {
+  const code = normalizeGiftCode(row && row.code);
+  if (!code || GIFT_CODE_DENYLIST.has(code)) return false;
+  const source = String((row && row.source) || "");
+  if (source.startsWith("public:")) return giftCodeCandidateAllowed(code, `GIFT CODE ${code}`);
   return true;
 }
 
@@ -1009,6 +1042,108 @@ function collectGiftCodesFromPublicText(text, source, url) {
   return rows;
 }
 
+function decodeHtmlTextStrict(value) {
+  return String(value || "")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(Number(code) || 32));
+}
+
+function textLinesFromHtmlStrict(html) {
+  return decodeHtmlTextStrict(String(html || "")
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<(br|hr)\b[^>]*>/gi, "\n")
+    .replace(/<\/(div|p|li|h[1-6]|section|article|header|footer|main|aside|button|a|span)>/gi, "\n")
+    .replace(/<[^>]+>/g, " "))
+    .split(/\n+/)
+    .map((line) => cleanText(line, 120))
+    .filter(Boolean);
+}
+
+function giftCodeCandidateAllowedStrict(candidate, context = "") {
+  const code = normalizeGiftCode(candidate);
+  if (!isLikelyGiftCodeValue(code)) return false;
+  return /COPY\s+CODE|GIFT\s*CODE|CDK|REDEEM|ACTIVE|EXPIRED|REWARD|PROMO/i.test(String(context || ""));
+}
+
+function redeemCodeAllowedForPublicUseStrict(row) {
+  const code = normalizeGiftCode(row && row.code);
+  if (!isLikelyGiftCodeValue(code)) return false;
+  const status = cleanText((row && row.status) || "", 40).toLowerCase();
+  if (status === "invalid_code" || status === "invalid" || status === "bad_candidate") return false;
+  const source = String((row && row.source) || "");
+  if (source.startsWith("public:") && !/\d/.test(code)) return false;
+  return true;
+}
+
+function collectGiftCodesFromPublicTextStrict(text, source, url) {
+  const lines = textLinesFromHtmlStrict(text);
+  const seen = new Set();
+  const rows = [];
+  const ignoredLine = (line) => /^(ACTIVE|EXPIRED|COPY CODE|COPY|SIGN IN|SIGN IN TO REDEEM|SHARE LINK|VIEW IMAGE|EXPIRES:?|LAST CHECKED:?|NO CODES YET\.?|GIFT CODES?|RECENT REDEMPTIONS?)$/i.test(line)
+    || /^EXPIRES:/i.test(line)
+    || /^[-:•●\d\s]+$/.test(line);
+  const push = (candidate, status, context) => {
+    const code = normalizeGiftCode(candidate);
+    if (!giftCodeCandidateAllowedStrict(code, context) || seen.has(code)) return;
+    seen.add(code);
+    rows.push({
+      code,
+      source: `public:${source}`,
+      status,
+      isActive: status === "expired" ? false : true,
+      discoveredAt: Date.now(),
+      updatedAt: Date.now(),
+      raw: { source: `public:${source}`, url, context: cleanText(context, 220) },
+    });
+  };
+
+  for (let i = 0; i < lines.length; i += 1) {
+    const line = lines[i];
+    if (!/COPY\s+CODE/i.test(line)) continue;
+    let candidate = "";
+    let status = "active";
+    const contextLines = [];
+    for (let j = i - 1; j >= Math.max(0, i - 8); j -= 1) {
+      const prev = lines[j];
+      contextLines.unshift(prev);
+      if (/^EXPIRED$/i.test(prev)) status = "expired";
+      if (/^ACTIVE$/i.test(prev)) status = "active";
+      if (!candidate && !ignoredLine(prev) && isLikelyGiftCodeValue(prev)) candidate = prev;
+    }
+    if (candidate) push(candidate, status, [...contextLines, line].join(" "));
+  }
+
+  for (let i = 0; i < lines.length; i += 1) {
+    if (!/^(ACTIVE|EXPIRED)$/i.test(lines[i])) continue;
+    const status = /^EXPIRED$/i.test(lines[i]) ? "expired" : "active";
+    for (let j = i + 1; j <= Math.min(lines.length - 1, i + 6); j += 1) {
+      const candidate = lines[j];
+      if (ignoredLine(candidate)) continue;
+      const context = lines.slice(i, Math.min(lines.length, j + 7)).join(" ");
+      if (!/COPY\s+CODE/i.test(context)) continue;
+      push(candidate, status, context);
+      break;
+    }
+  }
+
+  const plain = plainTextFromHtml(text).toUpperCase();
+  const explicit = plain.matchAll(/\b(?:GIFT\s*CODE|PROMO\s*CODE|REDEEM\s*CODE|CDK)\s*[:：#=]\s*([A-Z0-9_-]{5,32})\b/g);
+  for (const match of explicit) {
+    const start = Math.max(0, match.index - 80);
+    const end = Math.min(plain.length, match.index + match[0].length + 80);
+    const context = plain.slice(start, end);
+    push(match[1], /EXPIRED|ENDED|INVALID|NOT\s+ACTIVE/i.test(context) ? "expired" : "active", context);
+  }
+
+  return rows;
+}
+
 async function fetchPublicGiftCodePage(source) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 9000);
@@ -1034,9 +1169,10 @@ async function discoverRedeemCodesFromPublicPages(env) {
   for (const source of PUBLIC_GIFT_CODE_SOURCES) {
     try {
       const text = await fetchPublicGiftCodePage(source);
-      const rows = collectGiftCodesFromPublicText(text, source.source, source.url).slice(0, 12);
+      const rows = collectGiftCodesFromPublicTextStrict(text, source.source, source.url).slice(0, 20);
       for (const row of rows) {
-        await saveRedeemCode(env, row).catch(() => {});
+        const saved = await saveRedeemCode(env, row).catch(() => false);
+        if (!saved) continue;
         result.discovered.push(row.code);
         if (row.status === "active") {
           result.active.push(row.code);
@@ -1130,7 +1266,7 @@ async function addRedeemCode(request, env) {
   if (!admin.ok) return admin.response;
   const body = await request.json().catch(() => ({}));
   const code = normalizeGiftCode(body.code || body.giftCode || body.cdk);
-  if (!code) return json({ ok: false, error: "Valid gift code is required." }, 400);
+  if (!isLikelyGiftCodeValue(code)) return json({ ok: false, error: "Valid gift code is required." }, 400);
   await saveRedeemCode(env, {
     code,
     source: "manual",
@@ -1149,26 +1285,24 @@ async function listRedeemCodes(request, env) {
   if (!ready.ok) return ready.response;
   const url = new URL(request.url);
   const limit = Math.min(50, Math.max(1, Number(url.searchParams.get("limit")) || 20));
+  const scanLimit = Math.max(100, limit * 5);
   const [codes, players] = await Promise.all([
-    supabaseJson(env, `/redeem_codes?select=code,source,status,is_active,last_redeem_status,last_redeemed_at_ms,discovered_at_ms,updated_at_ms&order=discovered_at_ms.desc&limit=${limit}`).catch(() => []),
+    supabaseJson(env, `/redeem_codes?select=code,source,status,is_active,last_redeem_status,last_redeemed_at_ms,discovered_at_ms,updated_at_ms&order=discovered_at_ms.desc&limit=${scanLimit}`).catch(() => []),
     countRedeemPlayers(env).catch(() => 0),
   ]);
-  return json({ ok: true, codes: codes || [], registeredPlayers: players });
+  return json({ ok: true, codes: (codes || []).filter(redeemCodeAllowedForPublicUseStrict).slice(0, limit), registeredPlayers: players });
 }
 
 async function redeemStatus(env) {
   if (!supabaseConfig(env).enabled) return json({ ok: true, supabase: false, registeredPlayers: 0, activeCodes: 0, daemon: null, automation: null });
   const [players, codes, daemon, automation] = await Promise.all([
     countRedeemPlayers(env).catch(() => 0),
-    supabaseFetch(env, "/redeem_codes?status=eq.active&select=code&limit=1", {
-      headers: { prefer: "count=exact", range: "0-0" },
-    }).catch(() => null),
+    supabaseJson(env, "/redeem_codes?status=eq.active&select=code,source&limit=200").catch(() => []),
     readRedeemDaemonStatus(env).catch(() => null),
     readRedeemAutomationStatus(env).catch(() => null),
   ]);
-  const range = codes ? codes.headers.get("content-range") || "" : "";
-  const activeCodes = Number(range.split("/")[1]);
-  return json({ ok: true, supabase: true, registeredPlayers: players, activeCodes: Number.isFinite(activeCodes) ? activeCodes : 0, daemon, automation });
+  const activeCodes = (codes || []).filter(redeemCodeAllowedForPublicUseStrict).length;
+  return json({ ok: true, supabase: true, registeredPlayers: players, activeCodes, daemon, automation });
 }
 
 async function countSupabaseRows(env, path) {

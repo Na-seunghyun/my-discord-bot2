@@ -1829,7 +1829,10 @@
       'IMAGE', 'KINGSHOT', 'LANGUAGE', 'LINK', 'LOADING', 'LOGIN', 'MASTER', 'MORE',
       'PLAYER', 'PLAYERS', 'PROFILE', 'QUICK', 'REDEEM', 'REDEMPTION', 'REGISTER',
       'RESOURCES', 'REWARDS', 'SERVER', 'SHARE', 'SIGN', 'STATUS', 'THEME', 'TOGGLE',
-      'TOOLS', 'TRACKER', 'UNKNOWN', 'VIEW', 'WAITING'
+      'TOOLS', 'TRACKER', 'TRANSFER', 'KINGDOM', 'KINGDOMS', 'RANKING', 'RANKINGS',
+      'COMPARE', 'COMPARISON', 'SCOUT', 'SCOUTING', 'DIRECTORY', 'AMBASSADOR', 'NETWORK',
+      'COLONIES', 'RECRUIT', 'RECRUITING', 'RESULTS', 'MATCHUPS', 'COUNTDOWN',
+      'ANALYTICS', 'ANALYSIS', 'PERFORMANCE', 'UNKNOWN', 'VIEW', 'WAITING'
     ]);
     function normalizeDisplayCode(value) {
       return String(value || '').toUpperCase().replace(/[^A-Z0-9_-]/g, '');
@@ -1841,6 +1844,7 @@
       if (/^\d+$/.test(code)) return false;
       if (!/[A-Z]/.test(code)) return false;
       if (/^(HTTP|HTTPS|WWW|MAIL|EMAIL|INPUT|IMAGE|LOGIN|BUTTON|PROFILE|PLAYER|REGISTER|DISCORD|GITHUB)/.test(code)) return false;
+      if (String((row && row.source) || '').startsWith('public:') && !/\d/.test(code)) return false;
       const status = String((row && row.status) || '').toLowerCase();
       if (status === 'invalid' || status === 'invalid_code' || status === 'bad_candidate') return false;
       return true;
