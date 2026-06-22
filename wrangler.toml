@@ -9,6 +9,11 @@ binding = "ASSETS"
 [triggers]
 crons = ["*/10 * * * *"]
 
+[vars]
+AUTO_REDEEM_ENABLED = "true"
+AUTO_REDEEM_BATCH_SIZE = "12"
+AUTO_REDEEM_DELAY_MS = "1200"
+
 [[kv_namespaces]]
 binding = "FEEDBACK"
 id = "08261076ead3448a96bf924729adb01d"
@@ -45,8 +50,5 @@ id = "59330ca6081448d8bd6d3a70445e8501"
 # INTEL_COLLECT_STALE_HOURS = "72"
 # INTEL_COLLECT_DELAY_MS = "1000"
 
-# Optional Auto Redeem controls. The Worker cron above runs every 10 minutes.
-# A separate tmux runner can also call /api/redeem/run as a backup.
-# AUTO_REDEEM_ENABLED = "true"
-# AUTO_REDEEM_BATCH_SIZE = "12"
-# AUTO_REDEEM_DELAY_MS = "1200"
+# Auto Redeem controls are set in [vars] above.
+# The Worker cron runs every 10 minutes, and a tmux runner can also call /api/redeem/run as a backup.
