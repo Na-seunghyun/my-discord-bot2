@@ -8,6 +8,7 @@ Required environment variables:
 
 Optional:
   AUTO_REDEEM_DAEMON_INTERVAL  Seconds between runs, default 600
+  AUTO_REDEEM_DAEMON_USER_AGENT  User-Agent sent to Cloudflare
 """
 
 import json
@@ -21,6 +22,11 @@ import urllib.request
 BASE_URL = os.getenv("HUB_BASE_URL", "https://my-discord-bot2.looloo90.workers.dev").rstrip("/")
 ADMIN_TOKEN = os.getenv("ADMIN_TOKEN", "")
 INTERVAL = max(60, int(os.getenv("AUTO_REDEEM_DAEMON_INTERVAL", "600")))
+USER_AGENT = os.getenv(
+    "AUTO_REDEEM_DAEMON_USER_AGENT",
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/126.0 Safari/537.36 NashshAutoRedeem/1.1",
+)
 
 
 def post_json(path: str) -> dict:
@@ -29,7 +35,9 @@ def post_json(path: str) -> dict:
         data=b"{}",
         method="POST",
         headers={
+            "accept": "application/json",
             "content-type": "application/json",
+            "user-agent": USER_AGENT,
             "x-admin-token": ADMIN_TOKEN,
         },
     )
@@ -62,6 +70,12 @@ def run_once() -> None:
         )
     except urllib.error.HTTPError as error:
         detail = error.read().decode("utf-8", "replace")
+        if error.code == 403 and "1010" in detail:
+            detail = (
+                "Cloudflare blocked this server request before it reached the Worker "
+                "(error code: 1010). Add a Cloudflare WAF/Security skip rule for "
+                "/api/redeem/* or allow this server IP."
+            )
         print(f"{started} HTTP {error.code}: {detail}", flush=True)
     except Exception as error:
         print(f"{started} ERROR: {error}", flush=True)
