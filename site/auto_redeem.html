@@ -1818,9 +1818,33 @@
     let currentLang = new URL(location.href).searchParams.get('lang') || localStorage.getItem('siteLang') || localStorage.getItem('lang') || 'ko';
     if (!I18N[currentLang]) currentLang = 'ko';
     const saved = JSON.parse(localStorage.getItem('autoRedeemRegistration') || '{}');
+    let latestVisibleActiveCodes = null;
     const $ = (id) => document.getElementById(id);
     const tr = (key) => (I18N[currentLang] && I18N[currentLang][key]) || I18N.en[key] || key;
     const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (ch) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+    const UI_GIFT_CODE_DENYLIST = new Set([
+      'ABOUT', 'ACTIVE', 'AUTOMATIC', 'BROWSE', 'BUTTON', 'CALCULATOR', 'CALCULATORS',
+      'CHANGE', 'CLAIM', 'CODE', 'CODES', 'COMMUNITY', 'COPY', 'DATABASE', 'DISCORD',
+      'EXPIRED', 'FEEDBACK', 'GIFT', 'GIFTCODE', 'GUIDE', 'GUIDES', 'HISTORY', 'HOME',
+      'IMAGE', 'KINGSHOT', 'LANGUAGE', 'LINK', 'LOADING', 'LOGIN', 'MASTER', 'MORE',
+      'PLAYER', 'PLAYERS', 'PROFILE', 'QUICK', 'REDEEM', 'REDEMPTION', 'REGISTER',
+      'RESOURCES', 'REWARDS', 'SERVER', 'SHARE', 'SIGN', 'STATUS', 'THEME', 'TOGGLE',
+      'TOOLS', 'TRACKER', 'UNKNOWN', 'VIEW', 'WAITING'
+    ]);
+    function normalizeDisplayCode(value) {
+      return String(value || '').toUpperCase().replace(/[^A-Z0-9_-]/g, '');
+    }
+    function isDisplayableGiftCode(row) {
+      const code = normalizeDisplayCode(row && row.code);
+      if (!code || code.length < 5 || code.length > 32) return false;
+      if (UI_GIFT_CODE_DENYLIST.has(code)) return false;
+      if (/^\d+$/.test(code)) return false;
+      if (!/[A-Z]/.test(code)) return false;
+      if (/^(HTTP|HTTPS|WWW|MAIL|EMAIL|INPUT|IMAGE|LOGIN|BUTTON|PROFILE|PLAYER|REGISTER|DISCORD|GITHUB)/.test(code)) return false;
+      const status = String((row && row.status) || '').toLowerCase();
+      if (status === 'invalid' || status === 'invalid_code' || status === 'bad_candidate') return false;
+      return true;
+    }
     function parseBulkIds(text, max = 250) {
       const matches = String(text || '').match(/\d{3,12}/g) || [];
       return [...new Set(matches)].slice(0, max);
@@ -1846,7 +1870,7 @@
       url.searchParams.set('lang', currentLang);
       history.replaceState(null, '', url.toString());
       $('registeredBadge').textContent = `${tr('registeredPlayers')}: -`;
-      $('activeCodeBadge').textContent = `${tr('activeCodes')}: -`;
+      $('activeCodeBadge').textContent = `${tr('activeCodes')}: ${latestVisibleActiveCodes === null ? '-' : latestVisibleActiveCodes}`;
       updateBulkPreview();
     }
 
@@ -1915,7 +1939,7 @@
       try {
         const data = await api('/api/redeem/status');
         $('registeredBadge').textContent = `${tr('registeredPlayers')}: ${data.registeredPlayers || 0}`;
-        $('activeCodeBadge').textContent = `${tr('activeCodes')}: ${data.activeCodes || 0}`;
+        $('activeCodeBadge').textContent = `${tr('activeCodes')}: ${latestVisibleActiveCodes === null ? '-' : latestVisibleActiveCodes}`;
         renderAutomationStatus(data.automation || data.daemon);
       } catch {
         $('registeredBadge').textContent = `${tr('registeredPlayers')}: -`;
@@ -1953,9 +1977,11 @@
     }
 
     function renderCodeDock(codes) {
-      const rows = Array.isArray(codes) ? codes : [];
+      const rows = (Array.isArray(codes) ? codes : []).filter(isDisplayableGiftCode);
       const active = rows.filter((row) => statusClass(row) === 'active').length;
+      latestVisibleActiveCodes = active;
       $('codeDockCount').textContent = `${active}/${rows.length || 0}`;
+      $('activeCodeBadge').textContent = `${tr('activeCodes')}: ${active}`;
       if (!rows.length) {
         $('codeDockList').innerHTML = `<div class="note">${escapeHtml(tr('noCodes'))}</div>`;
         return;
@@ -2000,7 +2026,7 @@
       $('userDockCount').textContent = `${data.registeredPlayers || recentPlayers.length || 0}`;
       $('successDockCount').textContent = `${recentSuccess.length || 0}`;
       $('registeredBadge').textContent = `${tr('registeredPlayers')}: ${data.registeredPlayers || 0}`;
-      if (data.activeCodes !== undefined) $('activeCodeBadge').textContent = `${tr('activeCodes')}: ${data.activeCodes || 0}`;
+      $('activeCodeBadge').textContent = `${tr('activeCodes')}: ${latestVisibleActiveCodes === null ? '-' : latestVisibleActiveCodes}`;
       if (data.automation !== undefined || data.daemon !== undefined) renderAutomationStatus(data.automation || data.daemon);
 
       $('recentUsersList').innerHTML = recentPlayers.length ? recentPlayers.map((player) => `
