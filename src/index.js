@@ -13,9 +13,10 @@ const OFFICIAL_GIFT_REDEEM_API = "https://kingshot-giftcode.centurygame.com/api/
 const OFFICIAL_GIFT_ORIGIN = "https://ks-giftcode.centurygame.com";
 const OFFICIAL_GIFT_SIGN_SALT = "mN4!pQs6JrYwV9";
 const OFFICIAL_GIFT_TIMEOUT_MS = 10000;
-const AUTO_REDEEM_DEFAULT_BATCH_SIZE = 12;
-const AUTO_REDEEM_DEFAULT_DELAY_MS = 1200;
-const AUTO_REDEEM_DEFAULT_MAX_ATTEMPTS = 3;
+const AUTO_REDEEM_DEFAULT_BATCH_SIZE = 16;
+const AUTO_REDEEM_DEFAULT_CLOUDFLARE_BATCH_SIZE = 6;
+const AUTO_REDEEM_DEFAULT_DELAY_MS = 700;
+const AUTO_REDEEM_DEFAULT_MAX_ATTEMPTS = 4;
 const AUTO_REDEEM_RUNNER_STALE_MS = 25 * 60 * 1000;
 const PUBLIC_GIFT_CODE_SOURCES = [
   { source: "kingshot.net", url: "https://kingshot.net/gift-codes" },
@@ -46,6 +47,8 @@ const COLLECTOR_DEFAULT_KINGDOM_BATCH = 1;
 const COLLECTOR_DEFAULT_DETAIL_LIMIT = 20;
 const COLLECTOR_DEFAULT_STALE_HOURS = 72;
 const COLLECTOR_DEFAULT_DELAY_MS = 1000;
+const REGISTERED_INTEL_DEFAULT_LIMIT = 10;
+const REGISTERED_INTEL_DEFAULT_STALE_HOURS = 24;
 
 let cachedToken = "";
 let cachedTokenExpires = 0;
@@ -552,8 +555,11 @@ function autoRedeemConfig(env) {
   return {
     enabled: envBool(env.AUTO_REDEEM_ENABLED, true),
     batchSize: envNumber(env.AUTO_REDEEM_BATCH_SIZE, AUTO_REDEEM_DEFAULT_BATCH_SIZE, 1, 30),
+    cloudflareBatchSize: envNumber(env.AUTO_REDEEM_CLOUDFLARE_BATCH_SIZE, AUTO_REDEEM_DEFAULT_CLOUDFLARE_BATCH_SIZE, 1, 12),
     delayMs: envNumber(env.AUTO_REDEEM_DELAY_MS, AUTO_REDEEM_DEFAULT_DELAY_MS, 300, 8000),
     maxAttempts: envNumber(env.AUTO_REDEEM_MAX_ATTEMPTS, AUTO_REDEEM_DEFAULT_MAX_ATTEMPTS, 1, 8),
+    verifyPlayerBeforeRedeem: envBool(env.AUTO_REDEEM_VERIFY_PLAYER, false),
+    daemonDiscover: envBool(env.AUTO_REDEEM_DAEMON_DISCOVER, false),
   };
 }
 
@@ -794,6 +800,22 @@ async function upsertRedeemPlayer(env, playerId, options = {}) {
     }]),
   });
   return { ok: true, status: existing ? "reactivated" : "created", player: profile, manageToken };
+}
+
+async function refreshRedeemPlayerProfile(env, profile) {
+  if (!supabaseConfig(env).enabled || !profile || !profile.id) return false;
+  await supabaseJson(env, `/redeem_players?id=eq.${encodeURIComponent(profile.id)}`, {
+    method: "PATCH",
+    body: JSON.stringify({
+      nickname: profile.username,
+      state: profile.state,
+      town_hall_level: profile.town_hall_level,
+      avatar_url: profile.avatar_url,
+      updated_at_ms: Date.now(),
+      profile_json: profile,
+    }),
+  });
+  return true;
 }
 
 async function registerRedeemPlayer(request, env) {
@@ -1081,7 +1103,58 @@ function redeemCodeAllowedForPublicUseStrict(row) {
   return true;
 }
 
+function collectKingshotNetGiftCodes(text, source, url) {
+  const lines = textLinesFromHtmlStrict(text);
+  const seen = new Set();
+  const rows = [];
+  const activeStart = lines.findIndex((line) => /^ACTIVE\s+GIFT\s+CODES$/i.test(line));
+  const expiredStart = lines.findIndex((line) => /^EXPIRED\s+GIFT\s+CODES$/i.test(line));
+  const howToStart = lines.findIndex((line) => /^HOW\s+TO\s+REDEEM\s+GIFT\s+CODES$/i.test(line));
+  const sections = [];
+  if (activeStart >= 0) sections.push({ status: "active", start: activeStart + 1, end: expiredStart > activeStart ? expiredStart : lines.length });
+  if (expiredStart >= 0) sections.push({ status: "expired", start: expiredStart + 1, end: howToStart > expiredStart ? howToStart : lines.length });
+
+  const ignored = (line) => /^(ACTIVE|EXPIRED|COPY CODE|COPY|SIGN IN TO REDEEM|SIGN IN|SHARE LINK|VIEW IMAGE|EXPIRES:?|LAST CHECKED:?|NOT SPECIFIED YET)$/i.test(line)
+    || /^EXPIRES:/i.test(line)
+    || /^[-:?™\d\s]+$/.test(line);
+
+  const push = (candidate, status, context) => {
+    const code = normalizeGiftCode(candidate);
+    if (!isLikelyGiftCodeValue(code) || seen.has(code)) return;
+    seen.add(code);
+    rows.push({
+      code,
+      source: `trusted-public:${source}`,
+      status,
+      isActive: status === "active",
+      discoveredAt: Date.now(),
+      updatedAt: Date.now(),
+      raw: { source: `trusted-public:${source}`, url, context: cleanText(context, 220) },
+    });
+  };
+
+  for (const section of sections) {
+    for (let i = section.start; i < section.end; i += 1) {
+      if (!/^(ACTIVE|EXPIRED)$/i.test(lines[i])) continue;
+      const localStatus = /^EXPIRED$/i.test(lines[i]) ? "expired" : section.status;
+      for (let j = i + 1; j < Math.min(section.end, i + 8); j += 1) {
+        const candidate = lines[j];
+        if (ignored(candidate)) continue;
+        const context = lines.slice(i, Math.min(section.end, j + 6)).join(" ");
+        if (!/COPY\s+CODE|SIGN\s+IN\s+TO\s+REDEEM|SHARE\s+LINK|EXPIRES:/i.test(context)) continue;
+        push(candidate, localStatus, context);
+        break;
+      }
+    }
+  }
+  return rows;
+}
+
 function collectGiftCodesFromPublicTextStrict(text, source, url) {
+  if (/^kingshot\.net$/i.test(source)) {
+    const rows = collectKingshotNetGiftCodes(text, source, url);
+    if (rows.length) return rows;
+  }
   const lines = textLinesFromHtmlStrict(text);
   const seen = new Set();
   const rows = [];
@@ -1394,12 +1467,13 @@ async function runRedeemJobs(env, reason = "manual") {
   const result = { ok: true, reason, enabled: cfg.enabled, processed: 0, success: 0, failed: 0, retrying: 0, pending: 0, results: [] };
   if (!cfg.enabled) return { ...result, ok: false, skipped: "AUTO_REDEEM_ENABLED is off." };
   if (!supabaseConfig(env).enabled) return { ...result, ok: false, skipped: "Supabase is not configured." };
+  const batchLimit = reason === "cloudflare-cron" ? Math.min(cfg.batchSize, cfg.cloudflareBatchSize) : cfg.batchSize;
   const staleRunningCutoff = Date.now() - 15 * 60 * 1000;
   await supabaseJson(env, `/redeem_jobs?status=eq.running&updated_at_ms=lt.${staleRunningCutoff}&attempts=lt.${cfg.maxAttempts}`, {
     method: "PATCH",
     body: JSON.stringify({ status: "pending", updated_at_ms: Date.now(), last_error: "Recovered stale running job for retry." }),
   }).catch(() => {});
-  const jobs = await supabaseJson(env, `/redeem_jobs?status=eq.pending&select=job_key,player_id,gift_code,attempts&order=created_at_ms.asc&limit=${cfg.batchSize}`).catch(() => []);
+  const jobs = await supabaseJson(env, `/redeem_jobs?status=eq.pending&select=job_key,player_id,gift_code,attempts&order=created_at_ms.asc&limit=${batchLimit}`).catch(() => []);
   result.pending = (jobs || []).length;
   for (const job of jobs || []) {
     await delay(cfg.delayMs);
@@ -1410,7 +1484,7 @@ async function runRedeemJobs(env, reason = "manual") {
       body: JSON.stringify({ status: "running", attempts: attemptNumber, updated_at_ms: now }),
     }).catch(() => {});
     try {
-      const redeem = await redeemOfficialGiftCode(job.player_id, job.gift_code);
+      const redeem = await redeemOfficialGiftCode(job.player_id, job.gift_code, { verifyPlayer: cfg.verifyPlayerBeforeRedeem });
       const doneAt = Date.now();
       const retrying = !redeem.ok && isRetryableRedeemStatus(redeem.status) && attemptNumber < cfg.maxAttempts;
       const finalStatus = retrying ? "pending" : redeem.ok ? "success" : redeem.status;
@@ -1453,7 +1527,11 @@ async function runRedeemJobs(env, reason = "manual") {
 }
 
 async function runAutoRedeemCycle(env, reason = "cron") {
-  const discovery = await discoverRedeemCodes(env).catch((error) => ({ ok: false, discovered: [], errors: [cleanText(error.message, 120)] }));
+  const cfg = autoRedeemConfig(env);
+  const shouldDiscover = reason !== "putty-daemon" || cfg.daemonDiscover;
+  const discovery = shouldDiscover
+    ? await discoverRedeemCodes(env).catch((error) => ({ ok: false, discovered: [], errors: [cleanText(error.message, 120)] }))
+    : { ok: true, skipped: "Discovery is handled by Cloudflare schedule/manual refresh.", discovered: [], active: [], expired: [], errors: [] };
   const jobs = await runRedeemJobs(env, reason).catch((error) => ({ ok: false, error: cleanText(error.message, 120) }));
   return { ok: Boolean(discovery.ok !== false && jobs.ok !== false), discovery, jobs };
 }
@@ -1519,15 +1597,16 @@ function classifyRedeemPayloadV2(payload) {
   return { status: "failed", ok: false, message: message || "redeem failed" };
 }
 
-async function redeemOfficialGiftCode(playerId, giftCode) {
+async function redeemOfficialGiftCode(playerId, giftCode, options = {}) {
   const fid = meaningfulText(playerId, 40);
   const cdk = meaningfulText(giftCode, 80).toUpperCase();
   if (!/^\d{3,12}$/.test(fid) || !/^[A-Z0-9_-]{3,64}$/.test(cdk)) {
     return { ok: false, status: "invalid_input", message: "Invalid player ID or gift code." };
   }
 
-  const profile = await fetchOfficialGiftProfile(fid);
-  if (!profile) return { ok: false, status: "player_not_found", message: "Player ID could not be verified." };
+  const verifyPlayer = options.verifyPlayer !== false;
+  const profile = verifyPlayer ? await fetchOfficialGiftProfile(fid) : null;
+  if (verifyPlayer && !profile) return { ok: false, status: "player_not_found", message: "Player ID could not be verified." };
 
   const data = { fid, cdk, time: Date.now() };
   data.sign = officialGiftSign(data);
@@ -1749,6 +1828,89 @@ async function saveIntelCache(env, request, payload) {
   }
 }
 
+function importCacheRequest(apiPath, cacheKey = "") {
+  const cleanPath = String(apiPath || "").replace(/^\/+/, "").replace(/^api\/+/, "").replace(/^kingshot\/+/, "");
+  const path = cleanPath || "import/manual";
+  const url = new URL(`https://collector.local/kingshot/${path}`);
+  if (cacheKey) url.searchParams.set("cache_key", String(cacheKey).slice(0, 160));
+  return new Request(url.toString(), { method: "GET" });
+}
+
+function normalizeIntelImportEntries(body) {
+  const entries = [];
+  const pushEntry = (entry, fallbackPath = "") => {
+    if (!isPlainObject(entry)) return;
+    const payload = entry.payload ?? entry.response ?? entry.data ?? entry.result ?? entry.body;
+    if (payload == null || isIntelErrorPayload(payload)) return;
+    const apiPath = cleanText(entry.apiPath || entry.path || entry.url || fallbackPath, 240) || "import/manual";
+    entries.push({ apiPath, payload });
+  };
+
+  if (Array.isArray(body && body.entries)) body.entries.forEach((entry) => pushEntry(entry));
+  if (Array.isArray(body && body.cache)) body.cache.forEach((entry) => pushEntry(entry));
+  if ((body && (body.payload !== undefined || body.response !== undefined || body.data !== undefined)) && (body.apiPath || body.path || body.url)) {
+    pushEntry(body);
+  }
+  if (body && body.kingdom && body.payload) pushEntry({ apiPath: `kingdoms/${body.kingdom}`, payload: body.payload });
+  if (body && body.playerId && body.payload) pushEntry({ apiPath: `players/${body.playerId}`, payload: body.payload });
+  return entries.slice(0, 50);
+}
+
+async function importIntelData(request, env) {
+  const admin = requireAdmin(request, env);
+  if (!admin.ok) return admin.response;
+  if (!supabaseConfig(env).enabled && !hasIntelDb(env)) {
+    return json({ ok: false, error: "No Intel storage is configured." }, 400);
+  }
+
+  const body = await request.json().catch(() => null);
+  if (!isPlainObject(body)) return json({ ok: false, error: "JSON body is required." }, 400);
+
+  const result = {
+    ok: true,
+    source: cleanText(body.source, 80) || "authorized-import",
+    playersImported: 0,
+    cacheImported: 0,
+    skipped: 0,
+    errors: [],
+  };
+
+  const playerRows = [];
+  if (Array.isArray(body.players)) playerRows.push(...body.players);
+  if (isPlainObject(body.player)) playerRows.push(body.player);
+  if (isPlainObject(body.profile)) playerRows.push(body.profile);
+
+  const normalizedPlayers = playerRows
+    .map((player) => normalizePlayerSummary({ ...player, source: result.source }))
+    .filter(Boolean)
+    .slice(0, 200);
+  if (normalizedPlayers.length) {
+    await Promise.all([
+      savePlayerSummariesD1(env, normalizedPlayers).catch((error) => result.errors.push(`d1 players: ${cleanText(error.message, 140)}`)),
+      savePlayerSummariesSupabase(env, normalizedPlayers).catch((error) => result.errors.push(`supabase players: ${cleanText(error.message, 140)}`)),
+    ]);
+    result.playersImported += normalizedPlayers.length;
+  }
+
+  const entries = normalizeIntelImportEntries(body);
+  for (const entry of entries) {
+    try {
+      await saveIntelCache(env, importCacheRequest(entry.apiPath), entry.payload);
+      const players = collectPlayersFromPayload(entry.payload);
+      result.playersImported += players.length;
+      result.cacheImported += 1;
+    } catch (error) {
+      result.skipped += 1;
+      result.errors.push(`${cleanText(entry.apiPath, 80)}: ${cleanText(error.message, 140)}`);
+    }
+  }
+
+  if (!result.playersImported && !result.cacheImported) {
+    return json({ ...result, ok: false, error: "No valid players or cache payloads were found." }, 400);
+  }
+  return json(result);
+}
+
 async function readIntelCache(env, request) {
   if (!hasIntelDb(env) || request.method !== "GET") return null;
   await ensureIntelSchema(env);
@@ -1844,6 +2006,7 @@ async function fallbackIntelResponse(env, request) {
 
 async function intelStatus(env) {
   const cfg = collectorConfig(env);
+  const registeredCfg = registeredIntelConfig(env);
   const status = {
     d1: hasIntelDb(env),
     r2: Boolean(env.INTEL_BUCKET && typeof env.INTEL_BUCKET.put === "function"),
@@ -1855,11 +2018,15 @@ async function intelStatus(env) {
     supabaseCachedResponses: 0,
     collector: {
       enabled: cfg.enabled,
+      upstreamEnabled: cfg.upstreamEnabled,
       minKingdom: cfg.minKingdom,
       maxKingdom: cfg.maxKingdom,
       kingdomBatch: cfg.kingdomBatch,
       detailLimit: cfg.detailLimit,
       staleHours: Math.round(cfg.staleMs / 60 / 60 / 1000),
+      registeredEnabled: registeredCfg.enabled,
+      registeredLimit: registeredCfg.limit,
+      registeredStaleHours: Math.round(registeredCfg.staleMs / 60 / 60 / 1000),
     },
   };
   if (status.d1) {
@@ -2012,12 +2179,22 @@ function collectorConfig(env) {
   const maxKingdom = envNumber(env.INTEL_COLLECT_MAX_KINGDOM, COLLECTOR_DEFAULT_MAX_KINGDOM, minKingdom, 9999);
   return {
     enabled: envBool(env.INTEL_COLLECT_ENABLED, true),
+    upstreamEnabled: envBool(env.INTEL_COLLECT_UPSTREAM_ENABLED, false),
     minKingdom,
     maxKingdom,
     kingdomBatch: envNumber(env.INTEL_COLLECT_KINGDOM_BATCH, COLLECTOR_DEFAULT_KINGDOM_BATCH, 1, 3),
     detailLimit: envNumber(env.INTEL_COLLECT_PLAYER_DETAILS, COLLECTOR_DEFAULT_DETAIL_LIMIT, 0, 25),
     staleMs: envNumber(env.INTEL_COLLECT_STALE_HOURS, COLLECTOR_DEFAULT_STALE_HOURS, 1, 720) * 60 * 60 * 1000,
     delayMs: envNumber(env.INTEL_COLLECT_DELAY_MS, COLLECTOR_DEFAULT_DELAY_MS, 100, 5000),
+  };
+}
+
+function registeredIntelConfig(env) {
+  return {
+    enabled: envBool(env.INTEL_REGISTERED_COLLECT_ENABLED, true),
+    limit: envNumber(env.INTEL_REGISTERED_COLLECT_LIMIT, REGISTERED_INTEL_DEFAULT_LIMIT, 1, 50),
+    staleMs: envNumber(env.INTEL_REGISTERED_STALE_HOURS, REGISTERED_INTEL_DEFAULT_STALE_HOURS, 1, 720) * 60 * 60 * 1000,
+    delayMs: envNumber(env.INTEL_REGISTERED_COLLECT_DELAY_MS, COLLECTOR_DEFAULT_DELAY_MS, 100, 5000),
   };
 }
 
@@ -2139,6 +2316,55 @@ async function recentlyStoredPlayerIds(env, ids, staleMs) {
   return recent;
 }
 
+async function runRegisteredIntelCollector(env, reason = "registered-cron") {
+  const cfg = registeredIntelConfig(env);
+  const result = {
+    ok: true,
+    reason,
+    enabled: cfg.enabled,
+    checked: 0,
+    saved: 0,
+    skippedRecent: 0,
+    errors: [],
+  };
+  if (!cfg.enabled) return { ...result, ok: false, skipped: "INTEL_REGISTERED_COLLECT_ENABLED is off." };
+  if (!supabaseConfig(env).enabled && !hasIntelDb(env)) return { ...result, ok: false, skipped: "No Intel storage is configured." };
+  if (!supabaseConfig(env).enabled) return { ...result, ok: false, skipped: "Supabase is required to read registered IDs." };
+
+  const scanLimit = Math.min(200, Math.max(cfg.limit * 6, cfg.limit));
+  const rows = await supabaseJson(
+    env,
+    `/redeem_players?enabled=eq.true&consent=eq.true&select=id,updated_at_ms&order=updated_at_ms.asc&limit=${scanLimit}`,
+  ).catch((error) => {
+    result.errors.push(`redeem_players: ${cleanText(error.message, 140)}`);
+    return [];
+  });
+  const ids = [...new Set((rows || []).map((row) => String(row.id || "")).filter(Boolean))];
+  if (!ids.length) return result;
+
+  const recent = await recentlyStoredPlayerIds(env, ids, cfg.staleMs).catch(() => new Set());
+  const targets = ids.filter((id) => !recent.has(id)).slice(0, cfg.limit);
+  result.skippedRecent = Math.max(0, ids.length - targets.length);
+
+  for (const id of targets) {
+    await delay(cfg.delayMs);
+    result.checked += 1;
+    try {
+      const profile = await fetchOfficialGiftProfile(id);
+      if (!profile) {
+        result.errors.push(`${id}: official profile unavailable`);
+        continue;
+      }
+      await saveOfficialProfile(env, profile);
+      await refreshRedeemPlayerProfile(env, profile).catch(() => {});
+      result.saved += 1;
+    } catch (error) {
+      result.errors.push(`${id}: ${cleanText(error.message, 140)}`);
+    }
+  }
+  return result;
+}
+
 async function runIntelCollector(env, reason = "manual") {
   const cfg = collectorConfig(env);
   const result = {
@@ -2151,6 +2377,7 @@ async function runIntelCollector(env, reason = "manual") {
     errors: [],
   };
   if (!cfg.enabled) return { ...result, ok: false, skipped: "INTEL_COLLECT_ENABLED is off." };
+  if (!cfg.upstreamEnabled) return { ...result, ok: true, skipped: "Protected upstream collector is disabled. Registered/import collectors are active." };
   if (!supabaseConfig(env).enabled && !hasIntelDb(env)) return { ...result, ok: false, skipped: "No Intel storage is configured." };
 
   const state = await readCollectorState(env, cfg);
@@ -2212,6 +2439,27 @@ async function runIntelCollector(env, reason = "manual") {
   await writeCollectorState(env, nextState);
   result.nextKingdom = cursor;
   return result;
+}
+
+async function runSafeIntelCycle(env, reason = "manual") {
+  const registered = await runRegisteredIntelCollector(env, reason).catch((error) => ({
+    ok: false,
+    reason,
+    error: cleanText(error.message, 180),
+    errors: [cleanText(error.message, 140)],
+  }));
+  const upstream = await runIntelCollector(env, reason).catch((error) => ({
+    ok: false,
+    reason,
+    error: cleanText(error.message, 180),
+    errors: [cleanText(error.message, 140)],
+  }));
+  return {
+    ok: Boolean(registered.ok !== false && upstream.ok !== false),
+    reason,
+    registered,
+    upstream,
+  };
 }
 
 function corsHeaders(origin) {
@@ -2362,8 +2610,9 @@ export default {
     if (url.pathname === "/api/intel/collect" && request.method === "POST") {
       const admin = requireAdmin(request, env);
       if (!admin.ok) return admin.response;
-      return json(await runIntelCollector(env, "manual"));
+      return json(await runSafeIntelCycle(env, "manual"));
     }
+    if (url.pathname === "/api/intel/import" && request.method === "POST") return importIntelData(request, env);
     if (url.pathname === "/api/intel/cleanup" && request.method === "POST") return cleanupIntel(request, env);
     if (url.pathname === "/api/redeem/register" && request.method === "POST") return registerRedeemPlayer(request, env);
     if (url.pathname === "/api/redeem/register-bulk" && request.method === "POST") return registerRedeemPlayersBulk(request, env);
@@ -2424,7 +2673,7 @@ export default {
     return env.ASSETS.fetch(assetRequest(request, `/site${url.pathname}`));
   },
   async scheduled(event, env, ctx) {
-    ctx.waitUntil(runIntelCollector(env, "cron").catch(() => null));
+    ctx.waitUntil(runSafeIntelCycle(env, "cron").catch(() => null));
     ctx.waitUntil(runTrackedAutoRedeemCycle(env, "cloudflare-cron").catch(() => null));
   },
 };
