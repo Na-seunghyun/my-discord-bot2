@@ -1,16 +1,23 @@
 #!/usr/bin/env python3
 """
-Small tmux-friendly Auto Redeem runner.
+Tmux-friendly Kingshot Auto Redeem runner.
+
+This daemon claims pending redeem jobs from the Worker, redeems them through the
+official Kingshot gift-code page with Playwright, then reports the result back
+to the Worker/Supabase queue.
 
 Required environment variables:
   HUB_BASE_URL   Example: https://my-discord-bot2.looloo90.workers.dev
   ADMIN_TOKEN    Same value as the Cloudflare Worker ADMIN_TOKEN secret
 
 Optional:
-  AUTO_REDEEM_DAEMON_INTERVAL  Seconds between runs, default 600
-  AUTO_REDEEM_DAEMON_USER_AGENT  User-Agent sent to Cloudflare
+  AUTO_REDEEM_DAEMON_INTERVAL    Seconds between runs, default 300
+  AUTO_REDEEM_DAEMON_BATCH_SIZE  Jobs per loop, default 12
+  AUTO_REDEEM_DAEMON_TIMEOUT_MS  Browser action timeout, default 2500
+  AUTO_REDEEM_DAEMON_HEADLESS    true/false, default true
 """
 
+import asyncio
 import json
 import os
 import sys
@@ -18,69 +25,245 @@ import time
 import urllib.error
 import urllib.request
 
+try:
+    from playwright.async_api import TimeoutError as PlaywrightTimeoutError
+    from playwright.async_api import async_playwright
+except Exception:  # pragma: no cover - shown to the server operator
+    async_playwright = None
+    PlaywrightTimeoutError = TimeoutError
+
 
 BASE_URL = os.getenv("HUB_BASE_URL", "https://my-discord-bot2.looloo90.workers.dev").rstrip("/")
 ADMIN_TOKEN = os.getenv("ADMIN_TOKEN", "")
-INTERVAL = max(60, int(os.getenv("AUTO_REDEEM_DAEMON_INTERVAL", "600")))
+INTERVAL = max(60, int(os.getenv("AUTO_REDEEM_DAEMON_INTERVAL", "300")))
+BATCH_SIZE = max(1, min(30, int(os.getenv("AUTO_REDEEM_DAEMON_BATCH_SIZE", "12"))))
+TIMEOUT_MS = max(800, int(os.getenv("AUTO_REDEEM_DAEMON_TIMEOUT_MS", "2500")))
+HEADLESS = os.getenv("AUTO_REDEEM_DAEMON_HEADLESS", "true").strip().lower() not in {"0", "false", "no", "off"}
+OFFICIAL_REDEEM_URL = "https://ks-giftcode.centurygame.com/"
 USER_AGENT = os.getenv(
     "AUTO_REDEEM_DAEMON_USER_AGENT",
     "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
-    "(KHTML, like Gecko) Chrome/126.0 Safari/537.36 NashshAutoRedeem/1.1",
+    "(KHTML, like Gecko) Chrome/126.0 Safari/537.36 NashshAutoRedeem/2.0",
 )
 
 
-def post_json(path: str) -> dict:
+def request_json(path: str, payload: dict | None = None) -> dict:
+    body = json.dumps(payload or {}).encode("utf-8")
     request = urllib.request.Request(
         f"{BASE_URL}{path}",
-        data=b"{}",
+        data=body,
         method="POST",
         headers={
             "accept": "application/json",
             "content-type": "application/json",
             "user-agent": USER_AGENT,
             "x-admin-token": ADMIN_TOKEN,
-            "x-auto-redeem-runner": "putty-daemon",
+            "x-auto-redeem-runner": "putty-browser-daemon",
         },
     )
-    with urllib.request.urlopen(request, timeout=45) as response:
+    with urllib.request.urlopen(request, timeout=60) as response:
         raw = response.read().decode("utf-8", "replace")
     return json.loads(raw or "{}")
 
 
-def run_once() -> None:
-    started = time.strftime("%Y-%m-%d %H:%M:%S")
+def classify_message(message: str) -> tuple[str, bool]:
+    text = (message or "").strip()
+    lower = text.lower()
+    if "redeemed, please claim" in lower or "claim the rewards in your mail" in lower:
+        return "success", True
+    if "same gift code" in lower or "only be redeemed once" in lower or "already claimed" in lower:
+        return "already_claimed", False
+    if "gift code not found" in lower or "case-sensitive" in lower or "invalid code" in lower:
+        return "invalid_code", False
+    if "expired" in lower or "no longer valid" in lower:
+        return "expired", False
+    if "time error" in lower or "redemption time" in lower or "exchange time" in lower:
+        return "time_window_closed", False
+    if "server busy" in lower or "try again later" in lower:
+        return "server_busy", False
+    if "too frequent" in lower or "too many" in lower or "rate limit" in lower:
+        return "rate_limited", False
+    if "captcha" in lower or "verification" in lower or "verify" in lower:
+        return "captcha_required", False
+    if "player not found" in lower or "invalid player" in lower or "double check player" in lower:
+        return "player_not_found", False
+    return "failed", False
+
+
+async def read_modal_message(page) -> str:
     try:
-        result = post_json("/api/redeem/run")
-        discovery = result.get("discovery") or {}
-        jobs = result.get("jobs") or {}
-        print(
-            json.dumps(
-                {
-                    "time": started,
-                    "ok": result.get("ok"),
-                    "active": len(discovery.get("active") or []),
-                    "discovered": len(discovery.get("discovered") or []),
-                    "jobsProcessed": jobs.get("processed", 0),
-                    "success": jobs.get("success", 0),
-                    "failed": jobs.get("failed", 0),
-                    "retrying": jobs.get("retrying", 0),
-                    "errors": discovery.get("errors") or [],
-                },
-                ensure_ascii=False,
-            ),
-            flush=True,
-        )
-    except urllib.error.HTTPError as error:
-        detail = error.read().decode("utf-8", "replace")
-        if error.code == 403 and "1010" in detail:
-            detail = (
-                "Cloudflare blocked this server request before it reached the Worker "
-                "(error code: 1010). Add a Cloudflare WAF/Security skip rule for "
-                "/api/redeem/* or allow this server IP."
+        await page.wait_for_selector("div.message_modal", timeout=TIMEOUT_MS * 3)
+        return (await page.inner_text("div.modal_content .msg", timeout=TIMEOUT_MS)).strip()
+    except Exception:
+        return ""
+
+
+async def close_modal(page) -> None:
+    for selector in ("div.confirm_btn", "button:has-text('OK')", "button:has-text('Confirm')"):
+        try:
+            locator = page.locator(selector).first
+            if await locator.is_visible(timeout=500):
+                await locator.click(timeout=TIMEOUT_MS)
+                return
+        except Exception:
+            pass
+
+
+async def exit_player_panel(page) -> None:
+    try:
+        locator = page.locator("div.exit_con").first
+        if await locator.is_visible(timeout=700):
+            await locator.click(timeout=TIMEOUT_MS)
+    except Exception:
+        pass
+
+
+async def detect_blocked_or_unready(page) -> str:
+    try:
+        content = (await page.content()).lower()
+    except Exception:
+        return ""
+    if "captcha" in content or "challenge" in content or "verify you are human" in content:
+        return "captcha_required"
+    return ""
+
+
+async def redeem_one(page, job: dict) -> dict:
+    job_key = str(job.get("jobKey") or "")
+    player_id = str(job.get("playerId") or "")
+    gift_code = str(job.get("giftCode") or "").upper()
+    attempts = int(job.get("attempts") or 0)
+
+    result = {
+        "jobKey": job_key,
+        "playerId": player_id,
+        "giftCode": gift_code,
+        "attempts": attempts,
+        "ok": False,
+        "status": "failed",
+        "message": "",
+        "response": {"source": "putty-browser-daemon"},
+    }
+
+    try:
+        await page.goto(OFFICIAL_REDEEM_URL, wait_until="domcontentloaded", timeout=TIMEOUT_MS * 8)
+        blocked = await detect_blocked_or_unready(page)
+        if blocked:
+            result.update(status=blocked, message="Official page requires verification.")
+            return result
+
+        await page.fill("input[placeholder='Player ID']", player_id, timeout=TIMEOUT_MS * 4)
+        await page.click("div.btn.login_btn", timeout=TIMEOUT_MS * 4)
+        await page.wait_for_timeout(900)
+
+        login_message = await read_modal_message(page)
+        if login_message:
+            await close_modal(page)
+            status, ok = classify_message(login_message)
+            if status == "failed":
+                status = "server_busy" if "server busy" in login_message.lower() else "player_not_found"
+            result.update(status=status, ok=ok, message=login_message)
+            return result
+
+        try:
+            player_nick = (await page.inner_text("p.name", timeout=TIMEOUT_MS * 5)).strip()
+        except Exception:
+            blocked = await detect_blocked_or_unready(page)
+            result.update(
+                status=blocked or "timeout",
+                message="Player login did not complete before timeout.",
             )
-        print(f"{started} HTTP {error.code}: {detail}", flush=True)
+            return result
+
+        await page.fill("input[placeholder='Enter Gift Code']", gift_code, timeout=TIMEOUT_MS * 4)
+        await page.click("div.btn.exchange_btn", timeout=TIMEOUT_MS * 4)
+        await page.wait_for_timeout(900)
+
+        modal_text = await read_modal_message(page)
+        if not modal_text:
+            result.update(status="timeout", message="No confirmation modal appeared.")
+            return result
+
+        await close_modal(page)
+        await exit_player_panel(page)
+
+        status, ok = classify_message(modal_text)
+        result.update(
+            status=status,
+            ok=ok,
+            message=modal_text,
+            playerNick=player_nick,
+            response={
+                "source": "putty-browser-daemon",
+                "player_nick": player_nick,
+                "message": modal_text,
+            },
+        )
+        return result
+    except PlaywrightTimeoutError as error:
+        result.update(status="timeout", message=f"Timeout: {error}")
+        return result
     except Exception as error:
-        print(f"{started} ERROR: {error}", flush=True)
+        result.update(status="network_error", message=str(error))
+        return result
+
+
+async def redeem_jobs(jobs: list[dict]) -> list[dict]:
+    if not jobs:
+        return []
+    if async_playwright is None:
+        return [
+            {
+                "jobKey": job.get("jobKey"),
+                "playerId": job.get("playerId"),
+                "giftCode": job.get("giftCode"),
+                "attempts": job.get("attempts"),
+                "ok": False,
+                "status": "failed",
+                "message": "Playwright is not installed. Run: pip install -r requirements.txt && python3 -m playwright install chromium",
+            }
+            for job in jobs
+        ]
+
+    results: list[dict] = []
+    async with async_playwright() as playwright:
+        browser = await playwright.chromium.launch(headless=HEADLESS)
+        page = await browser.new_page(user_agent=USER_AGENT, viewport={"width": 1280, "height": 900})
+        for job in jobs:
+            results.append(await redeem_one(page, job))
+            await page.wait_for_timeout(500)
+        await browser.close()
+    return results
+
+
+def print_cycle(started: str, claim: dict, report: dict | None = None, error: str = "") -> None:
+    jobs = claim.get("jobs") or []
+    payload = {
+        "time": started,
+        "ok": not error,
+        "claimed": len(jobs),
+        "processed": (report or {}).get("processed", 0),
+        "success": (report or {}).get("success", 0),
+        "failed": (report or {}).get("failed", 0),
+        "retrying": (report or {}).get("retrying", 0),
+        "error": error,
+    }
+    print(json.dumps(payload, ensure_ascii=False), flush=True)
+
+
+async def run_once() -> None:
+    started_text = time.strftime("%Y-%m-%d %H:%M:%S")
+    started_ms = int(time.time() * 1000)
+    claim = request_json("/api/redeem/claim", {"limit": BATCH_SIZE})
+    jobs = claim.get("jobs") or []
+    if not jobs:
+        report = request_json("/api/redeem/report", {"startedAtMs": started_ms, "results": []})
+        print_cycle(started_text, claim, report)
+        return
+
+    results = await redeem_jobs(jobs)
+    report = request_json("/api/redeem/report", {"startedAtMs": started_ms, "results": results})
+    print_cycle(started_text, claim, report)
 
 
 def main() -> int:
@@ -88,9 +271,27 @@ def main() -> int:
         print("ADMIN_TOKEN is required.", file=sys.stderr)
         return 2
 
-    print(f"Auto Redeem daemon started. base={BASE_URL} interval={INTERVAL}s", flush=True)
+    print(
+        f"Auto Redeem browser daemon started. base={BASE_URL} interval={INTERVAL}s "
+        f"batch={BATCH_SIZE} headless={HEADLESS}",
+        flush=True,
+    )
     while True:
-        run_once()
+        try:
+            asyncio.run(run_once())
+        except urllib.error.HTTPError as error:
+            detail = error.read().decode("utf-8", "replace")
+            if error.code == 403 and "1010" in detail:
+                detail = (
+                    "Cloudflare blocked this server request before it reached the Worker "
+                    "(error code: 1010). Add a Cloudflare WAF/Security skip rule for "
+                    "/api/redeem/* or allow this server IP."
+                )
+            print(f"{time.strftime('%Y-%m-%d %H:%M:%S')} HTTP {error.code}: {detail}", flush=True)
+        except KeyboardInterrupt:
+            raise
+        except Exception as error:
+            print(f"{time.strftime('%Y-%m-%d %H:%M:%S')} ERROR: {error}", flush=True)
         time.sleep(INTERVAL)
 
 

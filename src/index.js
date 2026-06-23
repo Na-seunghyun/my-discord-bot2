@@ -558,6 +558,7 @@ function autoRedeemConfig(env) {
     cloudflareBatchSize: envNumber(env.AUTO_REDEEM_CLOUDFLARE_BATCH_SIZE, AUTO_REDEEM_DEFAULT_CLOUDFLARE_BATCH_SIZE, 1, 12),
     delayMs: envNumber(env.AUTO_REDEEM_DELAY_MS, AUTO_REDEEM_DEFAULT_DELAY_MS, 300, 8000),
     maxAttempts: envNumber(env.AUTO_REDEEM_MAX_ATTEMPTS, AUTO_REDEEM_DEFAULT_MAX_ATTEMPTS, 1, 8),
+    workerRedeemEnabled: envBool(env.AUTO_REDEEM_WORKER_REDEEM_ENABLED, false),
     verifyPlayerBeforeRedeem: envBool(env.AUTO_REDEEM_VERIFY_PLAYER, false),
     daemonDiscover: envBool(env.AUTO_REDEEM_DAEMON_DISCOVER, false),
     upstreamCodesEnabled: envBool(env.AUTO_REDEEM_UPSTREAM_CODES_ENABLED, false),
@@ -1536,13 +1537,162 @@ async function runRedeemJobs(env, reason = "manual") {
   return result;
 }
 
+async function claimRedeemJobs(request, env) {
+  const ready = requireSupabase(env);
+  if (!ready.ok) return ready.response;
+  const admin = requireAdmin(request, env);
+  if (!admin.ok) return admin.response;
+
+  const cfg = autoRedeemConfig(env);
+  if (!cfg.enabled) return json({ ok: false, skipped: "AUTO_REDEEM_ENABLED is off.", jobs: [] });
+
+  const url = new URL(request.url);
+  const body = await request.json().catch(() => ({}));
+  const requestedLimit = Number(body.limit || url.searchParams.get("limit"));
+  const limit = Math.min(cfg.batchSize, Math.max(1, Number.isFinite(requestedLimit) ? Math.floor(requestedLimit) : cfg.batchSize));
+  const now = Date.now();
+  const staleRunningCutoff = now - 20 * 60 * 1000;
+
+  await supabaseJson(env, `/redeem_jobs?status=eq.running&updated_at_ms=lt.${staleRunningCutoff}&attempts=lt.${cfg.maxAttempts}`, {
+    method: "PATCH",
+    body: JSON.stringify({ status: "pending", updated_at_ms: now, last_error: "Recovered stale daemon job for retry." }),
+  }).catch(() => {});
+
+  const jobs = await supabaseJson(env, `/redeem_jobs?status=eq.pending&select=job_key,player_id,gift_code,attempts&order=created_at_ms.asc&limit=${limit}`).catch(() => []);
+  const claimed = [];
+  for (const job of jobs || []) {
+    const attemptNumber = numberValue(job.attempts) + 1;
+    const claimedAt = Date.now();
+    const updated = await supabaseJson(env, `/redeem_jobs?job_key=eq.${encodeURIComponent(job.job_key)}&status=eq.pending`, {
+      method: "PATCH",
+      headers: { prefer: "return=representation" },
+      body: JSON.stringify({
+        status: "running",
+        attempts: attemptNumber,
+        updated_at_ms: claimedAt,
+        last_error: "Claimed by PuTTY browser daemon.",
+      }),
+    }).catch(() => []);
+    if (updated && updated.length) {
+      claimed.push({
+        jobKey: job.job_key,
+        playerId: String(job.player_id || ""),
+        giftCode: String(job.gift_code || ""),
+        attempts: attemptNumber,
+      });
+    }
+  }
+
+  return json({ ok: true, claimed: claimed.length, jobs: claimed });
+}
+
+function classifyDaemonRedeemResult(row) {
+  const statusHint = cleanText(row && (row.status || row.resultStatus), 80).toLowerCase();
+  const message = meaningfulText(row && (row.message || row.error || row.last_error), 240);
+  const lower = message.toLowerCase();
+  const ok = Boolean(row && (row.ok || row.success));
+
+  if (ok || statusHint === "success" || /redeemed,?\s*please\s*claim|claim\s+the\s+rewards\s+in\s+your\s+mail/i.test(message)) {
+    return { status: "success", ok: true, message: message || "success" };
+  }
+  if (statusHint === "already_claimed" || /same\s+gift\s+code|only\s+be\s+redeemed\s+once|already|claimed|used|received/i.test(message)) {
+    return { status: "already_claimed", ok: false, message: message || "already claimed" };
+  }
+  if (statusHint === "invalid_code" || /gift\s*code\s*not\s*found|case-sensitive|invalid\s+gift|invalid\s+code|cdk\s*error/i.test(message)) {
+    return { status: "invalid_code", ok: false, message: message || "invalid code" };
+  }
+  if (statusHint === "expired" || /expired|ended|no\s+longer\s+valid/i.test(message)) {
+    return { status: "expired", ok: false, message: message || "expired" };
+  }
+  if (statusHint === "time_window_closed" || /time\s*error|redemption\s*time|exchange\s*time|time\s*limit|not\s+open|not\s+started|not\s+available/i.test(message)) {
+    return { status: "time_window_closed", ok: false, message: message || "time window closed" };
+  }
+  if (statusHint === "captcha_required" || /captcha|verification|verify/i.test(message)) {
+    return { status: "captcha_required", ok: false, message: message || "captcha required" };
+  }
+  if (statusHint === "player_not_found" || /player\s+not\s+found|invalid\s+player|double\s+check\s+player|problem\s+with\s+logging\s+in/i.test(message)) {
+    return { status: "player_not_found", ok: false, message: message || "player not found" };
+  }
+  if (statusHint === "rate_limited" || /too\s+many|too\s+frequent|frequently|rate\s*limit/i.test(message)) {
+    return { status: "rate_limited", ok: false, message: message || "rate limited" };
+  }
+  if (statusHint === "server_busy" || /server\s+busy|try\s+again\s+later/i.test(message)) {
+    return { status: "server_busy", ok: false, message: message || "server busy" };
+  }
+  if (statusHint === "timeout" || statusHint === "network_error" || /timeout|timed\s*out|network|no\s+confirmation\s+modal/i.test(lower)) {
+    return { status: statusHint === "network_error" ? "network_error" : "timeout", ok: false, message: message || "timeout" };
+  }
+  return { status: statusHint || "failed", ok: false, message: message || "redeem failed" };
+}
+
+async function reportRedeemJobs(request, env) {
+  const ready = requireSupabase(env);
+  if (!ready.ok) return ready.response;
+  const admin = requireAdmin(request, env);
+  if (!admin.ok) return admin.response;
+
+  const cfg = autoRedeemConfig(env);
+  const body = await request.json().catch(() => ({}));
+  const rows = Array.isArray(body.results) ? body.results.slice(0, 50) : [];
+  const summary = { ok: true, processed: 0, success: 0, failed: 0, retrying: 0, results: [] };
+
+  for (const row of rows) {
+    const jobKey = meaningfulText(row.jobKey || row.job_key, 180);
+    if (!jobKey) continue;
+    const classified = classifyDaemonRedeemResult(row);
+    const attemptNumber = numberValue(row.attempts);
+    const retrying = !classified.ok && isRetryableRedeemStatus(classified.status) && attemptNumber > 0 && attemptNumber < cfg.maxAttempts;
+    const finalStatus = retrying ? "pending" : classified.ok ? "success" : classified.status;
+    const now = Date.now();
+    const responseJson = isPlainObject(row.response) ? row.response : {
+      source: "putty-browser-daemon",
+      status: classified.status,
+      message: classified.message,
+      player_nick: cleanText(row.playerNick || row.player_nick, 120),
+    };
+
+    await supabaseJson(env, `/redeem_jobs?job_key=eq.${encodeURIComponent(jobKey)}`, {
+      method: "PATCH",
+      body: JSON.stringify({
+        status: finalStatus,
+        last_error: classified.ok ? "" : classified.message,
+        response_json: responseJson,
+        redeemed_at_ms: classified.ok ? now : null,
+        updated_at_ms: now,
+      }),
+    }).catch(() => {});
+
+    summary.processed += 1;
+    if (classified.ok) summary.success += 1;
+    else if (retrying) summary.retrying += 1;
+    else summary.failed += 1;
+    summary.results.push({
+      playerId: cleanText(row.playerId || row.player_id, 40),
+      code: normalizeGiftCode(row.giftCode || row.gift_code),
+      status: finalStatus,
+      message: classified.message,
+    });
+  }
+
+  const startedAtMs = numberValue(body.startedAtMs) || Date.now();
+  await saveRedeemDaemonStatus(env, request, {
+    ok: summary.ok,
+    discovery: { ok: true, active: [], discovered: [], errors: [] },
+    jobs: summary,
+  }, null, startedAtMs).catch(() => {});
+
+  return json(summary);
+}
+
 async function runAutoRedeemCycle(env, reason = "cron") {
   const cfg = autoRedeemConfig(env);
   const shouldDiscover = reason !== "putty-daemon" || cfg.daemonDiscover;
   const discovery = shouldDiscover
     ? await discoverRedeemCodes(env).catch((error) => ({ ok: false, discovered: [], errors: [cleanText(error.message, 120)] }))
     : { ok: true, skipped: "Discovery is handled by Cloudflare schedule/manual refresh.", discovered: [], active: [], expired: [], errors: [] };
-  const jobs = await runRedeemJobs(env, reason).catch((error) => ({ ok: false, error: cleanText(error.message, 120) }));
+  const jobs = cfg.workerRedeemEnabled
+    ? await runRedeemJobs(env, reason).catch((error) => ({ ok: false, error: cleanText(error.message, 120) }))
+    : { ok: true, reason, skipped: "Redeem execution is handled by the PuTTY browser daemon.", processed: 0, success: 0, failed: 0, retrying: 0 };
   return { ok: Boolean(discovery.ok !== false && jobs.ok !== false), discovery, jobs };
 }
 
@@ -2631,6 +2781,8 @@ export default {
     if (url.pathname === "/api/redeem/activity" && request.method === "GET") return redeemActivity(request, env);
     if (url.pathname === "/api/redeem/codes" && request.method === "GET") return listRedeemCodes(request, env);
     if (url.pathname === "/api/redeem/code" && request.method === "POST") return addRedeemCode(request, env);
+    if (url.pathname === "/api/redeem/claim" && request.method === "POST") return claimRedeemJobs(request, env);
+    if (url.pathname === "/api/redeem/report" && request.method === "POST") return reportRedeemJobs(request, env);
     if (url.pathname === "/api/redeem/daemon-test" && request.method === "POST") {
       const ready = requireSupabase(env);
       if (!ready.ok) return ready.response;
