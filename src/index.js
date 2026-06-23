@@ -560,6 +560,7 @@ function autoRedeemConfig(env) {
     maxAttempts: envNumber(env.AUTO_REDEEM_MAX_ATTEMPTS, AUTO_REDEEM_DEFAULT_MAX_ATTEMPTS, 1, 8),
     verifyPlayerBeforeRedeem: envBool(env.AUTO_REDEEM_VERIFY_PLAYER, false),
     daemonDiscover: envBool(env.AUTO_REDEEM_DAEMON_DISCOVER, false),
+    upstreamCodesEnabled: envBool(env.AUTO_REDEEM_UPSTREAM_CODES_ENABLED, false),
   };
 }
 
@@ -1266,51 +1267,54 @@ async function discoverRedeemCodesFromPublicPages(env) {
 
 async function discoverRedeemCodes(env) {
   const result = { ok: true, discovered: [], active: [], expired: [], usageUpdated: 0, jobsCreated: 0, errors: [] };
-  try {
-    const payload = await fetchUpstreamJson("codes");
-    const rows = Array.isArray(payload) ? payload : [];
-    for (const sourceRow of rows) {
-      const row = normalizeSourceCodeRow(sourceRow, "jeab:codes");
-      if (!row) continue;
-      await saveRedeemCode(env, row).catch(() => {});
-      result.discovered.push(row.code);
-      if (row.status === "active") {
-        result.active.push(row.code);
-        result.jobsCreated += await createRedeemJobsForCode(env, row.code).catch(() => 0);
-      } else {
-        result.expired.push(row.code);
+  const cfg = autoRedeemConfig(env);
+  if (cfg.upstreamCodesEnabled) {
+    try {
+      const payload = await fetchUpstreamJson("codes");
+      const rows = Array.isArray(payload) ? payload : [];
+      for (const sourceRow of rows) {
+        const row = normalizeSourceCodeRow(sourceRow, "jeab:codes");
+        if (!row) continue;
+        await saveRedeemCode(env, row).catch(() => {});
+        result.discovered.push(row.code);
+        if (row.status === "active") {
+          result.active.push(row.code);
+          result.jobsCreated += await createRedeemJobsForCode(env, row.code).catch(() => 0);
+        } else {
+          result.expired.push(row.code);
+        }
       }
+    } catch (error) {
+      result.errors.push(`codes: ${cleanText(error.message, 120)}`);
     }
-  } catch (error) {
-    result.errors.push(`codes: ${cleanText(error.message, 120)}`);
-  }
 
-  try {
-    const payload = await fetchUpstreamJson("redemptions/recent");
-    const rows = Array.isArray(payload) ? payload : [];
-    for (const sourceRow of rows) {
-      const usage = normalizeRecentRedemptionRow(sourceRow);
-      if (!usage) continue;
-      if (await updateRedeemCodeUsage(env, usage).catch(() => false)) result.usageUpdated += 1;
-    }
-    if (!result.active.length) {
-      const fallbackCodes = [...collectGiftCodesFromPayload(payload)].slice(0, 8);
-      for (const code of fallbackCodes) {
-        await saveRedeemCode(env, {
-          code,
-          source: "jeab:redemptions/recent",
-          status: "observed",
-          isActive: null,
-          discoveredAt: Date.now(),
-          updatedAt: Date.now(),
-          raw: { source: "jeab:redemptions/recent", fallback: true },
-        }).catch(() => {});
-        result.discovered.push(code);
-        result.jobsCreated += await createRedeemJobsForCode(env, code).catch(() => 0);
+    try {
+      const payload = await fetchUpstreamJson("redemptions/recent");
+      const rows = Array.isArray(payload) ? payload : [];
+      for (const sourceRow of rows) {
+        const usage = normalizeRecentRedemptionRow(sourceRow);
+        if (!usage) continue;
+        if (await updateRedeemCodeUsage(env, usage).catch(() => false)) result.usageUpdated += 1;
       }
+      if (!result.active.length) {
+        const fallbackCodes = [...collectGiftCodesFromPayload(payload)].slice(0, 8);
+        for (const code of fallbackCodes) {
+          await saveRedeemCode(env, {
+            code,
+            source: "jeab:redemptions/recent",
+            status: "observed",
+            isActive: null,
+            discoveredAt: Date.now(),
+            updatedAt: Date.now(),
+            raw: { source: "jeab:redemptions/recent", fallback: true },
+          }).catch(() => {});
+          result.discovered.push(code);
+          result.jobsCreated += await createRedeemJobsForCode(env, code).catch(() => 0);
+        }
+      }
+    } catch (error) {
+      result.errors.push(`redemptions/recent: ${cleanText(error.message, 120)}`);
     }
-  } catch (error) {
-    result.errors.push(`redemptions/recent: ${cleanText(error.message, 120)}`);
   }
 
   const publicDiscovery = await discoverRedeemCodesFromPublicPages(env).catch((error) => ({
@@ -1363,7 +1367,13 @@ async function listRedeemCodes(request, env) {
     supabaseJson(env, `/redeem_codes?select=code,source,status,is_active,last_redeem_status,last_redeemed_at_ms,discovered_at_ms,updated_at_ms&order=discovered_at_ms.desc&limit=${scanLimit}`).catch(() => []),
     countRedeemPlayers(env).catch(() => 0),
   ]);
-  return json({ ok: true, codes: (codes || []).filter(redeemCodeAllowedForPublicUseStrict).slice(0, limit), registeredPlayers: players });
+  const visible = (codes || []).filter(redeemCodeAllowedForPublicUseStrict).sort((a, b) => {
+    const aActive = a && a.status === "active" && a.is_active !== false ? 1 : 0;
+    const bActive = b && b.status === "active" && b.is_active !== false ? 1 : 0;
+    if (aActive !== bActive) return bActive - aActive;
+    return numberValue(b && b.discovered_at_ms) - numberValue(a && a.discovered_at_ms);
+  });
+  return json({ ok: true, codes: visible.slice(0, limit), registeredPlayers: players });
 }
 
 async function redeemStatus(env) {

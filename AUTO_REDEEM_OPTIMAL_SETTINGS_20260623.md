@@ -18,12 +18,14 @@ AUTO_REDEEM_DELAY_MS=700
 AUTO_REDEEM_MAX_ATTEMPTS=4
 AUTO_REDEEM_VERIFY_PLAYER=false
 AUTO_REDEEM_DAEMON_DISCOVER=false
+AUTO_REDEEM_UPSTREAM_CODES_ENABLED=false
 ```
 
 Why:
 
 - Cloudflare scheduled runs discover new public codes and process a small safe batch.
 - PuTTY/Oracle daemon processes redeem jobs faster without re-checking public pages every cycle.
+- The protected upstream code source is disabled by default, so `session 403` warnings do not affect health status.
 - Player IDs are already verified during registration, so redeem jobs skip the extra player profile lookup.
 - Retryable failures such as timeout, network error, server busy, or rate limit stay pending until max attempts.
 
