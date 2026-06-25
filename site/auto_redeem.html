@@ -2479,8 +2479,9 @@
       const running = Number(queue.running || 0);
       const stale = Number(queue.staleRunning || 0);
       const retryPending = Number(queue.retryPending || 0);
-      badge.textContent = `${tr('queuePending')} ${pending} / ${tr('queueRunning')} ${running}`;
-      badge.title = `${tr('queueStale')}: ${stale} / retry: ${retryPending}`;
+      const staleText = stale > 0 ? ` / ${tr('queueStale')} ${stale}` : '';
+      badge.textContent = `${tr('queuePending')} ${pending} / ${tr('queueRunning')} ${running}${staleText}`;
+      badge.title = `${tr('queueStale')}: ${stale} / retry: ${retryPending} / ${queue.runningStaleMinutes || 5}m`;
     }
     function renderAutomationStatus(daemon) {
       const badge = $('daemonBadge');
