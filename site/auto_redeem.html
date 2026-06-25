@@ -1206,8 +1206,128 @@
     .redeem-redesign .live-panel .dock-body {
       max-height: 430px;
     }
+    .kingdom-registry {
+      margin-top: 18px;
+    }
+    .kingdom-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+    .kingdom-head h2 {
+      margin: 0;
+      font-size: 22px;
+    }
+    .kingdom-head p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-weight: 850;
+      line-height: 1.5;
+    }
+    .kingdom-summary {
+      min-height: 34px;
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid rgba(82,255,224,.28);
+      border-radius: 999px;
+      padding: 0 12px;
+      color: var(--cyan);
+      background: rgba(82,255,224,.08);
+      font-size: 12px;
+      font-weight: 1000;
+      white-space: nowrap;
+    }
+    .kingdom-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 12px;
+    }
+    .kingdom-card {
+      min-width: 0;
+      border: 1px solid rgba(154,183,255,.22);
+      border-radius: 20px;
+      background:
+        linear-gradient(140deg, rgba(82,255,224,.10), rgba(244,200,106,.06)),
+        rgba(255,255,255,.045);
+      box-shadow: 0 18px 46px rgba(0,0,0,.24);
+      overflow: hidden;
+    }
+    .kingdom-card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 13px 14px;
+      border-bottom: 1px solid rgba(154,183,255,.15);
+    }
+    .kingdom-id {
+      color: var(--gold);
+      font-size: 20px;
+      font-weight: 1000;
+      text-shadow: 0 0 18px rgba(244,200,106,.22);
+    }
+    .kingdom-count {
+      min-height: 26px;
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 0 10px;
+      color: #061512;
+      background: var(--ok);
+      font-size: 12px;
+      font-weight: 1000;
+      white-space: nowrap;
+    }
+    .kingdom-player-list {
+      display: grid;
+      gap: 8px;
+      max-height: 300px;
+      overflow: auto;
+      padding: 12px;
+    }
+    .kingdom-player {
+      display: grid;
+      grid-template-columns: 38px minmax(0, 1fr);
+      gap: 9px;
+      align-items: center;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 14px;
+      padding: 8px;
+      background: rgba(0,0,0,.15);
+    }
+    .kingdom-player .mini-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+    }
+    .kingdom-player-name {
+      min-width: 0;
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      color: var(--text);
+      font-weight: 1000;
+      font-size: 13px;
+    }
+    .kingdom-player-name span:first-child {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .kingdom-player-meta {
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 850;
+      overflow-wrap: anywhere;
+    }
     .redeem-redesign .console-card,
     .redeem-redesign .live-command-center,
+    .redeem-redesign .kingdom-registry,
+    .redeem-redesign .kingdom-card,
+    .redeem-redesign .kingdom-player,
     .redeem-redesign .live-panel,
     .redeem-redesign .mini-row,
     .redeem-redesign .mini-main,
@@ -1266,9 +1386,14 @@
       }
       .rail-controls,
       .redeem-redesign .live-columns,
+      .kingdom-head,
       .split-actions,
       .input-command {
         grid-template-columns: 1fr;
+      }
+      .kingdom-head {
+        display: grid;
+        align-items: start;
       }
       .rail-status {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1406,6 +1531,20 @@
             <div class="panel-head"><span data-i18n="successTitle">Redeem success</span></div>
             <div class="dock-body"><div class="dock-grid" id="successList"><div class="note" data-i18n="loadingActivity">Loading activity...</div></div></div>
           </div>
+        </div>
+      </section>
+
+      <section class="console-card kingdom-registry">
+        <div class="kingdom-head">
+          <div>
+            <span class="console-kicker">KINGDOM REGISTRY</span>
+            <h2 data-i18n="kingdomRegistryTitle">Registered IDs by Kingdom</h2>
+            <p data-i18n="kingdomRegistryHelp">Browse saved auto-redeem IDs grouped by kingdom number.</p>
+          </div>
+          <span class="kingdom-summary" id="kingdomSummary">-</span>
+        </div>
+        <div class="kingdom-grid" id="kingdomGrid">
+          <div class="note" data-i18n="loadingKingdoms">Loading kingdom registry...</div>
         </div>
       </section>
     </main>
@@ -1815,11 +1954,103 @@
       daemonJobs: '작업'
     });
 
+    Object.assign(I18N.en, {
+      kingdomRegistryTitle: 'Registered IDs by Kingdom',
+      kingdomRegistryHelp: 'Browse saved auto-redeem IDs grouped by kingdom number.',
+      loadingKingdoms: 'Loading kingdom registry...',
+      noKingdomRegistry: 'No registered kingdom data yet.',
+      kingdomRegistryError: 'Could not load kingdom registry.',
+      kingdoms: 'kingdoms',
+      registeredIdsShort: 'IDs',
+      ids: 'IDs',
+      unknownKingdom: 'Unknown kingdom'
+    });
+    Object.assign(I18N.ko, {
+      kingdomRegistryTitle: '왕국별 등록 ID',
+      kingdomRegistryHelp: '오토리딤에 등록된 ID를 왕국 번호별로 확인할 수 있습니다.',
+      loadingKingdoms: '왕국별 등록 현황을 불러오는 중...',
+      noKingdomRegistry: '아직 표시할 왕국 등록 정보가 없습니다.',
+      kingdomRegistryError: '왕국별 등록 현황을 불러오지 못했습니다.',
+      kingdoms: '개 왕국',
+      registeredIdsShort: '개 ID',
+      ids: '명',
+      unknownKingdom: '왕국 미확인'
+    });
+    Object.assign(I18N['zh-CN'], {
+      kingdomRegistryTitle: '按王国查看登记 ID',
+      kingdomRegistryHelp: '按王国编号浏览已保存的自动兑换 ID。',
+      loadingKingdoms: '正在加载王国登记列表...',
+      noKingdomRegistry: '还没有王国登记数据。',
+      kingdomRegistryError: '无法加载王国登记列表。',
+      kingdoms: '个王国',
+      registeredIdsShort: '个 ID',
+      ids: '个 ID',
+      unknownKingdom: '未知王国'
+    });
+    Object.assign(I18N['zh-TW'], {
+      kingdomRegistryTitle: '按王國查看登記 ID',
+      kingdomRegistryHelp: '按王國編號瀏覽已保存的自動兌換 ID。',
+      loadingKingdoms: '正在載入王國登記列表...',
+      noKingdomRegistry: '還沒有王國登記資料。',
+      kingdomRegistryError: '無法載入王國登記列表。',
+      kingdoms: '個王國',
+      registeredIdsShort: '個 ID',
+      ids: '個 ID',
+      unknownKingdom: '未知王國'
+    });
+    Object.assign(I18N.fr, {
+      kingdomRegistryTitle: 'IDs inscrits par royaume',
+      kingdomRegistryHelp: 'Parcourez les IDs auto redeem enregistrés par numéro de royaume.',
+      loadingKingdoms: 'Chargement des royaumes...',
+      noKingdomRegistry: 'Aucune donnée de royaume enregistrée.',
+      kingdomRegistryError: 'Impossible de charger les royaumes.',
+      kingdoms: 'royaumes',
+      registeredIdsShort: 'IDs',
+      ids: 'IDs',
+      unknownKingdom: 'Royaume inconnu'
+    });
+    Object.assign(I18N.de, {
+      kingdomRegistryTitle: 'Registrierte IDs nach Königreich',
+      kingdomRegistryHelp: 'Gespeicherte Auto-Redeem-IDs nach Königreichsnummer ansehen.',
+      loadingKingdoms: 'Königreiche werden geladen...',
+      noKingdomRegistry: 'Noch keine Königreichsdaten.',
+      kingdomRegistryError: 'Königreichsliste konnte nicht geladen werden.',
+      kingdoms: 'Königreiche',
+      registeredIdsShort: 'IDs',
+      ids: 'IDs',
+      unknownKingdom: 'Unbekanntes Königreich'
+    });
+    Object.assign(I18N.th, {
+      kingdomRegistryTitle: 'ID ที่ลงทะเบียนตามอาณาจักร',
+      kingdomRegistryHelp: 'ดู ID auto redeem ที่บันทึกไว้แยกตามหมายเลขอาณาจักร',
+      loadingKingdoms: 'กำลังโหลดรายการอาณาจักร...',
+      noKingdomRegistry: 'ยังไม่มีข้อมูลอาณาจักร',
+      kingdomRegistryError: 'โหลดรายการอาณาจักรไม่ได้',
+      kingdoms: 'อาณาจักร',
+      registeredIdsShort: 'ID',
+      ids: 'ID',
+      unknownKingdom: 'ไม่ทราบอาณาจักร'
+    });
+    Object.assign(I18N.id, {
+      kingdomRegistryTitle: 'ID Terdaftar per Kingdom',
+      kingdomRegistryHelp: 'Lihat ID auto redeem yang tersimpan berdasarkan nomor kingdom.',
+      loadingKingdoms: 'Memuat registry kingdom...',
+      noKingdomRegistry: 'Belum ada data kingdom terdaftar.',
+      kingdomRegistryError: 'Tidak dapat memuat registry kingdom.',
+      kingdoms: 'kingdom',
+      registeredIdsShort: 'ID',
+      ids: 'ID',
+      unknownKingdom: 'Kingdom tidak diketahui'
+    });
+
     let currentLang = new URL(location.href).searchParams.get('lang') || localStorage.getItem('siteLang') || localStorage.getItem('lang') || 'ko';
     if (!I18N[currentLang]) currentLang = 'ko';
     const saved = JSON.parse(localStorage.getItem('autoRedeemRegistration') || '{}');
     let latestVisibleActiveCodes = null;
     const $ = (id) => document.getElementById(id);
+    const setTextById = (id, value) => {
+      document.querySelectorAll(`[id="${id}"]`).forEach((node) => { node.textContent = value; });
+    };
     const tr = (key) => (I18N[currentLang] && I18N[currentLang][key]) || I18N.en[key] || key;
     const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (ch) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
     const UI_GIFT_CODE_DENYLIST = new Set([
@@ -2027,8 +2258,9 @@
     function renderActivity(data) {
       const recentPlayers = Array.isArray(data.recentPlayers) ? data.recentPlayers : [];
       const recentSuccess = Array.isArray(data.recentSuccess) ? data.recentSuccess : [];
+      const successTotal = Number(data.successJobs || 0);
       $('userDockCount').textContent = `${data.registeredPlayers || recentPlayers.length || 0}`;
-      $('successDockCount').textContent = `${recentSuccess.length || 0}`;
+      setTextById('successDockCount', `${successTotal || recentSuccess.length || 0}`);
       $('registeredBadge').textContent = `${tr('registeredPlayers')}: ${data.registeredPlayers || 0}`;
       $('activeCodeBadge').textContent = `${tr('activeCodes')}: ${latestVisibleActiveCodes === null ? '-' : latestVisibleActiveCodes}`;
       if (data.automation !== undefined || data.daemon !== undefined) renderAutomationStatus(data.automation || data.daemon);
@@ -2058,7 +2290,70 @@
       } catch (error) {
         $('recentUsersList').innerHTML = `<div class="note">${escapeHtml(error.message)}</div>`;
         $('successList').innerHTML = `<div class="note">${escapeHtml(error.message)}</div>`;
-        $('successDockCount').textContent = '-';
+        setTextById('successDockCount', '-');
+      }
+    }
+
+    function unitText(value, key) {
+      const compact = currentLang === 'ko' || currentLang === 'zh-CN' || currentLang === 'zh-TW';
+      return compact ? `${value}${tr(key)}` : `${value} ${tr(key)}`;
+    }
+
+    function kingdomDisplayLabel(kingdom) {
+      if (!kingdom || kingdom.state === null || kingdom.state === undefined || kingdom.label === 'Unknown') {
+        return tr('unknownKingdom');
+      }
+      return `K${kingdom.state}`;
+    }
+
+    function renderKingdomRegistry(data) {
+      const kingdoms = Array.isArray(data.kingdoms) ? data.kingdoms : [];
+      const total = Number(data.total || 0);
+      const kingdomCount = Number(data.kingdomCount || kingdoms.length || 0);
+      setTextById('kingdomSummary', `${unitText(kingdomCount, 'kingdoms')} / ${unitText(total, 'registeredIdsShort')}`);
+      const grid = $('kingdomGrid');
+      if (!grid) return;
+      if (!kingdoms.length) {
+        grid.innerHTML = `<div class="note">${escapeHtml(tr('noKingdomRegistry'))}</div>`;
+        return;
+      }
+      grid.innerHTML = kingdoms.map((kingdom) => {
+        const players = Array.isArray(kingdom.players) ? kingdom.players : [];
+        return `
+          <article class="kingdom-card">
+            <div class="kingdom-card-head">
+              <strong class="kingdom-id">${escapeHtml(kingdomDisplayLabel(kingdom))}</strong>
+              <span class="kingdom-count">${escapeHtml(unitText(kingdom.count || players.length || 0, 'ids'))}</span>
+            </div>
+            <div class="kingdom-player-list">
+              ${players.length ? players.map((player) => `
+                <div class="kingdom-player">
+                  ${avatarNode(player)}
+                  <div>
+                    <div class="kingdom-player-name">
+                      <span>${escapeHtml(playerName(player))}</span>
+                      <span>${escapeHtml(maskId(player.id))}</span>
+                    </div>
+                    <div class="kingdom-player-meta">${escapeHtml(playerMeta(player))} · ${escapeHtml(formatTime(player.created_at_ms || player.updated_at_ms))}</div>
+                  </div>
+                </div>`).join('') : `<div class="note">${escapeHtml(tr('noRecentUsers'))}</div>`}
+            </div>
+          </article>`;
+      }).join('');
+    }
+
+    async function loadKingdomRegistry() {
+      const grid = $('kingdomGrid');
+      if (grid && !grid.dataset.loaded) {
+        grid.innerHTML = `<div class="note">${escapeHtml(tr('loadingKingdoms'))}</div>`;
+      }
+      try {
+        const data = await api('/api/redeem/kingdoms?limit=1500');
+        renderKingdomRegistry(data);
+        if (grid) grid.dataset.loaded = '1';
+      } catch (error) {
+        setTextById('kingdomSummary', '-');
+        if (grid) grid.innerHTML = `<div class="note">${escapeHtml(`${tr('kingdomRegistryError')} ${error.message || ''}`)}</div>`;
       }
     }
 
@@ -2080,6 +2375,7 @@
       loadStatus();
       loadCodes();
       loadActivity();
+      loadKingdomRegistry();
     });
     if (saved.playerId) $('playerId').value = saved.playerId;
     if (saved.manageToken) $('manageToken').value = saved.manageToken;
@@ -2104,6 +2400,7 @@
         }
         loadStatus();
         loadActivity();
+        loadKingdomRegistry();
       } catch (error) {
         setStatus('registerStatus', error.message);
       }
@@ -2135,6 +2432,7 @@
         );
         loadStatus();
         loadActivity();
+        loadKingdomRegistry();
       } catch (error) {
         setStatus('registerStatus', error.message);
       }
@@ -2161,6 +2459,7 @@
         setStatus('manageStatus', tr('removed'));
         loadStatus();
         loadActivity();
+        loadKingdomRegistry();
       } catch (error) {
         setStatus('manageStatus', error.message);
       }
@@ -2182,17 +2481,20 @@
       loadStatus();
       loadCodes();
       loadActivity();
+      loadKingdomRegistry();
     });
     $('bulkIds').addEventListener('input', updateBulkPreview);
     applyI18n();
     loadStatus();
     loadCodes();
     loadActivity();
+    loadKingdomRegistry();
     setInterval(() => {
       loadStatus();
       loadCodes();
       loadActivity();
     }, 60000);
+    setInterval(loadKingdomRegistry, 300000);
   </script>
 </body>
 </html>

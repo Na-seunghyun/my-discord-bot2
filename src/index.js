@@ -1473,6 +1473,47 @@ async function redeemActivity(request, env) {
   });
 }
 
+async function redeemKingdomRegistry(request, env) {
+  const ready = requireSupabase(env);
+  if (!ready.ok) return ready.response;
+  const url = new URL(request.url);
+  const limit = Math.min(3000, Math.max(50, Number(url.searchParams.get("limit")) || 1500));
+  const rows = await supabaseJson(
+    env,
+    `/redeem_players?enabled=eq.true&consent=eq.true&select=id,nickname,state,town_hall_level,avatar_url,created_at_ms,updated_at_ms,profile_json&order=state.asc.nullslast,created_at_ms.desc&limit=${limit}`
+  ).catch(() => []);
+  const groups = new Map();
+  for (const row of rows || []) {
+    const player = publicRedeemPlayer(row);
+    const key = player.state === null || player.state === undefined ? "unknown" : String(player.state);
+    if (!groups.has(key)) {
+      groups.set(key, {
+        state: player.state,
+        label: key === "unknown" ? "Unknown" : `K${key}`,
+        count: 0,
+        players: [],
+        latestUpdatedAtMs: 0,
+      });
+    }
+    const group = groups.get(key);
+    group.count += 1;
+    group.players.push(player);
+    group.latestUpdatedAtMs = Math.max(group.latestUpdatedAtMs, numberValue(player.updated_at_ms || player.created_at_ms));
+  }
+  const kingdoms = [...groups.values()].sort((a, b) => {
+    if (a.state === null || a.state === undefined) return 1;
+    if (b.state === null || b.state === undefined) return -1;
+    return Number(a.state) - Number(b.state);
+  });
+  return json({
+    ok: true,
+    limit,
+    total: (rows || []).length,
+    kingdomCount: kingdoms.length,
+    kingdoms,
+  });
+}
+
 async function runRedeemJobs(env, reason = "manual") {
   const cfg = autoRedeemConfig(env);
   const result = { ok: true, reason, enabled: cfg.enabled, processed: 0, success: 0, failed: 0, retrying: 0, pending: 0, results: [] };
@@ -1625,6 +1666,38 @@ function classifyDaemonRedeemResult(row) {
   return { status: statusHint || "failed", ok: false, message: message || "redeem failed" };
 }
 
+async function saveDaemonObservedPlayer(env, row) {
+  const id = meaningfulText(row && (row.playerId || row.player_id), 40);
+  const response = isPlainObject(row && row.response) ? row.response : {};
+  const nick = meaningfulText(
+    (row && (row.playerNick || row.player_nick)) || response.player_nick || response.playerNick,
+    160,
+  );
+  if (!/^\d{3,12}$/.test(id) || !nick) return false;
+
+  const profile = normalizePlayerSummary({
+    id,
+    fid: id,
+    username: nick,
+    nickname: nick,
+    source: "official-redeem-browser",
+    last_refreshed_at: new Date().toISOString(),
+  });
+  if (!profile) return false;
+
+  await saveOfficialProfile(env, profile).catch(() => {});
+  if (supabaseConfig(env).enabled) {
+    await supabaseJson(env, `/redeem_players?id=eq.${encodeURIComponent(id)}`, {
+      method: "PATCH",
+      body: JSON.stringify({
+        nickname: nick,
+        updated_at_ms: Date.now(),
+      }),
+    }).catch(() => {});
+  }
+  return true;
+}
+
 async function reportRedeemJobs(request, env) {
   const ready = requireSupabase(env);
   if (!ready.ok) return ready.response;
@@ -1661,6 +1734,8 @@ async function reportRedeemJobs(request, env) {
         updated_at_ms: now,
       }),
     }).catch(() => {});
+
+    await saveDaemonObservedPlayer(env, row).catch(() => {});
 
     summary.processed += 1;
     if (classified.ok) summary.success += 1;
@@ -2779,6 +2854,7 @@ export default {
     if (url.pathname === "/api/redeem/unregister" && request.method === "POST") return unregisterRedeemPlayer(request, env);
     if (url.pathname === "/api/redeem/status" && request.method === "GET") return redeemStatus(env);
     if (url.pathname === "/api/redeem/activity" && request.method === "GET") return redeemActivity(request, env);
+    if (url.pathname === "/api/redeem/kingdoms" && request.method === "GET") return redeemKingdomRegistry(request, env);
     if (url.pathname === "/api/redeem/codes" && request.method === "GET") return listRedeemCodes(request, env);
     if (url.pathname === "/api/redeem/code" && request.method === "POST") return addRedeemCode(request, env);
     if (url.pathname === "/api/redeem/claim" && request.method === "POST") return claimRedeemJobs(request, env);
