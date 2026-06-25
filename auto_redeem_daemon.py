@@ -11,8 +11,10 @@ Required environment variables:
   ADMIN_TOKEN    Same value as the Cloudflare Worker ADMIN_TOKEN secret
 
 Optional:
-  AUTO_REDEEM_DAEMON_INTERVAL    Seconds between runs, default 300
-  AUTO_REDEEM_DAEMON_BATCH_SIZE  Jobs per loop, default 12
+  AUTO_REDEEM_DAEMON_INTERVAL    Idle seconds when no jobs exist, default 60
+  AUTO_REDEEM_DAEMON_REST_SECONDS Seconds to rest after a non-empty batch, default 5
+  AUTO_REDEEM_DAEMON_BATCH_SIZE  Jobs per loop, default 20
+  AUTO_REDEEM_DAEMON_CONCURRENCY Pages processed at once, default 2
   AUTO_REDEEM_DAEMON_TIMEOUT_MS  Browser action timeout, default 2500
   AUTO_REDEEM_DAEMON_HEADLESS    true/false, default true
 """
@@ -35,8 +37,10 @@ except Exception:  # pragma: no cover - shown to the server operator
 
 BASE_URL = os.getenv("HUB_BASE_URL", "https://my-discord-bot2.looloo90.workers.dev").rstrip("/")
 ADMIN_TOKEN = os.getenv("ADMIN_TOKEN", "")
-INTERVAL = max(60, int(os.getenv("AUTO_REDEEM_DAEMON_INTERVAL", "300")))
-BATCH_SIZE = max(1, min(30, int(os.getenv("AUTO_REDEEM_DAEMON_BATCH_SIZE", "12"))))
+INTERVAL = max(10, int(os.getenv("AUTO_REDEEM_DAEMON_INTERVAL", "60")))
+REST_SECONDS = max(0.0, float(os.getenv("AUTO_REDEEM_DAEMON_REST_SECONDS", "5")))
+BATCH_SIZE = max(1, min(30, int(os.getenv("AUTO_REDEEM_DAEMON_BATCH_SIZE", "20"))))
+CONCURRENCY = max(1, min(4, int(os.getenv("AUTO_REDEEM_DAEMON_CONCURRENCY", "2"))))
 TIMEOUT_MS = max(800, int(os.getenv("AUTO_REDEEM_DAEMON_TIMEOUT_MS", "2500")))
 HEADLESS = os.getenv("AUTO_REDEEM_DAEMON_HEADLESS", "true").strip().lower() not in {"0", "false", "no", "off"}
 OFFICIAL_REDEEM_URL = "https://ks-giftcode.centurygame.com/"
@@ -228,10 +232,20 @@ async def redeem_jobs(jobs: list[dict]) -> list[dict]:
     results: list[dict] = []
     async with async_playwright() as playwright:
         browser = await playwright.chromium.launch(headless=HEADLESS)
-        page = await browser.new_page(user_agent=USER_AGENT, viewport={"width": 1280, "height": 900})
-        for job in jobs:
-            results.append(await redeem_one(page, job))
-            await page.wait_for_timeout(500)
+        semaphore = asyncio.Semaphore(CONCURRENCY)
+        ordered_results: list[dict | None] = [None] * len(jobs)
+
+        async def run_one(index: int, job: dict) -> None:
+            async with semaphore:
+                page = await browser.new_page(user_agent=USER_AGENT, viewport={"width": 1280, "height": 900})
+                try:
+                    ordered_results[index] = await redeem_one(page, job)
+                finally:
+                    await page.close()
+                await asyncio.sleep(0.5)
+
+        await asyncio.gather(*(run_one(index, job) for index, job in enumerate(jobs)))
+        results = [result for result in ordered_results if result is not None]
         await browser.close()
     return results
 
@@ -251,7 +265,7 @@ def print_cycle(started: str, claim: dict, report: dict | None = None, error: st
     print(json.dumps(payload, ensure_ascii=False), flush=True)
 
 
-async def run_once() -> None:
+async def run_once() -> int:
     started_text = time.strftime("%Y-%m-%d %H:%M:%S")
     started_ms = int(time.time() * 1000)
     claim = request_json("/api/redeem/claim", {"limit": BATCH_SIZE})
@@ -259,11 +273,12 @@ async def run_once() -> None:
     if not jobs:
         report = request_json("/api/redeem/report", {"startedAtMs": started_ms, "results": []})
         print_cycle(started_text, claim, report)
-        return
+        return 0
 
     results = await redeem_jobs(jobs)
     report = request_json("/api/redeem/report", {"startedAtMs": started_ms, "results": results})
     print_cycle(started_text, claim, report)
+    return len(jobs)
 
 
 def main() -> int:
@@ -273,12 +288,14 @@ def main() -> int:
 
     print(
         f"Auto Redeem browser daemon started. base={BASE_URL} interval={INTERVAL}s "
-        f"batch={BATCH_SIZE} headless={HEADLESS}",
+        f"batch={BATCH_SIZE} concurrency={CONCURRENCY} rest={REST_SECONDS:g}s headless={HEADLESS}",
         flush=True,
     )
     while True:
+        sleep_seconds = INTERVAL
         try:
-            asyncio.run(run_once())
+            claimed = asyncio.run(run_once())
+            sleep_seconds = REST_SECONDS if claimed else INTERVAL
         except urllib.error.HTTPError as error:
             detail = error.read().decode("utf-8", "replace")
             if error.code == 403 and "1010" in detail:
@@ -292,7 +309,7 @@ def main() -> int:
             raise
         except Exception as error:
             print(f"{time.strftime('%Y-%m-%d %H:%M:%S')} ERROR: {error}", flush=True)
-        time.sleep(INTERVAL)
+        time.sleep(sleep_seconds)
 
 
 if __name__ == "__main__":
