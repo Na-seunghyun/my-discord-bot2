@@ -984,6 +984,26 @@ async function updateRedeemCodeUsage(env, usage) {
   return true;
 }
 
+async function updateRedeemCodeFromAttempt(env, giftCode, classified, atMs = Date.now()) {
+  const code = normalizeGiftCode(giftCode);
+  const status = cleanText(classified && classified.status, 80);
+  if (!code || !status || !supabaseConfig(env).enabled) return false;
+  const patch = {
+    last_redeem_status: status,
+    last_redeemed_at_ms: atMs,
+    updated_at_ms: atMs,
+  };
+  if (status === "expired") {
+    patch.status = "expired";
+    patch.is_active = false;
+  }
+  await supabaseJson(env, `/redeem_codes?code=eq.${encodeURIComponent(code)}`, {
+    method: "PATCH",
+    body: JSON.stringify(patch),
+  }).catch(() => {});
+  return true;
+}
+
 function redeemCodeReadyForAutoRedeem(row) {
   const status = cleanText((row && row.status) || "", 40).toLowerCase();
   if (status !== "active") return false;
@@ -1540,7 +1560,7 @@ async function redeemActivity(request, env) {
   if (!ready.ok) return ready.response;
   const url = new URL(request.url);
   const playerLimit = Math.min(12, Math.max(3, Number(url.searchParams.get("players")) || 6));
-  const successLimit = Math.min(30, Math.max(5, Number(url.searchParams.get("success")) || 14));
+  const successLimit = Math.min(50, Math.max(5, Number(url.searchParams.get("success")) || 50));
 
   const [recentPlayersRaw, recentSuccessRaw, pendingJobs, successJobs, activeCodes, registeredPlayers, queue, daemon, automation] = await Promise.all([
     supabaseJson(env, `/redeem_players?enabled=eq.true&consent=eq.true&select=id,nickname,state,town_hall_level,avatar_url,created_at_ms,updated_at_ms,profile_json&order=created_at_ms.desc&limit=${playerLimit}`).catch(() => []),
@@ -1664,6 +1684,7 @@ async function runRedeemJobs(env, reason = "manual") {
       const doneAt = Date.now();
       const retrying = !redeem.ok && isRetryableRedeemStatus(redeem.status) && attemptNumber < cfg.maxAttempts;
       const finalStatus = retrying ? "pending" : redeem.ok ? "success" : redeem.status;
+      await updateRedeemCodeFromAttempt(env, job.gift_code, { status: redeem.status, ok: redeem.ok }, doneAt).catch(() => {});
       await supabaseJson(env, `/redeem_jobs?job_key=eq.${encodeURIComponent(job.job_key)}`, {
         method: "PATCH",
         body: JSON.stringify({
@@ -1825,10 +1846,13 @@ async function reportRedeemJobs(request, env) {
   const cfg = autoRedeemConfig(env);
   const body = await request.json().catch(() => ({}));
   const rows = Array.isArray(body.results) ? body.results.slice(0, 50) : [];
-  const summary = { ok: true, processed: 0, success: 0, failed: 0, retrying: 0, results: [] };
+  const summary = { ok: true, processed: 0, saved: 0, saveFailed: 0, success: 0, failed: 0, retrying: 0, results: [] };
 
   for (const row of rows) {
-    const jobKey = meaningfulText(row.jobKey || row.job_key, 180);
+    const playerId = cleanText(row.playerId || row.player_id, 40);
+    const giftCode = normalizeGiftCode(row.giftCode || row.gift_code);
+    const fallbackJobKey = giftCode && playerId ? `${giftCode}:${playerId}` : "";
+    const jobKey = meaningfulText(row.jobKey || row.job_key || fallbackJobKey, 180);
     if (!jobKey) continue;
     const classified = classifyDaemonRedeemResult(row);
     const attemptNumber = numberValue(row.attempts);
@@ -1841,27 +1865,50 @@ async function reportRedeemJobs(request, env) {
       message: classified.message,
       player_nick: cleanText(row.playerNick || row.player_nick, 120),
     };
+    const patchBody = {
+      status: finalStatus,
+      last_error: classified.ok ? "" : classified.message,
+      response_json: responseJson,
+      redeemed_at_ms: classified.ok ? now : null,
+      updated_at_ms: now,
+    };
 
-    await supabaseJson(env, `/redeem_jobs?job_key=eq.${encodeURIComponent(jobKey)}`, {
+    let updatedRows = await supabaseJson(env, `/redeem_jobs?job_key=eq.${encodeURIComponent(jobKey)}`, {
       method: "PATCH",
-      body: JSON.stringify({
-        status: finalStatus,
-        last_error: classified.ok ? "" : classified.message,
-        response_json: responseJson,
-        redeemed_at_ms: classified.ok ? now : null,
-        updated_at_ms: now,
-      }),
-    }).catch(() => {});
+      headers: { prefer: "return=representation" },
+      body: JSON.stringify(patchBody),
+    }).catch(() => []);
+    if ((!updatedRows || !updatedRows.length) && fallbackJobKey && fallbackJobKey !== jobKey) {
+      updatedRows = await supabaseJson(env, `/redeem_jobs?job_key=eq.${encodeURIComponent(fallbackJobKey)}`, {
+        method: "PATCH",
+        headers: { prefer: "return=representation" },
+        body: JSON.stringify(patchBody),
+      }).catch(() => []);
+    }
+    if (!updatedRows || !updatedRows.length) {
+      summary.processed += 1;
+      summary.saveFailed += 1;
+      summary.failed += 1;
+      summary.results.push({
+        playerId,
+        code: giftCode,
+        status: "report_failed",
+        message: "Redeem result was received, but the job row was not updated.",
+      });
+      continue;
+    }
 
+    await updateRedeemCodeFromAttempt(env, giftCode, classified, now).catch(() => {});
     await saveDaemonObservedPlayer(env, row).catch(() => {});
 
     summary.processed += 1;
+    summary.saved += 1;
     if (classified.ok) summary.success += 1;
     else if (retrying) summary.retrying += 1;
     else summary.failed += 1;
     summary.results.push({
-      playerId: cleanText(row.playerId || row.player_id, 40),
-      code: normalizeGiftCode(row.giftCode || row.gift_code),
+      playerId,
+      code: giftCode,
       status: finalStatus,
       message: classified.message,
     });

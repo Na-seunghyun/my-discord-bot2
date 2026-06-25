@@ -2401,6 +2401,7 @@
     async function api(path, options = {}) {
       const response = await fetch(path, {
         ...options,
+        cache: 'no-store',
         headers: { 'content-type': 'application/json', ...(options.headers || {}) },
       });
       const data = await response.json().catch(() => ({}));
@@ -2585,7 +2586,7 @@
 
     async function loadActivity() {
       try {
-        const data = await api('/api/redeem/activity?players=6&success=14');
+        const data = await api('/api/redeem/activity?players=6&success=50');
         renderActivity(data);
       } catch (error) {
         $('recentUsersList').innerHTML = `<div class="note">${escapeHtml(error.message)}</div>`;

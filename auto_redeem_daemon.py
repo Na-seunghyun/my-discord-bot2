@@ -266,6 +266,8 @@ def print_cycle(started: str, claim: dict, report: dict | None = None, error: st
         "ok": not error,
         "claimed": len(jobs),
         "processed": (report or {}).get("processed", 0),
+        "saved": (report or {}).get("saved", 0),
+        "saveFailed": (report or {}).get("saveFailed", 0),
         "success": (report or {}).get("success", 0),
         "failed": (report or {}).get("failed", 0),
         "retrying": (report or {}).get("retrying", 0),
