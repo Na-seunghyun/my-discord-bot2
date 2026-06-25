@@ -1873,17 +1873,41 @@ async function reportRedeemJobs(request, env) {
       updated_at_ms: now,
     };
 
+    let reportError = "";
     let updatedRows = await supabaseJson(env, `/redeem_jobs?job_key=eq.${encodeURIComponent(jobKey)}`, {
       method: "PATCH",
       headers: { prefer: "return=representation" },
       body: JSON.stringify(patchBody),
-    }).catch(() => []);
+    }).catch((error) => {
+      reportError = cleanText(error.message, 180);
+      return [];
+    });
     if ((!updatedRows || !updatedRows.length) && fallbackJobKey && fallbackJobKey !== jobKey) {
       updatedRows = await supabaseJson(env, `/redeem_jobs?job_key=eq.${encodeURIComponent(fallbackJobKey)}`, {
         method: "PATCH",
         headers: { prefer: "return=representation" },
         body: JSON.stringify(patchBody),
-      }).catch(() => []);
+      }).catch((error) => {
+        reportError = cleanText(error.message, 180);
+        return [];
+      });
+    }
+    if (!updatedRows || !updatedRows.length) {
+      updatedRows = await supabaseJson(env, "/redeem_jobs?on_conflict=job_key", {
+        method: "POST",
+        headers: { prefer: "resolution=merge-duplicates,return=representation" },
+        body: JSON.stringify([{
+          job_key: fallbackJobKey || jobKey,
+          player_id: playerId,
+          gift_code: giftCode,
+          attempts: attemptNumber,
+          created_at_ms: now,
+          ...patchBody,
+        }]),
+      }).catch((error) => {
+        reportError = cleanText(error.message, 180);
+        return [];
+      });
     }
     if (!updatedRows || !updatedRows.length) {
       summary.processed += 1;
@@ -1893,7 +1917,7 @@ async function reportRedeemJobs(request, env) {
         playerId,
         code: giftCode,
         status: "report_failed",
-        message: "Redeem result was received, but the job row was not updated.",
+        message: reportError || "Redeem result was received, but the job row was not updated.",
       });
       continue;
     }
