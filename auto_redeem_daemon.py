@@ -252,6 +252,15 @@ async def redeem_jobs(jobs: list[dict]) -> list[dict]:
 
 def print_cycle(started: str, claim: dict, report: dict | None = None, error: str = "") -> None:
     jobs = claim.get("jobs") or []
+    recovered = claim.get("recovered") or {}
+    status_counts: dict[str, int] = {}
+    samples: list[str] = []
+    for row in (report or {}).get("results", [])[:50]:
+        status = str(row.get("status") or "unknown")
+        status_counts[status] = status_counts.get(status, 0) + 1
+        message = str(row.get("message") or "").strip()
+        if message and len(samples) < 3:
+            samples.append(f"{status}: {message[:100]}")
     payload = {
         "time": started,
         "ok": not error,
@@ -260,12 +269,22 @@ def print_cycle(started: str, claim: dict, report: dict | None = None, error: st
         "success": (report or {}).get("success", 0),
         "failed": (report or {}).get("failed", 0),
         "retrying": (report or {}).get("retrying", 0),
+        "recovered": recovered.get("recovered", 0),
+        "staleFailed": recovered.get("failed", 0),
+        "statuses": status_counts,
+        "samples": samples,
         "error": error,
     }
     print(json.dumps(payload, ensure_ascii=False), flush=True)
 
 
 async def run_once() -> int:
+    if async_playwright is None:
+        raise RuntimeError(
+            "Playwright is not installed. Install it before starting the daemon: "
+            "pip install -r requirements.txt && python3 -m playwright install chromium"
+        )
+
     started_text = time.strftime("%Y-%m-%d %H:%M:%S")
     started_ms = int(time.time() * 1000)
     claim = request_json("/api/redeem/claim", {"limit": BATCH_SIZE})
@@ -284,6 +303,14 @@ async def run_once() -> int:
 def main() -> int:
     if not ADMIN_TOKEN:
         print("ADMIN_TOKEN is required.", file=sys.stderr)
+        return 2
+    if async_playwright is None:
+        print(
+            "Playwright is not installed. Stop here before claiming jobs.\n"
+            "Run: pip install -r requirements.txt && python3 -m playwright install chromium",
+            file=sys.stderr,
+            flush=True,
+        )
         return 2
 
     print(

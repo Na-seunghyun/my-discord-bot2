@@ -1552,6 +1552,7 @@
       <div class="rail-status">
         <div class="rail-stat"><span data-i18n="registeredPlayers">Registered IDs</span><strong id="registeredBadge">-</strong></div>
         <div class="rail-stat"><span data-i18n="activeCodes">Active codes</span><strong id="activeCodeBadge">-</strong></div>
+        <div class="rail-stat queue-stat"><span data-i18n="queueStatus">Queue status</span><strong id="queueBadge">-</strong></div>
         <div id="daemonBadge" class="engine-card daemon-badge unknown" data-i18n="automationUnknown">Auto redeem engine checking...</div>
       </div>
     </aside>
@@ -2315,6 +2316,15 @@
       summaryFailed: 'gagal'
     });
 
+    Object.assign(I18N.en, { queueStatus: 'Queue status', queuePending: 'waiting', queueRunning: 'running', queueStale: 'stale' });
+    Object.assign(I18N.ko, { queueStatus: '큐 상태', queuePending: '대기', queueRunning: '진행', queueStale: '복구대상' });
+    Object.assign(I18N['zh-CN'], { queueStatus: '队列状态', queuePending: '等待', queueRunning: '运行', queueStale: '需恢复' });
+    Object.assign(I18N['zh-TW'], { queueStatus: '佇列狀態', queuePending: '等待', queueRunning: '執行', queueStale: '需恢復' });
+    Object.assign(I18N.fr, { queueStatus: 'File', queuePending: 'attente', queueRunning: 'en cours', queueStale: 'a reprendre' });
+    Object.assign(I18N.de, { queueStatus: 'Warteschlange', queuePending: 'wartet', queueRunning: 'laeuft', queueStale: 'zu erholen' });
+    Object.assign(I18N.th, { queueStatus: 'คิว', queuePending: 'รอ', queueRunning: 'ทำงาน', queueStale: 'กู้คืน' });
+    Object.assign(I18N.id, { queueStatus: 'Status antrean', queuePending: 'menunggu', queueRunning: 'berjalan', queueStale: 'pulih' });
+
     let currentLang = new URL(location.href).searchParams.get('lang') || localStorage.getItem('siteLang') || localStorage.getItem('lang') || 'ko';
     if (!I18N[currentLang]) currentLang = 'ko';
     const saved = JSON.parse(localStorage.getItem('autoRedeemRegistration') || '{}');
@@ -2447,12 +2457,29 @@
         const data = await api('/api/redeem/status');
         $('registeredBadge').textContent = `${tr('registeredPlayers')}: ${data.registeredPlayers || 0}`;
         $('activeCodeBadge').textContent = `${tr('activeCodes')}: ${latestVisibleActiveCodes === null ? '-' : latestVisibleActiveCodes}`;
+        renderQueueStatus(data.queue);
         renderAutomationStatus(data.automation || data.daemon);
       } catch {
         $('registeredBadge').textContent = `${tr('registeredPlayers')}: -`;
         $('activeCodeBadge').textContent = `${tr('activeCodes')}: -`;
+        renderQueueStatus(null);
         renderAutomationStatus(null);
       }
+    }
+    function renderQueueStatus(queue) {
+      const badge = $('queueBadge');
+      if (!badge) return;
+      if (!queue) {
+        badge.textContent = '-';
+        badge.title = '';
+        return;
+      }
+      const pending = Number(queue.pending || 0);
+      const running = Number(queue.running || 0);
+      const stale = Number(queue.staleRunning || 0);
+      const retryPending = Number(queue.retryPending || 0);
+      badge.textContent = `${tr('queuePending')} ${pending} / ${tr('queueRunning')} ${running}`;
+      badge.title = `${tr('queueStale')}: ${stale} / retry: ${retryPending}`;
     }
     function renderAutomationStatus(daemon) {
       const badge = $('daemonBadge');
@@ -2535,6 +2562,7 @@
       setTextById('successDockCount', `${successTotal || recentSuccess.length || 0}`);
       $('registeredBadge').textContent = `${tr('registeredPlayers')}: ${data.registeredPlayers || 0}`;
       $('activeCodeBadge').textContent = `${tr('activeCodes')}: ${latestVisibleActiveCodes === null ? '-' : latestVisibleActiveCodes}`;
+      renderQueueStatus(data.queue);
       if (data.automation !== undefined || data.daemon !== undefined) renderAutomationStatus(data.automation || data.daemon);
 
       $('recentUsersList').innerHTML = recentPlayers.length ? recentPlayers.map((player) => `
