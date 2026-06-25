@@ -1851,6 +1851,9 @@ async function reportRedeemJobs(request, env) {
   const body = await request.json().catch(() => ({}));
   const rows = Array.isArray(body.results) ? body.results.slice(0, 50) : [];
   const summary = { ok: true, processed: 0, saved: 0, saveFailed: 0, success: 0, failed: 0, retrying: 0, results: [] };
+  const now = Date.now();
+  const jobPayloads = [];
+  const codePayloadByCode = new Map();
 
   for (const row of rows) {
     const playerId = cleanText(row.playerId || row.player_id, 40);
@@ -1862,76 +1865,41 @@ async function reportRedeemJobs(request, env) {
     const attemptNumber = numberValue(row.attempts);
     const retrying = !classified.ok && isRetryableRedeemStatus(classified.status) && attemptNumber > 0 && attemptNumber < cfg.maxAttempts;
     const finalStatus = retrying ? "pending" : classified.ok ? "success" : classified.status;
-    const now = Date.now();
     const responseJson = isPlainObject(row.response) ? row.response : {
       source: "putty-browser-daemon",
       status: classified.status,
       message: classified.message,
       player_nick: cleanText(row.playerNick || row.player_nick, 120),
     };
-    const patchBody = {
+
+    jobPayloads.push({
+      job_key: fallbackJobKey || jobKey,
+      player_id: playerId,
+      gift_code: giftCode,
+      attempts: attemptNumber,
       status: finalStatus,
       last_error: classified.ok ? "" : classified.message,
       response_json: responseJson,
+      created_at_ms: now,
       redeemed_at_ms: classified.ok ? now : null,
       updated_at_ms: now,
-    };
-
-    let reportError = "";
-    let updatedRows = await supabaseJson(env, `/redeem_jobs?job_key=eq.${encodeURIComponent(jobKey)}`, {
-      method: "PATCH",
-      headers: { prefer: "return=representation" },
-      body: JSON.stringify(patchBody),
-    }).catch((error) => {
-      reportError = cleanText(error.message, 180);
-      return [];
     });
-    if ((!updatedRows || !updatedRows.length) && fallbackJobKey && fallbackJobKey !== jobKey) {
-      updatedRows = await supabaseJson(env, `/redeem_jobs?job_key=eq.${encodeURIComponent(fallbackJobKey)}`, {
-        method: "PATCH",
-        headers: { prefer: "return=representation" },
-        body: JSON.stringify(patchBody),
-      }).catch((error) => {
-        reportError = cleanText(error.message, 180);
-        return [];
-      });
-    }
-    if (!updatedRows || !updatedRows.length) {
-      updatedRows = await supabaseJson(env, "/redeem_jobs?on_conflict=job_key", {
-        method: "POST",
-        headers: { prefer: "resolution=merge-duplicates,return=representation" },
-        body: JSON.stringify([{
-          job_key: fallbackJobKey || jobKey,
-          player_id: playerId,
-          gift_code: giftCode,
-          attempts: attemptNumber,
-          created_at_ms: now,
-          ...patchBody,
-        }]),
-      }).catch((error) => {
-        reportError = cleanText(error.message, 180);
-        return [];
-      });
-    }
-    if (!updatedRows || !updatedRows.length) {
-      summary.processed += 1;
-      summary.saveFailed += 1;
-      summary.failed += 1;
-      summary.results.push({
-        jobKey: fallbackJobKey || jobKey,
-        playerId,
-        code: giftCode,
-        status: "report_failed",
-        message: reportError || "Redeem result was received, but the job row was not updated.",
-      });
-      continue;
-    }
 
-    await updateRedeemCodeFromAttempt(env, giftCode, classified, now).catch(() => {});
-    await saveDaemonObservedPlayer(env, row).catch(() => {});
+    if (giftCode) {
+      const existing = codePayloadByCode.get(giftCode) || {};
+      const expired = classified.status === "expired" || existing.status === "expired";
+      codePayloadByCode.set(giftCode, {
+        code: giftCode,
+        source: "official-redeem-browser",
+        status: expired ? "expired" : "active",
+        is_active: expired ? false : true,
+        last_redeem_status: classified.status,
+        last_redeemed_at_ms: now,
+        updated_at_ms: now,
+      });
+    }
 
     summary.processed += 1;
-    summary.saved += 1;
     if (classified.ok) summary.success += 1;
     else if (retrying) summary.retrying += 1;
     else summary.failed += 1;
@@ -1942,6 +1910,38 @@ async function reportRedeemJobs(request, env) {
       status: finalStatus,
       message: classified.message,
     });
+  }
+
+  if (jobPayloads.length) {
+    let reportError = "";
+    await supabaseJson(env, "/redeem_jobs?on_conflict=job_key", {
+      method: "POST",
+      headers: { prefer: "resolution=merge-duplicates" },
+      body: JSON.stringify(jobPayloads),
+    }).then(() => {
+      summary.saved = jobPayloads.length;
+    }).catch((error) => {
+      reportError = cleanText(error.message, 180);
+      summary.saveFailed = jobPayloads.length;
+      summary.saved = 0;
+      summary.success = 0;
+      summary.retrying = 0;
+      summary.failed = jobPayloads.length;
+      summary.results = summary.results.map((item) => ({
+        ...item,
+        status: "report_failed",
+        message: reportError || "Redeem results were received, but bulk job save failed.",
+      }));
+    });
+  }
+
+  const codePayloads = [...codePayloadByCode.values()];
+  if (codePayloads.length && !summary.saveFailed) {
+    await supabaseJson(env, "/redeem_codes?on_conflict=code", {
+      method: "POST",
+      headers: { prefer: "resolution=merge-duplicates" },
+      body: JSON.stringify(codePayloads),
+    }).catch(() => {});
   }
 
   const startedAtMs = numberValue(body.startedAtMs) || Date.now();
