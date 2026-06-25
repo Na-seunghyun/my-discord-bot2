@@ -1428,6 +1428,17 @@ function publicRedeemJob(row, playerMap = new Map()) {
   };
 }
 
+function publicRedeemJobStatus(row) {
+  return {
+    gift_code: normalizeGiftCode(row && row.gift_code),
+    status: cleanText(row && row.status, 40),
+    attempts: numberValue(row && row.attempts),
+    last_error: meaningfulText(row && row.last_error, 160),
+    redeemed_at_ms: numberValue(row && row.redeemed_at_ms),
+    updated_at_ms: numberValue(row && row.updated_at_ms),
+  };
+}
+
 async function redeemActivity(request, env) {
   const ready = requireSupabase(env);
   if (!ready.ok) return ready.response;
@@ -1482,9 +1493,26 @@ async function redeemKingdomRegistry(request, env) {
     env,
     `/redeem_players?enabled=eq.true&consent=eq.true&select=id,nickname,state,town_hall_level,avatar_url,created_at_ms,updated_at_ms,profile_json&order=state.asc.nullslast,created_at_ms.desc&limit=${limit}`
   ).catch(() => []);
+  const playerIds = (rows || []).map((row) => String(row.id || "")).filter(Boolean);
+  const playerIdSet = new Set(playerIds);
+  const recentJobByPlayer = new Map();
+  if (playerIds.length) {
+    const recentJobs = await supabaseJson(
+      env,
+      "/redeem_jobs?select=player_id,gift_code,status,attempts,last_error,redeemed_at_ms,updated_at_ms&order=updated_at_ms.desc&limit=8000"
+    ).catch(() => []);
+    for (const job of recentJobs || []) {
+      const playerId = String(job.player_id || "");
+      if (!playerIdSet.has(playerId) || recentJobByPlayer.has(playerId)) continue;
+      recentJobByPlayer.set(playerId, publicRedeemJobStatus(job));
+    }
+  }
   const groups = new Map();
   for (const row of rows || []) {
-    const player = publicRedeemPlayer(row);
+    const player = {
+      ...publicRedeemPlayer(row),
+      recent_redeem: recentJobByPlayer.get(String(row.id || "")) || null,
+    };
     const key = player.state === null || player.state === undefined ? "unknown" : String(player.state);
     if (!groups.has(key)) {
       groups.set(key, {

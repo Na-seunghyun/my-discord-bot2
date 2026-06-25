@@ -1254,6 +1254,10 @@
       box-shadow: 0 18px 46px rgba(0,0,0,.24);
       overflow: hidden;
     }
+    .kingdom-card[open] {
+      border-color: rgba(82,255,224,.36);
+      box-shadow: 0 20px 58px rgba(0,0,0,.28), 0 0 34px rgba(82,255,224,.08);
+    }
     .kingdom-card-head {
       display: flex;
       align-items: center;
@@ -1261,6 +1265,24 @@
       gap: 10px;
       padding: 13px 14px;
       border-bottom: 1px solid rgba(154,183,255,.15);
+      cursor: pointer;
+      list-style: none;
+    }
+    .kingdom-card-head::-webkit-details-marker {
+      display: none;
+    }
+    .kingdom-title-pack {
+      min-width: 0;
+      display: grid;
+      gap: 4px;
+    }
+    .kingdom-rollup {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 1000;
     }
     .kingdom-id {
       color: var(--gold);
@@ -1279,6 +1301,21 @@
       font-size: 12px;
       font-weight: 1000;
       white-space: nowrap;
+    }
+    .kingdom-card-head::after {
+      content: "+";
+      min-width: 26px;
+      height: 26px;
+      display: inline-grid;
+      place-items: center;
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 999px;
+      color: var(--gold);
+      background: rgba(244,200,106,.08);
+      font-weight: 1000;
+    }
+    .kingdom-card[open] .kingdom-card-head::after {
+      content: "-";
     }
     .kingdom-player-list {
       display: grid;
@@ -1322,6 +1359,73 @@
       font-size: 12px;
       font-weight: 850;
       overflow-wrap: anywhere;
+    }
+    .kingdom-redeem-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      margin-top: 7px;
+    }
+    .redeem-status {
+      min-height: 24px;
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 0 9px;
+      font-size: 11px;
+      font-weight: 1000;
+      white-space: nowrap;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color: var(--muted);
+    }
+    .redeem-status.success {
+      color: #061512;
+      background: var(--ok);
+      border-color: rgba(128,246,168,.44);
+    }
+    .redeem-status.failed,
+    .redeem-status.invalid_code,
+    .redeem-status.expired,
+    .redeem-status.time_window_closed,
+    .redeem-status.player_not_found,
+    .redeem-status.not_logged_in {
+      color: #28090a;
+      background: #ffb5b2;
+      border-color: rgba(255,114,109,.46);
+    }
+    .redeem-status.pending,
+    .redeem-status.running {
+      color: #101007;
+      background: var(--gold);
+      border-color: rgba(244,200,106,.44);
+    }
+    .redeem-status.already_claimed {
+      color: #071014;
+      background: var(--cyan);
+      border-color: rgba(82,255,224,.44);
+    }
+    .redeem-code-chip,
+    .redeem-reason {
+      min-height: 24px;
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 0 9px;
+      color: var(--muted);
+      background: rgba(255,255,255,.055);
+      border: 1px solid rgba(154,183,255,.14);
+      font-size: 11px;
+      font-weight: 900;
+      overflow-wrap: anywhere;
+    }
+    .redeem-reason {
+      max-width: 100%;
+      border-radius: 10px;
+      white-space: normal;
+      line-height: 1.35;
+      padding-block: 4px;
     }
     .redeem-redesign .console-card,
     .redeem-redesign .live-command-center,
@@ -2042,6 +2146,174 @@
       ids: 'ID',
       unknownKingdom: 'Kingdom tidak diketahui'
     });
+    Object.assign(I18N.en, {
+      latestCode: 'Latest code',
+      noRecentRedeem: 'No redeem record yet',
+      reason: 'Reason',
+      status_pending: 'Waiting',
+      status_running: 'Processing',
+      status_success: 'Success',
+      status_failed: 'Failed',
+      status_already_claimed: 'Already claimed',
+      status_expired: 'Expired',
+      status_invalid_code: 'Invalid code',
+      status_time_window_closed: 'Time closed',
+      status_not_logged_in: 'Login failed',
+      status_player_not_found: 'Player not found',
+      status_timeout: 'Timeout',
+      status_network_error: 'Network error',
+      status_server_busy: 'Server busy',
+      summarySuccess: 'success',
+      summaryRunning: 'working',
+      summaryFailed: 'failed'
+    });
+    Object.assign(I18N.ko, {
+      latestCode: '최근 코드',
+      noRecentRedeem: '아직 지급 기록 없음',
+      reason: '사유',
+      status_pending: '대기',
+      status_running: '진행 중',
+      status_success: '성공',
+      status_failed: '실패',
+      status_already_claimed: '이미 수령',
+      status_expired: '만료',
+      status_invalid_code: '잘못된 코드',
+      status_time_window_closed: '지급 시간 종료',
+      status_not_logged_in: '로그인 실패',
+      status_player_not_found: '유저 없음',
+      status_timeout: '시간 초과',
+      status_network_error: '네트워크 오류',
+      status_server_busy: '서버 혼잡',
+      summarySuccess: '성공',
+      summaryRunning: '진행',
+      summaryFailed: '실패'
+    });
+    Object.assign(I18N['zh-CN'], {
+      latestCode: '最新代码',
+      noRecentRedeem: '暂无兑换记录',
+      reason: '原因',
+      status_pending: '等待',
+      status_running: '处理中',
+      status_success: '成功',
+      status_failed: '失败',
+      status_already_claimed: '已领取',
+      status_expired: '已过期',
+      status_invalid_code: '无效代码',
+      status_time_window_closed: '时间已结束',
+      status_not_logged_in: '登录失败',
+      status_player_not_found: '找不到玩家',
+      status_timeout: '超时',
+      status_network_error: '网络错误',
+      status_server_busy: '服务器繁忙',
+      summarySuccess: '成功',
+      summaryRunning: '进行中',
+      summaryFailed: '失败'
+    });
+    Object.assign(I18N['zh-TW'], {
+      latestCode: '最新代碼',
+      noRecentRedeem: '暫無兌換記錄',
+      reason: '原因',
+      status_pending: '等待',
+      status_running: '處理中',
+      status_success: '成功',
+      status_failed: '失敗',
+      status_already_claimed: '已領取',
+      status_expired: '已過期',
+      status_invalid_code: '無效代碼',
+      status_time_window_closed: '時間已結束',
+      status_not_logged_in: '登入失敗',
+      status_player_not_found: '找不到玩家',
+      status_timeout: '逾時',
+      status_network_error: '網路錯誤',
+      status_server_busy: '伺服器繁忙',
+      summarySuccess: '成功',
+      summaryRunning: '進行中',
+      summaryFailed: '失敗'
+    });
+    Object.assign(I18N.fr, {
+      latestCode: 'Dernier code',
+      noRecentRedeem: 'Aucun historique',
+      reason: 'Raison',
+      status_pending: 'En attente',
+      status_running: 'En cours',
+      status_success: 'Succès',
+      status_failed: 'Échec',
+      status_already_claimed: 'Déjà reçu',
+      status_expired: 'Expiré',
+      status_invalid_code: 'Code invalide',
+      status_time_window_closed: 'Temps fermé',
+      status_not_logged_in: 'Connexion échouée',
+      status_player_not_found: 'Joueur introuvable',
+      status_timeout: 'Délai dépassé',
+      status_network_error: 'Erreur réseau',
+      status_server_busy: 'Serveur occupé',
+      summarySuccess: 'succès',
+      summaryRunning: 'en cours',
+      summaryFailed: 'échec'
+    });
+    Object.assign(I18N.de, {
+      latestCode: 'Letzter Code',
+      noRecentRedeem: 'Noch kein Verlauf',
+      reason: 'Grund',
+      status_pending: 'Wartet',
+      status_running: 'Läuft',
+      status_success: 'Erfolg',
+      status_failed: 'Fehlgeschlagen',
+      status_already_claimed: 'Bereits erhalten',
+      status_expired: 'Abgelaufen',
+      status_invalid_code: 'Ungültiger Code',
+      status_time_window_closed: 'Zeitfenster vorbei',
+      status_not_logged_in: 'Login fehlgeschlagen',
+      status_player_not_found: 'Spieler nicht gefunden',
+      status_timeout: 'Timeout',
+      status_network_error: 'Netzwerkfehler',
+      status_server_busy: 'Server ausgelastet',
+      summarySuccess: 'Erfolg',
+      summaryRunning: 'läuft',
+      summaryFailed: 'Fehler'
+    });
+    Object.assign(I18N.th, {
+      latestCode: 'โค้ดล่าสุด',
+      noRecentRedeem: 'ยังไม่มีประวัติ',
+      reason: 'เหตุผล',
+      status_pending: 'รอ',
+      status_running: 'กำลังทำงาน',
+      status_success: 'สำเร็จ',
+      status_failed: 'ล้มเหลว',
+      status_already_claimed: 'รับแล้ว',
+      status_expired: 'หมดอายุ',
+      status_invalid_code: 'โค้ดไม่ถูกต้อง',
+      status_time_window_closed: 'หมดเวลา',
+      status_not_logged_in: 'เข้าสู่ระบบล้มเหลว',
+      status_player_not_found: 'ไม่พบผู้เล่น',
+      status_timeout: 'หมดเวลา',
+      status_network_error: 'เครือข่ายผิดพลาด',
+      status_server_busy: 'เซิร์ฟเวอร์ยุ่ง',
+      summarySuccess: 'สำเร็จ',
+      summaryRunning: 'กำลังทำ',
+      summaryFailed: 'ล้มเหลว'
+    });
+    Object.assign(I18N.id, {
+      latestCode: 'Kode terbaru',
+      noRecentRedeem: 'Belum ada riwayat',
+      reason: 'Alasan',
+      status_pending: 'Menunggu',
+      status_running: 'Diproses',
+      status_success: 'Sukses',
+      status_failed: 'Gagal',
+      status_already_claimed: 'Sudah diterima',
+      status_expired: 'Kedaluwarsa',
+      status_invalid_code: 'Kode tidak valid',
+      status_time_window_closed: 'Waktu ditutup',
+      status_not_logged_in: 'Login gagal',
+      status_player_not_found: 'Player tidak ditemukan',
+      status_timeout: 'Timeout',
+      status_network_error: 'Error jaringan',
+      status_server_busy: 'Server sibuk',
+      summarySuccess: 'sukses',
+      summaryRunning: 'proses',
+      summaryFailed: 'gagal'
+    });
 
     let currentLang = new URL(location.href).searchParams.get('lang') || localStorage.getItem('siteLang') || localStorage.getItem('lang') || 'ko';
     if (!I18N[currentLang]) currentLang = 'ko';
@@ -2306,6 +2578,53 @@
       return `K${kingdom.state}`;
     }
 
+    function normalizeRedeemStatus(value) {
+      return String(value || '').trim().toLowerCase().replace(/[^a-z0-9_]+/g, '_') || 'pending';
+    }
+
+    function redeemJobStatusLabel(status) {
+      const normalized = normalizeRedeemStatus(status);
+      return tr(`status_${normalized}`) || normalized.replace(/_/g, ' ');
+    }
+
+    function redeemStatusGroup(status) {
+      const normalized = normalizeRedeemStatus(status);
+      if (normalized === 'success') return 'success';
+      if (normalized === 'pending' || normalized === 'running') return 'running';
+      return 'failed';
+    }
+
+    function kingdomRollup(players) {
+      const counts = { success: 0, running: 0, failed: 0 };
+      players.forEach((player) => {
+        if (!player.recent_redeem) return;
+        counts[redeemStatusGroup(player.recent_redeem.status)] += 1;
+      });
+      return `
+        <span>${escapeHtml(tr('summarySuccess'))}: ${counts.success}</span>
+        <span>${escapeHtml(tr('summaryRunning'))}: ${counts.running}</span>
+        <span>${escapeHtml(tr('summaryFailed'))}: ${counts.failed}</span>`;
+    }
+
+    function recentRedeemHtml(player) {
+      const recent = player.recent_redeem;
+      if (!recent) {
+        return `<div class="kingdom-redeem-row"><span class="redeem-status">${escapeHtml(tr('noRecentRedeem'))}</span></div>`;
+      }
+      const status = normalizeRedeemStatus(recent.status);
+      const statusLabel = redeemJobStatusLabel(status);
+      const code = recent.gift_code || '-';
+      const reason = recent.last_error || statusLabel;
+      const time = formatTime(recent.redeemed_at_ms || recent.updated_at_ms);
+      return `
+        <div class="kingdom-redeem-row">
+          <span class="redeem-status ${escapeHtml(status)}">${escapeHtml(statusLabel)}</span>
+          <span class="redeem-code-chip">${escapeHtml(tr('latestCode'))}: ${escapeHtml(code)}</span>
+          <span class="redeem-code-chip">${escapeHtml(time)}</span>
+          <span class="redeem-reason">${escapeHtml(tr('reason'))}: ${escapeHtml(reason)}</span>
+        </div>`;
+    }
+
     function renderKingdomRegistry(data) {
       const kingdoms = Array.isArray(data.kingdoms) ? data.kingdoms : [];
       const total = Number(data.total || 0);
@@ -2317,14 +2636,18 @@
         grid.innerHTML = `<div class="note">${escapeHtml(tr('noKingdomRegistry'))}</div>`;
         return;
       }
-      grid.innerHTML = kingdoms.map((kingdom) => {
+      grid.innerHTML = kingdoms.map((kingdom, index) => {
         const players = Array.isArray(kingdom.players) ? kingdom.players : [];
+        const openAttr = index === 0 ? ' open' : '';
         return `
-          <article class="kingdom-card">
-            <div class="kingdom-card-head">
-              <strong class="kingdom-id">${escapeHtml(kingdomDisplayLabel(kingdom))}</strong>
+          <details class="kingdom-card"${openAttr}>
+            <summary class="kingdom-card-head">
+              <span class="kingdom-title-pack">
+                <strong class="kingdom-id">${escapeHtml(kingdomDisplayLabel(kingdom))}</strong>
+                <span class="kingdom-rollup">${kingdomRollup(players)}</span>
+              </span>
               <span class="kingdom-count">${escapeHtml(unitText(kingdom.count || players.length || 0, 'ids'))}</span>
-            </div>
+            </summary>
             <div class="kingdom-player-list">
               ${players.length ? players.map((player) => `
                 <div class="kingdom-player">
@@ -2335,10 +2658,11 @@
                       <span>${escapeHtml(maskId(player.id))}</span>
                     </div>
                     <div class="kingdom-player-meta">${escapeHtml(playerMeta(player))} · ${escapeHtml(formatTime(player.created_at_ms || player.updated_at_ms))}</div>
+                    ${recentRedeemHtml(player)}
                   </div>
                 </div>`).join('') : `<div class="note">${escapeHtml(tr('noRecentUsers'))}</div>`}
             </div>
-          </article>`;
+          </details>`;
       }).join('');
     }
 
