@@ -687,7 +687,11 @@ async function readRedeemAutomationStatus(env) {
     readRedeemDaemonStatus(env).catch(() => null),
   ]);
   const candidates = [cloudflare, putty, legacyDaemon].filter(Boolean);
-  const primary = candidates.find((item) => item.state === "online" || item.state === "warning") || candidates[0] || null;
+  const puttyCandidate = putty || legacyDaemon || null;
+  const activePutty = puttyCandidate && (puttyCandidate.state === "online" || puttyCandidate.state === "warning") ? puttyCandidate : null;
+  const activeAny = candidates.find((item) => item.state === "online" || item.state === "warning") || null;
+  const newestAny = [...candidates].sort((a, b) => numberValue(b.lastSeenAtMs) - numberValue(a.lastSeenAtMs))[0] || null;
+  const primary = activePutty || activeAny || puttyCandidate || newestAny || null;
   const stable = Boolean(candidates.find((item) => item.state === "online"));
   const warning = Boolean(candidates.find((item) => item.state === "warning" || item.state === "error"));
   const lastSeenAtMs = Math.max(0, ...candidates.map((item) => numberValue(item.lastSeenAtMs)));
@@ -1914,6 +1918,7 @@ async function reportRedeemJobs(request, env) {
       summary.saveFailed += 1;
       summary.failed += 1;
       summary.results.push({
+        jobKey: fallbackJobKey || jobKey,
         playerId,
         code: giftCode,
         status: "report_failed",
@@ -1931,6 +1936,7 @@ async function reportRedeemJobs(request, env) {
     else if (retrying) summary.retrying += 1;
     else summary.failed += 1;
     summary.results.push({
+      jobKey: fallbackJobKey || jobKey,
       playerId,
       code: giftCode,
       status: finalStatus,

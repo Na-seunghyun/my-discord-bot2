@@ -255,12 +255,16 @@ def print_cycle(started: str, claim: dict, report: dict | None = None, error: st
     recovered = claim.get("recovered") or {}
     status_counts: dict[str, int] = {}
     samples: list[str] = []
+    report_failed_samples: list[str] = []
     for row in (report or {}).get("results", [])[:50]:
         status = str(row.get("status") or "unknown")
         status_counts[status] = status_counts.get(status, 0) + 1
         message = str(row.get("message") or "").strip()
-        if message and len(samples) < 3:
-            samples.append(f"{status}: {message[:100]}")
+        sample = f"{status}: {message[:160]}" if message else status
+        if status == "report_failed" and len(report_failed_samples) < 5:
+            report_failed_samples.append(sample)
+        elif message and len(samples) < 3:
+            samples.append(sample)
     payload = {
         "time": started,
         "ok": not error,
@@ -274,7 +278,8 @@ def print_cycle(started: str, claim: dict, report: dict | None = None, error: st
         "recovered": recovered.get("recovered", 0),
         "staleFailed": recovered.get("failed", 0),
         "statuses": status_counts,
-        "samples": samples,
+        "samples": (report_failed_samples[:3] or samples),
+        "reportFailedSamples": report_failed_samples,
         "error": error,
     }
     print(json.dumps(payload, ensure_ascii=False), flush=True)
