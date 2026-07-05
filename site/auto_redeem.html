@@ -2348,15 +2348,16 @@
       'ANALYTICS', 'ANALYSIS', 'PERFORMANCE', 'UNKNOWN', 'VIEW', 'WAITING'
     ]);
     function normalizeDisplayCode(value) {
-      return String(value || '').toUpperCase().replace(/[^A-Z0-9_-]/g, '');
+      return String(value || '').replace(/[^A-Za-z0-9_-]/g, '');
     }
     function isDisplayableGiftCode(row) {
       const code = normalizeDisplayCode(row && row.code);
+      const upperCode = code.toUpperCase();
       if (!code || code.length < 5 || code.length > 32) return false;
-      if (UI_GIFT_CODE_DENYLIST.has(code)) return false;
+      if (UI_GIFT_CODE_DENYLIST.has(upperCode)) return false;
       if (/^\d+$/.test(code)) return false;
-      if (!/[A-Z]/.test(code)) return false;
-      if (/^(HTTP|HTTPS|WWW|MAIL|EMAIL|INPUT|IMAGE|LOGIN|BUTTON|PROFILE|PLAYER|REGISTER|DISCORD|GITHUB)/.test(code)) return false;
+      if (!/[A-Za-z]/.test(code)) return false;
+      if (/^(HTTP|HTTPS|WWW|MAIL|EMAIL|INPUT|IMAGE|LOGIN|BUTTON|PROFILE|PLAYER|REGISTER|DISCORD|GITHUB)/i.test(code)) return false;
       if (String((row && row.source) || '').startsWith('public:') && !/\d/.test(code)) return false;
       const status = String((row && row.status) || '').toLowerCase();
       if (status === 'invalid' || status === 'invalid_code' || status === 'bad_candidate') return false;

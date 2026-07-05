@@ -465,18 +465,19 @@ async function saveOfficialProfile(env, profile) {
 }
 
 function normalizeGiftCode(value) {
-  const code = meaningfulText(value, 80).toUpperCase().replace(/[^A-Z0-9_-]/g, "");
-  return /^[A-Z0-9_-]{3,64}$/.test(code) ? code : "";
+  const code = meaningfulText(value, 80).replace(/[^A-Za-z0-9_-]/g, "");
+  return /^[A-Za-z0-9_-]{3,64}$/.test(code) ? code : "";
 }
 
 function isLikelyGiftCodeValue(value) {
   const code = normalizeGiftCode(value);
+  const upperCode = code.toUpperCase();
   if (!code || code.length < 5 || code.length > 32) return false;
-  if (GIFT_CODE_DENYLIST.has(code)) return false;
+  if (GIFT_CODE_DENYLIST.has(upperCode)) return false;
   if (/^\d+$/.test(code)) return false;
-  if (!/[A-Z]/.test(code)) return false;
+  if (!/[A-Za-z]/.test(code)) return false;
   if (/^(HTTP|HTTPS|WWW|MAIL|EMAIL|INPUT|IMAGE|LOGIN|BUTTON|PROFILE|PLAYER|REGISTER|DISCORD|GITHUB)/i.test(code)) return false;
-  if (/^[A-Z]{1,4}$/.test(code)) return false;
+  if (/^[A-Za-z]{1,4}$/.test(code)) return false;
   return true;
 }
 
@@ -523,13 +524,18 @@ function normalizeRecentRedemptionRow(row) {
 function collectGiftCodesFromPayload(payload, out = new Set(), keyHint = "", depth = 0) {
   if (depth > 5 || payload == null) return out;
   if (typeof payload === "string") {
-    const text = payload.toUpperCase();
+    const text = String(payload || "");
     if (/CODE|CDK|GIFT|REDEEM/.test(keyHint.toUpperCase())) {
       const direct = normalizeGiftCode(text);
       if (isLikelyGiftCodeValue(direct)) out.add(direct);
     }
     const matches = text.matchAll(/(?:GIFT\s*CODE|CODE|CDK|REDEEM)\s*[:：#-]?\s*`?([A-Z0-9_-]{3,64})`?/g);
     for (const match of matches) {
+      const code = normalizeGiftCode(match[1]);
+      if (isLikelyGiftCodeValue(code)) out.add(code);
+    }
+    const mixedCaseMatches = text.matchAll(/(?:GIFT\s*CODE|CODE|CDK|REDEEM)\s*[:=\-]?\s*`?([A-Za-z0-9_-]{3,64})`?/gi);
+    for (const match of mixedCaseMatches) {
       const code = normalizeGiftCode(match[1]);
       if (isLikelyGiftCodeValue(code)) out.add(code);
     }
@@ -1170,7 +1176,7 @@ function giftCodeCandidateAllowed(candidate, context) {
 
 function redeemCodeAllowedForPublicUse(row) {
   const code = normalizeGiftCode(row && row.code);
-  if (!code || GIFT_CODE_DENYLIST.has(code)) return false;
+  if (!code || GIFT_CODE_DENYLIST.has(code.toUpperCase())) return false;
   const source = String((row && row.source) || "");
   if (source.startsWith("public:")) return giftCodeCandidateAllowed(code, `GIFT CODE ${code}`);
   return true;
@@ -1178,17 +1184,17 @@ function redeemCodeAllowedForPublicUse(row) {
 
 function collectGiftCodesFromPublicText(text, source, url) {
   const plain = plainTextFromHtml(text);
-  const upper = plain.toUpperCase();
   const rows = [];
   const seen = new Set();
-  const matches = upper.matchAll(/\b[A-Z0-9][A-Z0-9_-]{4,31}\b/g);
+  const matches = plain.matchAll(/\b[A-Za-z0-9][A-Za-z0-9_-]{4,31}\b/g);
   for (const match of matches) {
     const raw = match[0];
     const start = Math.max(0, match.index - 100);
-    const end = Math.min(upper.length, match.index + raw.length + 100);
-    const context = upper.slice(start, end);
+    const end = Math.min(plain.length, match.index + raw.length + 100);
+    const context = plain.slice(start, end);
+    const upperContext = context.toUpperCase();
     const code = normalizeGiftCode(raw);
-    if (!giftCodeCandidateAllowed(code, context) || seen.has(code)) continue;
+    if (!giftCodeCandidateAllowed(code, upperContext) || seen.has(code)) continue;
     seen.add(code);
     const expired = /EXPIRED|ENDED|INVALID|NOT\s+ACTIVE|만료|期限切れ|หมดอายุ/i.test(context);
     rows.push({
@@ -1345,9 +1351,16 @@ function collectGiftCodesFromPublicTextStrict(text, source, url) {
     }
   }
 
-  const plain = plainTextFromHtml(text).toUpperCase();
+  const plain = plainTextFromHtml(text);
   const explicit = plain.matchAll(/\b(?:GIFT\s*CODE|PROMO\s*CODE|REDEEM\s*CODE|CDK)\s*[:：#=]\s*([A-Z0-9_-]{5,32})\b/g);
   for (const match of explicit) {
+    const start = Math.max(0, match.index - 80);
+    const end = Math.min(plain.length, match.index + match[0].length + 80);
+    const context = plain.slice(start, end);
+    push(match[1], /EXPIRED|ENDED|INVALID|NOT\s+ACTIVE/i.test(context) ? "expired" : "active", context);
+  }
+  const explicitMixedCase = plain.matchAll(/\b(?:GIFT\s*CODE|PROMO\s*CODE|REDEEM\s*CODE|CDK)\s*[:=\-]\s*([A-Za-z0-9_-]{5,32})\b/gi);
+  for (const match of explicitMixedCase) {
     const start = Math.max(0, match.index - 80);
     const end = Math.min(plain.length, match.index + match[0].length + 80);
     const context = plain.slice(start, end);
@@ -2098,8 +2111,8 @@ function classifyRedeemPayloadV2(payload) {
 
 async function redeemOfficialGiftCode(playerId, giftCode, options = {}) {
   const fid = meaningfulText(playerId, 40);
-  const cdk = meaningfulText(giftCode, 80).toUpperCase();
-  if (!/^\d{3,12}$/.test(fid) || !/^[A-Z0-9_-]{3,64}$/.test(cdk)) {
+  const cdk = normalizeGiftCode(giftCode);
+  if (!/^\d{3,12}$/.test(fid) || !/^[A-Za-z0-9_-]{3,64}$/.test(cdk)) {
     return { ok: false, status: "invalid_input", message: "Invalid player ID or gift code." };
   }
 

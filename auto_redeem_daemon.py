@@ -135,7 +135,7 @@ async def detect_blocked_or_unready(page) -> str:
 async def redeem_one(page, job: dict) -> dict:
     job_key = str(job.get("jobKey") or "")
     player_id = str(job.get("playerId") or "")
-    gift_code = str(job.get("giftCode") or "").upper()
+    gift_code = str(job.get("giftCode") or "")
     attempts = int(job.get("attempts") or 0)
 
     result = {
