@@ -1565,7 +1565,7 @@ async function redeemQueueSummary(env) {
     countSupabaseRows(env, "/redeem_jobs?status=eq.running&select=job_key&limit=1").catch(() => 0),
     countSupabaseRows(env, `/redeem_jobs?status=eq.running&updated_at_ms=lt.${staleCutoff}&select=job_key&limit=1`).catch(() => 0),
     countSupabaseRows(env, "/redeem_jobs?status=eq.success&select=job_key&limit=1").catch(() => 0),
-    countSupabaseRows(env, "/redeem_jobs?status=in.(failed,invalid_code,expired,already_claimed,time_window_closed,player_not_found,not_logged_in,captcha_required)&select=job_key&limit=1").catch(() => 0),
+    countSupabaseRows(env, "/redeem_jobs?status=in.(failed,invalid_code,expired,already_claimed,time_window_closed,player_not_found,not_logged_in,captcha_required,claim_limit_reached)&select=job_key&limit=1").catch(() => 0),
   ]);
   return {
     pending,
@@ -1839,6 +1839,9 @@ function classifyDaemonRedeemResult(row) {
   if (ok || statusHint === "success" || /redeemed,?\s*please\s*claim|claim\s+the\s+rewards\s+in\s+your\s+mail/i.test(message)) {
     return { status: "success", ok: true, message: message || "success" };
   }
+  if (statusHint === "claim_limit_reached" || /claim\s+limit\s+reached|unable\s+to\s+claim/i.test(message)) {
+    return { status: "claim_limit_reached", ok: false, message: message || "claim limit reached" };
+  }
   if (statusHint === "already_claimed" || /same\s+gift\s+code|only\s+be\s+redeemed\s+once|already|claimed|used|received/i.test(message)) {
     return { status: "already_claimed", ok: false, message: message || "already claimed" };
   }
@@ -2068,6 +2071,9 @@ function classifyRedeemPayload(payload) {
   if ((payload && payload.code === 0) || errCode === 0 || /redeemed,?\s*please\s*claim|claim\s+the\s+rewards\s+in\s+your\s+mail/i.test(message)) {
     return { status: "success", ok: true, message: message || "success" };
   }
+  if (/claim\s+limit\s+reached|unable\s+to\s+claim/i.test(message)) {
+    return { status: "claim_limit_reached", ok: false, message: message || "claim limit reached" };
+  }
   if (errCode === 40102) return { status: "captcha_required", ok: false, message: message || "captcha required" };
   if (errCode === 40014) return { status: "invalid_code", ok: false, message: message || "code not found" };
   if (errCode === 40009) return { status: "not_logged_in", ok: false, message: message || "not logged in" };
@@ -2085,6 +2091,9 @@ function classifyRedeemPayloadV2(payload) {
   const lower = message.toLowerCase();
   if ((payload && payload.code === 0) || errCode === 0 || /redeemed,?\s*please\s*claim|claim\s+the\s+rewards\s+in\s+your\s+mail/i.test(message)) {
     return { status: "success", ok: true, message: message || "success" };
+  }
+  if (/claim\s+limit\s+reached|unable\s+to\s+claim/i.test(message)) {
+    return { status: "claim_limit_reached", ok: false, message: message || "claim limit reached" };
   }
   if (errCode === 40102 || /captcha|verification|verify|40102|验证码|驗證碼|인증/i.test(message)) {
     return { status: "captcha_required", ok: false, message: message || "captcha required" };

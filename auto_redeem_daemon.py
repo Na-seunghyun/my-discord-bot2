@@ -75,6 +75,8 @@ def classify_message(message: str) -> tuple[str, bool]:
     lower = text.lower()
     if "redeemed, please claim" in lower or "claim the rewards in your mail" in lower:
         return "success", True
+    if "claim limit reached" in lower or "unable to claim" in lower:
+        return "claim_limit_reached", False
     if "same gift code" in lower or "only be redeemed once" in lower or "already claimed" in lower:
         return "already_claimed", False
     if "gift code not found" in lower or "case-sensitive" in lower or "invalid code" in lower:
