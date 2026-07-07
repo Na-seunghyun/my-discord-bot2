@@ -13,7 +13,7 @@ const OFFICIAL_GIFT_REDEEM_API = "https://kingshot-giftcode.centurygame.com/api/
 const OFFICIAL_GIFT_ORIGIN = "https://ks-giftcode.centurygame.com";
 const OFFICIAL_GIFT_SIGN_SALT = "mN4!pQs6JrYwV9";
 const OFFICIAL_GIFT_TIMEOUT_MS = 10000;
-const AUTO_REDEEM_DEFAULT_BATCH_SIZE = 25;
+const AUTO_REDEEM_DEFAULT_BATCH_SIZE = 40;
 const AUTO_REDEEM_DEFAULT_CLOUDFLARE_BATCH_SIZE = 6;
 const AUTO_REDEEM_DEFAULT_DELAY_MS = 700;
 const AUTO_REDEEM_DEFAULT_MAX_ATTEMPTS = 4;
@@ -560,7 +560,7 @@ function collectGiftCodesFromPayload(payload, out = new Set(), keyHint = "", dep
 function autoRedeemConfig(env) {
   return {
     enabled: envBool(env.AUTO_REDEEM_ENABLED, true),
-    batchSize: envNumber(env.AUTO_REDEEM_BATCH_SIZE, AUTO_REDEEM_DEFAULT_BATCH_SIZE, 1, 40),
+    batchSize: envNumber(env.AUTO_REDEEM_BATCH_SIZE, AUTO_REDEEM_DEFAULT_BATCH_SIZE, 1, 80),
     cloudflareBatchSize: envNumber(env.AUTO_REDEEM_CLOUDFLARE_BATCH_SIZE, AUTO_REDEEM_DEFAULT_CLOUDFLARE_BATCH_SIZE, 1, 12),
     delayMs: envNumber(env.AUTO_REDEEM_DELAY_MS, AUTO_REDEEM_DEFAULT_DELAY_MS, 300, 8000),
     maxAttempts: envNumber(env.AUTO_REDEEM_MAX_ATTEMPTS, AUTO_REDEEM_DEFAULT_MAX_ATTEMPTS, 1, 8),
@@ -1577,6 +1577,8 @@ async function redeemQueueSummary(env) {
     failedTerminal,
     waitingTotal: pending + running,
     runningStaleMinutes: Math.round(cfg.runningStaleMs / 60000),
+    batchSize: cfg.batchSize,
+    claimMode: cfg.batchSize > 40 ? "fast-rpc" : "standard",
   };
 }
 
@@ -1803,7 +1805,26 @@ async function claimRedeemJobs(request, env) {
   const limit = Math.min(cfg.batchSize, Math.max(1, Number.isFinite(requestedLimit) ? Math.floor(requestedLimit) : cfg.batchSize));
   const recovered = await recoverStaleRedeemJobs(env, cfg).catch(() => ({ recovered: 0, failed: 0 }));
 
-  const jobs = await supabaseJson(env, `/redeem_jobs?status=eq.pending&select=job_key,player_id,gift_code,attempts&order=created_at_ms.asc&limit=${limit}`).catch(() => []);
+  const runnerName = cleanText(request.headers.get("x-auto-redeem-runner") || "putty-daemon", 80);
+  const rpcClaimed = await supabaseJson(env, "/rpc/claim_redeem_jobs", {
+    method: "POST",
+    body: JSON.stringify({
+      p_limit: limit,
+      p_runner: runnerName,
+    }),
+  }).catch(() => null);
+  if (Array.isArray(rpcClaimed)) {
+    const claimed = rpcClaimed.map((job) => ({
+      jobKey: String(job.job_key || ""),
+      playerId: String(job.player_id || ""),
+      giftCode: String(job.gift_code || ""),
+      attempts: numberValue(job.attempts),
+    })).filter((job) => job.jobKey && job.playerId && job.giftCode);
+    return json({ ok: true, claimed: claimed.length, jobs: claimed, recovered, claimMode: "rpc" });
+  }
+
+  const fallbackLimit = Math.min(limit, 40);
+  const jobs = await supabaseJson(env, `/redeem_jobs?status=eq.pending&select=job_key,player_id,gift_code,attempts&order=created_at_ms.asc&limit=${fallbackLimit}`).catch(() => []);
   const claimed = [];
   for (const job of jobs || []) {
     const attemptNumber = numberValue(job.attempts) + 1;
@@ -1815,7 +1836,7 @@ async function claimRedeemJobs(request, env) {
         status: "running",
         attempts: attemptNumber,
         updated_at_ms: claimedAt,
-        last_error: "Claimed by PuTTY browser daemon.",
+        last_error: `Claimed by ${runnerName}.`,
       }),
     }).catch(() => []);
     if (updated && updated.length) {
@@ -1828,7 +1849,7 @@ async function claimRedeemJobs(request, env) {
     }
   }
 
-  return json({ ok: true, claimed: claimed.length, jobs: claimed, recovered });
+  return json({ ok: true, claimed: claimed.length, jobs: claimed, recovered, claimMode: "legacy" });
 }
 
 function classifyDaemonRedeemResult(row) {
@@ -1913,7 +1934,7 @@ async function reportRedeemJobs(request, env) {
 
   const cfg = autoRedeemConfig(env);
   const body = await request.json().catch(() => ({}));
-  const rows = Array.isArray(body.results) ? body.results.slice(0, 50) : [];
+  const rows = Array.isArray(body.results) ? body.results.slice(0, 100) : [];
   const summary = { ok: true, processed: 0, saved: 0, saveFailed: 0, success: 0, failed: 0, retrying: 0, results: [] };
   const now = Date.now();
   const jobPayloads = [];

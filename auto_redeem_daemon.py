@@ -15,8 +15,8 @@ Optional:
   AUTO_REDEEM_DAEMON_API_FALLBACK_BROWSER true/false, default true
   AUTO_REDEEM_DAEMON_INTERVAL    Idle seconds when no jobs exist, default 10
   AUTO_REDEEM_DAEMON_REST_SECONDS Seconds to rest after a non-empty batch, default 0
-  AUTO_REDEEM_DAEMON_BATCH_SIZE  Jobs per loop, default 25
-  AUTO_REDEEM_DAEMON_CONCURRENCY Pages processed at once, default 2
+  AUTO_REDEEM_DAEMON_BATCH_SIZE  Jobs per loop, default 40
+  AUTO_REDEEM_DAEMON_CONCURRENCY Pages processed at once, default 4
   AUTO_REDEEM_DAEMON_TIMEOUT_MS  Browser action timeout, default 2500
   AUTO_REDEEM_DAEMON_HEADLESS    true/false, default true
 """
@@ -46,8 +46,8 @@ DAEMON_MODE = os.getenv("AUTO_REDEEM_DAEMON_MODE", "api").strip().lower()
 API_FALLBACK_BROWSER = os.getenv("AUTO_REDEEM_DAEMON_API_FALLBACK_BROWSER", "true").strip().lower() not in {"0", "false", "no", "off"}
 INTERVAL = max(2, int(os.getenv("AUTO_REDEEM_DAEMON_INTERVAL", "10")))
 REST_SECONDS = max(0.0, float(os.getenv("AUTO_REDEEM_DAEMON_REST_SECONDS", "0")))
-BATCH_SIZE = max(1, min(40, int(os.getenv("AUTO_REDEEM_DAEMON_BATCH_SIZE", "25"))))
-CONCURRENCY = max(1, min(4, int(os.getenv("AUTO_REDEEM_DAEMON_CONCURRENCY", "2"))))
+BATCH_SIZE = max(1, min(80, int(os.getenv("AUTO_REDEEM_DAEMON_BATCH_SIZE", "40"))))
+CONCURRENCY = max(1, min(6, int(os.getenv("AUTO_REDEEM_DAEMON_CONCURRENCY", "4"))))
 TIMEOUT_MS = max(800, int(os.getenv("AUTO_REDEEM_DAEMON_TIMEOUT_MS", "2500")))
 HEADLESS = os.getenv("AUTO_REDEEM_DAEMON_HEADLESS", "true").strip().lower() not in {"0", "false", "no", "off"}
 OFFICIAL_REDEEM_URL = "https://ks-giftcode.centurygame.com/"

@@ -2324,6 +2324,14 @@
     Object.assign(I18N.de, { queueStatus: 'Warteschlange', queuePending: 'wartet', queueRunning: 'laeuft', queueStale: 'zu erholen' });
     Object.assign(I18N.th, { queueStatus: 'คิว', queuePending: 'รอ', queueRunning: 'ทำงาน', queueStale: 'กู้คืน' });
     Object.assign(I18N.id, { queueStatus: 'Status antrean', queuePending: 'menunggu', queueRunning: 'berjalan', queueStale: 'pulih' });
+    Object.assign(I18N.en, { queueBatch: 'batch' });
+    Object.assign(I18N.ko, { queueBatch: '배치' });
+    Object.assign(I18N['zh-CN'], { queueBatch: '批量' });
+    Object.assign(I18N['zh-TW'], { queueBatch: '批次' });
+    Object.assign(I18N.fr, { queueBatch: 'lot' });
+    Object.assign(I18N.de, { queueBatch: 'Batch' });
+    Object.assign(I18N.th, { queueBatch: 'ชุด' });
+    Object.assign(I18N.id, { queueBatch: 'batch' });
 
     let currentLang = new URL(location.href).searchParams.get('lang') || localStorage.getItem('siteLang') || localStorage.getItem('lang') || 'ko';
     if (!I18N[currentLang]) currentLang = 'ko';
@@ -2480,9 +2488,11 @@
       const running = Number(queue.running || 0);
       const stale = Number(queue.staleRunning || 0);
       const retryPending = Number(queue.retryPending || 0);
+      const batchSize = Number(queue.batchSize || 0);
       const staleText = stale > 0 ? ` / ${tr('queueStale')} ${stale}` : '';
-      badge.textContent = `${tr('queuePending')} ${pending} / ${tr('queueRunning')} ${running}${staleText}`;
-      badge.title = `${tr('queueStale')}: ${stale} / retry: ${retryPending} / ${queue.runningStaleMinutes || 5}m`;
+      const batchText = batchSize > 0 ? ` / ${tr('queueBatch')} ${batchSize}` : '';
+      badge.textContent = `${tr('queuePending')} ${pending} / ${tr('queueRunning')} ${running}${staleText}${batchText}`;
+      badge.title = `${tr('queueStale')}: ${stale} / retry: ${retryPending} / ${tr('queueBatch')}: ${batchSize || '-'} / ${queue.claimMode || '-'} / ${queue.runningStaleMinutes || 5}m`;
     }
     function renderAutomationStatus(daemon) {
       const badge = $('daemonBadge');
