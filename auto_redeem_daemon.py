@@ -11,20 +11,23 @@ Required environment variables:
   ADMIN_TOKEN    Same value as the Cloudflare Worker ADMIN_TOKEN secret
 
 Optional:
+  AUTO_REDEEM_DAEMON_MODE        api/browser, default api
   AUTO_REDEEM_DAEMON_INTERVAL    Idle seconds when no jobs exist, default 60
   AUTO_REDEEM_DAEMON_REST_SECONDS Seconds to rest after a non-empty batch, default 5
-  AUTO_REDEEM_DAEMON_BATCH_SIZE  Jobs per loop, default 20
+  AUTO_REDEEM_DAEMON_BATCH_SIZE  Jobs per loop, default 25
   AUTO_REDEEM_DAEMON_CONCURRENCY Pages processed at once, default 2
   AUTO_REDEEM_DAEMON_TIMEOUT_MS  Browser action timeout, default 2500
   AUTO_REDEEM_DAEMON_HEADLESS    true/false, default true
 """
 
 import asyncio
+import hashlib
 import json
 import os
 import sys
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 
 try:
@@ -37,13 +40,17 @@ except Exception:  # pragma: no cover - shown to the server operator
 
 BASE_URL = os.getenv("HUB_BASE_URL", "https://my-discord-bot2.looloo90.workers.dev").rstrip("/")
 ADMIN_TOKEN = os.getenv("ADMIN_TOKEN", "")
+DAEMON_MODE = os.getenv("AUTO_REDEEM_DAEMON_MODE", "api").strip().lower()
 INTERVAL = max(10, int(os.getenv("AUTO_REDEEM_DAEMON_INTERVAL", "60")))
 REST_SECONDS = max(0.0, float(os.getenv("AUTO_REDEEM_DAEMON_REST_SECONDS", "5")))
-BATCH_SIZE = max(1, min(30, int(os.getenv("AUTO_REDEEM_DAEMON_BATCH_SIZE", "20"))))
+BATCH_SIZE = max(1, min(40, int(os.getenv("AUTO_REDEEM_DAEMON_BATCH_SIZE", "25"))))
 CONCURRENCY = max(1, min(4, int(os.getenv("AUTO_REDEEM_DAEMON_CONCURRENCY", "2"))))
 TIMEOUT_MS = max(800, int(os.getenv("AUTO_REDEEM_DAEMON_TIMEOUT_MS", "2500")))
 HEADLESS = os.getenv("AUTO_REDEEM_DAEMON_HEADLESS", "true").strip().lower() not in {"0", "false", "no", "off"}
 OFFICIAL_REDEEM_URL = "https://ks-giftcode.centurygame.com/"
+OFFICIAL_GIFT_REDEEM_API = "https://kingshot-giftcode.centurygame.com/api/gift_code"
+OFFICIAL_GIFT_SIGN_SALT = "mN4!pQs6JrYwV9"
+OFFICIAL_GIFT_ORIGIN = "https://ks-giftcode.centurygame.com"
 USER_AGENT = os.getenv(
     "AUTO_REDEEM_DAEMON_USER_AGENT",
     "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
@@ -70,6 +77,61 @@ def request_json(path: str, payload: dict | None = None) -> dict:
     return json.loads(raw or "{}")
 
 
+def official_gift_sign(data: dict) -> str:
+    payload = "&".join(f"{key}={data[key]}" for key in sorted(data.keys()))
+    return hashlib.md5(f"{payload}{OFFICIAL_GIFT_SIGN_SALT}".encode("utf-8")).hexdigest()
+
+
+def official_post_json(url: str, data: dict) -> dict:
+    body_data = {**data, "time": int(time.time() * 1000)}
+    body_data["sign"] = official_gift_sign(body_data)
+    body = urllib.parse.urlencode(body_data).encode("utf-8")
+    request = urllib.request.Request(
+        url,
+        data=body,
+        method="POST",
+        headers={
+            "accept": "application/json, text/plain, */*",
+            "content-type": "application/x-www-form-urlencoded",
+            "origin": OFFICIAL_GIFT_ORIGIN,
+            "referer": f"{OFFICIAL_GIFT_ORIGIN}/",
+            "user-agent": USER_AGENT,
+        },
+    )
+    with urllib.request.urlopen(request, timeout=max(8, TIMEOUT_MS / 1000 * 3)) as response:
+        raw = response.read().decode("utf-8", "replace")
+    return json.loads(raw or "{}")
+
+
+def classify_official_payload(payload: dict) -> tuple[str, bool, str]:
+    err_code = int(payload.get("err_code") or 0) if str(payload.get("err_code") or "").lstrip("-").isdigit() else 0
+    message = str(payload.get("msg") or payload.get("message") or payload.get("err_msg") or "").strip()
+    lower = message.lower()
+    if payload.get("code") == 0 or err_code == 0 or "redeemed, please claim" in lower or "claim the rewards in your mail" in lower:
+        return "success", True, message or "success"
+    if "claim limit reached" in lower or "unable to claim" in lower:
+        return "claim_limit_reached", False, message or "claim limit reached"
+    if err_code == 40102 or "captcha" in lower or "verification" in lower or "verify" in lower:
+        return "captcha_required", False, message or "captcha required"
+    if err_code == 40014 or "gift code not found" in lower or "case-sensitive" in lower or "invalid code" in lower:
+        return "invalid_code", False, message or "invalid code"
+    if err_code == 40009 or "not logged in" in lower:
+        return "not_logged_in", False, message or "not logged in"
+    if "time error" in lower or "redemption time" in lower or "exchange time" in lower or "time limit" in lower:
+        return "time_window_closed", False, message or "time window closed"
+    if "same gift code" in lower or "only be redeemed once" in lower or "already" in lower or "claimed" in lower or "used" in lower:
+        return "already_claimed", False, message or "already claimed"
+    if "expired" in lower or "ended" in lower or "no longer valid" in lower:
+        return "expired", False, message or "expired"
+    if "too frequent" in lower or "too many" in lower or "rate limit" in lower:
+        return "rate_limited", False, message or "rate limited"
+    if "server busy" in lower or "try again later" in lower:
+        return "server_busy", False, message or "server busy"
+    if "player not found" in lower or "invalid player" in lower or "double check player" in lower:
+        return "player_not_found", False, message or "player not found"
+    return "failed", False, message or "redeem failed"
+
+
 def classify_message(message: str) -> tuple[str, bool]:
     text = (message or "").strip()
     lower = text.lower()
@@ -94,6 +156,79 @@ def classify_message(message: str) -> tuple[str, bool]:
     if "player not found" in lower or "invalid player" in lower or "double check player" in lower:
         return "player_not_found", False
     return "failed", False
+
+
+def redeem_one_api_sync(job: dict) -> dict:
+    job_key = str(job.get("jobKey") or "")
+    player_id = str(job.get("playerId") or "")
+    gift_code = str(job.get("giftCode") or "")
+    attempts = int(job.get("attempts") or 0)
+
+    result = {
+        "jobKey": job_key,
+        "playerId": player_id,
+        "giftCode": gift_code,
+        "attempts": attempts,
+        "ok": False,
+        "status": "failed",
+        "message": "",
+        "response": {"source": "putty-api-daemon"},
+    }
+
+    if not player_id or not gift_code:
+        result.update(status="failed", message="Missing player ID or gift code.")
+        return result
+
+    try:
+        payload = official_post_json(OFFICIAL_GIFT_REDEEM_API, {"fid": player_id, "cdk": gift_code})
+        status, ok, message = classify_official_payload(payload)
+        result.update(
+            status=status,
+            ok=ok,
+            message=message,
+            response={"source": "putty-api-daemon", "payload": payload},
+        )
+        return result
+    except urllib.error.HTTPError as error:
+        detail = error.read().decode("utf-8", "replace")
+        try:
+            payload = json.loads(detail or "{}")
+        except Exception:
+            payload = {"msg": detail or f"HTTP {error.code}"}
+        status, ok, message = classify_official_payload(payload)
+        if status == "failed":
+            if error.code == 429:
+                status = "rate_limited"
+            elif error.code in {408, 425} or error.code >= 500:
+                status = "server_error"
+        result.update(
+            status=status,
+            ok=ok,
+            message=message or f"HTTP {error.code}",
+            response={"source": "putty-api-daemon", "httpStatus": error.code, "payload": payload},
+        )
+        return result
+    except TimeoutError as error:
+        result.update(status="timeout", message=f"Timeout: {error}")
+        return result
+    except Exception as error:
+        result.update(status="network_error", message=str(error))
+        return result
+
+
+async def redeem_jobs_api(jobs: list[dict]) -> list[dict]:
+    if not jobs:
+        return []
+    semaphore = asyncio.Semaphore(CONCURRENCY)
+    ordered_results: list[dict | None] = [None] * len(jobs)
+
+    async def run_one(index: int, job: dict) -> None:
+        async with semaphore:
+            ordered_results[index] = await asyncio.to_thread(redeem_one_api_sync, job)
+            await asyncio.sleep(0.05)
+
+    await asyncio.gather(*(run_one(index, job) for index, job in enumerate(jobs)))
+    return [result for result in ordered_results if result is not None]
 
 
 async def read_modal_message(page) -> str:
@@ -288,7 +423,7 @@ def print_cycle(started: str, claim: dict, report: dict | None = None, error: st
 
 
 async def run_once() -> int:
-    if async_playwright is None:
+    if DAEMON_MODE == "browser" and async_playwright is None:
         raise RuntimeError(
             "Playwright is not installed. Install it before starting the daemon: "
             "pip install -r requirements.txt && python3 -m playwright install chromium"
@@ -303,7 +438,7 @@ async def run_once() -> int:
         print_cycle(started_text, claim, report)
         return 0
 
-    results = await redeem_jobs(jobs)
+    results = await redeem_jobs_api(jobs) if DAEMON_MODE == "api" else await redeem_jobs(jobs)
     report = request_json("/api/redeem/report", {"startedAtMs": started_ms, "results": results})
     print_cycle(started_text, claim, report)
     return len(jobs)
@@ -313,7 +448,10 @@ def main() -> int:
     if not ADMIN_TOKEN:
         print("ADMIN_TOKEN is required.", file=sys.stderr)
         return 2
-    if async_playwright is None:
+    if DAEMON_MODE not in {"api", "browser"}:
+        print("AUTO_REDEEM_DAEMON_MODE must be api or browser.", file=sys.stderr)
+        return 2
+    if DAEMON_MODE == "browser" and async_playwright is None:
         print(
             "Playwright is not installed. Stop here before claiming jobs.\n"
             "Run: pip install -r requirements.txt && python3 -m playwright install chromium",
@@ -323,7 +461,7 @@ def main() -> int:
         return 2
 
     print(
-        f"Auto Redeem browser daemon started. base={BASE_URL} interval={INTERVAL}s "
+        f"Auto Redeem daemon started. mode={DAEMON_MODE} base={BASE_URL} interval={INTERVAL}s "
         f"batch={BATCH_SIZE} concurrency={CONCURRENCY} rest={REST_SECONDS:g}s headless={HEADLESS}",
         flush=True,
     )

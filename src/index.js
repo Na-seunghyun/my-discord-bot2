@@ -13,7 +13,7 @@ const OFFICIAL_GIFT_REDEEM_API = "https://kingshot-giftcode.centurygame.com/api/
 const OFFICIAL_GIFT_ORIGIN = "https://ks-giftcode.centurygame.com";
 const OFFICIAL_GIFT_SIGN_SALT = "mN4!pQs6JrYwV9";
 const OFFICIAL_GIFT_TIMEOUT_MS = 10000;
-const AUTO_REDEEM_DEFAULT_BATCH_SIZE = 16;
+const AUTO_REDEEM_DEFAULT_BATCH_SIZE = 25;
 const AUTO_REDEEM_DEFAULT_CLOUDFLARE_BATCH_SIZE = 6;
 const AUTO_REDEEM_DEFAULT_DELAY_MS = 700;
 const AUTO_REDEEM_DEFAULT_MAX_ATTEMPTS = 4;
@@ -560,7 +560,7 @@ function collectGiftCodesFromPayload(payload, out = new Set(), keyHint = "", dep
 function autoRedeemConfig(env) {
   return {
     enabled: envBool(env.AUTO_REDEEM_ENABLED, true),
-    batchSize: envNumber(env.AUTO_REDEEM_BATCH_SIZE, AUTO_REDEEM_DEFAULT_BATCH_SIZE, 1, 30),
+    batchSize: envNumber(env.AUTO_REDEEM_BATCH_SIZE, AUTO_REDEEM_DEFAULT_BATCH_SIZE, 1, 40),
     cloudflareBatchSize: envNumber(env.AUTO_REDEEM_CLOUDFLARE_BATCH_SIZE, AUTO_REDEEM_DEFAULT_CLOUDFLARE_BATCH_SIZE, 1, 12),
     delayMs: envNumber(env.AUTO_REDEEM_DELAY_MS, AUTO_REDEEM_DEFAULT_DELAY_MS, 300, 8000),
     maxAttempts: envNumber(env.AUTO_REDEEM_MAX_ATTEMPTS, AUTO_REDEEM_DEFAULT_MAX_ATTEMPTS, 1, 8),
@@ -1164,10 +1164,11 @@ function plainTextFromHtml(html) {
 
 function giftCodeCandidateAllowed(candidate, context) {
   const code = normalizeGiftCode(candidate);
+  const upperCode = code.toUpperCase();
   if (!code || code.length < 5 || code.length > 32) return false;
-  if (GIFT_CODE_DENYLIST.has(code)) return false;
+  if (GIFT_CODE_DENYLIST.has(upperCode)) return false;
   if (/^\d+$/.test(code)) return false;
-  if (!/[A-Z]/.test(code)) return false;
+  if (!/[A-Za-z]/.test(code)) return false;
   if (!/\d/.test(code)) return false;
   if (!/CODE|CDK|GIFT|REDEEM|ACTIVE|EXPIRED|NEW|REWARD|PROMO/i.test(context)) return false;
   if (/^(HTTP|HTTPS|WWW|MAIL|EMAIL|INPUT|IMAGE|LOGIN|BUTTON|PROFILE|PLAYER|REGISTER)/i.test(code)) return false;
@@ -1245,7 +1246,7 @@ function redeemCodeAllowedForPublicUseStrict(row) {
   const status = cleanText((row && row.status) || "", 40).toLowerCase();
   if (status === "invalid_code" || status === "invalid" || status === "bad_candidate") return false;
   const source = String((row && row.source) || "");
-  if (source.startsWith("public:") && !/\d/.test(code)) return false;
+  if ((source.startsWith("public:") || source.startsWith("trusted-public:")) && !/\d/.test(code)) return false;
   return true;
 }
 
