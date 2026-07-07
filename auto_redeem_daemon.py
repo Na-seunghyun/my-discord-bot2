@@ -19,6 +19,7 @@ Optional:
   AUTO_REDEEM_DAEMON_CONCURRENCY Pages processed at once, default 4
   AUTO_REDEEM_DAEMON_TIMEOUT_MS  Browser action timeout, default 2500
   AUTO_REDEEM_DAEMON_HEADLESS    true/false, default true
+  AUTO_REDEEM_CAPTURE_OFFICIAL_REQUESTS true/false, default false
 """
 
 import asyncio
@@ -50,6 +51,7 @@ BATCH_SIZE = max(1, min(80, int(os.getenv("AUTO_REDEEM_DAEMON_BATCH_SIZE", "40")
 CONCURRENCY = max(1, min(6, int(os.getenv("AUTO_REDEEM_DAEMON_CONCURRENCY", "4"))))
 TIMEOUT_MS = max(800, int(os.getenv("AUTO_REDEEM_DAEMON_TIMEOUT_MS", "2500")))
 HEADLESS = os.getenv("AUTO_REDEEM_DAEMON_HEADLESS", "true").strip().lower() not in {"0", "false", "no", "off"}
+CAPTURE_OFFICIAL_REQUESTS = os.getenv("AUTO_REDEEM_CAPTURE_OFFICIAL_REQUESTS", "false").strip().lower() not in {"0", "false", "no", "off"}
 OFFICIAL_REDEEM_URL = "https://ks-giftcode.centurygame.com/"
 OFFICIAL_GIFT_PLAYER_API = "https://kingshot-giftcode.centurygame.com/api/player"
 OFFICIAL_GIFT_REDEEM_API = "https://kingshot-giftcode.centurygame.com/api/gift_code"
@@ -382,6 +384,35 @@ async def detect_blocked_or_unready(page) -> str:
     return ""
 
 
+def official_trace_url(url: str) -> bool:
+    return (
+        "kingshot-giftcode.centurygame.com/api/player" in url
+        or "kingshot-giftcode.centurygame.com/api/gift_code" in url
+    )
+
+
+def safe_capture_headers(headers: dict) -> dict:
+    allowed = {
+        "accept",
+        "accept-language",
+        "content-type",
+        "origin",
+        "referer",
+        "user-agent",
+        "sec-ch-ua",
+        "sec-ch-ua-mobile",
+        "sec-ch-ua-platform",
+        "sec-fetch-dest",
+        "sec-fetch-mode",
+        "sec-fetch-site",
+    }
+    return {
+        str(key).lower(): str(value)[:500]
+        for key, value in (headers or {}).items()
+        if str(key).lower() in allowed
+    }
+
+
 async def redeem_one(page, job: dict) -> dict:
     job_key = str(job.get("jobKey") or "")
     player_id = str(job.get("playerId") or "")
@@ -398,6 +429,44 @@ async def redeem_one(page, job: dict) -> dict:
         "message": "",
         "response": {"source": "putty-browser-daemon"},
     }
+    official_trace: list[dict] = []
+    capture_tasks: list[asyncio.Task] = []
+
+    async def capture_response(response) -> None:
+        try:
+            if not CAPTURE_OFFICIAL_REQUESTS or not official_trace_url(response.url):
+                return
+            request = response.request
+            request_headers = {}
+            try:
+                request_headers = await request.all_headers()
+            except Exception:
+                request_headers = getattr(request, "headers", {}) or {}
+            post_data = getattr(request, "post_data", None)
+            if callable(post_data):
+                post_data = post_data()
+            response_text = ""
+            try:
+                response_text = await response.text()
+            except Exception as error:
+                response_text = f"<response text unavailable: {error}>"
+            official_trace.append({
+                "url": response.url,
+                "method": request.method,
+                "status": response.status,
+                "request_headers": safe_capture_headers(request_headers),
+                "post_data": str(post_data or "")[:1000],
+                "response_text": response_text[:2000],
+            })
+        except Exception as error:
+            official_trace.append({"capture_error": str(error)[:240]})
+
+    def on_response(response) -> None:
+        if CAPTURE_OFFICIAL_REQUESTS and official_trace_url(response.url):
+            capture_tasks.append(asyncio.create_task(capture_response(response)))
+
+    if CAPTURE_OFFICIAL_REQUESTS:
+        page.on("response", on_response)
 
     try:
         await page.goto(OFFICIAL_REDEEM_URL, wait_until="domcontentloaded", timeout=TIMEOUT_MS * 8)
@@ -460,6 +529,16 @@ async def redeem_one(page, job: dict) -> dict:
     except Exception as error:
         result.update(status="network_error", message=str(error))
         return result
+    finally:
+        if CAPTURE_OFFICIAL_REQUESTS:
+            if capture_tasks:
+                await asyncio.gather(*capture_tasks, return_exceptions=True)
+            if official_trace:
+                response = result.get("response") if isinstance(result.get("response"), dict) else {}
+                result["response"] = {
+                    **response,
+                    "official_trace": official_trace[:8],
+                }
 
 
 async def redeem_jobs(jobs: list[dict]) -> list[dict]:
