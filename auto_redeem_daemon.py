@@ -12,8 +12,9 @@ Required environment variables:
 
 Optional:
   AUTO_REDEEM_DAEMON_MODE        api/browser, default api
-  AUTO_REDEEM_DAEMON_INTERVAL    Idle seconds when no jobs exist, default 60
-  AUTO_REDEEM_DAEMON_REST_SECONDS Seconds to rest after a non-empty batch, default 5
+  AUTO_REDEEM_DAEMON_API_FALLBACK_BROWSER true/false, default true
+  AUTO_REDEEM_DAEMON_INTERVAL    Idle seconds when no jobs exist, default 10
+  AUTO_REDEEM_DAEMON_REST_SECONDS Seconds to rest after a non-empty batch, default 0
   AUTO_REDEEM_DAEMON_BATCH_SIZE  Jobs per loop, default 25
   AUTO_REDEEM_DAEMON_CONCURRENCY Pages processed at once, default 2
   AUTO_REDEEM_DAEMON_TIMEOUT_MS  Browser action timeout, default 2500
@@ -41,8 +42,9 @@ except Exception:  # pragma: no cover - shown to the server operator
 BASE_URL = os.getenv("HUB_BASE_URL", "https://my-discord-bot2.looloo90.workers.dev").rstrip("/")
 ADMIN_TOKEN = os.getenv("ADMIN_TOKEN", "")
 DAEMON_MODE = os.getenv("AUTO_REDEEM_DAEMON_MODE", "api").strip().lower()
-INTERVAL = max(10, int(os.getenv("AUTO_REDEEM_DAEMON_INTERVAL", "60")))
-REST_SECONDS = max(0.0, float(os.getenv("AUTO_REDEEM_DAEMON_REST_SECONDS", "5")))
+API_FALLBACK_BROWSER = os.getenv("AUTO_REDEEM_DAEMON_API_FALLBACK_BROWSER", "true").strip().lower() not in {"0", "false", "no", "off"}
+INTERVAL = max(2, int(os.getenv("AUTO_REDEEM_DAEMON_INTERVAL", "10")))
+REST_SECONDS = max(0.0, float(os.getenv("AUTO_REDEEM_DAEMON_REST_SECONDS", "0")))
 BATCH_SIZE = max(1, min(40, int(os.getenv("AUTO_REDEEM_DAEMON_BATCH_SIZE", "25"))))
 CONCURRENCY = max(1, min(4, int(os.getenv("AUTO_REDEEM_DAEMON_CONCURRENCY", "2"))))
 TIMEOUT_MS = max(800, int(os.getenv("AUTO_REDEEM_DAEMON_TIMEOUT_MS", "2500")))
@@ -56,6 +58,15 @@ USER_AGENT = os.getenv(
     "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
     "(KHTML, like Gecko) Chrome/126.0 Safari/537.36 NashshAutoRedeem/2.0",
 )
+API_FALLBACK_STATUSES = {
+    "failed",
+    "timeout",
+    "network_error",
+    "server_error",
+    "rate_limited",
+    "server_busy",
+    "captcha_required",
+}
 
 
 def request_json(path: str, payload: dict | None = None) -> dict:
@@ -69,7 +80,7 @@ def request_json(path: str, payload: dict | None = None) -> dict:
             "content-type": "application/json",
             "user-agent": USER_AGENT,
             "x-admin-token": ADMIN_TOKEN,
-            "x-auto-redeem-runner": "putty-browser-daemon",
+            "x-auto-redeem-runner": "putty-api-daemon" if DAEMON_MODE == "api" else "putty-browser-daemon",
         },
     )
     with urllib.request.urlopen(request, timeout=60) as response:
@@ -229,6 +240,85 @@ async def redeem_jobs_api(jobs: list[dict]) -> list[dict]:
 
     await asyncio.gather(*(run_one(index, job) for index, job in enumerate(jobs)))
     return [result for result in ordered_results if result is not None]
+
+
+def result_job_key(result: dict) -> str:
+    job_key = str(result.get("jobKey") or result.get("job_key") or "")
+    if job_key:
+        return job_key
+    gift_code = str(result.get("giftCode") or result.get("gift_code") or "")
+    player_id = str(result.get("playerId") or result.get("player_id") or "")
+    return f"{gift_code}:{player_id}" if gift_code and player_id else ""
+
+
+def should_browser_fallback(results: list[dict]) -> bool:
+    if not results:
+        return False
+    for result in results:
+        if result.get("ok"):
+            return False
+        status = str(result.get("status") or "").strip().lower()
+        if status not in API_FALLBACK_STATUSES:
+            return False
+    return True
+
+
+def mark_browser_fallback(result: dict, api_result: dict | None = None) -> dict:
+    response = result.get("response") if isinstance(result.get("response"), dict) else {}
+    result["response"] = {
+        **response,
+        "fallback_from_api": True,
+        "api_status": (api_result or {}).get("status"),
+        "api_message": (api_result or {}).get("message"),
+    }
+    return result
+
+
+async def redeem_jobs_api_with_browser_fallback(jobs: list[dict]) -> list[dict]:
+    api_results = await redeem_jobs_api(jobs)
+    if not API_FALLBACK_BROWSER or not api_results or async_playwright is None:
+        return api_results
+
+    results_by_key = {result_job_key(result): result for result in api_results if result_job_key(result)}
+    grouped_results: dict[str, list[dict]] = {}
+    for result in api_results:
+        code = str(result.get("giftCode") or result.get("gift_code") or "")
+        grouped_results.setdefault(code, []).append(result)
+
+    fallback_keys: set[str] = set()
+    for group in grouped_results.values():
+        if should_browser_fallback(group):
+            for result in group:
+                key = result_job_key(result)
+                if key:
+                    fallback_keys.add(key)
+
+    if not fallback_keys:
+        return api_results
+
+    fallback_jobs = []
+    for job in jobs:
+        key = str(job.get("jobKey") or "")
+        if key in fallback_keys:
+            fallback_jobs.append(job)
+    if not fallback_jobs:
+        return api_results
+
+    try:
+        browser_results = await redeem_jobs(fallback_jobs)
+    except Exception:
+        return api_results
+    for result in browser_results:
+        key = result_job_key(result)
+        if key:
+            results_by_key[key] = mark_browser_fallback(result, results_by_key.get(key))
+
+    ordered_results = []
+    for job in jobs:
+        key = str(job.get("jobKey") or "")
+        if key and key in results_by_key:
+            ordered_results.append(results_by_key[key])
+    return ordered_results or api_results
 
 
 async def read_modal_message(page) -> str:
@@ -438,7 +528,7 @@ async def run_once() -> int:
         print_cycle(started_text, claim, report)
         return 0
 
-    results = await redeem_jobs_api(jobs) if DAEMON_MODE == "api" else await redeem_jobs(jobs)
+    results = await redeem_jobs_api_with_browser_fallback(jobs) if DAEMON_MODE == "api" else await redeem_jobs(jobs)
     report = request_json("/api/redeem/report", {"startedAtMs": started_ms, "results": results})
     print_cycle(started_text, claim, report)
     return len(jobs)
@@ -462,7 +552,8 @@ def main() -> int:
 
     print(
         f"Auto Redeem daemon started. mode={DAEMON_MODE} base={BASE_URL} interval={INTERVAL}s "
-        f"batch={BATCH_SIZE} concurrency={CONCURRENCY} rest={REST_SECONDS:g}s headless={HEADLESS}",
+        f"batch={BATCH_SIZE} concurrency={CONCURRENCY} rest={REST_SECONDS:g}s "
+        f"headless={HEADLESS} fallback={'browser' if DAEMON_MODE == 'api' and API_FALLBACK_BROWSER else 'off'}",
         flush=True,
     )
     while True:
