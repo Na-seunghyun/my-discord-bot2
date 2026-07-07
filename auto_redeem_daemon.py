@@ -11,7 +11,7 @@ Required environment variables:
   ADMIN_TOKEN    Same value as the Cloudflare Worker ADMIN_TOKEN secret
 
 Optional:
-  AUTO_REDEEM_DAEMON_MODE        api/browser, default api
+  AUTO_REDEEM_DAEMON_MODE        api/hybrid/browser, default api
   AUTO_REDEEM_DAEMON_API_FALLBACK_BROWSER true/false, default true
   AUTO_REDEEM_DAEMON_INTERVAL    Idle seconds when no jobs exist, default 10
   AUTO_REDEEM_DAEMON_REST_SECONDS Seconds to rest after a non-empty batch, default 0
@@ -76,6 +76,12 @@ API_FALLBACK_STATUSES = {
 
 
 def request_json(path: str, payload: dict | None = None) -> dict:
+    if DAEMON_MODE == "api":
+        runner = "putty-api-daemon"
+    elif DAEMON_MODE == "hybrid":
+        runner = "putty-hybrid-daemon"
+    else:
+        runner = "putty-browser-daemon"
     body = json.dumps(payload or {}).encode("utf-8")
     request = urllib.request.Request(
         f"{BASE_URL}{path}",
@@ -86,7 +92,7 @@ def request_json(path: str, payload: dict | None = None) -> dict:
             "content-type": "application/json",
             "user-agent": USER_AGENT,
             "x-admin-token": ADMIN_TOKEN,
-            "x-auto-redeem-runner": "putty-api-daemon" if DAEMON_MODE == "api" else "putty-browser-daemon",
+            "x-auto-redeem-runner": runner,
         },
     )
     with urllib.request.urlopen(request, timeout=60) as response:
@@ -120,6 +126,31 @@ def official_post_json(url: str, data: dict, opener=None) -> dict:
     with open_request(request, timeout=max(8, TIMEOUT_MS / 1000 * 3)) as response:
         raw = response.read().decode("utf-8", "replace")
     return json.loads(raw or "{}")
+
+
+async def official_post_json_browser(request_context, url: str, data: dict) -> dict:
+    time_ms = int(time.time() * 1000)
+    signed_data = {**data, "time": time_ms}
+    body_data = {"sign": official_gift_sign(signed_data), **data, "time": time_ms}
+    response = await request_context.post(
+        url,
+        form=body_data,
+        headers={
+            "accept": "application/json, text/plain, */*",
+            "origin": OFFICIAL_GIFT_ORIGIN,
+            "referer": f"{OFFICIAL_GIFT_ORIGIN}/",
+            "user-agent": USER_AGENT,
+        },
+        timeout=max(8000, TIMEOUT_MS * 3),
+    )
+    text = await response.text()
+    try:
+        payload = json.loads(text or "{}")
+    except Exception:
+        payload = {"msg": text[:500] or f"HTTP {response.status}"}
+    if response.status >= 400:
+        payload.setdefault("http_status", response.status)
+    return payload
 
 
 def official_player_payload_ok(payload: dict) -> bool:
@@ -300,13 +331,15 @@ def should_browser_fallback(results: list[dict]) -> bool:
     return True
 
 
-def mark_browser_fallback(result: dict, api_result: dict | None = None) -> dict:
+def mark_browser_fallback(result: dict, previous_result: dict | None = None, previous_source: str = "api") -> dict:
     response = result.get("response") if isinstance(result.get("response"), dict) else {}
     result["response"] = {
         **response,
-        "fallback_from_api": True,
-        "api_status": (api_result or {}).get("status"),
-        "api_message": (api_result or {}).get("message"),
+        "fallback_from": previous_source,
+        "fallback_from_api": previous_source == "api",
+        "fallback_from_hybrid": previous_source == "hybrid",
+        "previous_status": (previous_result or {}).get("status"),
+        "previous_message": (previous_result or {}).get("message"),
     }
     return result
 
@@ -348,7 +381,7 @@ async def redeem_jobs_api_with_browser_fallback(jobs: list[dict]) -> list[dict]:
     for result in browser_results:
         key = result_job_key(result)
         if key:
-            results_by_key[key] = mark_browser_fallback(result, results_by_key.get(key))
+            results_by_key[key] = mark_browser_fallback(result, results_by_key.get(key), "api")
 
     ordered_results = []
     for job in jobs:
@@ -356,6 +389,168 @@ async def redeem_jobs_api_with_browser_fallback(jobs: list[dict]) -> list[dict]:
         if key and key in results_by_key:
             ordered_results.append(results_by_key[key])
     return ordered_results or api_results
+
+
+async def redeem_one_hybrid(context, job: dict) -> dict:
+    job_key = str(job.get("jobKey") or "")
+    player_id = str(job.get("playerId") or "")
+    gift_code = str(job.get("giftCode") or "")
+    attempts = int(job.get("attempts") or 0)
+
+    result = {
+        "jobKey": job_key,
+        "playerId": player_id,
+        "giftCode": gift_code,
+        "attempts": attempts,
+        "ok": False,
+        "status": "failed",
+        "message": "",
+        "response": {"source": "putty-hybrid-daemon"},
+    }
+
+    if not player_id or not gift_code:
+        result.update(status="failed", message="Missing player ID or gift code.")
+        return result
+
+    try:
+        config_payload = await official_post_json_browser(context.request, OFFICIAL_GIFT_CONFIG_API, {})
+        player_payload = await official_post_json_browser(context.request, OFFICIAL_GIFT_PLAYER_API, {"fid": player_id})
+        if not official_player_payload_ok(player_payload):
+            status, _ok, message = classify_official_payload(player_payload)
+            result.update(
+                status=status if status != "failed" else "player_not_found",
+                ok=False,
+                message=message or "Player login did not complete.",
+                response={
+                    "source": "putty-hybrid-daemon",
+                    "config_payload": config_payload,
+                    "player_payload": player_payload,
+                },
+            )
+            return result
+
+        payload = await official_post_json_browser(
+            context.request,
+            OFFICIAL_GIFT_REDEEM_API,
+            {"fid": player_id, "cdk": gift_code, "captcha_code": ""},
+        )
+        status, ok, message = classify_official_payload(payload)
+        result.update(
+            status=status,
+            ok=ok,
+            message=message,
+            response={
+                "source": "putty-hybrid-daemon",
+                "config_payload": config_payload,
+                "player_payload": player_payload,
+                "payload": payload,
+            },
+        )
+        return result
+    except PlaywrightTimeoutError as error:
+        result.update(status="timeout", message=f"Timeout: {error}")
+        return result
+    except Exception as error:
+        result.update(status="network_error", message=str(error))
+        return result
+
+
+async def redeem_jobs_hybrid(jobs: list[dict]) -> list[dict]:
+    if not jobs:
+        return []
+    if async_playwright is None:
+        return [
+            {
+                "jobKey": job.get("jobKey"),
+                "playerId": job.get("playerId"),
+                "giftCode": job.get("giftCode"),
+                "attempts": job.get("attempts"),
+                "ok": False,
+                "status": "failed",
+                "message": "Playwright is not installed. Run: pip install -r requirements.txt && python3 -m playwright install chromium",
+            }
+            for job in jobs
+        ]
+
+    async with async_playwright() as playwright:
+        browser = await playwright.chromium.launch(headless=HEADLESS)
+        context = await browser.new_context(user_agent=USER_AGENT, viewport={"width": 1280, "height": 900})
+        seed_page = await context.new_page()
+        try:
+            await seed_page.goto(OFFICIAL_REDEEM_URL, wait_until="domcontentloaded", timeout=TIMEOUT_MS * 8)
+            blocked = await detect_blocked_or_unready(seed_page)
+            if blocked:
+                return [
+                    {
+                        "jobKey": job.get("jobKey"),
+                        "playerId": job.get("playerId"),
+                        "giftCode": job.get("giftCode"),
+                        "attempts": job.get("attempts"),
+                        "ok": False,
+                        "status": blocked,
+                        "message": "Official page requires verification.",
+                        "response": {"source": "putty-hybrid-daemon"},
+                    }
+                    for job in jobs
+                ]
+            await seed_page.wait_for_timeout(700)
+        finally:
+            await seed_page.close()
+
+        semaphore = asyncio.Semaphore(CONCURRENCY)
+        ordered_results: list[dict | None] = [None] * len(jobs)
+
+        async def run_one(index: int, job: dict) -> None:
+            async with semaphore:
+                ordered_results[index] = await redeem_one_hybrid(context, job)
+                await asyncio.sleep(0.05)
+
+        await asyncio.gather(*(run_one(index, job) for index, job in enumerate(jobs)))
+        results = [result for result in ordered_results if result is not None]
+        await context.close()
+        await browser.close()
+        return results
+
+
+async def redeem_jobs_hybrid_with_browser_fallback(jobs: list[dict]) -> list[dict]:
+    hybrid_results = await redeem_jobs_hybrid(jobs)
+    if not API_FALLBACK_BROWSER or not hybrid_results or async_playwright is None:
+        return hybrid_results
+
+    results_by_key = {result_job_key(result): result for result in hybrid_results if result_job_key(result)}
+    grouped_results: dict[str, list[dict]] = {}
+    for result in hybrid_results:
+        code = str(result.get("giftCode") or result.get("gift_code") or "")
+        grouped_results.setdefault(code, []).append(result)
+
+    fallback_keys: set[str] = set()
+    for group in grouped_results.values():
+        if should_browser_fallback(group):
+            for result in group:
+                key = result_job_key(result)
+                if key:
+                    fallback_keys.add(key)
+
+    fallback_jobs = [job for job in jobs if str(job.get("jobKey") or "") in fallback_keys]
+    if not fallback_jobs:
+        return hybrid_results
+
+    try:
+        browser_results = await redeem_jobs(fallback_jobs)
+    except Exception:
+        return hybrid_results
+
+    for result in browser_results:
+        key = result_job_key(result)
+        if key:
+            results_by_key[key] = mark_browser_fallback(result, results_by_key.get(key), "hybrid")
+
+    ordered_results = []
+    for job in jobs:
+        key = str(job.get("jobKey") or "")
+        if key and key in results_by_key:
+            ordered_results.append(results_by_key[key])
+    return ordered_results or hybrid_results
 
 
 async def read_modal_message(page) -> str:
@@ -627,7 +822,7 @@ def print_cycle(started: str, claim: dict, report: dict | None = None, error: st
 
 
 async def run_once() -> int:
-    if DAEMON_MODE == "browser" and async_playwright is None:
+    if DAEMON_MODE in {"browser", "hybrid"} and async_playwright is None:
         raise RuntimeError(
             "Playwright is not installed. Install it before starting the daemon: "
             "pip install -r requirements.txt && python3 -m playwright install chromium"
@@ -642,7 +837,12 @@ async def run_once() -> int:
         print_cycle(started_text, claim, report)
         return 0
 
-    results = await redeem_jobs_api_with_browser_fallback(jobs) if DAEMON_MODE == "api" else await redeem_jobs(jobs)
+    if DAEMON_MODE == "api":
+        results = await redeem_jobs_api_with_browser_fallback(jobs)
+    elif DAEMON_MODE == "hybrid":
+        results = await redeem_jobs_hybrid_with_browser_fallback(jobs)
+    else:
+        results = await redeem_jobs(jobs)
     report = request_json("/api/redeem/report", {"startedAtMs": started_ms, "results": results})
     print_cycle(started_text, claim, report)
     return len(jobs)
@@ -652,10 +852,10 @@ def main() -> int:
     if not ADMIN_TOKEN:
         print("ADMIN_TOKEN is required.", file=sys.stderr)
         return 2
-    if DAEMON_MODE not in {"api", "browser"}:
-        print("AUTO_REDEEM_DAEMON_MODE must be api or browser.", file=sys.stderr)
+    if DAEMON_MODE not in {"api", "hybrid", "browser"}:
+        print("AUTO_REDEEM_DAEMON_MODE must be api, hybrid, or browser.", file=sys.stderr)
         return 2
-    if DAEMON_MODE == "browser" and async_playwright is None:
+    if DAEMON_MODE in {"hybrid", "browser"} and async_playwright is None:
         print(
             "Playwright is not installed. Stop here before claiming jobs.\n"
             "Run: pip install -r requirements.txt && python3 -m playwright install chromium",
@@ -667,7 +867,7 @@ def main() -> int:
     print(
         f"Auto Redeem daemon started. mode={DAEMON_MODE} base={BASE_URL} interval={INTERVAL}s "
         f"batch={BATCH_SIZE} concurrency={CONCURRENCY} rest={REST_SECONDS:g}s "
-        f"headless={HEADLESS} fallback={'browser' if DAEMON_MODE == 'api' and API_FALLBACK_BROWSER else 'off'}",
+        f"headless={HEADLESS} fallback={'browser' if DAEMON_MODE in {'api', 'hybrid'} and API_FALLBACK_BROWSER else 'off'}",
         flush=True,
     )
     while True:
