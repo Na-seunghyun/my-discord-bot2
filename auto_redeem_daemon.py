@@ -180,6 +180,8 @@ def classify_official_payload(payload: dict) -> tuple[str, bool, str]:
         return "expired", False, message or "expired"
     if "too frequent" in lower or "too many" in lower or "rate limit" in lower:
         return "rate_limited", False, message or "rate limited"
+    if "recharge_money" in lower or "recharge money" in lower:
+        return "server_busy", False, message or "official session was not ready"
     if "server busy" in lower or "try again later" in lower:
         return "server_busy", False, message or "server busy"
     if "player not found" in lower or "invalid player" in lower or "double check player" in lower:
@@ -518,18 +520,15 @@ async def redeem_jobs_hybrid_with_browser_fallback(jobs: list[dict]) -> list[dic
         return hybrid_results
 
     results_by_key = {result_job_key(result): result for result in hybrid_results if result_job_key(result)}
-    grouped_results: dict[str, list[dict]] = {}
-    for result in hybrid_results:
-        code = str(result.get("giftCode") or result.get("gift_code") or "")
-        grouped_results.setdefault(code, []).append(result)
-
     fallback_keys: set[str] = set()
-    for group in grouped_results.values():
-        if should_browser_fallback(group):
-            for result in group:
-                key = result_job_key(result)
-                if key:
-                    fallback_keys.add(key)
+    for result in hybrid_results:
+        if result.get("ok"):
+            continue
+        status = str(result.get("status") or "").strip().lower()
+        if status in API_FALLBACK_STATUSES:
+            key = result_job_key(result)
+            if key:
+                fallback_keys.add(key)
 
     fallback_jobs = [job for job in jobs if str(job.get("jobKey") or "") in fallback_keys]
     if not fallback_jobs:
