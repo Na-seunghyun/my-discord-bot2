@@ -641,6 +641,7 @@
 
   <script>
     const CALCULATORS = [
+      ["building", "./building_calculator.html", "building"],
       ["governor-gear", "https://kingshot.net/governor-gear-calculator", "range"],
       ["governor-charm", "https://kingshot.net/governor-charm-calculator", "range"],
       ["pet", "https://kingshot.net/pet-calculator", "pet"],
@@ -1116,6 +1117,21 @@
       if (!I18N[code]) I18N[code] = { ...I18N.en, calculators: I18N.en.calculators };
       Object.assign(I18N[code], values);
     });
+    const BUILDING_NAV_PATCH = {
+      ko: ["Building Calculator", "\uac74\uc124 \uacc4\uc0b0\uae30"],
+      en: ["Building Calculator", "Building Calculator"],
+      de: ["Building Calculator", "Gebaeude-Rechner"],
+      fr: ["Building Calculator", "Calculateur de batiments"],
+      "zh-CN": ["Building Calculator", "\u5efa\u7b51\u8ba1\u7b97\u5668"],
+      "zh-TW": ["Building Calculator", "\u5efa\u7bc9\u8a08\u7b97\u5668"],
+      th: ["Building Calculator", "Building Calculator"],
+      id: ["Building Calculator", "Kalkulator bangunan"]
+    };
+    Object.entries(BUILDING_NAV_PATCH).forEach(([code, label]) => {
+      if (!I18N[code]) I18N[code] = { ...I18N.en, calculators: { ...I18N.en.calculators } };
+      if (!I18N[code].calculators) I18N[code].calculators = { ...I18N.en.calculators };
+      I18N[code].calculators.building = label;
+    });
     if (!I18N.zh) I18N.zh = I18N["zh-CN"];
     const normalizeLang = (value) => {
       const raw = String(value || "");
@@ -1154,6 +1170,7 @@
     }
 
     function hasData(id) {
+      if (id === "building") return true;
       const d = data[id];
       if (!d) return false;
       return Boolean(d.levels?.length || d.packages?.length || d.shardTable?.length || d.widgetCosts?.length || d.xpCosts?.length || d.troop_types || d.vipRequirements || d.masteryForgehammers || d.resourceKeys || d.techs?.length || d.manualValue);
@@ -1186,6 +1203,10 @@
         </button>`).join("");
       document.querySelectorAll("#calculatorNav button").forEach((button) => {
         button.addEventListener("click", () => {
+          if (button.dataset.id === "building") {
+            location.href = `./building_calculator.html?lang=${encodeURIComponent(lang)}`;
+            return;
+          }
           activeId = button.dataset.id;
           render();
         });

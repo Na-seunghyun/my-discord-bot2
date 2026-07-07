@@ -398,6 +398,12 @@
         linear-gradient(315deg, rgba(126,153,255,.22), transparent 48%),
         rgba(8, 14, 28, .94);
     }
+    .core-card.calc {
+      background:
+        linear-gradient(135deg, rgba(67,246,215,.18), transparent 38%),
+        linear-gradient(315deg, rgba(246,207,114,.2), transparent 48%),
+        rgba(8, 14, 28, .94);
+    }
     .core-card.redeem {
       background:
         linear-gradient(135deg, rgba(246,207,114,.21), transparent 34%),
@@ -773,33 +779,33 @@
         <h1><span data-i18n="heroA">Kingshot tools</span><br><span class="gradient">885 LEGEND NASHSH</span></h1>
         <p class="subtitle" data-i18n="subtitle">A cleaner command hub for map planning, player intel, calculators, and alliance coordination. Built for fast use on desktop and mobile.</p>
         <div class="hero-buttons">
-          <a class="primary" data-link-base="./kingshot_lookup.html" href="./kingshot_lookup.html" data-i18n="primary">Open Intel Lookup</a>
+          <a class="primary" data-link-base="./troop_training_ui.html" href="./troop_training_ui.html" data-i18n="primary">Open Calculators</a>
           <a class="secondary" data-link-base="./auto_redeem.html" href="./auto_redeem.html" data-i18n="secondaryRedeem">Open Auto Redeem</a>
         </div>
       </div>
       <aside class="metrics" aria-label="Site status">
         <div class="metric"><strong id="visitTotal">-</strong><span data-i18n="visitsTotal">Total visits</span><small data-i18n="visitHint">Protected by a daily KV safety cap.</small></div>
         <div class="metric"><strong id="visitToday">-</strong><span data-i18n="visitsToday">Today</span><small data-i18n="todayHint">Counts once per browser each day.</small></div>
-        <div class="metric"><strong>6</strong><span data-i18n="toolCount">Tools</span><small data-i18n="toolHint">Planner, intel, auto redeem, calculators, feedback.</small></div>
+        <div class="metric"><strong>7</strong><span data-i18n="toolCount">Tools</span><small data-i18n="toolHint">Planner, intel, auto redeem, calculators, feedback.</small></div>
         <div class="metric"><strong>885</strong><span>LEGEND</span><small>NASHSH command hub</small></div>
       </aside>
     </section>
 
     <section class="core-tools" aria-label="Core tools">
-      <a class="core-card intel" data-link-base="./kingshot_lookup.html" href="./kingshot_lookup.html">
+      <a class="core-card calc" data-link-base="./troop_training_ui.html" href="./troop_training_ui.html">
         <div>
           <div class="core-head">
-            <span class="core-kicker" data-i18n="coreIntelTag">Core Feature</span>
-            <span class="core-icon">ID</span>
+            <span class="core-kicker" data-i18n="coreCalcTag">Core Feature</span>
+            <span class="core-icon">CALC</span>
           </div>
-          <h2 data-i18n="coreIntelTitle">Kingshot Intel Lookup</h2>
-          <p data-i18n="coreIntelBody">Search player profiles, kingdoms, hero gear, and saved local intel first.</p>
+          <h2 data-i18n="coreCalcTitle">Kingshot Calculators</h2>
+          <p data-i18n="coreCalcBody">Open the calculator vault with building upgrades, training, gear, VIP, pack value, and war academy planning.</p>
           <div class="core-meta">
-            <span data-i18n="coreIntelMetaA">Player Intel</span>
-            <span data-i18n="coreIntelMetaB">Saved Database</span>
+            <span data-i18n="coreCalcMetaA">Building Calculator</span>
+            <span data-i18n="coreCalcMetaB">Resource Planning</span>
           </div>
         </div>
-        <span class="core-open" data-i18n="coreIntelButton">Open Intel Lookup</span>
+        <span class="core-open" data-i18n="coreCalcButton">Open Calculators</span>
       </a>
       <a class="core-card redeem" data-link-base="./auto_redeem.html" href="./auto_redeem.html">
         <div>
@@ -831,11 +837,17 @@
         <p data-i18n="mapBody">Plan cities, traps, castles, turrets, distance lines, and march timing.</p>
         <span class="open" data-i18n="mapButton">Open planner</span>
       </a>
-      <a class="tool standard" data-link-base="./troop_training_ui.html" href="./troop_training_ui.html">
+      <a class="tool standard" data-link-base="./building_calculator.html" href="./building_calculator.html">
         <span class="tag" data-i18n="tagCalc">Calculator Vault</span>
-        <h2 data-i18n="calcTitle">Kingshot Calculators</h2>
-        <p data-i18n="calcBody">Training, gear, VIP, pack value, and other resource planning calculators.</p>
-        <span class="open" data-i18n="calcButton">Open calculators</span>
+        <h2 data-i18n="buildingTitle">Building Calculator</h2>
+        <p data-i18n="buildingBody">Plan building upgrade resources and time with speed buffs, resource discounts, and Truegold levels.</p>
+        <span class="open" data-i18n="buildingButton">Open building calculator</span>
+      </a>
+      <a class="tool standard" data-link-base="./kingshot_lookup.html" href="./kingshot_lookup.html">
+        <span class="tag" data-i18n="tagIntel">Player Intel</span>
+        <h2 data-i18n="intelTitle">Kingshot Intel Lookup</h2>
+        <p data-i18n="intelBody">Search players, kingdoms, hero gear, and saved local intel when the upstream service is unstable.</p>
+        <span class="open" data-i18n="intelButton">Open intel</span>
       </a>
       <a class="tool standard" data-link-base="./feedback.html" href="./feedback.html">
         <span class="tag" data-i18n="tagFeedback">Feedback</span>
@@ -1168,6 +1180,45 @@
       }
     };
     Object.entries(CORE_FEATURE_I18N).forEach(([code, values]) => {
+      if (!I18N[code]) I18N[code] = {};
+      Object.assign(I18N[code], values);
+    });
+    const BUILDING_CALCULATOR_I18N = {
+      ko: {
+        primary: '\uacc4\uc0b0\uae30 \uc5f4\uae30',
+        toolHint: '\uc778\ud154, \uc624\ud1a0\ub9ac\ub524, \uc9c0\ub3c4, \uac74\uc124 \uacc4\uc0b0\uae30.',
+        coreCalcTag: '\ud575\uc2ec \uae30\ub2a5',
+        coreCalcTitle: 'Kingshot \uacc4\uc0b0\uae30',
+        coreCalcBody: '\uac74\uc124 \uc5c5\uadf8\ub808\uc774\ub4dc, \ud6c8\ub828, \uc7a5\ube44, VIP, \ud329 \uac00\uce58, \uc804\uc7c1 \uc544\uce74\ub370\ubbf8 \uacc4\uc0b0\uae30\ub97c \ud55c \uacf3\uc5d0\uc11c \uc0ac\uc6a9\ud569\ub2c8\ub2e4.',
+        coreCalcMetaA: '\uac74\uc124 \uacc4\uc0b0\uae30',
+        coreCalcMetaB: '\uc790\uc6d0 \uacc4\ud68d',
+        coreCalcButton: '\uacc4\uc0b0\uae30 \uc5f4\uae30',
+        buildingTitle: '\uac74\uc124 \uacc4\uc0b0\uae30',
+        buildingBody: '\uac74\uc124 \uc5c5\uadf8\ub808\uc774\ub4dc \uc790\uc6d0\uacfc \uc2dc\uac04\uc744 \uc18d\ub3c4 \ubc84\ud504, \uc790\uc6d0 \uac10\uc18c, \ud2b8\ub8e8\uace8\ub4dc \ub808\ubca8\uae4c\uc9c0 \ud568\uaed8 \uacc4\uc0b0\ud569\ub2c8\ub2e4.',
+        buildingButton: '\uac74\uc124 \uacc4\uc0b0\uae30 \uc5f4\uae30',
+        intelTitle: 'Kingshot \uc778\ud154 \uac80\uc0c9',
+        intelBody: '\ud50c\ub808\uc774\uc5b4, \uc655\uad6d, \uc601\uc6c5 \uc7a5\ube44, \uc800\uc7a5\ub41c \ub85c\uceec \uc815\ubcf4\ub97c \uac80\uc0c9\ud569\ub2c8\ub2e4.',
+        intelButton: '\uc778\ud154 \uc5f4\uae30'
+      },
+      en: {
+        primary: 'Open Calculators',
+        toolHint: 'Intel, auto redeem, planner, building calculator.',
+        coreCalcTag: 'Core Feature',
+        coreCalcTitle: 'Kingshot Calculators',
+        coreCalcBody: 'Use building upgrades, training, gear, VIP, pack value, and war academy calculators in one place.',
+        coreCalcMetaA: 'Building Calculator',
+        coreCalcMetaB: 'Resource Planning',
+        coreCalcButton: 'Open Calculators',
+        buildingTitle: 'Building Calculator',
+        buildingBody: 'Plan building upgrade resources and time with speed buffs, resource discounts, and Truegold levels.',
+        buildingButton: 'Open building calculator',
+        intelTitle: 'Kingshot Intel Lookup',
+        intelBody: 'Search players, kingdoms, hero gear, and saved local intel when the upstream service is unstable.',
+        intelButton: 'Open intel'
+      }
+    };
+    ['zh-CN','zh-TW','fr','de','th','id'].forEach((code) => { BUILDING_CALCULATOR_I18N[code] = BUILDING_CALCULATOR_I18N.en; });
+    Object.entries(BUILDING_CALCULATOR_I18N).forEach(([code, values]) => {
       if (!I18N[code]) I18N[code] = {};
       Object.assign(I18N[code], values);
     });
