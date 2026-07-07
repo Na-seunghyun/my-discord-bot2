@@ -53,6 +53,7 @@ TIMEOUT_MS = max(800, int(os.getenv("AUTO_REDEEM_DAEMON_TIMEOUT_MS", "2500")))
 HEADLESS = os.getenv("AUTO_REDEEM_DAEMON_HEADLESS", "true").strip().lower() not in {"0", "false", "no", "off"}
 CAPTURE_OFFICIAL_REQUESTS = os.getenv("AUTO_REDEEM_CAPTURE_OFFICIAL_REQUESTS", "false").strip().lower() not in {"0", "false", "no", "off"}
 OFFICIAL_REDEEM_URL = "https://ks-giftcode.centurygame.com/"
+OFFICIAL_GIFT_CONFIG_API = "https://kingshot-giftcode.centurygame.com/api/gift_code_config"
 OFFICIAL_GIFT_PLAYER_API = "https://kingshot-giftcode.centurygame.com/api/player"
 OFFICIAL_GIFT_REDEEM_API = "https://kingshot-giftcode.centurygame.com/api/gift_code"
 OFFICIAL_GIFT_SIGN_SALT = "mN4!pQs6JrYwV9"
@@ -99,8 +100,9 @@ def official_gift_sign(data: dict) -> str:
 
 
 def official_post_json(url: str, data: dict, opener=None) -> dict:
-    body_data = {**data, "time": int(time.time() * 1000)}
-    body_data["sign"] = official_gift_sign(body_data)
+    time_ms = int(time.time() * 1000)
+    signed_data = {**data, "time": time_ms}
+    body_data = {"sign": official_gift_sign(signed_data), **data, "time": time_ms}
     body = urllib.parse.urlencode(body_data).encode("utf-8")
     request = urllib.request.Request(
         url,
@@ -205,6 +207,7 @@ def redeem_one_api_sync(job: dict) -> dict:
         cookie_jar = http.cookiejar.CookieJar()
         opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cookie_jar))
 
+        config_payload = official_post_json(OFFICIAL_GIFT_CONFIG_API, {}, opener=opener)
         player_payload = official_post_json(OFFICIAL_GIFT_PLAYER_API, {"fid": player_id}, opener=opener)
         if not official_player_payload_ok(player_payload):
             status, _ok, message = classify_official_payload(player_payload)
@@ -212,17 +215,26 @@ def redeem_one_api_sync(job: dict) -> dict:
                 status=status if status != "failed" else "player_not_found",
                 ok=False,
                 message=message or "Player login did not complete.",
-                response={"source": "putty-api-daemon", "player_payload": player_payload},
+                response={"source": "putty-api-daemon", "config_payload": config_payload, "player_payload": player_payload},
             )
             return result
 
-        payload = official_post_json(OFFICIAL_GIFT_REDEEM_API, {"fid": player_id, "cdk": gift_code}, opener=opener)
+        payload = official_post_json(
+            OFFICIAL_GIFT_REDEEM_API,
+            {"fid": player_id, "cdk": gift_code, "captcha_code": ""},
+            opener=opener,
+        )
         status, ok, message = classify_official_payload(payload)
         result.update(
             status=status,
             ok=ok,
             message=message,
-            response={"source": "putty-api-daemon", "player_payload": player_payload, "payload": payload},
+            response={
+                "source": "putty-api-daemon",
+                "config_payload": config_payload,
+                "player_payload": player_payload,
+                "payload": payload,
+            },
         )
         return result
     except urllib.error.HTTPError as error:
