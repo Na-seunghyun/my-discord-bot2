@@ -23,6 +23,7 @@ Optional:
 
 import asyncio
 import hashlib
+import http.cookiejar
 import json
 import os
 import sys
@@ -50,6 +51,7 @@ CONCURRENCY = max(1, min(4, int(os.getenv("AUTO_REDEEM_DAEMON_CONCURRENCY", "2")
 TIMEOUT_MS = max(800, int(os.getenv("AUTO_REDEEM_DAEMON_TIMEOUT_MS", "2500")))
 HEADLESS = os.getenv("AUTO_REDEEM_DAEMON_HEADLESS", "true").strip().lower() not in {"0", "false", "no", "off"}
 OFFICIAL_REDEEM_URL = "https://ks-giftcode.centurygame.com/"
+OFFICIAL_GIFT_PLAYER_API = "https://kingshot-giftcode.centurygame.com/api/player"
 OFFICIAL_GIFT_REDEEM_API = "https://kingshot-giftcode.centurygame.com/api/gift_code"
 OFFICIAL_GIFT_SIGN_SALT = "mN4!pQs6JrYwV9"
 OFFICIAL_GIFT_ORIGIN = "https://ks-giftcode.centurygame.com"
@@ -66,6 +68,7 @@ API_FALLBACK_STATUSES = {
     "rate_limited",
     "server_busy",
     "captcha_required",
+    "not_logged_in",
 }
 
 
@@ -93,7 +96,7 @@ def official_gift_sign(data: dict) -> str:
     return hashlib.md5(f"{payload}{OFFICIAL_GIFT_SIGN_SALT}".encode("utf-8")).hexdigest()
 
 
-def official_post_json(url: str, data: dict) -> dict:
+def official_post_json(url: str, data: dict, opener=None) -> dict:
     body_data = {**data, "time": int(time.time() * 1000)}
     body_data["sign"] = official_gift_sign(body_data)
     body = urllib.parse.urlencode(body_data).encode("utf-8")
@@ -109,9 +112,15 @@ def official_post_json(url: str, data: dict) -> dict:
             "user-agent": USER_AGENT,
         },
     )
-    with urllib.request.urlopen(request, timeout=max(8, TIMEOUT_MS / 1000 * 3)) as response:
+    open_request = opener.open if opener else urllib.request.urlopen
+    with open_request(request, timeout=max(8, TIMEOUT_MS / 1000 * 3)) as response:
         raw = response.read().decode("utf-8", "replace")
     return json.loads(raw or "{}")
+
+
+def official_player_payload_ok(payload: dict) -> bool:
+    data = payload.get("data") if isinstance(payload, dict) else None
+    return isinstance(payload, dict) and payload.get("code") == 0 and isinstance(data, dict) and bool(data.get("fid"))
 
 
 def classify_official_payload(payload: dict) -> tuple[str, bool, str]:
@@ -191,13 +200,27 @@ def redeem_one_api_sync(job: dict) -> dict:
         return result
 
     try:
-        payload = official_post_json(OFFICIAL_GIFT_REDEEM_API, {"fid": player_id, "cdk": gift_code})
+        cookie_jar = http.cookiejar.CookieJar()
+        opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cookie_jar))
+
+        player_payload = official_post_json(OFFICIAL_GIFT_PLAYER_API, {"fid": player_id}, opener=opener)
+        if not official_player_payload_ok(player_payload):
+            status, _ok, message = classify_official_payload(player_payload)
+            result.update(
+                status=status if status != "failed" else "player_not_found",
+                ok=False,
+                message=message or "Player login did not complete.",
+                response={"source": "putty-api-daemon", "player_payload": player_payload},
+            )
+            return result
+
+        payload = official_post_json(OFFICIAL_GIFT_REDEEM_API, {"fid": player_id, "cdk": gift_code}, opener=opener)
         status, ok, message = classify_official_payload(payload)
         result.update(
             status=status,
             ok=ok,
             message=message,
-            response={"source": "putty-api-daemon", "payload": payload},
+            response={"source": "putty-api-daemon", "player_payload": player_payload, "payload": payload},
         )
         return result
     except urllib.error.HTTPError as error:
