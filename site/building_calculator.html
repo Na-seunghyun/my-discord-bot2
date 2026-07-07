@@ -313,6 +313,18 @@
       font-weight: 1000;
       box-shadow: inset 0 0 18px rgba(255,255,255,.04);
     }
+    .building-icon img, .resource-icon img, .item-img {
+      display: block;
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      filter: drop-shadow(0 6px 10px rgba(0,0,0,.24));
+    }
+    .item-img {
+      width: 18px;
+      height: 18px;
+      margin-right: 6px;
+    }
     .building-icon {
       width: 44px;
       height: 44px;
@@ -420,6 +432,9 @@
       font-size: 10px;
     }
     .resource-row span {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
       color: var(--muted);
       font-size: 12px;
       font-weight: 900;
@@ -517,9 +532,9 @@
         <h1><span data-i18n="titleA">Building</span> <span class="gold" data-i18n="titleB">Calculator</span></h1>
         <p class="subtitle" data-i18n="subtitle">Plan building upgrades by current and target level. Construction speed, cost reduction, wolf pet, minister buff, kingdom skill, and Double Time are reflected instantly.</p>
         <div class="hero-badges">
-          <span data-i18n="badgeTg">TG6-10 ready</span>
-          <span data-i18n="badgeBuff">Speed buffs</span>
-          <span data-i18n="badgeCost">Resource discount</span>
+          <span><img class="item-img" src="https://kingshot.net/images/items/tempered-truegold.png" alt="" loading="lazy"><span data-i18n="badgeTg">TG6-10 ready</span></span>
+          <span><img class="item-img" src="https://kingshot.net/images/items/speedup_general.png" alt="" loading="lazy"><span data-i18n="badgeBuff">Speed buffs</span></span>
+          <span><img class="item-img" src="https://kingshot.net/images/items/truegold.png" alt="" loading="lazy"><span data-i18n="badgeCost">Resource discount</span></span>
         </div>
       </div>
       <div class="hero-stats">
@@ -850,7 +865,7 @@
       $('modifiedTime').textContent = rows.length ? timeText(modified) : '-';
       $('resourceList').innerHTML = RESOURCE_KEYS.map((key) => {
         const value = key === 'truegold' || key === 'tempered_truegold' ? totals[key] : Math.round(totals[key] * costMul);
-        return `<div class="resource-row"><span class="resource-icon">${resourceShort(key)}</span><span>${nested('resources', key)}</span><strong>${rows.length ? fmt(value) : '-'}</strong></div>`;
+        return `<div class="resource-row"><span class="resource-icon">${resourceIconContent(key)}</span><span>${nested('resources', key)}</span><strong>${rows.length ? fmt(value) : '-'}</strong></div>`;
       }).join('');
       $('breakdown').innerHTML = rows.length ? rows.map((row) => {
         const resources = RESOURCE_KEYS.map((key) => {
@@ -863,6 +878,23 @@
 
     function resourceShort(key) {
       return { bread: 'BD', wood: 'WD', stone: 'ST', iron: 'IR', truegold: 'TG', tempered_truegold: 'TT' }[key] || key.slice(0, 2).toUpperCase();
+    }
+
+    function resourceImage(key) {
+      return {
+        bread: 'https://kingshot.net/images/items/bread.png',
+        wood: 'https://kingshot.net/images/items/wood.png',
+        stone: 'https://kingshot.net/images/items/stone.png',
+        iron: 'https://kingshot.net/images/items/iron.png',
+        truegold: 'https://kingshot.net/images/items/truegold.png',
+        tempered_truegold: 'https://kingshot.net/images/items/tempered-truegold.png'
+      }[key] || '';
+    }
+
+    function resourceIconContent(key) {
+      const src = resourceImage(key);
+      const fallback = resourceShort(key);
+      return src ? `<img src="${src}" alt="" loading="lazy" onerror="this.replaceWith(document.createTextNode('${fallback}'))">` : fallback;
     }
 
     function saveState() {
