@@ -162,8 +162,6 @@ def classify_official_payload(payload: dict) -> tuple[str, bool, str]:
     err_code = int(payload.get("err_code") or 0) if str(payload.get("err_code") or "").lstrip("-").isdigit() else 0
     message = str(payload.get("msg") or payload.get("message") or payload.get("err_msg") or "").strip()
     lower = message.lower()
-    if payload.get("code") == 0 or err_code == 0 or "redeemed, please claim" in lower or "claim the rewards in your mail" in lower:
-        return "success", True, message or "success"
     if "claim limit reached" in lower or "unable to claim" in lower:
         return "claim_limit_reached", False, message or "claim limit reached"
     if err_code == 40102 or "captcha" in lower or "verification" in lower or "verify" in lower:
@@ -186,14 +184,14 @@ def classify_official_payload(payload: dict) -> tuple[str, bool, str]:
         return "server_busy", False, message or "server busy"
     if "player not found" in lower or "invalid player" in lower or "double check player" in lower:
         return "player_not_found", False, message or "player not found"
+    if payload.get("code") == 0 or err_code == 0 or "redeemed, please claim" in lower or "claim the rewards in your mail" in lower:
+        return "success", True, message or "success"
     return "failed", False, message or "redeem failed"
 
 
 def classify_message(message: str) -> tuple[str, bool]:
     text = (message or "").strip()
     lower = text.lower()
-    if "redeemed, please claim" in lower or "claim the rewards in your mail" in lower:
-        return "success", True
     if "claim limit reached" in lower or "unable to claim" in lower:
         return "claim_limit_reached", False
     if "same gift code" in lower or "only be redeemed once" in lower or "already claimed" in lower:
@@ -208,6 +206,8 @@ def classify_message(message: str) -> tuple[str, bool]:
         return "server_busy", False
     if "too frequent" in lower or "too many" in lower or "rate limit" in lower:
         return "rate_limited", False
+    if "redeemed, please claim" in lower or "claim the rewards in your mail" in lower:
+        return "success", True
     if "captcha" in lower or "verification" in lower or "verify" in lower:
         return "captcha_required", False
     if "player not found" in lower or "invalid player" in lower or "double check player" in lower:

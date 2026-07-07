@@ -1858,8 +1858,11 @@ function classifyDaemonRedeemResult(row) {
   const lower = message.toLowerCase();
   const ok = Boolean(row && (row.ok || row.success));
 
-  if (ok || statusHint === "success" || /redeemed,?\s*please\s*claim|claim\s+the\s+rewards\s+in\s+your\s+mail/i.test(message)) {
-    return { status: "success", ok: true, message: message || "success" };
+  if (statusHint === "rate_limited" || /too\s+many|too\s+frequent|frequently|rate\s*limit/i.test(message)) {
+    return { status: "rate_limited", ok: false, message: message || "rate limited" };
+  }
+  if (statusHint === "server_busy" || /recharge[_\s-]*money|server\s+busy|try\s+again\s+later/i.test(message)) {
+    return { status: "server_busy", ok: false, message: message || "server busy" };
   }
   if (statusHint === "claim_limit_reached" || /claim\s+limit\s+reached|unable\s+to\s+claim/i.test(message)) {
     return { status: "claim_limit_reached", ok: false, message: message || "claim limit reached" };
@@ -1882,11 +1885,8 @@ function classifyDaemonRedeemResult(row) {
   if (statusHint === "player_not_found" || /player\s+not\s+found|invalid\s+player|double\s+check\s+player|problem\s+with\s+logging\s+in/i.test(message)) {
     return { status: "player_not_found", ok: false, message: message || "player not found" };
   }
-  if (statusHint === "rate_limited" || /too\s+many|too\s+frequent|frequently|rate\s*limit/i.test(message)) {
-    return { status: "rate_limited", ok: false, message: message || "rate limited" };
-  }
-  if (statusHint === "server_busy" || /server\s+busy|try\s+again\s+later/i.test(message)) {
-    return { status: "server_busy", ok: false, message: message || "server busy" };
+  if (ok || statusHint === "success" || /redeemed,?\s*please\s*claim|claim\s+the\s+rewards\s+in\s+your\s+mail/i.test(message)) {
+    return { status: "success", ok: true, message: message || "success" };
   }
   if (statusHint === "timeout" || statusHint === "network_error" || /timeout|timed\s*out|network|no\s+confirmation\s+modal/i.test(lower)) {
     return { status: statusHint === "network_error" ? "network_error" : "timeout", ok: false, message: message || "timeout" };
@@ -2090,8 +2090,11 @@ function classifyRedeemPayload(payload) {
   const errCode = numberValue(payload && payload.err_code);
   const message = meaningfulText(payload && (payload.msg || payload.message || payload.err_msg), 240);
   const lower = message.toLowerCase();
-  if ((payload && payload.code === 0) || errCode === 0 || /redeemed,?\s*please\s*claim|claim\s+the\s+rewards\s+in\s+your\s+mail/i.test(message)) {
-    return { status: "success", ok: true, message: message || "success" };
+  if (/too\s+many|too\s+frequent|frequently|rate\s*limit/i.test(message)) {
+    return { status: "rate_limited", ok: false, message: message || "rate limited" };
+  }
+  if (/recharge[_\s-]*money|server\s+busy|try\s+again\s+later/i.test(message)) {
+    return { status: "server_busy", ok: false, message: message || "server busy" };
   }
   if (/claim\s+limit\s+reached|unable\s+to\s+claim/i.test(message)) {
     return { status: "claim_limit_reached", ok: false, message: message || "claim limit reached" };
@@ -2104,6 +2107,9 @@ function classifyRedeemPayload(payload) {
   }
   if (/already|claimed|used/i.test(message)) return { status: "already_claimed", ok: false, message };
   if (/expired/i.test(message)) return { status: "expired", ok: false, message };
+  if ((payload && payload.code === 0) || errCode === 0 || /redeemed,?\s*please\s*claim|claim\s+the\s+rewards\s+in\s+your\s+mail/i.test(message)) {
+    return { status: "success", ok: true, message: message || "success" };
+  }
   return { status: "failed", ok: false, message: message || "redeem failed" };
 }
 
@@ -2111,8 +2117,11 @@ function classifyRedeemPayloadV2(payload) {
   const errCode = numberValue(payload && payload.err_code);
   const message = meaningfulText(payload && (payload.msg || payload.message || payload.err_msg), 240);
   const lower = message.toLowerCase();
-  if ((payload && payload.code === 0) || errCode === 0 || /redeemed,?\s*please\s*claim|claim\s+the\s+rewards\s+in\s+your\s+mail/i.test(message)) {
-    return { status: "success", ok: true, message: message || "success" };
+  if (/too\s+many|too\s+frequent|frequently|rate\s*limit/i.test(message)) {
+    return { status: "rate_limited", ok: false, message: message || "rate limited" };
+  }
+  if (/recharge[_\s-]*money|server\s+busy|try\s+again\s+later/i.test(message)) {
+    return { status: "server_busy", ok: false, message: message || "server busy" };
   }
   if (/claim\s+limit\s+reached|unable\s+to\s+claim/i.test(message)) {
     return { status: "claim_limit_reached", ok: false, message: message || "claim limit reached" };
@@ -2131,11 +2140,11 @@ function classifyRedeemPayloadV2(payload) {
     return { status: "already_claimed", ok: false, message: message || "already claimed" };
   }
   if (/expired|ended|no\s+longer\s+valid/i.test(message)) return { status: "expired", ok: false, message: message || "expired" };
-  if (/server\s+busy|try\s+again\s+later|too\s+many|too\s+frequent|frequently|rate\s*limit/i.test(message)) {
-    return { status: lower.includes("rate") || lower.includes("frequent") ? "rate_limited" : "server_busy", ok: false, message: message || "server busy" };
-  }
   if (/player\s+not\s+found|invalid\s+player|double\s+check\s+player|problem\s+with\s+logging\s+in/i.test(message)) {
     return { status: "player_not_found", ok: false, message: message || "player not found" };
+  }
+  if ((payload && payload.code === 0) || errCode === 0 || /redeemed,?\s*please\s*claim|claim\s+the\s+rewards\s+in\s+your\s+mail/i.test(message)) {
+    return { status: "success", ok: true, message: message || "success" };
   }
   return { status: "failed", ok: false, message: message || "redeem failed" };
 }
@@ -2151,7 +2160,7 @@ async function redeemOfficialGiftCode(playerId, giftCode, options = {}) {
   const profile = verifyPlayer ? await fetchOfficialGiftProfile(fid) : null;
   if (verifyPlayer && !profile) return { ok: false, status: "player_not_found", message: "Player ID could not be verified." };
 
-  const data = { fid, cdk, time: Date.now() };
+  const data = { fid, cdk, captcha_code: "", time: Date.now() };
   data.sign = officialGiftSign(data);
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), OFFICIAL_GIFT_TIMEOUT_MS);
