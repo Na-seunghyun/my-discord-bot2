@@ -564,6 +564,8 @@ function autoRedeemConfig(env) {
     cloudflareBatchSize: envNumber(env.AUTO_REDEEM_CLOUDFLARE_BATCH_SIZE, AUTO_REDEEM_DEFAULT_CLOUDFLARE_BATCH_SIZE, 1, 12),
     delayMs: envNumber(env.AUTO_REDEEM_DELAY_MS, AUTO_REDEEM_DEFAULT_DELAY_MS, 300, 8000),
     maxAttempts: envNumber(env.AUTO_REDEEM_MAX_ATTEMPTS, AUTO_REDEEM_DEFAULT_MAX_ATTEMPTS, 1, 8),
+    deferServerBusyAttempts: envNumber(env.AUTO_REDEEM_DEFER_SERVER_BUSY_ATTEMPTS, 6, 2, 30),
+    deferredCooldownMs: envNumber(env.AUTO_REDEEM_DEFERRED_COOLDOWN_MINUTES, 60, 5, 1440) * 60 * 1000,
     runningStaleMs: envNumber(env.AUTO_REDEEM_RUNNING_STALE_MINUTES, 12, 5, 90) * 60 * 1000,
     workerRedeemEnabled: envBool(env.AUTO_REDEEM_WORKER_REDEEM_ENABLED, false),
     verifyPlayerBeforeRedeem: envBool(env.AUTO_REDEEM_VERIFY_PLAYER, false),
@@ -580,12 +582,27 @@ function isAlwaysPendingRedeemStatus(status) {
   return new Set(["timeout", "network_error", "server_error", "rate_limited", "server_busy"]).has(String(status || ""));
 }
 
+function isDeferredCandidateStatus(status) {
+  return new Set(["server_busy", "rate_limited"]).has(String(status || ""));
+}
+
 async function recoverStaleRedeemJobs(env, cfg) {
-  if (!supabaseConfig(env).enabled) return { recovered: 0, failed: 0 };
+  if (!supabaseConfig(env).enabled) return { recovered: 0, failed: 0, deferredRecovered: 0 };
   const now = Date.now();
   const maxAttempts = Math.max(1, numberValue(cfg && cfg.maxAttempts) || AUTO_REDEEM_DEFAULT_MAX_ATTEMPTS);
   const staleMs = Math.max(5 * 60 * 1000, numberValue(cfg && cfg.runningStaleMs) || 12 * 60 * 1000);
   const cutoff = now - staleMs;
+  const deferredCutoff = now - Math.max(5 * 60 * 1000, numberValue(cfg && cfg.deferredCooldownMs) || 60 * 60 * 1000);
+  const deferredRows = await supabaseJson(env, `/redeem_jobs?status=eq.deferred&updated_at_ms=lt.${deferredCutoff}`, {
+    method: "PATCH",
+    headers: { prefer: "return=representation" },
+    body: JSON.stringify({
+      status: "pending",
+      attempts: 0,
+      updated_at_ms: now,
+      last_error: "Deferred cooldown complete; queued for retry.",
+    }),
+  }).catch(() => []);
   const recoveredRows = await supabaseJson(env, `/redeem_jobs?status=eq.running&updated_at_ms=lt.${cutoff}&attempts=lt.${maxAttempts}`, {
     method: "PATCH",
     headers: { prefer: "return=representation" },
@@ -607,6 +624,7 @@ async function recoverStaleRedeemJobs(env, cfg) {
   return {
     recovered: Array.isArray(recoveredRows) ? recoveredRows.length : 0,
     failed: Array.isArray(failedRows) ? failedRows.length : 0,
+    deferredRecovered: Array.isArray(deferredRows) ? deferredRows.length : 0,
   };
 }
 
@@ -1564,25 +1582,28 @@ async function countSupabaseRows(env, path) {
 async function redeemQueueSummary(env) {
   const cfg = autoRedeemConfig(env);
   const staleCutoff = Date.now() - cfg.runningStaleMs;
-  const [pending, retryPending, running, staleRunning, success, failedTerminal] = await Promise.all([
+  const [pending, retryPending, running, staleRunning, deferred, success, failedTerminal] = await Promise.all([
     countSupabaseRows(env, "/redeem_jobs?status=eq.pending&select=job_key&limit=1").catch(() => 0),
     countSupabaseRows(env, "/redeem_jobs?status=eq.pending&attempts=gt.0&select=job_key&limit=1").catch(() => 0),
     countSupabaseRows(env, "/redeem_jobs?status=eq.running&select=job_key&limit=1").catch(() => 0),
     countSupabaseRows(env, `/redeem_jobs?status=eq.running&updated_at_ms=lt.${staleCutoff}&select=job_key&limit=1`).catch(() => 0),
+    countSupabaseRows(env, "/redeem_jobs?status=eq.deferred&select=job_key&limit=1").catch(() => 0),
     countSupabaseRows(env, "/redeem_jobs?status=eq.success&select=job_key&limit=1").catch(() => 0),
-    countSupabaseRows(env, "/redeem_jobs?status=in.(failed,invalid_code,expired,already_claimed,time_window_closed,player_not_found,not_logged_in,captcha_required,claim_limit_reached)&select=job_key&limit=1").catch(() => 0),
+    countSupabaseRows(env, "/redeem_jobs?status=in.(failed,invalid_code,expired,already_claimed,time_window_closed,player_not_found,not_logged_in,captcha_required,claim_limit_reached,deferred)&select=job_key&limit=1").catch(() => 0),
   ]);
   return {
     pending,
     retryPending,
     running,
     staleRunning,
+    deferred,
     success,
     failedTerminal,
-    waitingTotal: pending + running,
+    waitingTotal: pending + running + deferred,
     runningStaleMinutes: Math.round(cfg.runningStaleMs / 60000),
     batchSize: cfg.batchSize,
     claimMode: cfg.batchSize > 40 ? "fast-rpc" : "standard",
+    deferredCooldownMinutes: Math.round((cfg.deferredCooldownMs || 0) / 60000),
   };
 }
 
@@ -1939,7 +1960,7 @@ async function reportRedeemJobs(request, env) {
   const cfg = autoRedeemConfig(env);
   const body = await request.json().catch(() => ({}));
   const rows = Array.isArray(body.results) ? body.results.slice(0, 100) : [];
-  const summary = { ok: true, processed: 0, saved: 0, saveFailed: 0, success: 0, failed: 0, retrying: 0, results: [] };
+  const summary = { ok: true, processed: 0, saved: 0, saveFailed: 0, success: 0, failed: 0, retrying: 0, deferred: 0, results: [] };
   const now = Date.now();
   const jobPayloads = [];
   const codePayloadByCode = new Map();
@@ -1952,12 +1973,15 @@ async function reportRedeemJobs(request, env) {
     if (!jobKey) continue;
     const classified = classifyDaemonRedeemResult(row);
     const attemptNumber = numberValue(row.attempts);
+    const shouldDefer = !classified.ok
+      && isDeferredCandidateStatus(classified.status)
+      && attemptNumber >= cfg.deferServerBusyAttempts;
     const alwaysPending = !classified.ok && isAlwaysPendingRedeemStatus(classified.status);
     const retrying = !classified.ok && (
-      alwaysPending ||
+      (!shouldDefer && alwaysPending) ||
       (isRetryableRedeemStatus(classified.status) && attemptNumber > 0 && attemptNumber < cfg.maxAttempts)
     );
-    const finalStatus = retrying ? "pending" : classified.ok ? "success" : classified.status;
+    const finalStatus = shouldDefer ? "deferred" : retrying ? "pending" : classified.ok ? "success" : classified.status;
     const responseJson = isPlainObject(row.response) ? row.response : {
       source: "putty-browser-daemon",
       status: classified.status,
@@ -1971,7 +1995,9 @@ async function reportRedeemJobs(request, env) {
       gift_code: giftCode,
       attempts: attemptNumber,
       status: finalStatus,
-      last_error: classified.ok ? "" : classified.message,
+      last_error: shouldDefer
+        ? `${classified.message || "server busy"}; deferred after ${attemptNumber} attempts.`
+        : classified.ok ? "" : classified.message,
       response_json: responseJson,
       created_at_ms: now,
       redeemed_at_ms: classified.ok ? now : null,
@@ -1993,6 +2019,7 @@ async function reportRedeemJobs(request, env) {
 
     summary.processed += 1;
     if (classified.ok) summary.success += 1;
+    else if (shouldDefer) summary.deferred += 1;
     else if (retrying) summary.retrying += 1;
     else summary.failed += 1;
     summary.results.push({
@@ -2018,6 +2045,7 @@ async function reportRedeemJobs(request, env) {
       summary.saved = 0;
       summary.success = 0;
       summary.retrying = 0;
+      summary.deferred = 0;
       summary.failed = jobPayloads.length;
       summary.results = summary.results.map((item) => ({
         ...item,
