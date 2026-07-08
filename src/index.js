@@ -591,6 +591,43 @@ function isBrowserReviewCandidateStatus(status) {
   return String(status || "") === "server_busy";
 }
 
+async function disableInvalidRedeemPlayer(env, playerId, reason = "Player ID could not be verified.") {
+  const id = cleanText(playerId, 40);
+  if (!supabaseConfig(env).enabled || !/^\d{3,12}$/.test(id)) return false;
+  const now = Date.now();
+  await supabaseJson(env, `/redeem_players?id=eq.${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    body: JSON.stringify({
+      enabled: false,
+      consent: false,
+      updated_at_ms: now,
+    }),
+  });
+  await supabaseJson(env, `/redeem_jobs?player_id=eq.${encodeURIComponent(id)}&status=in.(pending,running,deferred,browser_review)`, {
+    method: "PATCH",
+    body: JSON.stringify({
+      status: "player_not_found",
+      last_error: cleanText(reason, 240) || "Player ID could not be verified.",
+      updated_at_ms: now,
+    }),
+  }).catch(() => {});
+  await supabaseJson(env, "/redeem_meta?on_conflict=key", {
+    method: "POST",
+    headers: { prefer: "resolution=merge-duplicates" },
+    body: JSON.stringify([{
+      key: `redeem_invalid_player:${id}`,
+      value_json: {
+        playerId: id,
+        disabledAtMs: now,
+        reason: cleanText(reason, 240) || "Player ID could not be verified.",
+        source: "auto_redeem_report",
+      },
+      updated_at_ms: now,
+    }]),
+  }).catch(() => {});
+  return true;
+}
+
 async function recoverStaleRedeemJobs(env, cfg) {
   if (!supabaseConfig(env).enabled) return { recovered: 0, failed: 0, deferredRecovered: 0 };
   const now = Date.now();
@@ -848,8 +885,6 @@ async function upsertRedeemPlayer(env, playerId, options = {}) {
     return { ok: true, status: "duplicate", player: profile };
   }
 
-  const manageToken = newManageToken();
-  const tokenHash = await hashManageToken(manageToken);
   await supabaseJson(env, "/redeem_players?on_conflict=id", {
     method: "POST",
     headers: { prefer: "resolution=merge-duplicates" },
@@ -862,13 +897,13 @@ async function upsertRedeemPlayer(env, playerId, options = {}) {
       lang: cleanText(options.lang, 16),
       enabled: true,
       consent: true,
-      manage_token_hash: tokenHash,
+      manage_token_hash: null,
       created_at_ms: existing && existing.created_at_ms ? existing.created_at_ms : now,
       updated_at_ms: now,
       profile_json: profile,
     }]),
   });
-  return { ok: true, status: existing ? "reactivated" : "created", player: profile, manageToken };
+  return { ok: true, status: existing ? "reactivated" : "created", player: profile };
 }
 
 async function refreshRedeemPlayerProfile(env, profile) {
@@ -937,16 +972,30 @@ async function unregisterRedeemPlayer(request, env) {
   if (!ready.ok) return ready.response;
   const body = await request.json().catch(() => ({}));
   const playerId = meaningfulText(body.playerId || body.fid || body.id, 40);
-  const manageToken = meaningfulText(body.manageToken || body.token, 120);
-  if (!playerId || !manageToken) return json({ ok: false, error: "Player ID and manage token are required." }, 400);
-  const rows = await supabaseJson(env, `/redeem_players?id=eq.${encodeURIComponent(playerId)}&select=id,manage_token_hash&limit=1`);
+  if (!/^\d{3,12}$/.test(playerId)) return json({ ok: false, error: "Player ID is required." }, 400);
+  const rows = await supabaseJson(env, `/redeem_players?id=eq.${encodeURIComponent(playerId)}&select=id,nickname,state,town_hall_level,enabled,consent&limit=1`);
   const row = rows && rows[0];
-  if (!row || row.manage_token_hash !== await hashManageToken(manageToken)) return json({ ok: false, error: "Invalid manage token." }, 403);
-  await supabaseJson(env, `/redeem_players?id=eq.${encodeURIComponent(playerId)}`, {
-    method: "PATCH",
-    body: JSON.stringify({ enabled: false, consent: false, updated_at_ms: Date.now() }),
+  if (!row) return json({ ok: false, error: "Player ID is not registered." }, 404);
+  const now = Date.now();
+  await supabaseJson(env, "/redeem_meta?on_conflict=key", {
+    method: "POST",
+    headers: { prefer: "resolution=merge-duplicates" },
+    body: JSON.stringify([{
+      key: `redeem_delete_request:${playerId}`,
+      value_json: {
+        playerId,
+        nickname: row.nickname || "",
+        state: row.state || null,
+        townHallLevel: row.town_hall_level || null,
+        requestedAtMs: now,
+        reason: cleanText(body.reason, 240) || "User requested deletion from auto redeem page.",
+        status: "requested",
+        source: "auto_redeem_page",
+      },
+      updated_at_ms: now,
+    }]),
   });
-  return json({ ok: true });
+  return json({ ok: true, requested: true });
 }
 
 function redeemCodeExpiredByOfficialUse(row) {
@@ -1918,7 +1967,10 @@ function classifyDaemonRedeemResult(row) {
   if (statusHint === "captcha_required" || /captcha|verification|verify/i.test(message)) {
     return { status: "captcha_required", ok: false, message: message || "captcha required" };
   }
-  if (statusHint === "player_not_found" || /player\s+not\s+found|invalid\s+player|double\s+check\s+player|problem\s+with\s+logging\s+in/i.test(message)) {
+  if (statusHint === "not_logged_in" || /not\s+login|not\s+logged\s+in|problem\s+with\s+logging\s+in|double\s+check\s+player/i.test(message)) {
+    return { status: "not_logged_in", ok: false, message: message || "not logged in" };
+  }
+  if (statusHint === "player_not_found" || /player\s+not\s+found|invalid\s+player/i.test(message)) {
     return { status: "player_not_found", ok: false, message: message || "player not found" };
   }
   if (ok || statusHint === "success" || /redeemed,?\s*please\s*claim|claim\s+the\s+rewards\s+in\s+your\s+mail/i.test(message)) {
@@ -1971,10 +2023,11 @@ async function reportRedeemJobs(request, env) {
   const cfg = autoRedeemConfig(env);
   const body = await request.json().catch(() => ({}));
   const rows = Array.isArray(body.results) ? body.results.slice(0, 100) : [];
-  const summary = { ok: true, processed: 0, saved: 0, saveFailed: 0, success: 0, failed: 0, retrying: 0, deferred: 0, reviewing: 0, results: [] };
+  const summary = { ok: true, processed: 0, saved: 0, saveFailed: 0, success: 0, failed: 0, retrying: 0, deferred: 0, reviewing: 0, invalidPlayersDisabled: 0, results: [] };
   const now = Date.now();
   const jobPayloads = [];
   const codePayloadByCode = new Map();
+  const invalidPlayerById = new Map();
 
   for (const row of rows) {
     const playerId = cleanText(row.playerId || row.player_id, 40);
@@ -2004,6 +2057,7 @@ async function reportRedeemJobs(request, env) {
       (isRetryableRedeemStatus(classified.status) && attemptNumber > 0 && attemptNumber < cfg.maxAttempts)
     );
     const finalStatus = browserConfirmedBlocked ? "official_blocked" : shouldBrowserReview ? "browser_review" : shouldDefer ? "deferred" : retrying ? "pending" : classified.ok ? "success" : classified.status;
+    if (finalStatus === "player_not_found" && playerId) invalidPlayerById.set(playerId, classified.message);
     const responseJson = isPlainObject(row.response) ? row.response : {
       source: "putty-browser-daemon",
       status: classified.status,
@@ -2082,6 +2136,13 @@ async function reportRedeemJobs(request, env) {
         message: reportError || "Redeem results were received, but bulk job save failed.",
       }));
     });
+  }
+
+  if (invalidPlayerById.size && !summary.saveFailed) {
+    for (const [id, reason] of invalidPlayerById.entries()) {
+      const disabled = await disableInvalidRedeemPlayer(env, id, reason).catch(() => false);
+      if (disabled) summary.invalidPlayersDisabled += 1;
+    }
   }
 
   const codePayloads = [...codePayloadByCode.values()];
@@ -2211,7 +2272,10 @@ function classifyRedeemPayloadV2(payload) {
     return { status: "already_claimed", ok: false, message: message || "already claimed" };
   }
   if (/expired|ended|no\s+longer\s+valid/i.test(message)) return { status: "expired", ok: false, message: message || "expired" };
-  if (/player\s+not\s+found|invalid\s+player|double\s+check\s+player|problem\s+with\s+logging\s+in/i.test(message)) {
+  if (/not\s+login|not\s+logged\s+in|double\s+check\s+player|problem\s+with\s+logging\s+in/i.test(message)) {
+    return { status: "not_logged_in", ok: false, message: message || "not logged in" };
+  }
+  if (/player\s+not\s+found|invalid\s+player/i.test(message)) {
     return { status: "player_not_found", ok: false, message: message || "player not found" };
   }
   if ((payload && payload.code === 0) || errCode === 0 || /redeemed,?\s*please\s*claim|claim\s+the\s+rewards\s+in\s+your\s+mail/i.test(message)) {

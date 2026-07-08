@@ -196,7 +196,9 @@ def classify_official_payload(payload: dict) -> tuple[str, bool, str]:
         return "server_busy", False, message or "official session was not ready"
     if "server busy" in lower or "try again later" in lower:
         return "server_busy", False, message or "server busy"
-    if "player not found" in lower or "invalid player" in lower or "double check player" in lower:
+    if "double check player" in lower:
+        return "not_logged_in", False, message or "player check required"
+    if "player not found" in lower or "invalid player" in lower:
         return "player_not_found", False, message or "player not found"
     if payload.get("code") == 0 or err_code == 0 or "redeemed, please claim" in lower or "claim the rewards in your mail" in lower:
         return "success", True, message or "success"
@@ -216,6 +218,8 @@ def classify_message(message: str) -> tuple[str, bool]:
         return "expired", False
     if "time error" in lower or "redemption time" in lower or "exchange time" in lower:
         return "time_window_closed", False
+    if "not login" in lower or "not logged in" in lower or "problem with logging in" in lower:
+        return "not_logged_in", False
     if "server busy" in lower or "try again later" in lower:
         return "server_busy", False
     if "too frequent" in lower or "too many" in lower or "rate limit" in lower:
@@ -226,7 +230,9 @@ def classify_message(message: str) -> tuple[str, bool]:
         return "success", True
     if "captcha" in lower or "verification" in lower or "verify" in lower:
         return "captcha_required", False
-    if "player not found" in lower or "invalid player" in lower or "double check player" in lower:
+    if "double check player" in lower:
+        return "not_logged_in", False
+    if "player not found" in lower or "invalid player" in lower:
         return "player_not_found", False
     return "failed", False
 
@@ -261,7 +267,7 @@ def redeem_one_api_sync(job: dict) -> dict:
         if not official_player_payload_ok(player_payload):
             status, _ok, message = classify_official_payload(player_payload)
             result.update(
-                status=status if status != "failed" else "player_not_found",
+                status=status if status != "failed" else "not_logged_in",
                 ok=False,
                 message=message or "Player login did not complete.",
                 response={"source": "putty-api-daemon", "config_payload": config_payload, "player_payload": player_payload},
@@ -436,7 +442,7 @@ async def redeem_one_hybrid(context, job: dict) -> dict:
         if not official_player_payload_ok(player_payload):
             status, _ok, message = classify_official_payload(player_payload)
             result.update(
-                status=status if status != "failed" else "player_not_found",
+                status=status if status != "failed" else "not_logged_in",
                 ok=False,
                 message=message or "Player login did not complete.",
                 response={
@@ -706,7 +712,7 @@ async def redeem_one(page, job: dict) -> dict:
             await close_modal(page)
             status, ok = classify_message(login_message)
             if status == "failed":
-                status = "server_busy" if "server busy" in login_message.lower() else "player_not_found"
+                status = "server_busy" if "server busy" in login_message.lower() else "not_logged_in"
             result.update(status=status, ok=ok, message=login_message)
             return result
 

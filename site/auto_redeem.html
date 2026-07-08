@@ -2379,6 +2379,34 @@
     Object.assign(I18N.de, { queueBatch: 'Batch' });
     Object.assign(I18N.th, { queueBatch: 'ชุด' });
     Object.assign(I18N.id, { queueBatch: 'batch' });
+    Object.assign(I18N.en, {
+      loadToken: 'Load saved ID',
+      manageTitle: 'Removal Request',
+      manageHelp: 'Direct removal is disabled for safety. Send a request here, and the admin will review it. Invalid player IDs are removed automatically when the official redeem page confirms the ID is wrong.',
+      manageToken: 'Request note',
+      tokenPlaceholder: 'Optional note for admin',
+      remove: 'Request removal',
+      needToken: 'Player ID is required.',
+      removing: 'Sending removal request...',
+      removed: 'Removal request sent. Admin will review it.',
+      savedToken: 'Saved ID loaded.',
+      noToken: 'No saved ID in this browser.',
+      duplicateNote: 'Already registered. The saved ID remains active.'
+    });
+    Object.assign(I18N.ko, {
+      loadToken: '저장된 ID 불러오기',
+      manageTitle: '삭제 요청',
+      manageHelp: '안전을 위해 사용자가 직접 삭제할 수 없어요. 여기서 요청만 보내면 관리자가 확인 후 정리합니다. 공식 리딤에서 잘못된 ID로 확인된 경우만 자동 제외됩니다.',
+      manageToken: '요청 메모',
+      tokenPlaceholder: '관리자에게 남길 메모 선택 입력',
+      remove: '삭제 요청 보내기',
+      needToken: '플레이어 ID를 입력해주세요.',
+      removing: '삭제 요청을 보내는 중...',
+      removed: '삭제 요청이 접수되었습니다. 관리자가 확인 후 정리합니다.',
+      savedToken: '저장된 ID를 불러왔습니다.',
+      noToken: '이 브라우저에 저장된 ID가 없습니다.',
+      duplicateNote: '이미 등록된 ID입니다. 등록 상태는 그대로 유지됩니다.'
+    });
 
     let currentLang = new URL(location.href).searchParams.get('lang') || localStorage.getItem('siteLang') || localStorage.getItem('lang') || 'ko';
     if (!I18N[currentLang]) currentLang = 'ko';
@@ -2796,7 +2824,6 @@
       loadKingdomRegistry();
     });
     if (saved.playerId) $('playerId').value = saved.playerId;
-    if (saved.manageToken) $('manageToken').value = saved.manageToken;
 
     $('registerBtn').addEventListener('click', async () => {
       const playerId = $('playerId').value.replace(/\D/g, '');
@@ -2809,12 +2836,12 @@
           body: JSON.stringify({ playerId, lang: currentLang, consent: true }),
         });
         showProfile(data.player);
-        if (data.manageToken) {
-          localStorage.setItem('autoRedeemRegistration', JSON.stringify({ playerId, manageToken: data.manageToken }));
-          $('manageToken').value = data.manageToken;
-          setStatus('registerStatus', `${tr('registered')}\n${tr('manageToken')}:\n${data.manageToken}`);
-        } else {
+        localStorage.setItem('autoRedeemRegistration', JSON.stringify({ playerId }));
+        $('manageToken').value = '';
+        if (data.status === 'duplicate') {
           setStatus('registerStatus', `${tr('duplicateNote')}\n${data.player.username || data.player.id}`);
+        } else {
+          setStatus('registerStatus', `${tr('registered')}\n${tr('pendingJobs')}: ${data.jobsCreated || 0}`);
         }
         loadStatus();
         loadActivity();
@@ -2859,21 +2886,19 @@
     $('loadBtn').addEventListener('click', () => {
       const current = JSON.parse(localStorage.getItem('autoRedeemRegistration') || '{}');
       $('playerId').value = current.playerId || $('playerId').value;
-      $('manageToken').value = current.manageToken || '';
-      setStatus('registerStatus', current.manageToken ? `${tr('savedToken')}\n${current.manageToken}` : tr('noToken'));
+      setStatus('registerStatus', current.playerId ? `${tr('savedToken')}\n${current.playerId}` : tr('noToken'));
     });
 
     $('removeBtn').addEventListener('click', async () => {
       const playerId = $('playerId').value.replace(/\D/g, '');
-      const manageToken = $('manageToken').value.trim();
-      if (!playerId || !manageToken) return setStatus('manageStatus', tr('needToken'));
+      const reason = $('manageToken').value.trim();
+      if (!playerId) return setStatus('manageStatus', tr('needToken'));
       setStatus('manageStatus', tr('removing'));
       try {
         await api('/api/redeem/unregister', {
           method: 'POST',
-          body: JSON.stringify({ playerId, manageToken }),
+          body: JSON.stringify({ playerId, reason }),
         });
-        localStorage.removeItem('autoRedeemRegistration');
         setStatus('manageStatus', tr('removed'));
         loadStatus();
         loadActivity();
