@@ -18,6 +18,7 @@ Optional:
   AUTO_REDEEM_DAEMON_BATCH_SIZE  Jobs per loop, default 40
   AUTO_REDEEM_DAEMON_CONCURRENCY Pages processed at once, default 4
   AUTO_REDEEM_DAEMON_TIMEOUT_MS  Browser action timeout, default 2500
+  AUTO_REDEEM_DAEMON_BATCH_TIMEOUT_SECONDS Whole batch timeout, default auto
   AUTO_REDEEM_DAEMON_HEADLESS    true/false, default true
   AUTO_REDEEM_CAPTURE_OFFICIAL_REQUESTS true/false, default false
 """
@@ -50,6 +51,8 @@ REST_SECONDS = max(0.0, float(os.getenv("AUTO_REDEEM_DAEMON_REST_SECONDS", "0"))
 BATCH_SIZE = max(1, min(80, int(os.getenv("AUTO_REDEEM_DAEMON_BATCH_SIZE", "40"))))
 CONCURRENCY = max(1, min(6, int(os.getenv("AUTO_REDEEM_DAEMON_CONCURRENCY", "4"))))
 TIMEOUT_MS = max(800, int(os.getenv("AUTO_REDEEM_DAEMON_TIMEOUT_MS", "2500")))
+DEFAULT_BATCH_TIMEOUT_SECONDS = max(90, min(300, int((BATCH_SIZE * 12) / max(1, CONCURRENCY))))
+BATCH_TIMEOUT_SECONDS = max(30, int(os.getenv("AUTO_REDEEM_DAEMON_BATCH_TIMEOUT_SECONDS", str(DEFAULT_BATCH_TIMEOUT_SECONDS))))
 HEADLESS = os.getenv("AUTO_REDEEM_DAEMON_HEADLESS", "true").strip().lower() not in {"0", "false", "no", "off"}
 CAPTURE_OFFICIAL_REQUESTS = os.getenv("AUTO_REDEEM_CAPTURE_OFFICIAL_REQUESTS", "false").strip().lower() not in {"0", "false", "no", "off"}
 OFFICIAL_REDEEM_URL = "https://ks-giftcode.centurygame.com/"
@@ -785,9 +788,47 @@ async def redeem_jobs(jobs: list[dict]) -> list[dict]:
     return results
 
 
-def print_cycle(started: str, claim: dict, report: dict | None = None, error: str = "") -> None:
+def timeout_result_for_job(job: dict, message: str) -> dict:
+    return {
+        "jobKey": job.get("jobKey"),
+        "playerId": job.get("playerId"),
+        "giftCode": job.get("giftCode"),
+        "attempts": job.get("attempts"),
+        "ok": False,
+        "status": "timeout",
+        "message": message,
+        "response": {"source": f"putty-{DAEMON_MODE}-daemon", "batch_timeout": True},
+    }
+
+
+def count_result_sources(results: list[dict]) -> tuple[dict[str, int], dict[str, int]]:
+    sources: dict[str, int] = {}
+    fallbacks: dict[str, int] = {}
+    for result in results or []:
+        response = result.get("response") if isinstance(result.get("response"), dict) else {}
+        source = str(response.get("source") or "unknown")
+        fallback_from = str(response.get("fallback_from") or "")
+        sources[source] = sources.get(source, 0) + 1
+        if fallback_from:
+            fallbacks[fallback_from] = fallbacks.get(fallback_from, 0) + 1
+    return sources, fallbacks
+
+
+def print_cycle(
+    started: str,
+    claim: dict,
+    report: dict | None = None,
+    error: str = "",
+    started_ms: int | None = None,
+    raw_results: list[dict] | None = None,
+) -> None:
     jobs = claim.get("jobs") or []
     recovered = claim.get("recovered") or {}
+    now_ms = int(time.time() * 1000)
+    duration_sec = round(max(0, now_ms - (started_ms or now_ms)) / 1000, 1)
+    processed = int((report or {}).get("processed", 0) or 0)
+    throughput = round((processed / duration_sec) * 60, 1) if duration_sec > 0 and processed else 0
+    sources, fallbacks = count_result_sources(raw_results or [])
     status_counts: dict[str, int] = {}
     samples: list[str] = []
     report_failed_samples: list[str] = []
@@ -803,8 +844,10 @@ def print_cycle(started: str, claim: dict, report: dict | None = None, error: st
     payload = {
         "time": started,
         "ok": not error,
+        "durationSec": duration_sec,
+        "perMin": throughput,
         "claimed": len(jobs),
-        "processed": (report or {}).get("processed", 0),
+        "processed": processed,
         "saved": (report or {}).get("saved", 0),
         "saveFailed": (report or {}).get("saveFailed", 0),
         "success": (report or {}).get("success", 0),
@@ -813,6 +856,8 @@ def print_cycle(started: str, claim: dict, report: dict | None = None, error: st
         "recovered": recovered.get("recovered", 0),
         "staleFailed": recovered.get("failed", 0),
         "statuses": status_counts,
+        "sources": sources,
+        "fallbacks": fallbacks,
         "samples": (report_failed_samples[:3] or samples),
         "reportFailedSamples": report_failed_samples,
         "error": error,
@@ -833,17 +878,23 @@ async def run_once() -> int:
     jobs = claim.get("jobs") or []
     if not jobs:
         report = request_json("/api/redeem/report", {"startedAtMs": started_ms, "results": []})
-        print_cycle(started_text, claim, report)
+        print_cycle(started_text, claim, report, started_ms=started_ms, raw_results=[])
         return 0
 
-    if DAEMON_MODE == "api":
-        results = await redeem_jobs_api_with_browser_fallback(jobs)
-    elif DAEMON_MODE == "hybrid":
-        results = await redeem_jobs_hybrid_with_browser_fallback(jobs)
-    else:
-        results = await redeem_jobs(jobs)
+    try:
+        if DAEMON_MODE == "api":
+            results = await asyncio.wait_for(redeem_jobs_api_with_browser_fallback(jobs), timeout=BATCH_TIMEOUT_SECONDS)
+        elif DAEMON_MODE == "hybrid":
+            results = await asyncio.wait_for(redeem_jobs_hybrid_with_browser_fallback(jobs), timeout=BATCH_TIMEOUT_SECONDS)
+        else:
+            results = await asyncio.wait_for(redeem_jobs(jobs), timeout=BATCH_TIMEOUT_SECONDS)
+    except asyncio.TimeoutError:
+        results = [
+            timeout_result_for_job(job, f"Batch timed out after {BATCH_TIMEOUT_SECONDS}s; job will retry.")
+            for job in jobs
+        ]
     report = request_json("/api/redeem/report", {"startedAtMs": started_ms, "results": results})
-    print_cycle(started_text, claim, report)
+    print_cycle(started_text, claim, report, started_ms=started_ms, raw_results=results)
     return len(jobs)
 
 
@@ -866,7 +917,8 @@ def main() -> int:
     print(
         f"Auto Redeem daemon started. mode={DAEMON_MODE} base={BASE_URL} interval={INTERVAL}s "
         f"batch={BATCH_SIZE} concurrency={CONCURRENCY} rest={REST_SECONDS:g}s "
-        f"headless={HEADLESS} fallback={'browser' if DAEMON_MODE in {'api', 'hybrid'} and API_FALLBACK_BROWSER else 'off'}",
+        f"headless={HEADLESS} batchTimeout={BATCH_TIMEOUT_SECONDS}s "
+        f"fallback={'browser' if DAEMON_MODE in {'api', 'hybrid'} and API_FALLBACK_BROWSER else 'off'}",
         flush=True,
     )
     while True:
