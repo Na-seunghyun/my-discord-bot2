@@ -190,6 +190,8 @@ def classify_official_payload(payload: dict) -> tuple[str, bool, str]:
         return "expired", False, message or "expired"
     if "too frequent" in lower or "too many" in lower or "rate limit" in lower:
         return "rate_limited", False, message or "rate limited"
+    if "does not satisfy" in lower or "redemption requirements" in lower or "customer service" in lower or "stove_lv" in lower:
+        return "official_blocked", False, message or "official redeem blocked"
     if "recharge_money" in lower or "recharge money" in lower:
         return "server_busy", False, message or "official session was not ready"
     if "server busy" in lower or "try again later" in lower:
@@ -218,6 +220,8 @@ def classify_message(message: str) -> tuple[str, bool]:
         return "server_busy", False
     if "too frequent" in lower or "too many" in lower or "rate limit" in lower:
         return "rate_limited", False
+    if "does not satisfy" in lower or "redemption requirements" in lower or "customer service" in lower or "stove_lv" in lower:
+        return "official_blocked", False
     if "redeemed, please claim" in lower or "claim the rewards in your mail" in lower:
         return "success", True
     if "captcha" in lower or "verification" in lower or "verify" in lower:

@@ -1894,6 +1894,9 @@ function classifyDaemonRedeemResult(row) {
   if (statusHint === "rate_limited" || /too\s+many|too\s+frequent|frequently|rate\s*limit/i.test(message)) {
     return { status: "rate_limited", ok: false, message: message || "rate limited" };
   }
+  if (statusHint === "official_blocked" || /does\s+not\s+satisfy|redemption\s+requirements|customer\s+service|stove_lv/i.test(message)) {
+    return { status: "official_blocked", ok: false, message: message || "official redeem blocked" };
+  }
   if (statusHint === "server_busy" || /recharge[_\s-]*money|server\s+busy|try\s+again\s+later/i.test(message)) {
     return { status: "server_busy", ok: false, message: message || "server busy" };
   }
@@ -2158,6 +2161,9 @@ function classifyRedeemPayload(payload) {
   if (/recharge[_\s-]*money|server\s+busy|try\s+again\s+later/i.test(message)) {
     return { status: "server_busy", ok: false, message: message || "server busy" };
   }
+  if (/does\s+not\s+satisfy|redemption\s+requirements|customer\s+service|stove_lv/i.test(message)) {
+    return { status: "official_blocked", ok: false, message: message || "official redeem blocked" };
+  }
   if (/claim\s+limit\s+reached|unable\s+to\s+claim/i.test(message)) {
     return { status: "claim_limit_reached", ok: false, message: message || "claim limit reached" };
   }
@@ -2184,6 +2190,9 @@ function classifyRedeemPayloadV2(payload) {
   }
   if (/recharge[_\s-]*money|server\s+busy|try\s+again\s+later/i.test(message)) {
     return { status: "server_busy", ok: false, message: message || "server busy" };
+  }
+  if (/does\s+not\s+satisfy|redemption\s+requirements|customer\s+service|stove_lv/i.test(message)) {
+    return { status: "official_blocked", ok: false, message: message || "official redeem blocked" };
   }
   if (/claim\s+limit\s+reached|unable\s+to\s+claim/i.test(message)) {
     return { status: "claim_limit_reached", ok: false, message: message || "claim limit reached" };
