@@ -1396,7 +1396,8 @@
       border-color: rgba(255,114,109,.46);
     }
     .redeem-status.pending,
-    .redeem-status.running {
+    .redeem-status.running,
+    .redeem-status.deferred {
       color: #101007;
       background: var(--gold);
       border-color: rgba(244,200,106,.44);
@@ -2487,12 +2488,15 @@
       const pending = Number(queue.pending || 0);
       const running = Number(queue.running || 0);
       const stale = Number(queue.staleRunning || 0);
+      const deferred = Number(queue.deferred || 0);
       const retryPending = Number(queue.retryPending || 0);
       const batchSize = Number(queue.batchSize || 0);
       const staleText = stale > 0 ? ` / ${tr('queueStale')} ${stale}` : '';
+      const deferredLabel = currentLang === 'ko' ? '보류' : 'deferred';
+      const deferredText = deferred > 0 ? ` / ${deferredLabel} ${deferred}` : '';
       const batchText = batchSize > 0 ? ` / ${tr('queueBatch')} ${batchSize}` : '';
-      badge.textContent = `${tr('queuePending')} ${pending} / ${tr('queueRunning')} ${running}${staleText}${batchText}`;
-      badge.title = `${tr('queueStale')}: ${stale} / retry: ${retryPending} / ${tr('queueBatch')}: ${batchSize || '-'} / ${queue.claimMode || '-'} / ${queue.runningStaleMinutes || 5}m`;
+      badge.textContent = `${tr('queuePending')} ${pending} / ${tr('queueRunning')} ${running}${deferredText}${staleText}${batchText}`;
+      badge.title = `${tr('queueStale')}: ${stale} / ${deferredLabel}: ${deferred} / retry: ${retryPending} / ${tr('queueBatch')}: ${batchSize || '-'} / ${queue.claimMode || '-'} / ${queue.runningStaleMinutes || 5}m / cooldown ${queue.deferredCooldownMinutes || 60}m`;
     }
     function renderAutomationStatus(daemon) {
       const badge = $('daemonBadge');
