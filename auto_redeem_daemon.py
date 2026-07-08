@@ -18,7 +18,7 @@ Optional:
   AUTO_REDEEM_DAEMON_BATCH_SIZE  Jobs per loop, default 40
   AUTO_REDEEM_DAEMON_CONCURRENCY Pages processed at once, default 4
   AUTO_REDEEM_DAEMON_TIMEOUT_MS  Browser action timeout, default 2500
-  AUTO_REDEEM_DAEMON_BATCH_TIMEOUT_SECONDS Whole batch timeout, default auto
+  AUTO_REDEEM_DAEMON_BATCH_TIMEOUT_SECONDS Whole batch timeout; 0/off disables it
   AUTO_REDEEM_DAEMON_HEADLESS    true/false, default true
   AUTO_REDEEM_CAPTURE_OFFICIAL_REQUESTS true/false, default false
 """
@@ -52,7 +52,8 @@ BATCH_SIZE = max(1, min(80, int(os.getenv("AUTO_REDEEM_DAEMON_BATCH_SIZE", "40")
 CONCURRENCY = max(1, min(6, int(os.getenv("AUTO_REDEEM_DAEMON_CONCURRENCY", "4"))))
 TIMEOUT_MS = max(800, int(os.getenv("AUTO_REDEEM_DAEMON_TIMEOUT_MS", "2500")))
 DEFAULT_BATCH_TIMEOUT_SECONDS = max(90, min(300, int((BATCH_SIZE * 12) / max(1, CONCURRENCY))))
-BATCH_TIMEOUT_SECONDS = max(30, int(os.getenv("AUTO_REDEEM_DAEMON_BATCH_TIMEOUT_SECONDS", str(DEFAULT_BATCH_TIMEOUT_SECONDS))))
+_BATCH_TIMEOUT_RAW = os.getenv("AUTO_REDEEM_DAEMON_BATCH_TIMEOUT_SECONDS", str(DEFAULT_BATCH_TIMEOUT_SECONDS)).strip().lower()
+BATCH_TIMEOUT_SECONDS = 0 if _BATCH_TIMEOUT_RAW in {"0", "off", "false", "no", "none", "disabled"} else max(30, int(_BATCH_TIMEOUT_RAW))
 HEADLESS = os.getenv("AUTO_REDEEM_DAEMON_HEADLESS", "true").strip().lower() not in {"0", "false", "no", "off"}
 CAPTURE_OFFICIAL_REQUESTS = os.getenv("AUTO_REDEEM_CAPTURE_OFFICIAL_REQUESTS", "false").strip().lower() not in {"0", "false", "no", "off"}
 OFFICIAL_REDEEM_URL = "https://ks-giftcode.centurygame.com/"
@@ -853,7 +854,9 @@ def print_cycle(
         "success": (report or {}).get("success", 0),
         "failed": (report or {}).get("failed", 0),
         "retrying": (report or {}).get("retrying", 0),
+        "deferred": (report or {}).get("deferred", 0),
         "recovered": recovered.get("recovered", 0),
+        "deferredRecovered": recovered.get("deferredRecovered", 0),
         "staleFailed": recovered.get("failed", 0),
         "statuses": status_counts,
         "sources": sources,
@@ -883,11 +886,12 @@ async def run_once() -> int:
 
     try:
         if DAEMON_MODE == "api":
-            results = await asyncio.wait_for(redeem_jobs_api_with_browser_fallback(jobs), timeout=BATCH_TIMEOUT_SECONDS)
+            task = redeem_jobs_api_with_browser_fallback(jobs)
         elif DAEMON_MODE == "hybrid":
-            results = await asyncio.wait_for(redeem_jobs_hybrid_with_browser_fallback(jobs), timeout=BATCH_TIMEOUT_SECONDS)
+            task = redeem_jobs_hybrid_with_browser_fallback(jobs)
         else:
-            results = await asyncio.wait_for(redeem_jobs(jobs), timeout=BATCH_TIMEOUT_SECONDS)
+            task = redeem_jobs(jobs)
+        results = await task if BATCH_TIMEOUT_SECONDS <= 0 else await asyncio.wait_for(task, timeout=BATCH_TIMEOUT_SECONDS)
     except asyncio.TimeoutError:
         results = [
             timeout_result_for_job(job, f"Batch timed out after {BATCH_TIMEOUT_SECONDS}s; job will retry.")
@@ -917,7 +921,7 @@ def main() -> int:
     print(
         f"Auto Redeem daemon started. mode={DAEMON_MODE} base={BASE_URL} interval={INTERVAL}s "
         f"batch={BATCH_SIZE} concurrency={CONCURRENCY} rest={REST_SECONDS:g}s "
-        f"headless={HEADLESS} batchTimeout={BATCH_TIMEOUT_SECONDS}s "
+        f"headless={HEADLESS} batchTimeout={'off' if BATCH_TIMEOUT_SECONDS <= 0 else str(BATCH_TIMEOUT_SECONDS) + 's'} "
         f"fallback={'browser' if DAEMON_MODE in {'api', 'hybrid'} and API_FALLBACK_BROWSER else 'off'}",
         flush=True,
     )
