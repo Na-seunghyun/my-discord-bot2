@@ -47,9 +47,11 @@ ADMIN_TOKEN = os.getenv("ADMIN_TOKEN", "")
 DAEMON_MODE = os.getenv("AUTO_REDEEM_DAEMON_MODE", "api").strip().lower()
 API_FALLBACK_BROWSER = os.getenv("AUTO_REDEEM_DAEMON_API_FALLBACK_BROWSER", "true").strip().lower() not in {"0", "false", "no", "off"}
 REVIEW_ONLY = os.getenv("AUTO_REDEEM_DAEMON_REVIEW_ONLY", "false").strip().lower() not in {"0", "false", "no", "off"}
+AUTO_REVIEW = os.getenv("AUTO_REDEEM_DAEMON_AUTO_REVIEW", "true").strip().lower() not in {"0", "false", "no", "off"}
 INTERVAL = max(2, int(os.getenv("AUTO_REDEEM_DAEMON_INTERVAL", "10")))
 REST_SECONDS = max(0.0, float(os.getenv("AUTO_REDEEM_DAEMON_REST_SECONDS", "0")))
 BATCH_SIZE = max(1, min(80, int(os.getenv("AUTO_REDEEM_DAEMON_BATCH_SIZE", "40"))))
+REVIEW_BATCH_SIZE = max(1, min(10, int(os.getenv("AUTO_REDEEM_DAEMON_REVIEW_BATCH_SIZE", "3"))))
 CONCURRENCY = max(1, min(6, int(os.getenv("AUTO_REDEEM_DAEMON_CONCURRENCY", "4"))))
 TIMEOUT_MS = max(800, int(os.getenv("AUTO_REDEEM_DAEMON_TIMEOUT_MS", "2500")))
 DEFAULT_BATCH_TIMEOUT_SECONDS = max(90, min(300, int((BATCH_SIZE * 12) / max(1, CONCURRENCY))))
@@ -821,6 +823,14 @@ def count_result_sources(results: list[dict]) -> tuple[dict[str, int], dict[str,
     return sources, fallbacks
 
 
+def tag_browser_review_results(results: list[dict]) -> list[dict]:
+    for result in results or []:
+        response = result.get("response") if isinstance(result.get("response"), dict) else {}
+        response = {**response, "source": "putty-browser-review-daemon", "review_only": True}
+        result["response"] = response
+    return results
+
+
 def print_cycle(
     started: str,
     claim: dict,
@@ -853,6 +863,7 @@ def print_cycle(
         "ok": not error,
         "durationSec": duration_sec,
         "perMin": throughput,
+        "claimMode": claim.get("claimMode"),
         "claimed": len(jobs),
         "processed": processed,
         "saved": (report or {}).get("saved", 0),
@@ -884,26 +895,45 @@ async def run_once() -> int:
 
     started_text = time.strftime("%Y-%m-%d %H:%M:%S")
     started_ms = int(time.time() * 1000)
-    claim = request_json("/api/redeem/claim", {"limit": BATCH_SIZE, "reviewOnly": REVIEW_ONLY})
+    review_pass = REVIEW_ONLY
+    claim = request_json("/api/redeem/claim", {"limit": REVIEW_BATCH_SIZE if REVIEW_ONLY else BATCH_SIZE, "reviewOnly": REVIEW_ONLY})
     jobs = claim.get("jobs") or []
+    if (
+        not jobs
+        and AUTO_REVIEW
+        and not REVIEW_ONLY
+        and DAEMON_MODE == "hybrid"
+    ):
+        review_claim = request_json("/api/redeem/claim", {"limit": REVIEW_BATCH_SIZE, "reviewOnly": True})
+        review_jobs = review_claim.get("jobs") or []
+        if review_jobs:
+            claim = review_claim
+            jobs = review_jobs
+            review_pass = True
     if not jobs:
         report = request_json("/api/redeem/report", {"startedAtMs": started_ms, "results": []})
         print_cycle(started_text, claim, report, started_ms=started_ms, raw_results=[])
         return 0
 
     try:
-        if DAEMON_MODE == "api":
+        if review_pass:
+            task = redeem_jobs(jobs)
+        elif DAEMON_MODE == "api":
             task = redeem_jobs_api_with_browser_fallback(jobs)
         elif DAEMON_MODE == "hybrid":
             task = redeem_jobs_hybrid_with_browser_fallback(jobs)
         else:
             task = redeem_jobs(jobs)
         results = await task if BATCH_TIMEOUT_SECONDS <= 0 else await asyncio.wait_for(task, timeout=BATCH_TIMEOUT_SECONDS)
+        if review_pass:
+            results = tag_browser_review_results(results)
     except asyncio.TimeoutError:
         results = [
             timeout_result_for_job(job, f"Batch timed out after {BATCH_TIMEOUT_SECONDS}s; job will retry.")
             for job in jobs
         ]
+        if review_pass:
+            results = tag_browser_review_results(results)
     report = request_json("/api/redeem/report", {"startedAtMs": started_ms, "results": results})
     print_cycle(started_text, claim, report, started_ms=started_ms, raw_results=results)
     return len(jobs)
@@ -927,9 +957,9 @@ def main() -> int:
 
     print(
         f"Auto Redeem daemon started. mode={DAEMON_MODE} base={BASE_URL} interval={INTERVAL}s "
-        f"batch={BATCH_SIZE} concurrency={CONCURRENCY} rest={REST_SECONDS:g}s "
+        f"batch={BATCH_SIZE} reviewBatch={REVIEW_BATCH_SIZE} concurrency={CONCURRENCY} rest={REST_SECONDS:g}s "
         f"headless={HEADLESS} batchTimeout={'off' if BATCH_TIMEOUT_SECONDS <= 0 else str(BATCH_TIMEOUT_SECONDS) + 's'} "
-        f"reviewOnly={REVIEW_ONLY} "
+        f"reviewOnly={REVIEW_ONLY} autoReview={AUTO_REVIEW} "
         f"fallback={'browser' if DAEMON_MODE in {'api', 'hybrid'} and API_FALLBACK_BROWSER else 'off'}",
         flush=True,
     )
