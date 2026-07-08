@@ -566,6 +566,7 @@ function autoRedeemConfig(env) {
     maxAttempts: envNumber(env.AUTO_REDEEM_MAX_ATTEMPTS, AUTO_REDEEM_DEFAULT_MAX_ATTEMPTS, 1, 8),
     deferServerBusyAttempts: envNumber(env.AUTO_REDEEM_DEFER_SERVER_BUSY_ATTEMPTS, 6, 2, 30),
     deferredCooldownMs: envNumber(env.AUTO_REDEEM_DEFERRED_COOLDOWN_MINUTES, 60, 5, 1440) * 60 * 1000,
+    browserReviewEnabled: envBool(env.AUTO_REDEEM_BROWSER_REVIEW_ENABLED, true),
     runningStaleMs: envNumber(env.AUTO_REDEEM_RUNNING_STALE_MINUTES, 12, 5, 90) * 60 * 1000,
     workerRedeemEnabled: envBool(env.AUTO_REDEEM_WORKER_REDEEM_ENABLED, false),
     verifyPlayerBeforeRedeem: envBool(env.AUTO_REDEEM_VERIFY_PLAYER, false),
@@ -586,6 +587,10 @@ function isDeferredCandidateStatus(status) {
   return new Set(["server_busy", "rate_limited"]).has(String(status || ""));
 }
 
+function isBrowserReviewCandidateStatus(status) {
+  return String(status || "") === "server_busy";
+}
+
 async function recoverStaleRedeemJobs(env, cfg) {
   if (!supabaseConfig(env).enabled) return { recovered: 0, failed: 0, deferredRecovered: 0 };
   const now = Date.now();
@@ -598,7 +603,6 @@ async function recoverStaleRedeemJobs(env, cfg) {
     headers: { prefer: "return=representation" },
     body: JSON.stringify({
       status: "pending",
-      attempts: 0,
       updated_at_ms: now,
       last_error: "Deferred cooldown complete; queued for retry.",
     }),
@@ -1582,14 +1586,15 @@ async function countSupabaseRows(env, path) {
 async function redeemQueueSummary(env) {
   const cfg = autoRedeemConfig(env);
   const staleCutoff = Date.now() - cfg.runningStaleMs;
-  const [pending, retryPending, running, staleRunning, deferred, success, failedTerminal] = await Promise.all([
+  const [pending, retryPending, running, staleRunning, deferred, browserReview, success, failedTerminal] = await Promise.all([
     countSupabaseRows(env, "/redeem_jobs?status=eq.pending&select=job_key&limit=1").catch(() => 0),
     countSupabaseRows(env, "/redeem_jobs?status=eq.pending&attempts=gt.0&select=job_key&limit=1").catch(() => 0),
     countSupabaseRows(env, "/redeem_jobs?status=eq.running&select=job_key&limit=1").catch(() => 0),
     countSupabaseRows(env, `/redeem_jobs?status=eq.running&updated_at_ms=lt.${staleCutoff}&select=job_key&limit=1`).catch(() => 0),
     countSupabaseRows(env, "/redeem_jobs?status=eq.deferred&select=job_key&limit=1").catch(() => 0),
+    countSupabaseRows(env, "/redeem_jobs?status=eq.browser_review&select=job_key&limit=1").catch(() => 0),
     countSupabaseRows(env, "/redeem_jobs?status=eq.success&select=job_key&limit=1").catch(() => 0),
-    countSupabaseRows(env, "/redeem_jobs?status=in.(failed,invalid_code,expired,already_claimed,time_window_closed,player_not_found,not_logged_in,captcha_required,claim_limit_reached,deferred)&select=job_key&limit=1").catch(() => 0),
+    countSupabaseRows(env, "/redeem_jobs?status=in.(failed,invalid_code,expired,already_claimed,time_window_closed,player_not_found,not_logged_in,captcha_required,claim_limit_reached,deferred,official_blocked)&select=job_key&limit=1").catch(() => 0),
   ]);
   return {
     pending,
@@ -1597,9 +1602,10 @@ async function redeemQueueSummary(env) {
     running,
     staleRunning,
     deferred,
+    browserReview,
     success,
     failedTerminal,
-    waitingTotal: pending + running + deferred,
+    waitingTotal: pending + running + deferred + browserReview,
     runningStaleMinutes: Math.round(cfg.runningStaleMs / 60000),
     batchSize: cfg.batchSize,
     claimMode: cfg.batchSize > 40 ? "fast-rpc" : "standard",
@@ -1828,10 +1834,12 @@ async function claimRedeemJobs(request, env) {
   const body = await request.json().catch(() => ({}));
   const requestedLimit = Number(body.limit || url.searchParams.get("limit"));
   const limit = Math.min(cfg.batchSize, Math.max(1, Number.isFinite(requestedLimit) ? Math.floor(requestedLimit) : cfg.batchSize));
-  const recovered = await recoverStaleRedeemJobs(env, cfg).catch(() => ({ recovered: 0, failed: 0 }));
+  const recovered = await recoverStaleRedeemJobs(env, cfg).catch(() => ({ recovered: 0, failed: 0, deferredRecovered: 0 }));
 
   const runnerName = cleanText(request.headers.get("x-auto-redeem-runner") || "putty-daemon", 80);
-  const rpcClaimed = await supabaseJson(env, "/rpc/claim_redeem_jobs", {
+  const reviewOnly = Boolean(body.reviewOnly || body.review_only || url.searchParams.get("review") === "browser" || /browser.?review/i.test(runnerName));
+  const claimStatus = reviewOnly ? "browser_review" : "pending";
+  const rpcClaimed = reviewOnly ? null : await supabaseJson(env, "/rpc/claim_redeem_jobs", {
     method: "POST",
     body: JSON.stringify({
       p_limit: limit,
@@ -1849,12 +1857,12 @@ async function claimRedeemJobs(request, env) {
   }
 
   const fallbackLimit = Math.min(limit, 40);
-  const jobs = await supabaseJson(env, `/redeem_jobs?status=eq.pending&select=job_key,player_id,gift_code,attempts&order=created_at_ms.asc&limit=${fallbackLimit}`).catch(() => []);
+  const jobs = await supabaseJson(env, `/redeem_jobs?status=eq.${claimStatus}&select=job_key,player_id,gift_code,attempts&order=updated_at_ms.asc&limit=${fallbackLimit}`).catch(() => []);
   const claimed = [];
   for (const job of jobs || []) {
     const attemptNumber = numberValue(job.attempts) + 1;
     const claimedAt = Date.now();
-    const updated = await supabaseJson(env, `/redeem_jobs?job_key=eq.${encodeURIComponent(job.job_key)}&status=eq.pending`, {
+    const updated = await supabaseJson(env, `/redeem_jobs?job_key=eq.${encodeURIComponent(job.job_key)}&status=eq.${claimStatus}`, {
       method: "PATCH",
       headers: { prefer: "return=representation" },
       body: JSON.stringify({
@@ -1874,7 +1882,7 @@ async function claimRedeemJobs(request, env) {
     }
   }
 
-  return json({ ok: true, claimed: claimed.length, jobs: claimed, recovered, claimMode: "legacy" });
+  return json({ ok: true, claimed: claimed.length, jobs: claimed, recovered, claimMode: reviewOnly ? "browser-review" : "legacy" });
 }
 
 function classifyDaemonRedeemResult(row) {
@@ -1892,7 +1900,7 @@ function classifyDaemonRedeemResult(row) {
   if (statusHint === "claim_limit_reached" || /claim\s+limit\s+reached|unable\s+to\s+claim/i.test(message)) {
     return { status: "claim_limit_reached", ok: false, message: message || "claim limit reached" };
   }
-  if (statusHint === "already_claimed" || /same\s+gift\s+code|only\s+be\s+redeemed\s+once|already|claimed|used|received/i.test(message)) {
+  if (statusHint === "already_claimed" || /same\s+type\s+exchange|same\s+gift\s+code|only\s+be\s+redeemed\s+once|already|claimed|used|received/i.test(message)) {
     return { status: "already_claimed", ok: false, message: message || "already claimed" };
   }
   if (statusHint === "invalid_code" || /gift\s*code\s*not\s*found|case-sensitive|invalid\s+gift|invalid\s+code|cdk\s*error/i.test(message)) {
@@ -1960,7 +1968,7 @@ async function reportRedeemJobs(request, env) {
   const cfg = autoRedeemConfig(env);
   const body = await request.json().catch(() => ({}));
   const rows = Array.isArray(body.results) ? body.results.slice(0, 100) : [];
-  const summary = { ok: true, processed: 0, saved: 0, saveFailed: 0, success: 0, failed: 0, retrying: 0, deferred: 0, results: [] };
+  const summary = { ok: true, processed: 0, saved: 0, saveFailed: 0, success: 0, failed: 0, retrying: 0, deferred: 0, reviewing: 0, results: [] };
   const now = Date.now();
   const jobPayloads = [];
   const codePayloadByCode = new Map();
@@ -1973,15 +1981,26 @@ async function reportRedeemJobs(request, env) {
     if (!jobKey) continue;
     const classified = classifyDaemonRedeemResult(row);
     const attemptNumber = numberValue(row.attempts);
+    const incomingResponse = isPlainObject(row.response) ? row.response : {};
+    const sourceText = cleanText(`${incomingResponse.source || ""} ${row.source || ""} ${request.headers.get("x-auto-redeem-runner") || ""}`, 180).toLowerCase();
+    const isBrowserReview = /browser.?review/.test(sourceText);
+    const shouldBrowserReview = cfg.browserReviewEnabled
+      && !isBrowserReview
+      && !classified.ok
+      && isBrowserReviewCandidateStatus(classified.status)
+      && attemptNumber > cfg.deferServerBusyAttempts;
     const shouldDefer = !classified.ok
+      && !shouldBrowserReview
+      && !isBrowserReview
       && isDeferredCandidateStatus(classified.status)
       && attemptNumber >= cfg.deferServerBusyAttempts;
+    const browserConfirmedBlocked = isBrowserReview && !classified.ok && isBrowserReviewCandidateStatus(classified.status);
     const alwaysPending = !classified.ok && isAlwaysPendingRedeemStatus(classified.status);
     const retrying = !classified.ok && (
-      (!shouldDefer && alwaysPending) ||
+      (!shouldBrowserReview && !shouldDefer && !browserConfirmedBlocked && alwaysPending) ||
       (isRetryableRedeemStatus(classified.status) && attemptNumber > 0 && attemptNumber < cfg.maxAttempts)
     );
-    const finalStatus = shouldDefer ? "deferred" : retrying ? "pending" : classified.ok ? "success" : classified.status;
+    const finalStatus = browserConfirmedBlocked ? "official_blocked" : shouldBrowserReview ? "browser_review" : shouldDefer ? "deferred" : retrying ? "pending" : classified.ok ? "success" : classified.status;
     const responseJson = isPlainObject(row.response) ? row.response : {
       source: "putty-browser-daemon",
       status: classified.status,
@@ -1995,7 +2014,11 @@ async function reportRedeemJobs(request, env) {
       gift_code: giftCode,
       attempts: attemptNumber,
       status: finalStatus,
-      last_error: shouldDefer
+      last_error: browserConfirmedBlocked
+        ? `${classified.message || "official redeem blocked"}; confirmed by browser review.`
+        : shouldBrowserReview
+          ? `${classified.message || "server busy"}; queued for browser review after ${attemptNumber} attempts.`
+          : shouldDefer
         ? `${classified.message || "server busy"}; deferred after ${attemptNumber} attempts.`
         : classified.ok ? "" : classified.message,
       response_json: responseJson,
@@ -2019,6 +2042,8 @@ async function reportRedeemJobs(request, env) {
 
     summary.processed += 1;
     if (classified.ok) summary.success += 1;
+    else if (shouldBrowserReview) summary.reviewing += 1;
+    else if (browserConfirmedBlocked) summary.failed += 1;
     else if (shouldDefer) summary.deferred += 1;
     else if (retrying) summary.retrying += 1;
     else summary.failed += 1;
@@ -2046,6 +2071,7 @@ async function reportRedeemJobs(request, env) {
       summary.success = 0;
       summary.retrying = 0;
       summary.deferred = 0;
+      summary.reviewing = 0;
       summary.failed = jobPayloads.length;
       summary.results = summary.results.map((item) => ({
         ...item,
@@ -2141,7 +2167,7 @@ function classifyRedeemPayload(payload) {
   if (/time\s*error|redemption\s*time|exchange\s*time|time\s*limit|超出兑换时间|교환\s*시간이\s*초과|交換.*時間/i.test(message)) {
     return { status: "time_window_closed", ok: false, message: message || "time window closed" };
   }
-  if (/already|claimed|used/i.test(message)) return { status: "already_claimed", ok: false, message };
+  if (/same\s+type\s+exchange|already|claimed|used/i.test(message)) return { status: "already_claimed", ok: false, message };
   if (/expired/i.test(message)) return { status: "expired", ok: false, message };
   if ((payload && payload.code === 0) || errCode === 0 || /redeemed,?\s*please\s*claim|claim\s+the\s+rewards\s+in\s+your\s+mail/i.test(message)) {
     return { status: "success", ok: true, message: message || "success" };
@@ -2172,7 +2198,7 @@ function classifyRedeemPayloadV2(payload) {
   if (/time\s*error|redemption\s*time|exchange\s*time|time\s*limit|not\s+open|not\s+started|not\s+available|兑换时间|兌換時間|교환\s*시간|交換.*時間/i.test(message)) {
     return { status: "time_window_closed", ok: false, message: message || "time window closed" };
   }
-  if (/same\s+gift\s+code|only\s+be\s+redeemed\s+once|already|claimed|used|received/i.test(message)) {
+  if (/same\s+type\s+exchange|same\s+gift\s+code|only\s+be\s+redeemed\s+once|already|claimed|used|received/i.test(message)) {
     return { status: "already_claimed", ok: false, message: message || "already claimed" };
   }
   if (/expired|ended|no\s+longer\s+valid/i.test(message)) return { status: "expired", ok: false, message: message || "expired" };
