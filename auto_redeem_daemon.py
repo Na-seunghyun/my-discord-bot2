@@ -46,6 +46,7 @@ BASE_URL = os.getenv("HUB_BASE_URL", "https://my-discord-bot2.looloo90.workers.d
 ADMIN_TOKEN = os.getenv("ADMIN_TOKEN", "")
 DAEMON_MODE = os.getenv("AUTO_REDEEM_DAEMON_MODE", "api").strip().lower()
 API_FALLBACK_BROWSER = os.getenv("AUTO_REDEEM_DAEMON_API_FALLBACK_BROWSER", "true").strip().lower() not in {"0", "false", "no", "off"}
+REVIEW_ONLY = os.getenv("AUTO_REDEEM_DAEMON_REVIEW_ONLY", "false").strip().lower() not in {"0", "false", "no", "off"}
 INTERVAL = max(2, int(os.getenv("AUTO_REDEEM_DAEMON_INTERVAL", "10")))
 REST_SECONDS = max(0.0, float(os.getenv("AUTO_REDEEM_DAEMON_REST_SECONDS", "0")))
 BATCH_SIZE = max(1, min(80, int(os.getenv("AUTO_REDEEM_DAEMON_BATCH_SIZE", "40"))))
@@ -79,13 +80,18 @@ API_FALLBACK_STATUSES = {
 }
 
 
-def request_json(path: str, payload: dict | None = None) -> dict:
+def daemon_source() -> str:
+    if REVIEW_ONLY:
+        return "putty-browser-review-daemon"
     if DAEMON_MODE == "api":
-        runner = "putty-api-daemon"
-    elif DAEMON_MODE == "hybrid":
-        runner = "putty-hybrid-daemon"
-    else:
-        runner = "putty-browser-daemon"
+        return "putty-api-daemon"
+    if DAEMON_MODE == "hybrid":
+        return "putty-hybrid-daemon"
+    return "putty-browser-daemon"
+
+
+def request_json(path: str, payload: dict | None = None) -> dict:
+    runner = daemon_source()
     body = json.dumps(payload or {}).encode("utf-8")
     request = urllib.request.Request(
         f"{BASE_URL}{path}",
@@ -176,7 +182,7 @@ def classify_official_payload(payload: dict) -> tuple[str, bool, str]:
         return "not_logged_in", False, message or "not logged in"
     if "time error" in lower or "redemption time" in lower or "exchange time" in lower or "time limit" in lower:
         return "time_window_closed", False, message or "time window closed"
-    if "same gift code" in lower or "only be redeemed once" in lower or "already" in lower or "claimed" in lower or "used" in lower:
+    if "same type exchange" in lower or "same gift code" in lower or "only be redeemed once" in lower or "already" in lower or "claimed" in lower or "used" in lower:
         return "already_claimed", False, message or "already claimed"
     if "expired" in lower or "ended" in lower or "no longer valid" in lower:
         return "expired", False, message or "expired"
@@ -198,7 +204,7 @@ def classify_message(message: str) -> tuple[str, bool]:
     lower = text.lower()
     if "claim limit reached" in lower or "unable to claim" in lower:
         return "claim_limit_reached", False
-    if "same gift code" in lower or "only be redeemed once" in lower or "already claimed" in lower:
+    if "same type exchange" in lower or "same gift code" in lower or "only be redeemed once" in lower or "already claimed" in lower:
         return "already_claimed", False
     if "gift code not found" in lower or "case-sensitive" in lower or "invalid code" in lower:
         return "invalid_code", False
@@ -637,7 +643,7 @@ async def redeem_one(page, job: dict) -> dict:
         "ok": False,
         "status": "failed",
         "message": "",
-        "response": {"source": "putty-browser-daemon"},
+        "response": {"source": daemon_source()},
     }
     official_trace: list[dict] = []
     capture_tasks: list[asyncio.Task] = []
@@ -727,7 +733,7 @@ async def redeem_one(page, job: dict) -> dict:
             message=modal_text,
             playerNick=player_nick,
             response={
-                "source": "putty-browser-daemon",
+                "source": daemon_source(),
                 "player_nick": player_nick,
                 "message": modal_text,
             },
@@ -798,7 +804,7 @@ def timeout_result_for_job(job: dict, message: str) -> dict:
         "ok": False,
         "status": "timeout",
         "message": message,
-        "response": {"source": f"putty-{DAEMON_MODE}-daemon", "batch_timeout": True},
+        "response": {"source": daemon_source(), "batch_timeout": True},
     }
 
 
@@ -855,6 +861,7 @@ def print_cycle(
         "failed": (report or {}).get("failed", 0),
         "retrying": (report or {}).get("retrying", 0),
         "deferred": (report or {}).get("deferred", 0),
+        "reviewing": (report or {}).get("reviewing", 0),
         "recovered": recovered.get("recovered", 0),
         "deferredRecovered": recovered.get("deferredRecovered", 0),
         "staleFailed": recovered.get("failed", 0),
@@ -877,7 +884,7 @@ async def run_once() -> int:
 
     started_text = time.strftime("%Y-%m-%d %H:%M:%S")
     started_ms = int(time.time() * 1000)
-    claim = request_json("/api/redeem/claim", {"limit": BATCH_SIZE})
+    claim = request_json("/api/redeem/claim", {"limit": BATCH_SIZE, "reviewOnly": REVIEW_ONLY})
     jobs = claim.get("jobs") or []
     if not jobs:
         report = request_json("/api/redeem/report", {"startedAtMs": started_ms, "results": []})
@@ -922,6 +929,7 @@ def main() -> int:
         f"Auto Redeem daemon started. mode={DAEMON_MODE} base={BASE_URL} interval={INTERVAL}s "
         f"batch={BATCH_SIZE} concurrency={CONCURRENCY} rest={REST_SECONDS:g}s "
         f"headless={HEADLESS} batchTimeout={'off' if BATCH_TIMEOUT_SECONDS <= 0 else str(BATCH_TIMEOUT_SECONDS) + 's'} "
+        f"reviewOnly={REVIEW_ONLY} "
         f"fallback={'browser' if DAEMON_MODE in {'api', 'hybrid'} and API_FALLBACK_BROWSER else 'off'}",
         flush=True,
     )
