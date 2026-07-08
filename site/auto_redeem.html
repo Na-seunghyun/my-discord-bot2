@@ -1397,6 +1397,7 @@
     }
     .redeem-status.pending,
     .redeem-status.running,
+    .redeem-status.browser_review,
     .redeem-status.deferred {
       color: #101007;
       background: var(--gold);
@@ -1406,6 +1407,11 @@
       color: #071014;
       background: var(--cyan);
       border-color: rgba(82,255,224,.44);
+    }
+    .redeem-status.official_blocked {
+      color: #fff7d6;
+      background: rgba(255, 165, 66, .22);
+      border-color: rgba(255, 165, 66, .5);
     }
     .redeem-code-chip,
     .redeem-reason {
@@ -2316,6 +2322,46 @@
       summaryRunning: 'proses',
       summaryFailed: 'gagal'
     });
+    Object.assign(I18N.en, {
+      status_deferred: 'Deferred',
+      status_browser_review: 'Browser review',
+      status_official_blocked: 'Official blocked'
+    });
+    Object.assign(I18N.ko, {
+      status_deferred: '보류',
+      status_browser_review: '브라우저 검토',
+      status_official_blocked: '공식 거절'
+    });
+    Object.assign(I18N['zh-CN'], {
+      status_deferred: 'Deferred',
+      status_browser_review: 'Browser review',
+      status_official_blocked: 'Official blocked'
+    });
+    Object.assign(I18N['zh-TW'], {
+      status_deferred: 'Deferred',
+      status_browser_review: 'Browser review',
+      status_official_blocked: 'Official blocked'
+    });
+    Object.assign(I18N.fr, {
+      status_deferred: 'Differe',
+      status_browser_review: 'Verification navigateur',
+      status_official_blocked: 'Bloque officiel'
+    });
+    Object.assign(I18N.de, {
+      status_deferred: 'Pausiert',
+      status_browser_review: 'Browserpruefung',
+      status_official_blocked: 'Offiziell blockiert'
+    });
+    Object.assign(I18N.th, {
+      status_deferred: 'Deferred',
+      status_browser_review: 'Browser review',
+      status_official_blocked: 'Official blocked'
+    });
+    Object.assign(I18N.id, {
+      status_deferred: 'Ditunda',
+      status_browser_review: 'Review browser',
+      status_official_blocked: 'Diblokir resmi'
+    });
 
     Object.assign(I18N.en, { queueStatus: 'Queue status', queuePending: 'waiting', queueRunning: 'running', queueStale: 'stale' });
     Object.assign(I18N.ko, { queueStatus: '큐 상태', queuePending: '대기', queueRunning: '진행', queueStale: '복구대상' });
@@ -2489,14 +2535,17 @@
       const running = Number(queue.running || 0);
       const stale = Number(queue.staleRunning || 0);
       const deferred = Number(queue.deferred || 0);
+      const browserReview = Number(queue.browserReview || 0);
       const retryPending = Number(queue.retryPending || 0);
       const batchSize = Number(queue.batchSize || 0);
       const staleText = stale > 0 ? ` / ${tr('queueStale')} ${stale}` : '';
       const deferredLabel = currentLang === 'ko' ? '보류' : 'deferred';
+      const reviewLabel = currentLang === 'ko' ? '검토' : 'review';
       const deferredText = deferred > 0 ? ` / ${deferredLabel} ${deferred}` : '';
+      const reviewText = browserReview > 0 ? ` / ${reviewLabel} ${browserReview}` : '';
       const batchText = batchSize > 0 ? ` / ${tr('queueBatch')} ${batchSize}` : '';
-      badge.textContent = `${tr('queuePending')} ${pending} / ${tr('queueRunning')} ${running}${deferredText}${staleText}${batchText}`;
-      badge.title = `${tr('queueStale')}: ${stale} / ${deferredLabel}: ${deferred} / retry: ${retryPending} / ${tr('queueBatch')}: ${batchSize || '-'} / ${queue.claimMode || '-'} / ${queue.runningStaleMinutes || 5}m / cooldown ${queue.deferredCooldownMinutes || 60}m`;
+      badge.textContent = `${tr('queuePending')} ${pending} / ${tr('queueRunning')} ${running}${deferredText}${reviewText}${staleText}${batchText}`;
+      badge.title = `${tr('queueStale')}: ${stale} / ${deferredLabel}: ${deferred} / ${reviewLabel}: ${browserReview} / retry: ${retryPending} / ${tr('queueBatch')}: ${batchSize || '-'} / ${queue.claimMode || '-'} / ${queue.runningStaleMinutes || 5}m / cooldown ${queue.deferredCooldownMinutes || 60}m`;
     }
     function renderAutomationStatus(daemon) {
       const badge = $('daemonBadge');
@@ -2635,7 +2684,7 @@
     function redeemStatusGroup(status) {
       const normalized = normalizeRedeemStatus(status);
       if (normalized === 'success') return 'success';
-      if (normalized === 'pending' || normalized === 'running') return 'running';
+      if (normalized === 'pending' || normalized === 'running' || normalized === 'deferred' || normalized === 'browser_review') return 'running';
       return 'failed';
     }
 
