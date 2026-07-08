@@ -576,6 +576,10 @@ function isRetryableRedeemStatus(status) {
   return new Set(["failed", "timeout", "network_error", "server_error", "rate_limited", "server_busy"]).has(String(status || ""));
 }
 
+function isAlwaysPendingRedeemStatus(status) {
+  return new Set(["timeout", "network_error", "server_error", "rate_limited", "server_busy"]).has(String(status || ""));
+}
+
 async function recoverStaleRedeemJobs(env, cfg) {
   if (!supabaseConfig(env).enabled) return { recovered: 0, failed: 0 };
   const now = Date.now();
@@ -1948,7 +1952,11 @@ async function reportRedeemJobs(request, env) {
     if (!jobKey) continue;
     const classified = classifyDaemonRedeemResult(row);
     const attemptNumber = numberValue(row.attempts);
-    const retrying = !classified.ok && isRetryableRedeemStatus(classified.status) && attemptNumber > 0 && attemptNumber < cfg.maxAttempts;
+    const alwaysPending = !classified.ok && isAlwaysPendingRedeemStatus(classified.status);
+    const retrying = !classified.ok && (
+      alwaysPending ||
+      (isRetryableRedeemStatus(classified.status) && attemptNumber > 0 && attemptNumber < cfg.maxAttempts)
+    );
     const finalStatus = retrying ? "pending" : classified.ok ? "success" : classified.status;
     const responseJson = isPlainObject(row.response) ? row.response : {
       source: "putty-browser-daemon",
