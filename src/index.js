@@ -1192,6 +1192,13 @@ function prioritySecret(env) {
   return String(env.ADMIN_TOKEN || env.SUPABASE_SERVICE_ROLE_KEY || "");
 }
 
+async function priorityIpHash(request, env, ms = Date.now()) {
+  const ip = clientIp(request);
+  const secret = prioritySecret(env);
+  if (!ip || !secret) return "";
+  return (await hashManageToken(`${secret}.priority-ip.${priorityDayKey(ms)}.${ip}`)).slice(0, 64);
+}
+
 async function signPriorityPayload(env, encodedPayload) {
   const secret = prioritySecret(env);
   if (!secret) return "";
@@ -2283,6 +2290,17 @@ async function readPriorityBoostForPlayer(env, playerId) {
   return readPriorityVipBoostForPlayer(env, id);
 }
 
+async function readPriorityBoostForIp(env, ipHash) {
+  const hash = meaningfulText(ipHash, 80);
+  if (!hash) return null;
+  const day = priorityDayKey();
+  const rows = await supabaseJson(
+    env,
+    `/redeem_priority_boosts?boost_day=eq.${encodeURIComponent(day)}&ip_hash=eq.${encodeURIComponent(hash)}&select=player_id,boost_day,boost_score,boosted_at_ms,expires_at_ms,player_snapshot&limit=1`,
+  ).catch(() => []);
+  return rows && rows[0] ? publicPriorityBoost(rows[0]) : null;
+}
+
 async function redeemPriority(request, env) {
   const ready = requireSupabase(env);
   if (!ready.ok) return ready.response;
@@ -2319,6 +2337,11 @@ async function redeemPriorityChallenge(request, env) {
   const leaderboard = await listPriorityBoosts(env, cfg.topLimit);
   if (existing && existing.expires_at_ms > Date.now()) {
     return json({ ok: true, alreadyBoosted: true, player, mine: existing, leaderboard, resetAtMs: existing.expires_at_ms });
+  }
+  const ipHash = await priorityIpHash(request, env);
+  const existingIp = ipHash ? await readPriorityBoostForIp(env, ipHash) : null;
+  if (existingIp && existingIp.player_id && existingIp.player_id !== playerId) {
+    return json({ ok: false, error: "This network already used today's priority boost." }, 429);
   }
   const challenge = await createPriorityChallengePayload(env, playerId);
   return json({ ok: true, player, challenge, leaderboard, resetAtMs: priorityResetMs(Date.now(), cfg.days) });
@@ -2357,6 +2380,11 @@ async function boostRedeemPriority(request, env) {
       updatedJobs: 0,
     });
   }
+  const ipHash = await priorityIpHash(request, env, now);
+  const existingIp = ipHash ? await readPriorityBoostForIp(env, ipHash) : null;
+  if (existingIp && existingIp.player_id && existingIp.player_id !== playerId) {
+    return json({ ok: false, error: "This network already used today's priority boost." }, 429);
+  }
 
   const snapshot = {
     id: player.id,
@@ -2376,6 +2404,7 @@ async function boostRedeemPriority(request, env) {
       boosted_at_ms: now,
       expires_at_ms: expiresAtMs,
       challenge_hash: (await hashManageToken(String(body.challengeToken || body.challenge_token))).slice(0, 64),
+      ip_hash: ipHash || null,
       user_agent: cleanText(request.headers.get("user-agent"), 240),
       player_snapshot: snapshot,
     }]),

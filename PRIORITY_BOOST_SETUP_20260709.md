@@ -9,6 +9,8 @@
 - Only pending jobs are moved up. Running, success, and terminal failed jobs are not changed.
 - Boosted players are handled fairly: boosted jobs are processed before normal jobs, and boosted players are ordered by the time they pressed the daily boost button.
 - Adds a fixed VIP priority group. These IDs stay inside the top priority ribbon after reset, but are mixed into the top 30 instead of always appearing as ranks 1-6.
+- Adds a dedicated priority player ID input, so bulk registrants can choose which registered ID gets boosted.
+- Limits priority boosting to one player ID per network per day. The IP is stored only as a daily hash, not as the raw IP address.
 
 ## Apply order
 
@@ -16,7 +18,8 @@
    - Run `migrations/redeem_priority_boost_20260709.sql` once.
    - Then run `migrations/redeem_priority_fair_queue_20260709.sql` once.
    - Then run `migrations/redeem_priority_vip_queue_20260709.sql` once.
-   - If you already ran the first two files before this VIP patch, just run the VIP file now.
+   - Then run `migrations/redeem_priority_ip_limit_20260709.sql` once.
+   - If you already ran the previous priority files before this IP-limit patch, just run the IP-limit file now.
 
 2. GitHub
    - Upload/replace:
@@ -25,6 +28,7 @@
      - `migrations/redeem_priority_boost_20260709.sql`
      - `migrations/redeem_priority_fair_queue_20260709.sql`
      - `migrations/redeem_priority_vip_queue_20260709.sql`
+     - `migrations/redeem_priority_ip_limit_20260709.sql`
 
 3. Cloudflare
    - Rebuild/redeploy the Worker after GitHub is updated.

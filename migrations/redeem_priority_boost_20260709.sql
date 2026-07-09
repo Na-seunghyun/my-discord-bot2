@@ -23,12 +23,17 @@ create table if not exists public.redeem_priority_boosts (
   boosted_at_ms bigint not null,
   expires_at_ms bigint not null,
   challenge_hash text,
+  ip_hash text,
   user_agent text,
   player_snapshot jsonb not null default '{}'::jsonb
 );
 
 create unique index if not exists redeem_priority_boosts_player_day_idx
   on public.redeem_priority_boosts (player_id, boost_day);
+
+create unique index if not exists redeem_priority_boosts_day_ip_idx
+  on public.redeem_priority_boosts (boost_day, ip_hash)
+  where ip_hash is not null;
 
 create index if not exists redeem_priority_boosts_active_idx
   on public.redeem_priority_boosts (expires_at_ms desc, boosted_at_ms desc);

@@ -1234,7 +1234,7 @@
       position: relative;
       z-index: 1;
       display: grid;
-      grid-template-columns: minmax(200px, 1fr) minmax(120px, .45fr) auto;
+      grid-template-columns: minmax(160px, .7fr) auto minmax(120px, .45fr) auto;
       gap: 10px;
       align-items: center;
     }
@@ -1841,6 +1841,7 @@
           </div>
         </div>
         <div class="priority-actions">
+          <input id="priorityPlayerId" inputmode="numeric" maxlength="12" autocomplete="off" data-placeholder="priorityPlayerPlaceholder" placeholder="Priority player ID">
           <button class="primary" id="priorityChallengeBtn" data-i18n="priorityChallenge">Start daily boost</button>
           <input id="priorityAnswer" inputmode="numeric" autocomplete="off" data-placeholder="priorityAnswerPlaceholder" placeholder="Answer">
           <button class="ghost" id="priorityBoostBtn" data-i18n="priorityBoost">Boost my queue</button>
@@ -2102,6 +2103,7 @@
       priorityTitle: 'Daily Priority Boost', priorityHelp: 'Visit once a day, pass a quick check, and move your waiting redeem jobs higher in the queue until the next reset.',
       priorityChecking: 'Checking priority...', priorityEmpty: 'No boosted players yet today.', priorityChallenge: 'Start daily boost', priorityBoost: 'Boost my queue',
       priorityReady: 'Register or load your ID, then start today\'s priority boost.', priorityAnswerPlaceholder: 'Answer', priorityNeedId: 'Enter or load your registered player ID first.',
+      priorityPlayerPlaceholder: 'Priority player ID',
       priorityChallengeReady: 'Quick check:', priorityBoosting: 'Applying priority boost...', priorityDone: 'Priority boost is active until reset.', priorityAlready: 'Today\'s priority boost is already active.',
       priorityReset: 'Reset', priorityTop: 'Top priority', priorityActive: 'Priority active'
     };
@@ -2132,6 +2134,7 @@
       priorityTitle: '오늘의 우선권 부스트', priorityHelp: '하루 한 번 방문해 간단한 확인을 통과하면 다음 초기화 전까지 대기 중인 리딤 작업이 더 높은 우선순위로 이동합니다.',
       priorityChecking: '우선권 확인 중...', priorityEmpty: '오늘 우선권을 받은 유저가 아직 없습니다.', priorityChallenge: '오늘 우선권 시작', priorityBoost: '내 큐 우선권 적용',
       priorityReady: 'ID를 등록하거나 불러온 뒤 오늘의 우선권을 시작하세요.', priorityAnswerPlaceholder: '정답 입력', priorityNeedId: '등록된 플레이어 ID를 먼저 입력하거나 불러오세요.',
+      priorityPlayerPlaceholder: '우선권을 줄 플레이어 ID',
       priorityChallengeReady: '간단 확인:', priorityBoosting: '우선권 적용 중...', priorityDone: '초기화 전까지 우선권이 활성화됩니다.', priorityAlready: '오늘 우선권이 이미 활성화되어 있습니다.',
       priorityReset: '초기화', priorityTop: '상위 우선권', priorityActive: '우선권 활성'
     };
@@ -2148,6 +2151,7 @@
     let latestVisibleActiveCodes = null;
     let priorityChallengeToken = '';
     let priorityChallengeQuestion = '';
+    let priorityChallengePlayerId = '';
     const $ = (id) => document.getElementById(id);
     const setTextById = (id, value) => {
       document.querySelectorAll(`[id="${id}"]`).forEach((node) => { node.textContent = value; });
@@ -2414,9 +2418,10 @@
     }
 
     function currentPriorityPlayerId() {
+      const priorityTyped = $('priorityPlayerId') ? $('priorityPlayerId').value.replace(/\D/g, '') : '';
       const typed = $('playerId') ? $('playerId').value.replace(/\D/g, '') : '';
       const stored = saved && saved.playerId ? String(saved.playerId).replace(/\D/g, '') : '';
-      return typed || stored;
+      return priorityTyped || typed || stored;
     }
 
     function renderPriority(data) {
@@ -2476,11 +2481,13 @@
         if (data.alreadyBoosted) {
           priorityChallengeToken = '';
           priorityChallengeQuestion = '';
+          priorityChallengePlayerId = '';
           setStatus('priorityStatus', tr('priorityAlready'));
           return;
         }
         priorityChallengeToken = data.challenge && data.challenge.token ? data.challenge.token : '';
         priorityChallengeQuestion = data.challenge && data.challenge.question ? data.challenge.question : '';
+        priorityChallengePlayerId = playerId;
         $('priorityAnswer').value = '';
         $('priorityAnswer').focus();
         setStatus('priorityStatus', `${tr('priorityChallengeReady')} ${priorityChallengeQuestion}`);
@@ -2496,6 +2503,13 @@
         await requestPriorityChallenge();
         return;
       }
+      if (priorityChallengePlayerId && priorityChallengePlayerId !== playerId) {
+        priorityChallengeToken = '';
+        priorityChallengeQuestion = '';
+        priorityChallengePlayerId = '';
+        await requestPriorityChallenge();
+        return;
+      }
       const answer = $('priorityAnswer').value.trim();
       if (!answer) return setStatus('priorityStatus', `${tr('priorityChallengeReady')} ${priorityChallengeQuestion}`);
       setStatus('priorityStatus', tr('priorityBoosting'));
@@ -2506,6 +2520,7 @@
         });
         priorityChallengeToken = '';
         priorityChallengeQuestion = '';
+        priorityChallengePlayerId = '';
         $('priorityAnswer').value = '';
         renderPriority(data);
         setStatus('priorityStatus', data.alreadyBoosted ? tr('priorityAlready') : `${tr('priorityDone')} ${tr('pendingJobs')}: ${data.updatedJobs || 0}`);
@@ -2663,7 +2678,10 @@
       loadPriority();
       loadKingdomRegistry();
     });
-    if (saved.playerId) $('playerId').value = saved.playerId;
+    if (saved.playerId) {
+      $('playerId').value = saved.playerId;
+      $('priorityPlayerId').value = saved.playerId;
+    }
 
     $('registerBtn').addEventListener('click', async () => {
       const playerId = $('playerId').value.replace(/\D/g, '');
@@ -2677,6 +2695,7 @@
         });
         showProfile(data.player);
         localStorage.setItem('autoRedeemRegistration', JSON.stringify({ playerId }));
+        $('priorityPlayerId').value = playerId;
         $('manageToken').value = '';
         if (data.status === 'duplicate') {
           setStatus('registerStatus', `${tr('duplicateNote')}\n${data.player.username || data.player.id}`);
@@ -2728,6 +2747,7 @@
     $('loadBtn').addEventListener('click', () => {
       const current = JSON.parse(localStorage.getItem('autoRedeemRegistration') || '{}');
       $('playerId').value = current.playerId || $('playerId').value;
+      $('priorityPlayerId').value = current.playerId || $('priorityPlayerId').value;
       setStatus('registerStatus', current.playerId ? `${tr('savedToken')}\n${current.playerId}` : tr('noToken'));
     });
 
@@ -2771,6 +2791,12 @@
     });
     $('priorityChallengeBtn').addEventListener('click', requestPriorityChallenge);
     $('priorityBoostBtn').addEventListener('click', submitPriorityBoost);
+    $('priorityPlayerId').addEventListener('input', () => {
+      priorityChallengeToken = '';
+      priorityChallengeQuestion = '';
+      priorityChallengePlayerId = '';
+      $('priorityAnswer').value = '';
+    });
     $('priorityAnswer').addEventListener('keydown', (event) => {
       if (event.key === 'Enter') submitPriorityBoost();
     });
