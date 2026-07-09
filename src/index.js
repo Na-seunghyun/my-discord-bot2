@@ -2561,23 +2561,36 @@ async function redeemKingdomRegistry(request, env) {
   const ready = requireSupabase(env);
   if (!ready.ok) return ready.response;
   const url = new URL(request.url);
-  const limit = Math.min(3000, Math.max(50, Number(url.searchParams.get("limit")) || 1500));
-  const rows = await supabaseJson(
-    env,
-    `/redeem_players?enabled=eq.true&consent=eq.true&select=id,nickname,state,town_hall_level,avatar_url,created_at_ms,updated_at_ms,profile_json&order=state.asc.nullslast,created_at_ms.desc&limit=${limit}`
-  ).catch(() => []);
+  const limit = Math.min(12000, Math.max(50, Number(url.searchParams.get("limit")) || 8000));
+  const pageSize = Math.min(1000, Math.max(100, Number(url.searchParams.get("pageSize")) || 1000));
+  const rows = [];
+  for (let offset = 0; offset < limit; offset += pageSize) {
+    const page = await supabaseJson(
+      env,
+      `/redeem_players?enabled=eq.true&consent=eq.true&select=id,nickname,state,town_hall_level,avatar_url,created_at_ms,updated_at_ms,profile_json&order=state.asc.nullslast,created_at_ms.desc&limit=${pageSize}&offset=${offset}`
+    ).catch(() => []);
+    const chunk = Array.isArray(page) ? page : [];
+    rows.push(...chunk);
+    if (chunk.length < pageSize) break;
+  }
   const playerIds = (rows || []).map((row) => String(row.id || "")).filter(Boolean);
   const playerIdSet = new Set(playerIds);
   const recentJobByPlayer = new Map();
   if (playerIds.length) {
-    const recentJobs = await supabaseJson(
-      env,
-      "/redeem_jobs?select=player_id,gift_code,status,attempts,last_error,redeemed_at_ms,updated_at_ms&order=updated_at_ms.desc&limit=8000"
-    ).catch(() => []);
-    for (const job of recentJobs || []) {
-      const playerId = String(job.player_id || "");
-      if (!playerIdSet.has(playerId) || recentJobByPlayer.has(playerId)) continue;
-      recentJobByPlayer.set(playerId, publicRedeemJobStatus(job));
+    const jobPageSize = 1000;
+    const jobLimit = Math.min(16000, Math.max(4000, playerIds.length * 8));
+    for (let offset = 0; offset < jobLimit && recentJobByPlayer.size < playerIdSet.size; offset += jobPageSize) {
+      const recentJobs = await supabaseJson(
+        env,
+        `/redeem_jobs?select=player_id,gift_code,status,attempts,last_error,redeemed_at_ms,updated_at_ms&order=updated_at_ms.desc&limit=${jobPageSize}&offset=${offset}`
+      ).catch(() => []);
+      const chunk = Array.isArray(recentJobs) ? recentJobs : [];
+      for (const job of chunk) {
+        const playerId = String(job.player_id || "");
+        if (!playerIdSet.has(playerId) || recentJobByPlayer.has(playerId)) continue;
+        recentJobByPlayer.set(playerId, publicRedeemJobStatus(job));
+      }
+      if (chunk.length < jobPageSize) break;
     }
   }
   const groups = new Map();
