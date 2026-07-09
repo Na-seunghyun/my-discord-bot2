@@ -862,9 +862,6 @@
       document.querySelectorAll('[data-i18n-title]').forEach((node) => { node.title = tr(node.dataset.i18nTitle); });
       localStorage.setItem('siteLang', lang);
       localStorage.setItem('lang', lang);
-      const url = new URL(location.href);
-      url.searchParams.set('lang', lang);
-      history.replaceState(null, '', url.toString());
       $('langSelect').value = lang;
       $('hubLink').href = `./index.html?lang=${encodeURIComponent(lang)}`;
       $('calcHubLink').href = `./troop_training_ui.html?lang=${encodeURIComponent(lang)}`;

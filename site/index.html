@@ -1010,9 +1010,6 @@
       });
       localStorage.setItem('lang', next);
       localStorage.setItem('siteLang', next);
-      const url = new URL(location.href);
-      url.searchParams.set('lang', next);
-      history.replaceState(null, '', url.toString());
       document.getElementById('langSelect').value = next;
     }
     function fmt(value) {

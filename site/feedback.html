@@ -286,9 +286,6 @@
       $('backLink').href = `./index.html?lang=${encodeURIComponent(currentLang)}`;
       localStorage.setItem('lang', currentLang);
       localStorage.setItem('siteLang', currentLang);
-      const url = new URL(location.href);
-      url.searchParams.set('lang', currentLang);
-      history.replaceState(null, '', url);
     }
     function escapeHtml(value) {
       return String(value ?? '').replace(/[&<>"']/g, (ch) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));

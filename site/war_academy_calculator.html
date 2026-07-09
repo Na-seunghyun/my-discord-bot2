@@ -930,9 +930,6 @@
       document.querySelectorAll('[data-i18n]').forEach((node) => { node.textContent = tr(node.dataset.i18n); });
       localStorage.setItem('siteLang', lang);
       localStorage.setItem('lang', lang);
-      const url = new URL(location.href);
-      url.searchParams.set('lang', lang);
-      history.replaceState(null, '', url.toString());
       $('langSelect').value = lang;
       $('homeLink').href = `./index.html?lang=${encodeURIComponent(lang)}`;
       $('calcHubLink').href = `./troop_training_ui.html?lang=${encodeURIComponent(lang)}`;

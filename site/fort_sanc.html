@@ -503,9 +503,6 @@
       $('langSelect').value = lang;
       localStorage.setItem('lang', lang);
       localStorage.setItem('siteLang', lang);
-      const url = new URL(location.href);
-      url.searchParams.set('lang', lang);
-      history.replaceState(null, '', url.toString());
     }
     function fmt(value) {
       return Math.round(Number(value) || 0).toLocaleString(document.documentElement.lang || 'ko');

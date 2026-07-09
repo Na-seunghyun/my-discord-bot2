@@ -2584,9 +2584,6 @@
       $('langSelect').value = currentLang;
       localStorage.setItem('lang', currentLang);
       localStorage.setItem('siteLang', currentLang);
-      const url = new URL(location.href);
-      url.searchParams.set('lang', currentLang);
-      history.replaceState(null, '', url.toString());
       $('registeredBadge').textContent = `${tr('registeredPlayers')}: -`;
       $('activeCodeBadge').textContent = `${tr('activeCodes')}: ${latestVisibleActiveCodes === null ? '-' : latestVisibleActiveCodes}`;
       updateBulkPreview();

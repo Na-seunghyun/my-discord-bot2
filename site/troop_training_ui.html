@@ -2258,9 +2258,6 @@
         lang = normalizeLang(event.target.value);
         localStorage.setItem("siteLang", lang);
         localStorage.setItem("lang", lang);
-        const url = new URL(location.href);
-        url.searchParams.set("lang", lang);
-        history.replaceState(null, "", url);
         render();
       });
       $("languageSelect").value = lang;
