@@ -159,6 +159,24 @@
       box-shadow: 0 12px 26px rgba(255, 174, 58, .2);
     }
     .btn.secondary { color: var(--text); background: rgba(255, 255, 255, .09); border: 1px solid rgba(255, 255, 255, .12); box-shadow: none; }
+    .planner-note {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(255, 255, 255, .08);
+      color: var(--muted);
+      line-height: 1.55;
+    }
+    .planner-note strong {
+      display: block;
+      color: var(--gold);
+      font-size: 13px;
+      margin-bottom: 3px;
+    }
+    .planner-note span { display: block; font-size: 12px; }
     .tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
     .tab {
       border: 1px solid rgba(255, 255, 255, .12);
@@ -170,7 +188,62 @@
       cursor: pointer;
       font-weight: 850;
     }
-    .tab.active { border-color: rgba(255, 215, 109, .55); color: #261807; background: linear-gradient(135deg, var(--gold), var(--gold2)); }
+    .tab:hover, .tab.active { border-color: rgba(255, 215, 109, .55); color: #261807; background: linear-gradient(135deg, var(--gold), var(--gold2)); }
+    .type-stack { display: grid; gap: 18px; }
+    .type-section {
+      scroll-margin-top: 18px;
+      border: 1px solid rgba(255, 255, 255, .1);
+      border-radius: 22px;
+      background: linear-gradient(145deg, rgba(11, 18, 31, .66), rgba(21, 31, 48, .48));
+      padding: 16px;
+    }
+    .type-section-head {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(360px, .8fr);
+      gap: 14px;
+      align-items: end;
+      margin-bottom: 14px;
+    }
+    .type-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+    .type-icon {
+      width: 52px;
+      height: 52px;
+      display: grid;
+      place-items: center;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 215, 109, .3);
+      background: radial-gradient(circle at 40% 30%, rgba(255, 215, 109, .2), rgba(107, 220, 255, .06));
+      color: var(--gold);
+      font-size: 24px;
+      font-weight: 950;
+      flex: 0 0 auto;
+    }
+    .type-title h3 {
+      margin: 0;
+      font-size: clamp(20px, 3vw, 28px);
+      color: var(--text);
+    }
+    .type-title small {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+    .type-toolbar {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto auto;
+      gap: 10px;
+      align-items: end;
+      padding: 12px;
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, .09);
+      background: rgba(255, 255, 255, .045);
+    }
     .tech-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
     .tech-card {
       position: relative;
@@ -234,8 +307,10 @@
       .nav-actions { width: 100%; justify-content: stretch; }
       .nav-link, .lang-select { flex: 1 1 auto; min-width: 130px; }
       .hero { border-radius: 20px; }
-      .hero-stats, .controls-grid, .toolbar, .tech-grid, .levels, .metric-grid { grid-template-columns: 1fr; }
+      .hero-stats, .controls-grid, .toolbar, .tech-grid, .levels, .metric-grid, .planner-note, .type-section-head, .type-toolbar { grid-template-columns: 1fr; }
+      .planner-note .btn, .type-toolbar .btn { width: 100%; }
       .panel { padding: 14px; border-radius: 18px; }
+      .type-section { padding: 12px; border-radius: 18px; }
       .tech-top { grid-template-columns: 54px minmax(0, 1fr); }
       .tech-icon { width: 54px; height: 54px; border-radius: 14px; }
     }
@@ -299,16 +374,12 @@
             <div class="field"><label data-i18n="stone">Stone</label><input class="inventory" data-key="stone" type="text" placeholder="0"></div>
             <div class="field"><label data-i18n="iron">Iron</label><input class="inventory" data-key="iron" type="text" placeholder="0"></div>
           </div>
-          <div class="toolbar">
-            <div class="field"><label data-i18n="quickCurrent">Quick current</label><select id="quickCurrent"></select></div>
-            <div class="field"><label data-i18n="quickTarget">Quick target</label><select id="quickTarget"></select></div>
-            <div class="button-row">
-              <button class="btn" id="applyActive" type="button" data-i18n="applyActive">Apply active tab</button>
-              <button class="btn secondary" id="applyAll" type="button" data-i18n="applyAll">Apply all</button>
+          <div class="planner-note">
+            <div>
+              <strong data-i18n="scopeTitle">All troop branches are calculated together</strong>
+              <span data-i18n="scopeHint">Use each section's Set All controls below. The result panel totals every selected Infantry, Cavalry, and Archer upgrade.</span>
             </div>
-            <div class="button-row">
-              <button class="btn secondary" id="clearAll" type="button" data-i18n="clearAll">Clear all</button>
-            </div>
+            <button class="btn secondary" id="clearAll" type="button" data-i18n="clearAll">Clear all</button>
           </div>
         </div>
 
@@ -457,8 +528,84 @@
       }
     };
 
+    const SECTION_I18N = {
+      ko: {
+        scopeTitle: '모든 병종 섹션을 함께 계산합니다',
+        scopeHint: '아래 병종별 Set All을 사용하세요. 결과 패널은 선택된 보병, 기병, 궁병 연구를 모두 합산합니다.',
+        scrollTo: '이동',
+        researchUpgrades: '연구 업그레이드',
+        smartSetAll: '해당 병종의 각 기술을 선택한 현재/목표 레벨로 한 번에 설정합니다.',
+        setAll: 'Set All',
+        reset: '초기화'
+      },
+      en: {
+        scopeTitle: 'All troop branches are calculated together',
+        scopeHint: "Use each section's Set All controls below. The result panel totals every selected Infantry, Cavalry, and Archer upgrade.",
+        scrollTo: 'Scroll to',
+        researchUpgrades: 'research upgrades',
+        smartSetAll: 'Set every tech in this branch to the selected current and target levels.',
+        setAll: 'Set All',
+        reset: 'Reset'
+      },
+      'zh-CN': {
+        scopeTitle: '所有兵种分支会一起计算',
+        scopeHint: '请使用下方各兵种区域的 Set All。结果面板会合计已选择的步兵、骑兵、射手升级。',
+        scrollTo: '前往',
+        researchUpgrades: '研究升级',
+        smartSetAll: '将此兵种的所有科技设为所选当前等级和目标等级。',
+        setAll: '全部设置',
+        reset: '重置'
+      },
+      'zh-TW': {
+        scopeTitle: '所有兵種分支會一起計算',
+        scopeHint: '請使用下方各兵種區域的 Set All。結果面板會合計已選擇的步兵、騎兵、射手升級。',
+        scrollTo: '前往',
+        researchUpgrades: '研究升級',
+        smartSetAll: '將此兵種的所有科技設為所選目前等級和目標等級。',
+        setAll: '全部設定',
+        reset: '重置'
+      },
+      fr: {
+        scopeTitle: 'Toutes les branches sont calculees ensemble',
+        scopeHint: 'Utilisez Set All dans chaque section. Le panneau de resultats additionne infanterie, cavalerie et archer.',
+        scrollTo: 'Aller a',
+        researchUpgrades: 'recherches',
+        smartSetAll: 'Regle toutes les technologies de cette branche sur les niveaux choisis.',
+        setAll: 'Tout regler',
+        reset: 'Reinitialiser'
+      },
+      de: {
+        scopeTitle: 'Alle Truppengattungen werden gemeinsam berechnet',
+        scopeHint: 'Nutze Set All in jedem Abschnitt. Die Ergebnisse summieren Infanterie, Kavallerie und Bogenschuetzen.',
+        scrollTo: 'Zu',
+        researchUpgrades: 'Forschungen',
+        smartSetAll: 'Setzt jede Technologie dieser Gattung auf die gewaehlten aktuellen und Zielstufen.',
+        setAll: 'Alle setzen',
+        reset: 'Zuruecksetzen'
+      },
+      th: {
+        scopeTitle: 'คำนวณทุกสายทหารรวมกัน',
+        scopeHint: 'ใช้ Set All ในแต่ละส่วนด้านล่าง ผลลัพธ์จะรวมอัปเกรดของทหารราบ ทหารม้า และธนูที่เลือกไว้ทั้งหมด',
+        scrollTo: 'ไปที่',
+        researchUpgrades: 'งานวิจัย',
+        smartSetAll: 'ตั้งค่าเทคทั้งหมดในสายนี้ตามเลเวลปัจจุบันและเป้าหมายที่เลือก',
+        setAll: 'ตั้งค่าทั้งหมด',
+        reset: 'รีเซ็ต'
+      },
+      id: {
+        scopeTitle: 'Semua cabang pasukan dihitung bersama',
+        scopeHint: 'Gunakan Set All di tiap bagian. Panel hasil menjumlahkan semua upgrade Infantry, Cavalry, dan Archer yang dipilih.',
+        scrollTo: 'Ke',
+        researchUpgrades: 'upgrade riset',
+        smartSetAll: 'Atur semua teknologi di cabang ini ke level saat ini dan target yang dipilih.',
+        setAll: 'Set All',
+        reset: 'Reset'
+      }
+    };
+    Object.entries(SECTION_I18N).forEach(([key, value]) => Object.assign(I18N[key], value));
+
     const RESOURCE_KEYS = ['truegold_dust', 'bread', 'wood', 'stone', 'iron', 'gold'];
-    const DEFAULT_TYPES = ['infantry', 'cavalry', 'archer', 'general'];
+    const DEFAULT_TYPES = ['infantry', 'cavalry', 'archer'];
     const ICONS = { infantry: '⚔', cavalry: '♞', archer: '⌖', general: '✦' };
     const state = { academy: null, techs: [], selected: {}, inventory: {}, activeType: 'infantry' };
     const $ = (id) => document.getElementById(id);
@@ -530,47 +677,75 @@
     }
 
     function renderQuickSelects() {
+      const current = $('quickCurrent');
+      const target = $('quickTarget');
+      if (!current || !target) return;
       const max = Math.max(1, ...state.techs.map(maxLevel));
-      $('quickCurrent').innerHTML = levelOptions(max, 0);
-      $('quickTarget').innerHTML = levelOptions(max, 0);
+      current.innerHTML = levelOptions(max, 0);
+      target.innerHTML = levelOptions(max, 0);
     }
 
     function renderTabs() {
       const types = getTypes();
       if (!types.includes(state.activeType)) state.activeType = types[0] || 'general';
-      $('branchTabs').innerHTML = types.map((type) => `<button class="tab ${type === state.activeType ? 'active' : ''}" type="button" data-type="${type}">${ICONS[type] || '✦'} ${tr(type)}</button>`).join('');
+      $('branchTabs').innerHTML = types.map((type) => `<button class="tab ${type === state.activeType ? 'active' : ''}" type="button" data-type="${type}">${ICONS[type] || '✦'} ${tr('scrollTo')} ${tr(type)}</button>`).join('');
       document.querySelectorAll('#branchTabs .tab').forEach((button) => {
         button.addEventListener('click', () => {
           state.activeType = button.dataset.type;
           saveState();
           renderTabs();
-          renderTechs();
-          calculate();
+          document.getElementById(`academy-${state.activeType}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         });
       });
     }
 
+    function renderTechCard(tech) {
+      const sel = getSelection(tech.id);
+      const max = maxLevel(tech);
+      const active = Number(sel.current) < Number(sel.target);
+      const image = techImage(tech);
+      return `
+        <article class="tech-card ${active ? 'active' : ''}" data-id="${esc(tech.id)}">
+          <div class="tech-top">
+            <div class="tech-icon">${image ? `<img src="${image}" alt="" loading="lazy" onerror="this.remove()">` : esc(tech.icon || ICONS[tech.type] || '✦')}</div>
+            <div class="tech-title">
+              <h3>${esc(tech.name)}</h3>
+              <p>${esc(tech.description || tr(tech.type || 'general'))}</p>
+            </div>
+          </div>
+          <div class="levels">
+            <div class="field"><label>${tr('current')} ${tr('level')}</label><select class="tech-current">${levelOptions(max, sel.current)}</select></div>
+            <div class="field"><label>${tr('target')} ${tr('level')}</label><select class="tech-target">${levelOptions(max, sel.target)}</select></div>
+          </div>
+        </article>`;
+    }
+
     function renderTechs() {
-      const shown = state.techs.filter((tech) => (tech.type || 'general') === state.activeType);
-      $('techGrid').innerHTML = shown.map((tech) => {
-        const sel = getSelection(tech.id);
-        const max = maxLevel(tech);
-        const active = Number(sel.current) < Number(sel.target);
-        const image = techImage(tech);
+      const types = getTypes();
+      $('techGrid').className = 'type-stack';
+      $('techGrid').innerHTML = types.map((type) => {
+        const shown = state.techs.filter((tech) => (tech.type || 'general') === type);
+        const max = Math.max(1, ...shown.map(maxLevel));
         return `
-          <article class="tech-card ${active ? 'active' : ''}" data-id="${esc(tech.id)}">
-            <div class="tech-top">
-              <div class="tech-icon">${image ? `<img src="${image}" alt="" loading="lazy" onerror="this.remove()">` : esc(tech.icon || ICONS[tech.type] || '✦')}</div>
-              <div class="tech-title">
-                <h3>${esc(tech.name)}</h3>
-                <p>${esc(tech.description || tr(tech.type || 'general'))}</p>
+          <section class="type-section" id="academy-${esc(type)}" data-type="${esc(type)}">
+            <div class="type-section-head">
+              <div class="type-title">
+                <span class="type-icon">${ICONS[type] || '✦'}</span>
+                <div>
+                  <h3>${tr(type)}</h3>
+                  <small>${tr(type)} ${tr('researchUpgrades')}</small>
+                </div>
+              </div>
+              <div class="type-toolbar" data-type="${esc(type)}">
+                <div class="field"><label>${tr('current')}</label><select class="type-current">${levelOptions(max, 0)}</select></div>
+                <div class="field"><label>${tr('target')}</label><select class="type-target">${levelOptions(max, 0)}</select></div>
+                <button class="btn type-apply" type="button">${tr('setAll')}</button>
+                <button class="btn secondary type-reset" type="button">${tr('reset')}</button>
+                <small style="grid-column: 1 / -1">${tr('smartSetAll')}</small>
               </div>
             </div>
-            <div class="levels">
-              <div class="field"><label>${tr('current')} ${tr('level')}</label><select class="tech-current">${levelOptions(max, sel.current)}</select></div>
-              <div class="field"><label>${tr('target')} ${tr('level')}</label><select class="tech-target">${levelOptions(max, sel.target)}</select></div>
-            </div>
-          </article>`;
+            <div class="tech-grid">${shown.map(renderTechCard).join('')}</div>
+          </section>`;
       }).join('');
       document.querySelectorAll('.tech-card select').forEach((select) => {
         select.addEventListener('change', () => {
@@ -583,17 +758,29 @@
           calculate();
         });
       });
+      document.querySelectorAll('.type-toolbar').forEach((bar) => {
+        bar.querySelector('.type-apply').addEventListener('click', () => {
+          applyTypeLevels(
+            bar.dataset.type,
+            Number(bar.querySelector('.type-current').value) || 0,
+            Number(bar.querySelector('.type-target').value) || 0
+          );
+        });
+        bar.querySelector('.type-reset').addEventListener('click', () => {
+          applyTypeLevels(bar.dataset.type, 0, 0);
+        });
+      });
     }
 
-    function applyLevels(scope) {
-      const current = Number($('quickCurrent').value) || 0;
-      const target = Number($('quickTarget').value) || 0;
-      const targets = scope === 'all' ? state.techs : state.techs.filter((tech) => (tech.type || 'general') === state.activeType);
+    function applyTypeLevels(type, current, target) {
+      const targets = state.techs.filter((tech) => (tech.type || 'general') === type);
       targets.forEach((tech) => {
         const max = maxLevel(tech);
         state.selected[tech.id] = { current: Math.min(current, max), target: Math.min(target, max) };
       });
+      state.activeType = type;
       saveState();
+      renderTabs();
       renderTechs();
       calculate();
     }
@@ -737,11 +924,7 @@
     async function init() {
       $('langSelect').value = lang;
       $('langSelect').addEventListener('change', (event) => setLang(event.target.value));
-      $('applyActive').addEventListener('click', () => applyLevels('active'));
-      $('applyAll').addEventListener('click', () => applyLevels('all'));
       $('clearAll').addEventListener('click', clearAll);
-      $('quickCurrent').addEventListener('change', () => applyLevels('active'));
-      $('quickTarget').addEventListener('change', () => applyLevels('active'));
       document.querySelectorAll('.inventory, #speedBonus').forEach((input) => {
         input.addEventListener('input', () => { saveState(); calculate(); });
       });
