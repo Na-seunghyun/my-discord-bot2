@@ -3,7 +3,7 @@ main = "src/index.js"
 compatibility_date = "2025-06-18"
 
 [assets]
-directory = "."
+directory = "./site"
 binding = "ASSETS"
 
 [triggers]
@@ -11,7 +11,7 @@ crons = ["*/10 * * * *"]
 
 [vars]
 AUTO_REDEEM_ENABLED = "true"
-AUTO_REDEEM_BATCH_SIZE = "80"
+AUTO_REDEEM_BATCH_SIZE = "25"
 AUTO_REDEEM_DELAY_MS = "1200"
 AUTO_REDEEM_MAX_ATTEMPTS = "3"
 AUTO_REDEEM_RUNNING_STALE_MINUTES = "5"

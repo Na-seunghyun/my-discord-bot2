@@ -3504,7 +3504,7 @@ function assetRequest(request, pathname) {
 }
 
 async function transformedTroopCalculator(request, env) {
-  const response = await env.ASSETS.fetch(assetRequest(request, "/site/troop_training_ui.html"));
+  const response = await env.ASSETS.fetch(assetRequest(request, "/troop_training_ui.html"));
   const contentType = response.headers.get("content-type") || "";
   if (!response.ok || !contentType.includes("text/html")) return response;
 
@@ -3626,9 +3626,9 @@ export default {
         headers: { ...baseSecurityHeaders(), "content-type": "text/plain; charset=utf-8" },
       });
     }
-    if (url.pathname === "/") return fetchSiteAsset(request, env, "/site/index.html", { html: true });
+    if (url.pathname === "/") return fetchSiteAsset(request, env, "/index.html", { html: true });
     if (url.pathname === "/troop_training_ui.html") return transformedTroopCalculator(request, env);
-    return fetchSiteAsset(request, env, `/site${url.pathname}`);
+    return fetchSiteAsset(request, env, url.pathname);
   },
   async scheduled(event, env, ctx) {
     ctx.waitUntil(runSafeIntelCycle(env, "cron").catch(() => null));
