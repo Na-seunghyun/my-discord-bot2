@@ -1,0 +1,762 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>War Academy Calculator | 885 LEGEND NASHSH</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #080b12;
+      --panel: rgba(15, 22, 35, .88);
+      --panel2: rgba(20, 31, 48, .82);
+      --line: rgba(255, 214, 122, .22);
+      --line2: rgba(113, 211, 255, .22);
+      --text: #f7f2df;
+      --muted: #a8b1c4;
+      --gold: #ffd76d;
+      --gold2: #ffae3a;
+      --cyan: #6bdcff;
+      --green: #72f0a8;
+      --red: #ff7878;
+      --shadow: 0 22px 70px rgba(0, 0, 0, .36);
+      font-family: Inter, Pretendard, "Noto Sans KR", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 18% 0%, rgba(255, 193, 92, .16), transparent 31%),
+        radial-gradient(circle at 82% 12%, rgba(87, 208, 255, .14), transparent 28%),
+        linear-gradient(135deg, #070912 0%, #111723 48%, #070911 100%);
+      color: var(--text);
+    }
+    a { color: inherit; text-decoration: none; }
+    button, input, select { font: inherit; }
+    .shell { width: min(1500px, calc(100% - 28px)); margin: 0 auto; padding: 20px 0 28px; }
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .brand-mark {
+      width: 46px;
+      height: 46px;
+      display: grid;
+      place-items: center;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 215, 109, .34);
+      background: linear-gradient(145deg, rgba(255, 216, 112, .17), rgba(78, 198, 255, .08));
+      color: var(--gold);
+      font-weight: 950;
+      box-shadow: 0 0 28px rgba(255, 193, 92, .18);
+    }
+    .brand strong { display: block; letter-spacing: .08em; font-size: 13px; color: var(--gold); }
+    .brand span { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; }
+    .nav-actions { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 8px; }
+    .nav-link, .lang-select {
+      min-height: 38px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, .13);
+      background: rgba(255, 255, 255, .07);
+      color: var(--text);
+      padding: 9px 12px;
+    }
+    .lang-select option { background: #111827; color: #f7f2df; }
+    .hero {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(255, 215, 109, .2);
+      border-radius: 26px;
+      padding: clamp(22px, 4vw, 44px);
+      background:
+        linear-gradient(110deg, rgba(12, 19, 31, .96), rgba(23, 34, 52, .82)),
+        radial-gradient(circle at 76% 20%, rgba(255, 215, 109, .24), transparent 32%);
+      box-shadow: var(--shadow);
+    }
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(120deg, transparent 0%, rgba(255, 255, 255, .08) 42%, transparent 62%);
+      transform: translateX(-100%);
+      animation: sheen 7s linear infinite;
+    }
+    @keyframes sheen { to { transform: translateX(100%); } }
+    .hero-grid { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(320px, .95fr); gap: 22px; align-items: end; }
+    .eyebrow { display: inline-flex; align-items: center; gap: 8px; color: var(--cyan); font-size: 12px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
+    h1 { margin: 12px 0 12px; font-size: clamp(34px, 6vw, 76px); line-height: .92; letter-spacing: 0; }
+    .gold-text {
+      display: inline-block;
+      background: linear-gradient(90deg, #fff6bc, #ffd76d, #ff9f2d, #fff6bc);
+      background-size: 260% 100%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      animation: goldFlow 4.5s ease-in-out infinite;
+      text-shadow: 0 0 30px rgba(255, 190, 76, .22);
+    }
+    @keyframes goldFlow { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+    .hero p { max-width: 760px; margin: 0; color: var(--muted); line-height: 1.65; font-size: 15px; }
+    .hero-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .stat {
+      min-height: 94px;
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, .11);
+      background: rgba(5, 10, 18, .44);
+      padding: 15px;
+    }
+    .stat span { color: var(--muted); font-size: 12px; }
+    .stat strong { display: block; margin-top: 8px; color: var(--gold); font-size: clamp(20px, 3vw, 28px); }
+    .layout { display: grid; grid-template-columns: minmax(0, 1fr) 390px; gap: 18px; margin-top: 18px; align-items: start; }
+    .panel {
+      border: 1px solid rgba(255, 255, 255, .1);
+      border-radius: 22px;
+      background: var(--panel);
+      box-shadow: 0 18px 52px rgba(0, 0, 0, .24);
+      padding: 18px;
+    }
+    .panel-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+    .panel h2, .panel h3 { margin: 0; font-size: 18px; }
+    .panel small { color: var(--muted); line-height: 1.45; }
+    .controls-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+    .field { display: grid; gap: 7px; min-width: 0; }
+    .field label { color: var(--muted); font-size: 12px; font-weight: 750; }
+    .field input, .field select {
+      width: 100%;
+      min-height: 42px;
+      border-radius: 13px;
+      border: 1px solid rgba(255, 255, 255, .12);
+      background: rgba(6, 11, 20, .62);
+      color: var(--text);
+      padding: 9px 11px;
+      outline: none;
+    }
+    .field input:focus, .field select:focus { border-color: rgba(255, 215, 109, .48); box-shadow: 0 0 0 3px rgba(255, 215, 109, .1); }
+    .toolbar {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(255, 255, 255, .08);
+    }
+    .button-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; }
+    .btn {
+      min-height: 42px;
+      border: 0;
+      border-radius: 13px;
+      padding: 10px 14px;
+      cursor: pointer;
+      color: #20160a;
+      background: linear-gradient(135deg, var(--gold), var(--gold2));
+      font-weight: 900;
+      box-shadow: 0 12px 26px rgba(255, 174, 58, .2);
+    }
+    .btn.secondary { color: var(--text); background: rgba(255, 255, 255, .09); border: 1px solid rgba(255, 255, 255, .12); box-shadow: none; }
+    .tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+    .tab {
+      border: 1px solid rgba(255, 255, 255, .12);
+      background: rgba(255, 255, 255, .07);
+      color: var(--text);
+      border-radius: 999px;
+      min-height: 40px;
+      padding: 9px 13px;
+      cursor: pointer;
+      font-weight: 850;
+    }
+    .tab.active { border-color: rgba(255, 215, 109, .55); color: #261807; background: linear-gradient(135deg, var(--gold), var(--gold2)); }
+    .tech-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .tech-card {
+      position: relative;
+      overflow: hidden;
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, .11);
+      background: linear-gradient(145deg, rgba(25, 35, 52, .85), rgba(8, 13, 22, .85));
+      padding: 14px;
+    }
+    .tech-card.active { border-color: rgba(255, 215, 109, .48); box-shadow: 0 0 0 1px rgba(255, 215, 109, .13), 0 18px 42px rgba(255, 174, 58, .1); }
+    .tech-top { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 12px; align-items: center; margin-bottom: 12px; }
+    .tech-icon {
+      width: 64px;
+      height: 64px;
+      display: grid;
+      place-items: center;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 215, 109, .22);
+      background: rgba(255, 255, 255, .06);
+      overflow: hidden;
+      color: var(--gold);
+      font-size: 24px;
+      font-weight: 950;
+    }
+    .tech-icon img { width: 100%; height: 100%; object-fit: cover; }
+    .tech-title { min-width: 0; }
+    .tech-title h3 { margin: 0; font-size: 15px; line-height: 1.25; }
+    .tech-title p { margin: 5px 0 0; color: var(--muted); line-height: 1.35; font-size: 12px; }
+    .levels { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .result-panel { position: sticky; top: 16px; }
+    .metric-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .metric, .resource-row, .bonus-row {
+      border-radius: 15px;
+      border: 1px solid rgba(255, 255, 255, .09);
+      background: rgba(255, 255, 255, .055);
+      padding: 12px;
+    }
+    .metric span, .resource-row span, .bonus-row span { display: block; color: var(--muted); font-size: 12px; }
+    .metric strong { display: block; margin-top: 7px; color: var(--gold); font-size: 20px; }
+    .resource-list, .bonus-list { display: grid; gap: 8px; margin-top: 10px; }
+    .resource-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: center; }
+    .resource-row strong { color: var(--text); }
+    .resource-row small { color: var(--muted); }
+    .need { color: var(--red); }
+    .extra { color: var(--green); }
+    .section-title { margin: 18px 0 10px; color: var(--gold); font-size: 12px; font-weight: 950; letter-spacing: .13em; text-transform: uppercase; }
+    .table-wrap { overflow-x: auto; margin-top: 12px; }
+    table { width: 100%; min-width: 780px; border-collapse: collapse; }
+    th, td { padding: 10px; border-bottom: 1px solid rgba(255, 255, 255, .08); text-align: left; font-size: 12px; }
+    th { color: var(--gold); background: rgba(255, 255, 255, .04); }
+    td { color: #e7edf7; }
+    .empty { color: var(--muted); line-height: 1.6; }
+    .footer { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; color: var(--muted); font-size: 12px; padding: 18px 4px 4px; }
+    @media (max-width: 1100px) {
+      .hero-grid, .layout { grid-template-columns: 1fr; }
+      .result-panel { position: static; }
+    }
+    @media (max-width: 760px) {
+      .shell { width: min(100% - 18px, 1500px); padding-top: 12px; }
+      .topbar { align-items: flex-start; flex-direction: column; }
+      .nav-actions { width: 100%; justify-content: stretch; }
+      .nav-link, .lang-select { flex: 1 1 auto; min-width: 130px; }
+      .hero { border-radius: 20px; }
+      .hero-stats, .controls-grid, .toolbar, .tech-grid, .levels, .metric-grid { grid-template-columns: 1fr; }
+      .panel { padding: 14px; border-radius: 18px; }
+      .tech-top { grid-template-columns: 54px minmax(0, 1fr); }
+      .tech-icon { width: 54px; height: 54px; border-radius: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <a class="brand" id="homeLink" href="./index.html">
+        <span class="brand-mark">885</span>
+        <span><strong>885 LEGEND NASHSH</strong><span data-i18n="brandSub">Kingshot command tools</span></span>
+      </a>
+      <div class="nav-actions">
+        <select id="langSelect" class="lang-select" aria-label="Language">
+          <option value="ko">한국어</option>
+          <option value="en">English</option>
+          <option value="zh-CN">简体中文</option>
+          <option value="zh-TW">繁體中文</option>
+          <option value="fr">Français</option>
+          <option value="de">Deutsch</option>
+          <option value="th">ไทย</option>
+          <option value="id">Indonesia</option>
+        </select>
+        <a class="nav-link" id="calcHubLink" href="./troop_training_ui.html" data-i18n="calcHub">Calculator hub</a>
+        <a class="nav-link" href="https://buymeacoffee.com/nashsh" target="_blank" rel="noreferrer" data-i18n="support">Support page</a>
+      </div>
+    </header>
+
+    <section class="hero">
+      <div class="hero-grid">
+        <div>
+          <span class="eyebrow" data-i18n="badge">Research planner</span>
+          <h1><span data-i18n="titleA">War Academy</span><br><span class="gold-text" data-i18n="titleB">Calculator</span></h1>
+          <p data-i18n="subtitle">Plan infantry, cavalry, and archer research with Truegold Dust, resources, research time, power gain, and final bonus totals.</p>
+        </div>
+        <div class="hero-stats">
+          <div class="stat"><span data-i18n="selectedTech">Selected techs</span><strong id="selectedCount">0</strong></div>
+          <div class="stat"><span data-i18n="upgradeSteps">Upgrade steps</span><strong id="stepCount">0</strong></div>
+          <div class="stat"><span data-i18n="researchTime">Research time</span><strong id="timeCount">-</strong></div>
+          <div class="stat"><span data-i18n="powerGain">Power gain</span><strong id="powerCount">0</strong></div>
+        </div>
+      </div>
+    </section>
+
+    <main class="layout">
+      <section>
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <h2 data-i18n="inventoryTitle">Inventory & Speed</h2>
+              <small data-i18n="inventoryHint">Enter what you already own to see shortages and leftover resources.</small>
+            </div>
+            <small id="dataStatus" data-i18n="loading">Loading data...</small>
+          </div>
+          <div class="controls-grid">
+            <div class="field"><label data-i18n="truegold_dust">Truegold Dust</label><input class="inventory" data-key="truegold_dust" type="text" placeholder="0, 500K, 1.5M"></div>
+            <div class="field"><label data-i18n="gold">Gold</label><input class="inventory" data-key="gold" type="text" placeholder="0"></div>
+            <div class="field"><label data-i18n="researchSpeed">Research Speed Bonus (%)</label><input id="speedBonus" type="number" min="0" max="500" step="0.1" value="0"></div>
+            <div class="field"><label data-i18n="bread">Bread</label><input class="inventory" data-key="bread" type="text" placeholder="0"></div>
+            <div class="field"><label data-i18n="wood">Wood</label><input class="inventory" data-key="wood" type="text" placeholder="0"></div>
+            <div class="field"><label data-i18n="stone">Stone</label><input class="inventory" data-key="stone" type="text" placeholder="0"></div>
+            <div class="field"><label data-i18n="iron">Iron</label><input class="inventory" data-key="iron" type="text" placeholder="0"></div>
+          </div>
+          <div class="toolbar">
+            <div class="field"><label data-i18n="quickCurrent">Quick current</label><select id="quickCurrent"></select></div>
+            <div class="field"><label data-i18n="quickTarget">Quick target</label><select id="quickTarget"></select></div>
+            <div class="button-row">
+              <button class="btn" id="applyActive" type="button" data-i18n="applyActive">Apply active tab</button>
+              <button class="btn secondary" id="applyAll" type="button" data-i18n="applyAll">Apply all</button>
+            </div>
+            <div class="button-row">
+              <button class="btn secondary" id="clearAll" type="button" data-i18n="clearAll">Clear all</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-top:18px">
+          <div class="panel-head">
+            <div>
+              <h2 data-i18n="techTree">Technology tree</h2>
+              <small data-i18n="techHint">Set each current and target level. Only upgrades above the current level are counted.</small>
+            </div>
+          </div>
+          <div class="tabs" id="branchTabs"></div>
+          <div class="tech-grid" id="techGrid"></div>
+        </div>
+      </section>
+
+      <aside class="panel result-panel">
+        <div class="panel-head">
+          <div>
+            <h2 data-i18n="results">Results</h2>
+            <small data-i18n="resultsHint">Totals update whenever a level or inventory value changes.</small>
+          </div>
+        </div>
+        <div id="resultBody" class="empty" data-i18n="noSelection">Select target levels to see results.</div>
+      </aside>
+    </main>
+
+    <footer class="footer">
+      <span>Created by #885 Legend nashsh</span>
+      <span data-i18n="dataSource">War Academy data is loaded locally from the calculator dataset.</span>
+    </footer>
+  </div>
+
+  <script>
+    const I18N = {
+      ko: {
+        brandSub: 'Kingshot 지휘 도구', calcHub: '계산기 허브', support: '후원 페이지', badge: '연구 플래너', titleA: '전쟁 아카데미', titleB: '계산기',
+        subtitle: '보병, 기병, 궁병 연구의 트루골드 가루, 자원, 연구 시간, 전투력 증가, 최종 보너스를 한 번에 계산합니다.',
+        selectedTech: '선택 기술', upgradeSteps: '업그레이드 단계', researchTime: '연구 시간', powerGain: '전투력 증가',
+        inventoryTitle: '보유 자원 및 속도', inventoryHint: '현재 보유량을 입력하면 부족 자원과 남는 자원을 함께 확인할 수 있습니다.', loading: '데이터 불러오는 중...', ready: '데이터 준비 완료',
+        truegold_dust: '트루골드 가루', bread: '빵', wood: '나무', stone: '석재', iron: '철', gold: '골드', researchSpeed: '연구 속도 보너스 (%)',
+        quickCurrent: '일괄 현재', quickTarget: '일괄 목표', current: '현재', target: '목표', applyActive: '현재 탭 적용', applyAll: '전체 적용', clearAll: '전체 초기화',
+        techTree: '기술 트리', techHint: '각 기술의 현재 레벨과 목표 레벨을 설정하세요. 현재보다 높은 단계만 계산됩니다.',
+        results: '계산 결과', resultsHint: '레벨이나 보유 자원을 바꾸면 결과가 자동으로 갱신됩니다.', noSelection: '목표 레벨을 선택하면 결과가 표시됩니다.',
+        baseTime: '기본 시간', modifiedTime: '적용 시간', savedTime: '단축 시간', resources: '필요 자원', stillNeed: '부족', leftover: '여유',
+        bonuses: '적용 보너스', breakdown: '기술별 상세', technology: '기술', upgrade: '업그레이드', time: '시간', power: '전투력',
+        all: '전체', infantry: '보병', cavalry: '기병', archer: '궁병', general: '공통', none: '없음', level: '레벨',
+        dataSource: '전쟁 아카데미 데이터는 계산기 데이터셋에서 로컬로 불러옵니다.', timeUnits: { d: '일', h: '시간', m: '분', s: '초' }
+      },
+      en: {
+        brandSub: 'Kingshot command tools', calcHub: 'Calculator hub', support: 'Support page', badge: 'Research planner', titleA: 'War Academy', titleB: 'Calculator',
+        subtitle: 'Plan infantry, cavalry, and archer research with Truegold Dust, resources, research time, power gain, and final bonus totals.',
+        selectedTech: 'Selected techs', upgradeSteps: 'Upgrade steps', researchTime: 'Research time', powerGain: 'Power gain',
+        inventoryTitle: 'Inventory & Speed', inventoryHint: 'Enter what you already own to see shortages and leftover resources.', loading: 'Loading data...', ready: 'Data ready',
+        truegold_dust: 'Truegold Dust', bread: 'Bread', wood: 'Wood', stone: 'Stone', iron: 'Iron', gold: 'Gold', researchSpeed: 'Research Speed Bonus (%)',
+        quickCurrent: 'Quick current', quickTarget: 'Quick target', current: 'Current', target: 'Target', applyActive: 'Apply active tab', applyAll: 'Apply all', clearAll: 'Clear all',
+        techTree: 'Technology tree', techHint: 'Set each current and target level. Only upgrades above the current level are counted.',
+        results: 'Results', resultsHint: 'Totals update whenever a level or inventory value changes.', noSelection: 'Select target levels to see results.',
+        baseTime: 'Base time', modifiedTime: 'Modified time', savedTime: 'Saved time', resources: 'Required resources', stillNeed: 'Need', leftover: 'Extra',
+        bonuses: 'Upgrade bonuses', breakdown: 'Technology breakdown', technology: 'Technology', upgrade: 'Upgrade', time: 'Time', power: 'Power',
+        all: 'All', infantry: 'Infantry', cavalry: 'Cavalry', archer: 'Archer', general: 'General', none: 'None', level: 'Level',
+        dataSource: 'War Academy data is loaded locally from the calculator dataset.', timeUnits: { d: 'd', h: 'h', m: 'm', s: 's' }
+      },
+      'zh-CN': {
+        brandSub: 'Kingshot 指挥工具', calcHub: '计算器中心', support: '支持页面', badge: '研究规划', titleA: '战争学院', titleB: '计算器',
+        subtitle: '计算步兵、骑兵、射手研究所需的真金粉尘、资源、研究时间、战力提升和最终加成。',
+        selectedTech: '已选科技', upgradeSteps: '升级阶段', researchTime: '研究时间', powerGain: '战力提升',
+        inventoryTitle: '库存与速度', inventoryHint: '输入已有资源即可查看缺口与剩余。', loading: '正在加载数据...', ready: '数据已准备',
+        truegold_dust: '真金粉尘', bread: '面包', wood: '木材', stone: '石头', iron: '铁', gold: '金币', researchSpeed: '研究速度加成 (%)',
+        quickCurrent: '批量当前', quickTarget: '批量目标', current: '当前', target: '目标', applyActive: '应用当前页', applyAll: '应用全部', clearAll: '全部清除',
+        techTree: '科技树', techHint: '设置每项科技的当前等级和目标等级。只计算高于当前等级的升级。',
+        results: '结果', resultsHint: '等级或库存变化时会自动更新。', noSelection: '选择目标等级后即可查看结果。',
+        baseTime: '基础时间', modifiedTime: '调整后时间', savedTime: '节省时间', resources: '所需资源', stillNeed: '缺少', leftover: '剩余',
+        bonuses: '升级加成', breakdown: '科技明细', technology: '科技', upgrade: '升级', time: '时间', power: '战力',
+        all: '全部', infantry: '步兵', cavalry: '骑兵', archer: '射手', general: '通用', none: '无', level: '等级',
+        dataSource: '战争学院数据从本地计算器数据集中加载。', timeUnits: { d: '天', h: '小时', m: '分钟', s: '秒' }
+      },
+      'zh-TW': {
+        brandSub: 'Kingshot 指揮工具', calcHub: '計算器中心', support: '支援頁面', badge: '研究規劃', titleA: '戰爭學院', titleB: '計算器',
+        subtitle: '計算步兵、騎兵、射手研究所需的真金粉塵、資源、研究時間、戰力提升和最終加成。',
+        selectedTech: '已選科技', upgradeSteps: '升級階段', researchTime: '研究時間', powerGain: '戰力提升',
+        inventoryTitle: '庫存與速度', inventoryHint: '輸入已有資源即可查看缺口與剩餘。', loading: '正在載入資料...', ready: '資料已準備',
+        truegold_dust: '真金粉塵', bread: '麵包', wood: '木材', stone: '石頭', iron: '鐵', gold: '金幣', researchSpeed: '研究速度加成 (%)',
+        quickCurrent: '批量目前', quickTarget: '批量目標', current: '目前', target: '目標', applyActive: '套用目前頁', applyAll: '套用全部', clearAll: '全部清除',
+        techTree: '科技樹', techHint: '設定每項科技的目前等級和目標等級。只計算高於目前等級的升級。',
+        results: '結果', resultsHint: '等級或庫存變化時會自動更新。', noSelection: '選擇目標等級後即可查看結果。',
+        baseTime: '基礎時間', modifiedTime: '調整後時間', savedTime: '節省時間', resources: '所需資源', stillNeed: '缺少', leftover: '剩餘',
+        bonuses: '升級加成', breakdown: '科技明細', technology: '科技', upgrade: '升級', time: '時間', power: '戰力',
+        all: '全部', infantry: '步兵', cavalry: '騎兵', archer: '射手', general: '通用', none: '無', level: '等級',
+        dataSource: '戰爭學院資料從本機計算器資料集中載入。', timeUnits: { d: '天', h: '小時', m: '分鐘', s: '秒' }
+      },
+      fr: {
+        brandSub: 'Outils de commandement Kingshot', calcHub: 'Hub des calculateurs', support: 'Page de soutien', badge: 'Planificateur de recherche', titleA: 'Académie de guerre', titleB: 'Calculateur',
+        subtitle: 'Planifiez les recherches infanterie, cavalerie et archer avec poussière Truegold, ressources, temps, puissance et bonus finaux.',
+        selectedTech: 'Technos choisies', upgradeSteps: 'Étapes', researchTime: 'Temps de recherche', powerGain: 'Gain de puissance',
+        inventoryTitle: 'Inventaire et vitesse', inventoryHint: 'Saisissez vos ressources pour voir les manques et surplus.', loading: 'Chargement...', ready: 'Données prêtes',
+        truegold_dust: 'Poussière Truegold', bread: 'Pain', wood: 'Bois', stone: 'Pierre', iron: 'Fer', gold: 'Or', researchSpeed: 'Bonus de vitesse recherche (%)',
+        quickCurrent: 'Actuel rapide', quickTarget: 'Cible rapide', current: 'Actuel', target: 'Cible', applyActive: 'Appliquer l’onglet', applyAll: 'Tout appliquer', clearAll: 'Tout effacer',
+        techTree: 'Arbre technologique', techHint: 'Définissez le niveau actuel et cible. Seules les hausses au-dessus du niveau actuel sont comptées.',
+        results: 'Résultats', resultsHint: 'Les totaux se mettent à jour automatiquement.', noSelection: 'Sélectionnez des niveaux cibles pour voir les résultats.',
+        baseTime: 'Temps de base', modifiedTime: 'Temps ajusté', savedTime: 'Temps gagné', resources: 'Ressources requises', stillNeed: 'Manque', leftover: 'Surplus',
+        bonuses: 'Bonus', breakdown: 'Détail des technologies', technology: 'Technologie', upgrade: 'Amélioration', time: 'Temps', power: 'Puissance',
+        all: 'Tout', infantry: 'Infanterie', cavalry: 'Cavalerie', archer: 'Archer', general: 'Général', none: 'Aucun', level: 'Niveau',
+        dataSource: 'Les données de l’Académie de guerre sont chargées localement.', timeUnits: { d: 'j', h: 'h', m: 'min', s: 's' }
+      },
+      de: {
+        brandSub: 'Kingshot-Kommandowerkzeuge', calcHub: 'Rechner-Hub', support: 'Support-Seite', badge: 'Forschungsplaner', titleA: 'Kriegsakademie', titleB: 'Rechner',
+        subtitle: 'Plane Infanterie-, Kavallerie- und Bogenschützenforschung mit Truegold-Staub, Ressourcen, Zeit, Macht und Gesamtboni.',
+        selectedTech: 'Gewählte Forschung', upgradeSteps: 'Schritte', researchTime: 'Forschungszeit', powerGain: 'Machtzuwachs',
+        inventoryTitle: 'Inventar und Tempo', inventoryHint: 'Gib vorhandene Ressourcen ein, um Fehlmengen und Überschüsse zu sehen.', loading: 'Daten werden geladen...', ready: 'Daten bereit',
+        truegold_dust: 'Truegold-Staub', bread: 'Brot', wood: 'Holz', stone: 'Stein', iron: 'Eisen', gold: 'Gold', researchSpeed: 'Forschungstempo (%)',
+        quickCurrent: 'Schnell aktuell', quickTarget: 'Schnell Ziel', current: 'Aktuell', target: 'Ziel', applyActive: 'Aktiven Tab anwenden', applyAll: 'Alles anwenden', clearAll: 'Alles löschen',
+        techTree: 'Technologiebaum', techHint: 'Setze aktuelle und Zielstufe. Gezählt werden nur Upgrades über der aktuellen Stufe.',
+        results: 'Ergebnisse', resultsHint: 'Summen aktualisieren sich automatisch.', noSelection: 'Wähle Zielstufen, um Ergebnisse zu sehen.',
+        baseTime: 'Basiszeit', modifiedTime: 'Angepasste Zeit', savedTime: 'Gesparte Zeit', resources: 'Benötigte Ressourcen', stillNeed: 'Fehlt', leftover: 'Übrig',
+        bonuses: 'Upgrade-Boni', breakdown: 'Technologie-Details', technology: 'Technologie', upgrade: 'Upgrade', time: 'Zeit', power: 'Macht',
+        all: 'Alle', infantry: 'Infanterie', cavalry: 'Kavallerie', archer: 'Bogenschützen', general: 'Allgemein', none: 'Keine', level: 'Stufe',
+        dataSource: 'Kriegsakademie-Daten werden lokal geladen.', timeUnits: { d: 'T', h: 'Std', m: 'Min', s: 'Sek' }
+      },
+      th: {
+        brandSub: 'เครื่องมือบัญชาการ Kingshot', calcHub: 'ศูนย์คำนวณ', support: 'หน้าสนับสนุน', badge: 'วางแผนวิจัย', titleA: 'สถาบันสงคราม', titleB: 'คำนวณ',
+        subtitle: 'คำนวณงานวิจัยทหารราบ ทหารม้า และธนู พร้อม Truegold Dust ทรัพยากร เวลา พลัง และโบนัสรวม',
+        selectedTech: 'เทคที่เลือก', upgradeSteps: 'ขั้นอัปเกรด', researchTime: 'เวลาวิจัย', powerGain: 'พลังที่เพิ่ม',
+        inventoryTitle: 'ทรัพยากรและความเร็ว', inventoryHint: 'ใส่ทรัพยากรที่มีเพื่อดูส่วนที่ขาดและเหลือ', loading: 'กำลังโหลดข้อมูล...', ready: 'ข้อมูลพร้อมแล้ว',
+        truegold_dust: 'Truegold Dust', bread: 'ขนมปัง', wood: 'ไม้', stone: 'หิน', iron: 'เหล็ก', gold: 'ทอง', researchSpeed: 'โบนัสความเร็ววิจัย (%)',
+        quickCurrent: 'ปัจจุบันรวม', quickTarget: 'เป้าหมายรวม', current: 'ปัจจุบัน', target: 'เป้าหมาย', applyActive: 'ใช้กับแท็บนี้', applyAll: 'ใช้ทั้งหมด', clearAll: 'ล้างทั้งหมด',
+        techTree: 'ผังเทคโนโลยี', techHint: 'ตั้งค่าเลเวลปัจจุบันและเป้าหมาย ระบบจะนับเฉพาะเลเวลที่สูงกว่าปัจจุบัน',
+        results: 'ผลลัพธ์', resultsHint: 'ผลรวมจะอัปเดตเมื่อเปลี่ยนเลเวลหรือทรัพยากร', noSelection: 'เลือกเลเวลเป้าหมายเพื่อดูผลลัพธ์',
+        baseTime: 'เวลาเดิม', modifiedTime: 'เวลาหลังปรับ', savedTime: 'เวลาที่ลด', resources: 'ทรัพยากรที่ใช้', stillNeed: 'ขาด', leftover: 'เหลือ',
+        bonuses: 'โบนัสอัปเกรด', breakdown: 'รายละเอียดเทค', technology: 'เทคโนโลยี', upgrade: 'อัปเกรด', time: 'เวลา', power: 'พลัง',
+        all: 'ทั้งหมด', infantry: 'ทหารราบ', cavalry: 'ทหารม้า', archer: 'ธนู', general: 'ทั่วไป', none: 'ไม่มี', level: 'เลเวล',
+        dataSource: 'ข้อมูลสถาบันสงครามโหลดจากไฟล์ในไซต์', timeUnits: { d: 'วัน', h: 'ชม.', m: 'นาที', s: 'วิ' }
+      },
+      id: {
+        brandSub: 'Alat komando Kingshot', calcHub: 'Hub kalkulator', support: 'Halaman dukungan', badge: 'Perencana riset', titleA: 'Akademi Perang', titleB: 'Kalkulator',
+        subtitle: 'Rencanakan riset infantry, cavalry, dan archer dengan Truegold Dust, sumber daya, waktu, power, dan total bonus akhir.',
+        selectedTech: 'Teknologi dipilih', upgradeSteps: 'Langkah upgrade', researchTime: 'Waktu riset', powerGain: 'Kenaikan power',
+        inventoryTitle: 'Inventori & kecepatan', inventoryHint: 'Masukkan stok milikmu untuk melihat kekurangan dan sisa.', loading: 'Memuat data...', ready: 'Data siap',
+        truegold_dust: 'Truegold Dust', bread: 'Roti', wood: 'Kayu', stone: 'Batu', iron: 'Besi', gold: 'Gold', researchSpeed: 'Bonus kecepatan riset (%)',
+        quickCurrent: 'Current cepat', quickTarget: 'Target cepat', current: 'Saat ini', target: 'Target', applyActive: 'Terapkan tab aktif', applyAll: 'Terapkan semua', clearAll: 'Hapus semua',
+        techTree: 'Pohon teknologi', techHint: 'Atur level saat ini dan target. Hanya upgrade di atas level saat ini yang dihitung.',
+        results: 'Hasil', resultsHint: 'Total berubah otomatis saat level atau inventori diubah.', noSelection: 'Pilih level target untuk melihat hasil.',
+        baseTime: 'Waktu dasar', modifiedTime: 'Waktu akhir', savedTime: 'Waktu hemat', resources: 'Sumber daya perlu', stillNeed: 'Kurang', leftover: 'Sisa',
+        bonuses: 'Bonus upgrade', breakdown: 'Rincian teknologi', technology: 'Teknologi', upgrade: 'Upgrade', time: 'Waktu', power: 'Power',
+        all: 'Semua', infantry: 'Infantry', cavalry: 'Cavalry', archer: 'Archer', general: 'Umum', none: 'Tidak ada', level: 'Level',
+        dataSource: 'Data Akademi Perang dimuat lokal dari dataset kalkulator.', timeUnits: { d: 'h', h: 'jam', m: 'mnt', s: 'dtk' }
+      }
+    };
+
+    const RESOURCE_KEYS = ['truegold_dust', 'bread', 'wood', 'stone', 'iron', 'gold'];
+    const DEFAULT_TYPES = ['infantry', 'cavalry', 'archer', 'general'];
+    const ICONS = { infantry: '⚔', cavalry: '♞', archer: '⌖', general: '✦' };
+    const state = { academy: null, techs: [], selected: {}, inventory: {}, activeType: 'infantry' };
+    const $ = (id) => document.getElementById(id);
+    const normalizeLang = (value) => {
+      const raw = String(value || '');
+      const lower = raw.toLowerCase();
+      if (lower === 'zh-cn' || lower === 'zh') return 'zh-CN';
+      if (lower === 'zh-tw') return 'zh-TW';
+      const short = lower.split('-')[0];
+      return I18N[raw] ? raw : I18N[short] ? short : 'ko';
+    };
+    let lang = normalizeLang(new URL(location.href).searchParams.get('lang') || localStorage.getItem('siteLang') || localStorage.getItem('lang') || navigator.language);
+    const tr = (key) => I18N[lang]?.[key] || I18N.en[key] || key;
+    const locale = () => ({ ko: 'ko-KR', en: 'en-US', 'zh-CN': 'zh-CN', 'zh-TW': 'zh-TW', fr: 'fr-FR', de: 'de-DE', th: 'th-TH', id: 'id-ID' }[lang] || 'en-US');
+    const fmt = (value) => Math.round(Number(value) || 0).toLocaleString(locale());
+    const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+    const techImage = (tech) => tech.image ? `https://kingshot.net/images/tech-tree/${encodeURIComponent(tech.image)}` : '';
+    const maxLevel = (tech) => Number(tech?.data?.max_level) || Math.max(1, ...(tech?.data?.levels || []).map((row) => Number(row.level) || 0));
+    const parseAmount = (value) => {
+      const text = String(value || '').trim().toLowerCase().replace(/\s/g, '').replace(/,/g, '');
+      if (!text) return 0;
+      const number = Number.parseFloat(text);
+      if (!Number.isFinite(number)) return 0;
+      if (text.endsWith('b')) return Math.floor(number * 1000000000);
+      if (text.endsWith('m')) return Math.floor(number * 1000000);
+      if (text.endsWith('k')) return Math.floor(number * 1000);
+      return Math.floor(number);
+    };
+    const timeText = (seconds) => {
+      let total = Math.max(0, Math.round(Number(seconds) || 0));
+      const d = Math.floor(total / 86400); total %= 86400;
+      const h = Math.floor(total / 3600); total %= 3600;
+      const m = Math.floor(total / 60);
+      const s = total % 60;
+      const u = I18N[lang]?.timeUnits || I18N.en.timeUnits;
+      return d ? `${d}${u.d} ${h}${u.h} ${m}${u.m}` : h ? `${h}${u.h} ${m}${u.m}` : m ? `${m}${u.m} ${s}${u.s}` : `${s}${u.s}`;
+    };
+    const getTypes = () => DEFAULT_TYPES.filter((type) => state.techs.some((tech) => (tech.type || 'general') === type));
+    const getSelection = (id) => state.selected[id] || { current: 0, target: 0 };
+
+    function saveState() {
+      const payload = {
+        selected: state.selected,
+        inventory: Object.fromEntries(RESOURCE_KEYS.map((key) => [key, document.querySelector(`.inventory[data-key="${key}"]`)?.value || ''])),
+        speed: $('speedBonus')?.value || '0',
+        activeType: state.activeType
+      };
+      localStorage.setItem('warAcademyCalculatorState:v1', JSON.stringify(payload));
+    }
+
+    function loadSavedState() {
+      try {
+        const saved = JSON.parse(localStorage.getItem('warAcademyCalculatorState:v1') || '{}');
+        state.selected = saved.selected || {};
+        state.inventory = saved.inventory || {};
+        state.activeType = saved.activeType || state.activeType;
+        RESOURCE_KEYS.forEach((key) => {
+          const input = document.querySelector(`.inventory[data-key="${key}"]`);
+          if (input) input.value = state.inventory[key] || '';
+        });
+        $('speedBonus').value = saved.speed || '0';
+      } catch {}
+    }
+
+    function levelOptions(max, selected = 0) {
+      const rows = [`<option value="0">${tr('none')}</option>`];
+      for (let i = 1; i <= max; i++) rows.push(`<option value="${i}" ${Number(selected) === i ? 'selected' : ''}>${tr('level')} ${i}</option>`);
+      return rows.join('');
+    }
+
+    function renderQuickSelects() {
+      const max = Math.max(1, ...state.techs.map(maxLevel));
+      $('quickCurrent').innerHTML = levelOptions(max, 0);
+      $('quickTarget').innerHTML = levelOptions(max, 0);
+    }
+
+    function renderTabs() {
+      const types = getTypes();
+      if (!types.includes(state.activeType)) state.activeType = types[0] || 'general';
+      $('branchTabs').innerHTML = types.map((type) => `<button class="tab ${type === state.activeType ? 'active' : ''}" type="button" data-type="${type}">${ICONS[type] || '✦'} ${tr(type)}</button>`).join('');
+      document.querySelectorAll('#branchTabs .tab').forEach((button) => {
+        button.addEventListener('click', () => {
+          state.activeType = button.dataset.type;
+          saveState();
+          renderTabs();
+          renderTechs();
+          calculate();
+        });
+      });
+    }
+
+    function renderTechs() {
+      const shown = state.techs.filter((tech) => (tech.type || 'general') === state.activeType);
+      $('techGrid').innerHTML = shown.map((tech) => {
+        const sel = getSelection(tech.id);
+        const max = maxLevel(tech);
+        const active = Number(sel.current) < Number(sel.target);
+        const image = techImage(tech);
+        return `
+          <article class="tech-card ${active ? 'active' : ''}" data-id="${esc(tech.id)}">
+            <div class="tech-top">
+              <div class="tech-icon">${image ? `<img src="${image}" alt="" loading="lazy" onerror="this.remove()">` : esc(tech.icon || ICONS[tech.type] || '✦')}</div>
+              <div class="tech-title">
+                <h3>${esc(tech.name)}</h3>
+                <p>${esc(tech.description || tr(tech.type || 'general'))}</p>
+              </div>
+            </div>
+            <div class="levels">
+              <div class="field"><label>${tr('current')} ${tr('level')}</label><select class="tech-current">${levelOptions(max, sel.current)}</select></div>
+              <div class="field"><label>${tr('target')} ${tr('level')}</label><select class="tech-target">${levelOptions(max, sel.target)}</select></div>
+            </div>
+          </article>`;
+      }).join('');
+      document.querySelectorAll('.tech-card select').forEach((select) => {
+        select.addEventListener('change', () => {
+          const card = select.closest('.tech-card');
+          const current = Number(card.querySelector('.tech-current').value) || 0;
+          const target = Number(card.querySelector('.tech-target').value) || 0;
+          state.selected[card.dataset.id] = { current, target };
+          card.classList.toggle('active', current < target);
+          saveState();
+          calculate();
+        });
+      });
+    }
+
+    function applyLevels(scope) {
+      const current = Number($('quickCurrent').value) || 0;
+      const target = Number($('quickTarget').value) || 0;
+      const targets = scope === 'all' ? state.techs : state.techs.filter((tech) => (tech.type || 'general') === state.activeType);
+      targets.forEach((tech) => {
+        const max = maxLevel(tech);
+        state.selected[tech.id] = { current: Math.min(current, max), target: Math.min(target, max) };
+      });
+      saveState();
+      renderTechs();
+      calculate();
+    }
+
+    function clearAll() {
+      state.selected = {};
+      saveState();
+      renderTechs();
+      calculate();
+    }
+
+    function addBonus(bonuses, benefit) {
+      if (!benefit?.type || benefit.type === 'unlock_tech_tree' || !benefit.value) return;
+      const value = Number.parseFloat(benefit.value) || 0;
+      const unit = benefit.unit || '';
+      bonuses[benefit.type] ||= { value: 0, unit };
+      bonuses[benefit.type].value += value;
+    }
+
+    function bonusLabel(key) {
+      return key.replace(/^truegold_/, '').replaceAll('_', ' ').replace(/\b\w/g, (ch) => ch.toUpperCase());
+    }
+
+    function collectTotals() {
+      const totals = { time: 0, power: 0 };
+      RESOURCE_KEYS.forEach((key) => { totals[key] = 0; });
+      const bonuses = {};
+      const breakdown = [];
+      let selectedCount = 0;
+      let steps = 0;
+      state.techs.forEach((tech) => {
+        const sel = getSelection(tech.id);
+        const current = Number(sel.current) || 0;
+        const target = Number(sel.target) || 0;
+        if (current >= target) return;
+        selectedCount++;
+        const costs = { time: 0, power: 0 };
+        RESOURCE_KEYS.forEach((key) => { costs[key] = 0; });
+        for (let level = current + 1; level <= target; level++) {
+          const row = (tech.data?.levels || []).find((item) => Number(item.level) === level);
+          if (!row) continue;
+          steps++;
+          Object.entries(row.cost || {}).forEach(([key, value]) => {
+            if (key in totals) {
+              totals[key] += Number(value) || 0;
+              costs[key] += Number(value) || 0;
+            }
+          });
+          (row.benefits || []).forEach((benefit) => {
+            const power = Number.parseInt(String(benefit.power || 0), 10) || 0;
+            totals.power += power;
+            costs.power += power;
+            addBonus(bonuses, benefit);
+          });
+        }
+        breakdown.push({ tech, current, target, costs });
+      });
+      return { totals, bonuses, breakdown, selectedCount, steps };
+    }
+
+    function calculate() {
+      const { totals, bonuses, breakdown, selectedCount, steps } = collectTotals();
+      const speed = Math.max(0, Number(String($('speedBonus').value || '0').replace(',', '.')) || 0);
+      const modifiedMinutes = Math.round(totals.time / (1 + speed / 100));
+      const savedMinutes = Math.max(0, totals.time - modifiedMinutes);
+      $('selectedCount').textContent = fmt(selectedCount);
+      $('stepCount').textContent = fmt(steps);
+      $('timeCount').textContent = selectedCount ? timeText(modifiedMinutes * 60) : '-';
+      $('powerCount').textContent = fmt(totals.power);
+
+      if (!selectedCount) {
+        $('resultBody').className = 'empty';
+        $('resultBody').textContent = tr('noSelection');
+        return;
+      }
+
+      const inventory = {};
+      RESOURCE_KEYS.forEach((key) => {
+        inventory[key] = parseAmount(document.querySelector(`.inventory[data-key="${key}"]`)?.value);
+      });
+      const metricHtml = `
+        <div class="metric-grid">
+          <div class="metric"><span>${tr('baseTime')}</span><strong>${timeText(totals.time * 60)}</strong></div>
+          <div class="metric"><span>${tr('modifiedTime')}</span><strong>${timeText(modifiedMinutes * 60)}</strong></div>
+          <div class="metric"><span>${tr('savedTime')}</span><strong>${timeText(savedMinutes * 60)}</strong></div>
+          <div class="metric"><span>${tr('powerGain')}</span><strong>${fmt(totals.power)}</strong></div>
+        </div>`;
+      const resourcesHtml = `
+        <div class="section-title">${tr('resources')}</div>
+        <div class="resource-list">
+          ${RESOURCE_KEYS.map((key) => {
+            const diff = totals[key] - (inventory[key] || 0);
+            const stateText = diff > 0 ? `${tr('stillNeed')} ${fmt(diff)}` : `${tr('leftover')} ${fmt(Math.abs(diff))}`;
+            return `<div class="resource-row"><span>${tr(key)}<small>${stateText}</small></span><strong class="${diff > 0 ? 'need' : 'extra'}">${fmt(totals[key])}</strong></div>`;
+          }).join('')}
+        </div>`;
+      const bonusHtml = Object.keys(bonuses).length ? `
+        <div class="section-title">${tr('bonuses')}</div>
+        <div class="bonus-list">${Object.entries(bonuses).map(([key, bonus]) => `<div class="bonus-row"><span>${esc(bonusLabel(key))}</span><strong>${bonus.unit === 'percentage' ? '+' + bonus.value.toFixed(2) + '%' : '+' + fmt(bonus.value)}</strong></div>`).join('')}</div>` : '';
+      const tableHtml = breakdown.length ? `
+        <div class="section-title">${tr('breakdown')}</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>${tr('technology')}</th><th>${tr('upgrade')}</th>${RESOURCE_KEYS.map((key) => `<th>${tr(key)}</th>`).join('')}<th>${tr('time')}</th><th>${tr('power')}</th></tr></thead>
+            <tbody>${breakdown.map(({ tech, current, target, costs }) => `
+              <tr>
+                <td>${esc(tech.name)}</td>
+                <td>${current} → ${target}</td>
+                ${RESOURCE_KEYS.map((key) => `<td>${fmt(costs[key])}</td>`).join('')}
+                <td>${timeText(Math.round(costs.time / (1 + speed / 100)) * 60)}</td>
+                <td>${fmt(costs.power)}</td>
+              </tr>`).join('')}</tbody>
+          </table>
+        </div>` : '';
+      $('resultBody').className = '';
+      $('resultBody').innerHTML = metricHtml + resourcesHtml + bonusHtml + tableHtml;
+      saveState();
+    }
+
+    function setLang(next) {
+      lang = normalizeLang(next);
+      document.documentElement.lang = lang;
+      document.title = `${tr('titleA')} ${tr('titleB')} | 885 LEGEND NASHSH`;
+      document.querySelectorAll('[data-i18n]').forEach((node) => { node.textContent = tr(node.dataset.i18n); });
+      localStorage.setItem('siteLang', lang);
+      localStorage.setItem('lang', lang);
+      const url = new URL(location.href);
+      url.searchParams.set('lang', lang);
+      history.replaceState(null, '', url.toString());
+      $('langSelect').value = lang;
+      $('homeLink').href = `./index.html?lang=${encodeURIComponent(lang)}`;
+      $('calcHubLink').href = `./troop_training_ui.html?lang=${encodeURIComponent(lang)}`;
+      if (state.techs.length) {
+        renderQuickSelects();
+        renderTabs();
+        renderTechs();
+        calculate();
+      }
+    }
+
+    async function init() {
+      $('langSelect').value = lang;
+      $('langSelect').addEventListener('change', (event) => setLang(event.target.value));
+      $('applyActive').addEventListener('click', () => applyLevels('active'));
+      $('applyAll').addEventListener('click', () => applyLevels('all'));
+      $('clearAll').addEventListener('click', clearAll);
+      $('quickCurrent').addEventListener('change', () => applyLevels('active'));
+      $('quickTarget').addEventListener('change', () => applyLevels('active'));
+      document.querySelectorAll('.inventory, #speedBonus').forEach((input) => {
+        input.addEventListener('input', () => { saveState(); calculate(); });
+      });
+      const response = await fetch('./kingshot_calculator_data.json');
+      const payload = await response.json();
+      state.academy = payload.calculators?.['war-academy'] || payload['war-academy'];
+      state.techs = (state.academy?.techs || []).filter((tech) => tech.id !== 'war_academy');
+      loadSavedState();
+      renderQuickSelects();
+      setLang(lang);
+      $('dataStatus').textContent = tr('ready');
+    }
+    init().catch((error) => {
+      $('dataStatus').textContent = error.message || 'Data error';
+    });
+  </script>
+</body>
+</html>

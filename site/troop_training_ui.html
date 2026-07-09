@@ -654,7 +654,7 @@
       ["vip", "https://kingshot.net/vip-calculator", "vip"],
       ["pack", "https://kingshot.net/pack-calculator", "pack"],
       ["troop-training", "https://kingshot.net/troop-training-calculator", "troop"],
-      ["war-academy", "https://kingshot.net/war-academy-calculator", "warAcademy"],
+      ["war-academy", "./war_academy_calculator.html", "warAcademy"],
       ["fort-sanc", "https://github.com/Na-seunghyun/fr_web", "fortSanc"],
       ["transfer-pass", "https://kingshot.net/transfer-pass-calculator", "transferPass"]
     ];
@@ -1203,8 +1203,12 @@
         </button>`).join("");
       document.querySelectorAll("#calculatorNav button").forEach((button) => {
         button.addEventListener("click", () => {
-          if (button.dataset.id === "building") {
-            location.href = `./building_calculator.html?lang=${encodeURIComponent(lang)}`;
+          if (button.dataset.id === "building" || button.dataset.id === "war-academy") {
+            const localPages = {
+              building: "./building_calculator.html",
+              "war-academy": "./war_academy_calculator.html"
+            };
+            location.href = `${localPages[button.dataset.id]}?lang=${encodeURIComponent(lang)}`;
             return;
           }
           activeId = button.dataset.id;

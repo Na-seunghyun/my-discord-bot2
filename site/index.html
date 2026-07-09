@@ -843,6 +843,12 @@
         <p data-i18n="buildingBody">Plan building upgrade resources and time with speed buffs, resource discounts, and Truegold levels.</p>
         <span class="open" data-i18n="buildingButton">Open building calculator</span>
       </a>
+      <a class="tool standard" data-link-base="./war_academy_calculator.html" href="./war_academy_calculator.html">
+        <span class="tag" data-i18n="tagCalc">Calculator Vault</span>
+        <h2 data-i18n="warAcademyTitle">War Academy Calculator</h2>
+        <p data-i18n="warAcademyBody">Plan Truegold Dust, resources, research time, power gain, and troop research bonuses.</p>
+        <span class="open" data-i18n="warAcademyButton">Open war academy calculator</span>
+      </a>
       <a class="tool standard" data-link-base="./kingshot_lookup.html" href="./kingshot_lookup.html">
         <span class="tag" data-i18n="tagIntel">Player Intel</span>
         <h2 data-i18n="intelTitle">Kingshot Intel Lookup</h2>
@@ -1217,8 +1223,90 @@
         intelButton: 'Open intel'
       }
     };
-    ['zh-CN','zh-TW','fr','de','th','id'].forEach((code) => { BUILDING_CALCULATOR_I18N[code] = BUILDING_CALCULATOR_I18N.en; });
+    ['zh-CN','zh-TW','fr','de','th','id'].forEach((code) => { BUILDING_CALCULATOR_I18N[code] = { ...BUILDING_CALCULATOR_I18N.en }; });
+    Object.assign(BUILDING_CALCULATOR_I18N['zh-CN'], {
+      primary: '打开计算器', toolHint: '情报、自动兑换、地图、建筑计算器。',
+      coreCalcTitle: 'Kingshot 计算器', coreCalcBody: '集中使用建筑升级、训练、装备、VIP、礼包价值和战争学院计算器。',
+      coreCalcMetaA: '建筑计算器', coreCalcMetaB: '资源规划', coreCalcButton: '打开计算器',
+      buildingTitle: '建筑计算器', buildingBody: '计算建筑升级资源和时间，并支持速度增益、资源减免和真金等级。', buildingButton: '打开建筑计算器'
+    });
+    Object.assign(BUILDING_CALCULATOR_I18N['zh-TW'], {
+      primary: '開啟計算器', toolHint: '情報、自動兌換、地圖、建築計算器。',
+      coreCalcTitle: 'Kingshot 計算器', coreCalcBody: '集中使用建築升級、訓練、裝備、VIP、禮包價值和戰爭學院計算器。',
+      coreCalcMetaA: '建築計算器', coreCalcMetaB: '資源規劃', coreCalcButton: '開啟計算器',
+      buildingTitle: '建築計算器', buildingBody: '計算建築升級資源和時間，並支援速度增益、資源減免和真金等級。', buildingButton: '開啟建築計算器'
+    });
+    Object.assign(BUILDING_CALCULATOR_I18N.fr, {
+      primary: 'Ouvrir les calculateurs', toolHint: 'Intel, auto redeem, carte, calculateur bâtiment.',
+      coreCalcTitle: 'Calculateurs Kingshot', coreCalcBody: 'Utilisez bâtiments, entraînement, équipement, VIP, valeur des packs et Académie de guerre au même endroit.',
+      coreCalcMetaA: 'Calculateur bâtiment', coreCalcMetaB: 'Planification ressources', coreCalcButton: 'Ouvrir les calculateurs',
+      buildingTitle: 'Calculateur bâtiment', buildingBody: 'Planifiez ressources et temps de construction avec bonus de vitesse, réductions et niveaux Truegold.', buildingButton: 'Ouvrir le calculateur'
+    });
+    Object.assign(BUILDING_CALCULATOR_I18N.de, {
+      primary: 'Rechner öffnen', toolHint: 'Intel, Auto Redeem, Karte, Gebäuderechner.',
+      coreCalcTitle: 'Kingshot-Rechner', coreCalcBody: 'Nutze Gebäude, Training, Ausrüstung, VIP, Paketwert und Kriegsakademie an einem Ort.',
+      coreCalcMetaA: 'Gebäuderechner', coreCalcMetaB: 'Ressourcenplanung', coreCalcButton: 'Rechner öffnen',
+      buildingTitle: 'Gebäuderechner', buildingBody: 'Plane Upgrade-Ressourcen und Bauzeit mit Tempo-Buffs, Rabatten und Truegold-Stufen.', buildingButton: 'Gebäuderechner öffnen'
+    });
+    Object.assign(BUILDING_CALCULATOR_I18N.th, {
+      primary: 'เปิดเครื่องคำนวณ', toolHint: 'อินเทล ออโตรีดิม แผนที่ เครื่องคำนวณอาคาร',
+      coreCalcTitle: 'เครื่องคำนวณ Kingshot', coreCalcBody: 'ใช้เครื่องคำนวณอาคาร ฝึกทหาร อุปกรณ์ VIP แพ็ก และสถาบันสงครามในที่เดียว',
+      coreCalcMetaA: 'คำนวณอาคาร', coreCalcMetaB: 'วางแผนทรัพยากร', coreCalcButton: 'เปิดเครื่องคำนวณ',
+      buildingTitle: 'เครื่องคำนวณอาคาร', buildingBody: 'คำนวณทรัพยากรและเวลาสร้างพร้อมบัฟความเร็ว ลดทรัพยากร และเลเวล Truegold', buildingButton: 'เปิดคำนวณอาคาร'
+    });
+    Object.assign(BUILDING_CALCULATOR_I18N.id, {
+      primary: 'Buka kalkulator', toolHint: 'Intel, auto redeem, peta, kalkulator bangunan.',
+      coreCalcTitle: 'Kalkulator Kingshot', coreCalcBody: 'Gunakan kalkulator bangunan, training, gear, VIP, nilai pack, dan akademi perang di satu tempat.',
+      coreCalcMetaA: 'Kalkulator bangunan', coreCalcMetaB: 'Rencana sumber daya', coreCalcButton: 'Buka kalkulator',
+      buildingTitle: 'Kalkulator bangunan', buildingBody: 'Rencanakan sumber daya dan waktu upgrade dengan buff kecepatan, diskon, dan level Truegold.', buildingButton: 'Buka kalkulator bangunan'
+    });
     Object.entries(BUILDING_CALCULATOR_I18N).forEach(([code, values]) => {
+      if (!I18N[code]) I18N[code] = {};
+      Object.assign(I18N[code], values);
+    });
+    const WAR_ACADEMY_CARD_I18N = {
+      ko: {
+        warAcademyTitle: '전쟁 아카데미 계산기',
+        warAcademyBody: '트루골드 가루, 자원, 연구 시간, 전투력 증가, 병종 연구 보너스를 한 화면에서 계산합니다.',
+        warAcademyButton: '전쟁 아카데미 계산기 열기'
+      },
+      en: {
+        warAcademyTitle: 'War Academy Calculator',
+        warAcademyBody: 'Plan Truegold Dust, resources, research time, power gain, and troop research bonuses.',
+        warAcademyButton: 'Open war academy calculator'
+      },
+      'zh-CN': {
+        warAcademyTitle: '战争学院计算器',
+        warAcademyBody: '计算真金粉尘、资源、研究时间、战力提升和兵种研究加成。',
+        warAcademyButton: '打开战争学院计算器'
+      },
+      'zh-TW': {
+        warAcademyTitle: '戰爭學院計算器',
+        warAcademyBody: '計算真金粉塵、資源、研究時間、戰力提升和兵種研究加成。',
+        warAcademyButton: '開啟戰爭學院計算器'
+      },
+      fr: {
+        warAcademyTitle: 'Calculateur Académie de guerre',
+        warAcademyBody: 'Planifiez poussière Truegold, ressources, temps de recherche, puissance et bonus de troupes.',
+        warAcademyButton: 'Ouvrir le calculateur'
+      },
+      de: {
+        warAcademyTitle: 'Kriegsakademie-Rechner',
+        warAcademyBody: 'Plane Truegold-Staub, Ressourcen, Forschungszeit, Machtzuwachs und Truppenboni.',
+        warAcademyButton: 'Kriegsakademie öffnen'
+      },
+      th: {
+        warAcademyTitle: 'เครื่องคำนวณสถาบันสงคราม',
+        warAcademyBody: 'คำนวณ Truegold Dust ทรัพยากร เวลาวิจัย พลัง และโบนัสวิจัยทหาร',
+        warAcademyButton: 'เปิดเครื่องคำนวณสถาบันสงคราม'
+      },
+      id: {
+        warAcademyTitle: 'Kalkulator Akademi Perang',
+        warAcademyBody: 'Rencanakan Truegold Dust, sumber daya, waktu riset, kenaikan power, dan bonus troop.',
+        warAcademyButton: 'Buka kalkulator akademi perang'
+      }
+    };
+    Object.entries(WAR_ACADEMY_CARD_I18N).forEach(([code, values]) => {
       if (!I18N[code]) I18N[code] = {};
       Object.assign(I18N[code], values);
     });
