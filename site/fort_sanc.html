@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="ko">
 <head>
   <meta charset="utf-8">
@@ -337,6 +337,8 @@
       .twocol, .btns, .summary, .items, .grid, .metric-grid { grid-template-columns: 1fr; }
       .hero, .panel { border-radius: 18px; }
     }
+    .site-trustbar > span:not(.site-trust-links):not(.trust-copy) { display: none; }
+    .trust-copy { display: block; }
   </style>
   <link rel="stylesheet" href="./static/legend-ui.css?v=20260620-ui6">
 </head>
@@ -361,6 +363,7 @@
     </nav>
 
     <div class="site-trustbar" role="note" aria-label="Site safety notice">
+      <span class="trust-copy" data-i18n="trustText"><strong>HTTPS protected · safe connection.</strong> This page runs locally in your browser and never asks for passwords, payment details, account login, or device access.</span>
       <span><strong>HTTPS protected · 안전 연결.</strong> This page runs as a local planning tool in your browser. 비밀번호, 결제 정보, 계정 로그인을 요구하지 않습니다.</span>
       <span class="site-trust-links">
         <a href="./security.html">Security</a>
@@ -379,20 +382,20 @@
         <div class="panel-head"><strong data-i18n="setup">Setup</strong><span data-i18n="setupHint">Enter alliances and target counts, then generate a fair rotation.</span></div>
         <div class="form">
           <div class="grid">
-            <div class="field"><label for="frAlliances">Alliances</label><input id="frAlliances" type="text" value="GTR, TNW, HOG, DEA, RES" placeholder="GTR, TNW, HOG, DEA, RES"></div>
-            <div class="field"><label for="frTarget">Target points per alliance</label><input id="frTarget" type="number" min="0" value="10"></div>
-            <div class="field"><label for="frSeed">Seed</label><input id="frSeed" type="number" min="0" value="7"></div>
-            <div class="field"><label for="frRounds">Rounds</label><input id="frRounds" type="number" min="1" value="8"></div>
-            <div class="field"><label for="frForts">Fort count</label><input id="frForts" type="number" min="1" value="4"></div>
-            <div class="field"><label for="frRelics">San count</label><input id="frRelics" type="number" min="1" value="12"></div>
-            <div class="field"><label for="frEmptyMin">San EMPTY min</label><input id="frEmptyMin" type="number" min="0" value="2"></div>
-            <div class="field"><label for="frEmptyMax">San EMPTY max</label><input id="frEmptyMax" type="number" min="0" value="3"></div>
+            <div class="field"><label for="frAlliances" data-i18n="alliances">Alliances</label><input id="frAlliances" type="text" value="GTR, TNW, HOG, DEA, RES" placeholder="GTR, TNW, HOG, DEA, RES"></div>
+            <div class="field"><label for="frTarget" data-i18n="targetPoints">Target points per alliance</label><input id="frTarget" type="number" min="0" value="10"></div>
+            <div class="field"><label for="frSeed" data-i18n="seed">Seed</label><input id="frSeed" type="number" min="0" value="7"></div>
+            <div class="field"><label for="frRounds" data-i18n="rounds">Rounds</label><input id="frRounds" type="number" min="1" value="8"></div>
+            <div class="field"><label for="frForts" data-i18n="fortCount">Fort count</label><input id="frForts" type="number" min="1" value="4"></div>
+            <div class="field"><label for="frRelics" data-i18n="sancCount">San count</label><input id="frRelics" type="number" min="1" value="12"></div>
+            <div class="field"><label for="frEmptyMin" data-i18n="emptyMin">San EMPTY min</label><input id="frEmptyMin" type="number" min="0" value="2"></div>
+            <div class="field"><label for="frEmptyMax" data-i18n="emptyMax">San EMPTY max</label><input id="frEmptyMax" type="number" min="0" value="3"></div>
           </div>
         </div>
         <div class="calc-actions">
-          <button class="ghost" id="frMax" type="button">MAX ignore EMPTY</button>
-          <button class="primary" id="doCalc" type="button">Generate</button>
-          <button class="ghost" id="frCopy" type="button">Copy Discord</button>
+          <button class="ghost" id="frMax" type="button" data-i18n="maxIgnoreEmpty">MAX ignore EMPTY</button>
+          <button class="primary" id="doCalc" type="button" data-i18n="generate">Generate</button>
+          <button class="ghost" id="frCopy" type="button" data-i18n="copyDiscord">Copy Discord</button>
         </div>
         <p class="note" id="frLimitNote"></p>
       </section>
@@ -507,13 +510,18 @@
     function fmt(value) {
       return Math.round(Number(value) || 0).toLocaleString(document.documentElement.lang || 'ko');
     }
+    function t(key) {
+      const lang = document.documentElement.lang || getLang();
+      const dict = I18N[lang] || I18N.ko || I18N.en;
+      return (dict && dict[key]) || (I18N.en && I18N.en[key]) || key;
+    }
     function escapeHtml(value) {
       return String(value ?? '').replace(/[&<>"']/g, (ch) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
     }
     function parseAlliances(text) {
       const alliances = String(text || '').split(',').map((item) => item.trim()).filter(Boolean);
-      if (alliances.length < 2 || alliances.length > 8) throw new Error(`Alliances must be 2-8. Current: ${alliances.length}`);
-      if (new Set(alliances).size !== alliances.length) throw new Error('Alliance names are duplicated.');
+      if (alliances.length < 2 || alliances.length > 8) throw new Error(`${t('allianceCountError')} ${fmt(alliances.length)}`);
+      if (new Set(alliances).size !== alliances.length) throw new Error(t('duplicateAllianceError'));
       return alliances;
     }
     function seededRandom(seed) {
@@ -689,14 +697,14 @@
     }
     function formatDiscord(alliances, schedule, forts, relics) {
       return schedule.map((rd) => {
-        const lines = [`=== Round ${rd.round} ===`];
+        const lines = [`=== ${t('round')} ${fmt(rd.round)} ===`];
         alliances.forEach((name) => {
           const fortIds = Array.from({ length: forts }, (_, i) => i + 1).filter((id) => rd.fortOwner[id] === name);
           const sanIds = Array.from({ length: relics }, (_, i) => i + 1).filter((id) => rd.relicOwner[id] === name);
-          lines.push(`${name} - ${fortIds.length ? `Fort${fortIds.join(',')}` : 'No Fort'} / ${sanIds.length ? `San${sanIds.join(',')}` : 'No San'}`);
+          lines.push(`${name} - ${fortIds.length ? `Fort${fortIds.join(',')}` : t('noFort')} / ${sanIds.length ? `San${sanIds.join(',')}` : t('noSan')}`);
         });
         const emptyIds = Array.from({ length: relics }, (_, i) => i + 1).filter((id) => rd.relicOwner[id] === 'EMPTY');
-        lines.push(emptyIds.length ? `San EMPTY: ${emptyIds.length} (IDs: ${emptyIds.join(', ')})` : 'San EMPTY: 0');
+        lines.push(emptyIds.length ? `${t('emptyLabel')}: ${fmt(emptyIds.length)} (${t('idsLabel')}: ${emptyIds.join(', ')})` : `${t('emptyLabel')}: 0`);
         return lines.join('\n');
       }).join('\n\n');
     }
@@ -705,20 +713,20 @@
         const allocationRows = alliances.map((name) => {
           const fortIds = Array.from({ length: cfg.forts }, (_, i) => i + 1).filter((id) => rd.fortOwner[id] === name);
           const sanIds = Array.from({ length: cfg.relics }, (_, i) => i + 1).filter((id) => rd.relicOwner[id] === name);
-          return `<tr><td>${escapeHtml(name)}</td><td>${fortIds.length ? `Fort ${fortIds.join(', ')}` : 'No Fort'}</td><td>${sanIds.length ? `San ${sanIds.join(', ')}` : 'No San'}</td><td>${fmt(rd.pointsAfter[name] || 0)}</td></tr>`;
+          return `<tr><td>${escapeHtml(name)}</td><td>${fortIds.length ? `Fort ${fortIds.join(', ')}` : t('noFort')}</td><td>${sanIds.length ? `San ${sanIds.join(', ')}` : t('noSan')}</td><td>${fmt(rd.pointsAfter[name] || 0)}</td></tr>`;
         }).join('');
         const emptyIds = Array.from({ length: cfg.relics }, (_, i) => i + 1).filter((id) => rd.relicOwner[id] === 'EMPTY');
-        return `<div class="section-label">Round ${rd.round}</div><table class="result-table"><thead><tr><th>Alliance</th><th>Fort</th><th>San</th><th>Points</th></tr></thead><tbody>${allocationRows}<tr><td>EMPTY</td><td>-</td><td>${emptyIds.length ? emptyIds.join(', ') : '0'}</td><td>-</td></tr></tbody></table>`;
+        return `<div class="section-label">${escapeHtml(t('round'))} ${fmt(rd.round)}</div><table class="result-table"><thead><tr><th>${escapeHtml(t('alliance'))}</th><th>Fort</th><th>San</th><th>${escapeHtml(t('points'))}</th></tr></thead><tbody>${allocationRows}<tr><td>EMPTY</td><td>-</td><td>${emptyIds.length ? emptyIds.join(', ') : '0'}</td><td>-</td></tr></tbody></table>`;
       }).join('');
       $('resultPanel').innerHTML = `
         <div class="metric-grid">
-          <div class="metric"><div class="label">Safe cap</div><div class="value">${fmt(caps.safeCap)}</div></div>
-          <div class="metric"><div class="label">Best cap</div><div class="value">${fmt(caps.bestCap)}</div></div>
-          <div class="metric"><div class="label">Alliances</div><div class="value">${fmt(alliances.length)}</div></div>
-          <div class="metric"><div class="label">Rounds</div><div class="value">${fmt(cfg.rounds)}</div></div>
+          <div class="metric"><div class="label">${escapeHtml(t('safeCap'))}</div><div class="value">${fmt(caps.safeCap)}</div></div>
+          <div class="metric"><div class="label">${escapeHtml(t('bestCap'))}</div><div class="value">${fmt(caps.bestCap)}</div></div>
+          <div class="metric"><div class="label">${escapeHtml(t('alliances'))}</div><div class="value">${fmt(alliances.length)}</div></div>
+          <div class="metric"><div class="label">${escapeHtml(t('rounds'))}</div><div class="value">${fmt(cfg.rounds)}</div></div>
         </div>
         ${rows}
-        <div class="section-label">Discord Copy</div>
+        <div class="section-label">${escapeHtml(t('discordCopy'))}</div>
         <textarea id="frDiscordText" readonly>${escapeHtml(discordText)}</textarea>
       `;
     }
@@ -726,7 +734,7 @@
       try {
         const alliances = parseAlliances($('frAlliances').value);
         const caps = estimateCaps(alliances, Number($('frRounds').value) || 8, Number($('frForts').value) || 4, Number($('frRelics').value) || 12, Number($('frEmptyMin').value) || 0, Number($('frEmptyMax').value) || 0);
-        $('frLimitNote').textContent = `Estimated target limit: safe ${fmt(caps.safeCap)} / best ${fmt(caps.bestCap)}`;
+        $('frLimitNote').textContent = `${t('estimatedLimit')}: ${t('safeCap')} ${fmt(caps.safeCap)} / ${t('bestCap')} ${fmt(caps.bestCap)}`;
       } catch {
         $('frLimitNote').textContent = '';
       }
@@ -735,15 +743,15 @@
       try {
         const alliances = parseAlliances($('frAlliances').value);
         const cfg = readFortSancConfig(alliances, Number($('frTarget').value) || 0);
-        if (cfg.emptyMin > cfg.emptyMax) throw new Error('San EMPTY min must be <= max.');
-        if (cfg.emptyMax > cfg.relics) throw new Error('San EMPTY max cannot exceed San count.');
+        if (cfg.emptyMin > cfg.emptyMax) throw new Error(t('sanEmptyMinError'));
+        if (cfg.emptyMax > cfg.relics) throw new Error(t('sanEmptyMaxError'));
         const caps = estimateCaps(alliances, cfg.rounds, cfg.forts, cfg.relics, cfg.emptyMin, cfg.emptyMax);
-        if (cfg.target > caps.safeCap) throw new Error(`Impossible: safe cap ≈${caps.safeCap}, target=${cfg.target}`);
+        if (cfg.target > caps.safeCap) throw new Error(`${t('impossible')}: ${t('safeCap')} ${fmt(caps.safeCap)}, ${t('targetPoints')} ${fmt(cfg.target)}`);
         const schedule = buildSchedule(cfg);
         const discordText = formatDiscord(alliances, schedule, cfg.forts, cfg.relics);
         renderSchedule(alliances, schedule, cfg, discordText, caps);
       } catch (error) {
-        $('resultPanel').innerHTML = `<p class="note">Failed: ${escapeHtml(error.message)}</p>`;
+        $('resultPanel').innerHTML = `<p class="note">${escapeHtml(t('failed'))}: ${escapeHtml(error.message)}</p>`;
       }
     }
     document.querySelectorAll('#frAlliances,#frRounds,#frForts,#frRelics,#frEmptyMin,#frEmptyMax,#frTarget').forEach((input) => input.addEventListener('input', updateLimit));
@@ -755,10 +763,10 @@
         $('frEmptyMax').value = '0';
         $('frTarget').value = String(result.target);
         updateLimit();
-        $('frLimitNote').textContent = `MAX applied: ${fmt(result.target)} points per alliance. EMPTY ignored. Theoretical cap: ${fmt(result.theoretical)}.`;
+        $('frLimitNote').textContent = `${t('maxApplied')}: ${fmt(result.target)} ${t('points')} / ${t('emptyIgnored')} / ${t('theoreticalCap')}: ${fmt(result.theoretical)}.`;
         runFortSanc();
       } catch (error) {
-        $('resultPanel').innerHTML = `<p class="note">Failed: ${escapeHtml(error.message)}</p>`;
+        $('resultPanel').innerHTML = `<p class="note">${escapeHtml(t('failed'))}: ${escapeHtml(error.message)}</p>`;
       }
     });
     $('frCopy').addEventListener('click', async () => {
@@ -767,7 +775,33 @@
       try { await navigator.clipboard.writeText(text); } catch {}
     });
     $('doCalc').addEventListener('click', runFortSanc);
-    updateLimit();
+    Object.assign(I18N.en, {
+      trustText: 'HTTPS protected · safe connection. This page runs locally in your browser and never asks for passwords, payment details, account login, or device access.',
+      targetPoints: 'Target points per alliance',
+      emptyMin: 'San EMPTY min',
+      emptyMax: 'San EMPTY max',
+      maxIgnoreEmpty: 'MAX ignore EMPTY',
+      copyDiscord: 'Copy Discord',
+      safeCap: 'Safe cap',
+      bestCap: 'Best cap',
+      alliance: 'Alliance',
+      points: 'Points',
+      noFort: 'No Fort',
+      noSan: 'No San',
+      emptyLabel: 'San EMPTY',
+      idsLabel: 'IDs',
+      discordCopy: 'Discord Copy',
+      estimatedLimit: 'Estimated target limit',
+      maxApplied: 'MAX applied',
+      emptyIgnored: 'EMPTY ignored',
+      theoreticalCap: 'Theoretical cap',
+      failed: 'Failed',
+      impossible: 'Impossible',
+      allianceCountError: 'Alliances must be 2-8. Current:',
+      duplicateAllianceError: 'Alliance names are duplicated.',
+      sanEmptyMinError: 'San EMPTY min must be <= max.',
+      sanEmptyMaxError: 'San EMPTY max cannot exceed San count.',
+    });
     Object.assign(I18N.ko, {
       back: '\ud5c8\ube0c\ub85c \ub3cc\uc544\uac00\uae30',
       support: '\ud6c4\uc6d0 \ud398\uc774\uc9c0',
@@ -792,8 +826,34 @@
       sanc: 'Sanc',
       total: '\ucd1d\uc810',
       noAlliance: '\uc5f0\ub9f9\uc744 2\uac1c \uc774\uc0c1 \uc785\ub825\ud574\uc8fc\uc138\uc694.',
-      copied: '\ubcf5\uc0ac \uc644\ub8cc'
+      copied: '\ubcf5\uc0ac \uc644\ub8cc',
+      trustText: 'HTTPS 보호 연결 · 이 페이지는 브라우저 안에서 실행되는 계획 도구이며 비밀번호, 결제 정보, 계정 로그인, 기기 접근 권한을 요청하지 않습니다.',
+      targetPoints: '연맹별 목표 점수',
+      emptyMin: 'San EMPTY 최소',
+      emptyMax: 'San EMPTY 최대',
+      maxIgnoreEmpty: 'EMPTY 무시 MAX',
+      copyDiscord: '디스코드 복사',
+      safeCap: '안전 한도',
+      bestCap: '최대 한도',
+      alliance: '연맹',
+      points: '점수',
+      noFort: 'Fort 없음',
+      noSan: 'San 없음',
+      emptyLabel: 'San EMPTY',
+      idsLabel: 'ID',
+      discordCopy: '디스코드 복사',
+      estimatedLimit: '예상 목표 한도',
+      maxApplied: 'MAX 적용',
+      emptyIgnored: 'EMPTY 무시',
+      theoreticalCap: '이론 한도',
+      failed: '실패',
+      impossible: '불가능',
+      allianceCountError: '연맹은 2-8개여야 합니다. 현재:',
+      duplicateAllianceError: '연맹 이름이 중복되었습니다.',
+      sanEmptyMinError: 'San EMPTY 최소값은 최대값보다 작거나 같아야 합니다.',
+      sanEmptyMaxError: 'San EMPTY 최대값은 San 개수를 넘을 수 없습니다.'
     });
+    ['zh-CN','zh-TW','fr','de','th','id'].forEach((lang) => { I18N[lang] = { ...I18N.en }; });
     const LANGUAGE_LABELS = {
       ko: '\ud55c\uad6d\uc5b4',
       en: 'English',
@@ -812,7 +872,12 @@
     fixLanguageLabels();
     const initialLang = getLang();
     setLang(initialLang);
-    $('langSelect').addEventListener('change', (event) => setLang(event.target.value));
+    updateLimit();
+    $('langSelect').addEventListener('change', (event) => {
+      setLang(event.target.value);
+      updateLimit();
+    });
   </script>
 </body>
 </html>
+

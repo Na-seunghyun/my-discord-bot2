@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="ko">
 <head>
   <meta charset="utf-8">
@@ -1755,6 +1755,8 @@
     }
     .site-trustbar strong { color: var(--gold); }
     .site-trustbar span { color: var(--muted); line-height: 1.5; font-size: 13px; font-weight: 850; }
+    .site-trustbar > span:not(.site-trust-links):not(.trust-copy) { display: none; }
+    .trust-copy { display: block; }
     .site-trust-links { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
     .site-trust-links a {
       display: inline-flex;
@@ -1773,6 +1775,118 @@
     @media (max-width: 760px) {
       .site-trustbar { display: grid; grid-template-columns: 1fr; }
       .site-trust-links { justify-content: flex-start; }
+    }
+
+    .redeem-redesign button,
+    .redeem-redesign input,
+    .redeem-redesign select {
+      min-height: 40px;
+      border-radius: 12px;
+    }
+    .redeem-redesign textarea {
+      border-radius: 14px;
+    }
+    .priority-actions input,
+    .priority-actions button,
+    .input-command button,
+    .bulk-action,
+    .split-actions button {
+      min-height: 42px;
+    }
+    .priority-lounge::after,
+    .console-card::after,
+    .live-command-center::after,
+    .kingdom-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(110deg, transparent 0 24%, rgba(255,255,255,.12) 34%, transparent 45% 100%);
+      transform: translateX(-110%);
+      animation: softLightSweep 8s ease-in-out infinite;
+      opacity: .55;
+    }
+    .console-card,
+    .live-command-center,
+    .kingdom-card {
+      position: relative;
+    }
+    .console-card > *,
+    .live-command-center > *,
+    .kingdom-card > * {
+      position: relative;
+      z-index: 1;
+    }
+    @keyframes softLightSweep {
+      0%, 34% { transform: translateX(-110%); }
+      58%, 100% { transform: translateX(110%); }
+    }
+    .rail-stat strong,
+    .panel-count,
+    .success-meter strong,
+    .kingdom-count,
+    .kingdom-summary,
+    #bulkPreview {
+      font-variant-numeric: tabular-nums;
+      max-width: 100%;
+      overflow-wrap: anywhere;
+      line-height: 1.08;
+    }
+    .rail-stat strong {
+      font-size: clamp(16px, 2.4vw, 22px);
+    }
+    .panel-count,
+    .kingdom-count,
+    .kingdom-summary {
+      white-space: normal;
+      text-align: center;
+    }
+    .priority-vip-pill {
+      border-color: rgba(255, 238, 180, .72);
+      background: linear-gradient(135deg, rgba(255,241,183,.34), rgba(82,255,224,.14));
+      box-shadow: 0 0 16px rgba(244,200,106,.35), 0 0 28px rgba(82,255,224,.14);
+    }
+    .kingdom-grid {
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+    }
+    .kingdom-card {
+      overflow: clip;
+    }
+    .kingdom-card-head {
+      align-items: flex-start;
+    }
+    .kingdom-title-pack,
+    .kingdom-player > div,
+    .kingdom-player-name,
+    .kingdom-player-meta,
+    .redeem-reason {
+      min-width: 0;
+    }
+    .kingdom-player-name {
+      flex-wrap: wrap;
+    }
+    .kingdom-player-name span:first-child,
+    .priority-name,
+    .priority-meta,
+    .mini-title span:first-child {
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
+    .kingdom-rollup {
+      overflow-wrap: anywhere;
+    }
+    .kingdom-player-list {
+      max-height: min(440px, 62vh);
+    }
+    @media (max-width: 760px) {
+      .priority-actions,
+      .input-command,
+      .split-actions {
+        grid-template-columns: 1fr;
+      }
+      .success-meter strong {
+        font-size: clamp(24px, 10vw, 32px);
+      }
     }
   </style>
 </head>
@@ -1806,6 +1920,7 @@
 
     <main class="command-stage">
       <div class="site-trustbar" role="note" aria-label="Auto redeem safety notice">
+        <span class="trust-copy" data-i18n="trustText"><strong>HTTPS protected · safe connection.</strong> Auto Redeem stores only Kingshot player IDs and public profile summaries. It never asks for passwords, payment information, email login, or device access.</span>
         <span><strong>HTTPS protected · 안전 연결.</strong> Auto Redeem stores only Kingshot player IDs and public profile summaries. 비밀번호, 결제 정보, 이메일 로그인, 기기 접근 권한을 요구하지 않습니다.</span>
         <span class="site-trust-links">
           <a href="./security.html">Security</a>
@@ -2100,6 +2215,7 @@
       status_captcha_required: 'Verification required', summarySuccess: 'success', summaryRunning: 'working', summaryFailed: 'failed',
       queueStatus: 'Queue status', queuePending: 'waiting', queueRunning: 'running', queueStale: 'stale', queueBatch: 'batch', queuePriority: 'priority',
       safetyTitle: 'Safety notice', safetyBody: 'This tool only asks for your public Kingshot player ID. It never asks for your password, payment information, email login, or device access.',
+      trustText: 'HTTPS protected · safe connection. Auto Redeem stores only Kingshot player IDs and public profile summaries. It never asks for passwords, payment information, email login, or device access.',
       priorityTitle: 'Daily Priority Boost', priorityHelp: 'Visit once a day, pass a quick check, and move your waiting redeem jobs higher in the queue until the next reset.',
       priorityChecking: 'Checking priority...', priorityEmpty: 'No boosted players yet today.', priorityChallenge: 'Start daily boost', priorityBoost: 'Boost my queue',
       priorityReady: 'Register or load your ID, then start today\'s priority boost.', priorityAnswerPlaceholder: 'Answer', priorityNeedId: 'Enter or load your registered player ID first.',
@@ -2145,6 +2261,156 @@
       ko: '한국어', en: 'English', 'zh-CN': '简体中文', 'zh-TW': '繁體中文', fr: 'Français', de: 'Deutsch', th: 'ไทย', id: 'Indonesia'
     };
 
+    Object.assign(LANGUAGE_LABELS, {
+      ko: '한국어',
+      en: 'English',
+      'zh-CN': '简体中文',
+      'zh-TW': '繁體中文',
+      fr: 'Français',
+      de: 'Deutsch',
+      th: 'ไทย',
+      id: 'Indonesia',
+    });
+    Object.assign(I18N.ko, {
+      brandSub: 'Kingshot 오토 리딤',
+      back: '허브로 돌아가기',
+      heroA: '오토 리딤',
+      heroB: '기프트 코드 센터',
+      subtitle: 'Kingshot 플레이어 ID를 한 번 등록하면, 새 기프트 코드가 발견될 때 등록된 ID를 안전하게 지급 대기열에 올립니다.',
+      registerTitle: '플레이어 ID 등록',
+      playerId: 'Kingshot 플레이어 ID',
+      playerPlaceholder: '예: 123185474',
+      consent: '자동 기프트 코드 지급을 위해 이 플레이어 ID를 저장하는 데 동의합니다. 플레이어 ID와 공개 프로필 요약만 저장됩니다.',
+      bulkLabel: '대량 플레이어 ID',
+      bulkPlaceholder: 'ID를 공백, 쉼표, 줄바꿈으로 구분해서 붙여넣으세요.',
+      bulkRegister: '대량 ID 등록',
+      register: '등록',
+      loadToken: '저장된 ID 불러오기',
+      ready: '준비됨.',
+      manageTitle: '삭제 요청',
+      manageHelp: '안전을 위해 직접 삭제는 막아두었습니다. 여기서 요청을 보내면 관리자가 검토합니다. 공식 지급 페이지에서 잘못된 ID로 확인되면 자동으로 비활성화됩니다.',
+      manageToken: '요청 메모',
+      tokenPlaceholder: '관리자에게 남길 메모, 선택 사항',
+      remove: '삭제 요청',
+      refreshCodes: '상태 새로고침',
+      noAction: '아직 작업이 없습니다.',
+      codesTitle: '최신 기프트 코드',
+      codesHelp: '활성/만료 상태는 신뢰 가능한 공개 출처와 최근 지급 결과를 기준으로 동기화됩니다.',
+      loadingCodes: '코드를 불러오는 중...',
+      noCodes: '저장된 코드가 아직 없습니다.',
+      enterId: '플레이어 ID를 먼저 입력하세요.',
+      needConsent: 'ID 저장 동의가 필요합니다.',
+      checking: '공식 프로필 확인 중...',
+      registered: '등록되었습니다.',
+      savedToken: '저장된 ID를 불러왔습니다.',
+      noToken: '이 브라우저에 저장된 ID가 없습니다.',
+      needToken: '플레이어 ID가 필요합니다.',
+      removing: '삭제 요청을 보내는 중...',
+      removed: '삭제 요청을 보냈습니다. 관리자가 검토합니다.',
+      active: '활성',
+      expired: '만료',
+      observed: '확인됨',
+      unknown: '알 수 없음',
+      discovered: '발견',
+      recent: '최근 사용',
+      registeredPlayers: '등록 ID',
+      activeCodes: '활성 코드',
+      bulkDone: '대량 등록 완료.',
+      created: '신규',
+      duplicate: '중복',
+      invalid: '무효',
+      reactivated: '재활성화',
+      duplicateNote: '이미 등록된 ID입니다. 저장된 ID는 계속 활성 상태입니다.',
+      codeDockTitle: '코드 상태',
+      userDockTitle: '최근 등록 유저',
+      recentUsers: '최근 유저',
+      successTitle: '현재 성공 내역',
+      loadingActivity: '활동 내역을 불러오는 중...',
+      noRecentUsers: '아직 등록된 유저가 없습니다.',
+      noSuccess: '아직 성공한 지급 기록이 없습니다.',
+      pendingJobs: '대기 작업',
+      successJobs: '성공 기록',
+      success: '성공',
+      redeemed: '지급됨',
+      code: '코드',
+      unknownPlayer: '알 수 없는 유저',
+      copyCode: '복사',
+      copiedCode: '복사됨',
+      daemonChecking: 'PuTTY 서버 확인 중...',
+      daemonOnline: 'PuTTY 서버 온라인',
+      daemonWarning: 'PuTTY 서버 경고',
+      daemonOffline: 'PuTTY 서버 오프라인',
+      daemonError: 'PuTTY 서버 오류',
+      daemonUnknown: 'PuTTY 서버 알 수 없음',
+      daemonNever: '아직 신호 없음',
+      daemonJobs: '작업',
+      automationStable: '오토 리딤 엔진 안정',
+      automationWarning: '오토 리딤 엔진 경고',
+      automationOffline: '오토 리딤 엔진 확인 필요',
+      automationUnknown: '오토 리딤 엔진 확인 중',
+      automationCloudflare: 'Cloudflare 스케줄',
+      automationPutty: 'Oracle/PuTTY 백업',
+      kingdomRegistryTitle: '왕국별 등록 ID',
+      kingdomRegistryHelp: '저장된 오토 리딤 ID를 왕국 번호별로 확인합니다.',
+      loadingKingdoms: '왕국 등록 현황을 불러오는 중...',
+      noKingdomRegistry: '아직 왕국 등록 데이터가 없습니다.',
+      kingdomRegistryError: '왕국 등록 현황을 불러오지 못했습니다.',
+      kingdoms: '왕국',
+      registeredIdsShort: 'ID',
+      ids: 'ID',
+      unknownKingdom: '알 수 없는 왕국',
+      latestCode: '최신 코드',
+      noRecentRedeem: '최근 지급 기록 없음',
+      reason: '사유',
+      status_pending: '대기',
+      status_running: '진행',
+      status_success: '성공',
+      status_failed: '실패',
+      status_already_claimed: '이미 수령',
+      status_expired: '만료',
+      status_invalid_code: '무효 코드',
+      status_time_window_closed: '시간 종료',
+      status_not_logged_in: '로그인 실패',
+      status_player_not_found: '유저 없음',
+      status_timeout: '시간 초과',
+      status_network_error: '네트워크 오류',
+      status_server_busy: '서버 혼잡',
+      status_deferred: '보류',
+      status_browser_review: '브라우저 검토',
+      status_official_blocked: '공식 차단',
+      status_claim_limit_reached: '수령 제한',
+      status_captcha_required: '인증 필요',
+      summarySuccess: '성공',
+      summaryRunning: '진행',
+      summaryFailed: '실패',
+      queueStatus: '큐 상태',
+      queuePending: '대기',
+      queueRunning: '진행',
+      queueStale: '멈춤',
+      queueBatch: '배치',
+      queuePriority: '우선권',
+      safetyTitle: '안전 안내',
+      safetyBody: '이 도구는 공개 Kingshot 플레이어 ID만 요청합니다. 비밀번호, 결제 정보, 이메일 로그인, 기기 접근 권한은 절대 요청하지 않습니다.',
+      trustText: 'HTTPS 보호 연결 · Auto Redeem은 Kingshot 플레이어 ID와 공개 프로필 요약만 저장합니다. 비밀번호, 결제 정보, 이메일 로그인, 기기 접근 권한은 요청하지 않습니다.',
+      priorityTitle: '오늘의 우선권 부스트',
+      priorityHelp: '하루에 한 번 방문해 간단한 확인을 통과하면 다음 초기화 전까지 대기 중인 지급 작업의 우선순위가 올라갑니다.',
+      priorityChecking: '우선권 확인 중...',
+      priorityEmpty: '오늘 우선권을 받은 유저가 아직 없습니다.',
+      priorityChallenge: '오늘 우선권 시작',
+      priorityBoost: '내 큐 부스트',
+      priorityReady: 'ID를 등록하거나 불러온 뒤 오늘의 우선권을 시작하세요.',
+      priorityAnswerPlaceholder: '정답',
+      priorityNeedId: '등록된 플레이어 ID를 먼저 입력하거나 불러오세요.',
+      priorityPlayerPlaceholder: '우선권 플레이어 ID',
+      priorityChallengeReady: '간단 확인:',
+      priorityBoosting: '우선권 적용 중...',
+      priorityDone: '초기화 전까지 우선권이 활성화됩니다.',
+      priorityAlready: '오늘 우선권이 이미 활성화되어 있습니다.',
+      priorityReset: '초기화',
+      priorityTop: '상위 우선권',
+      priorityActive: '우선권 활성',
+    });
+
     let currentLang = new URL(location.href).searchParams.get('lang') || localStorage.getItem('siteLang') || localStorage.getItem('lang') || 'ko';
     if (!I18N[currentLang]) currentLang = 'ko';
     const saved = JSON.parse(localStorage.getItem('autoRedeemRegistration') || '{}');
@@ -2158,6 +2424,11 @@
     };
     const tr = (key) => (I18N[currentLang] && I18N[currentLang][key]) || I18N.en[key] || key;
     const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (ch) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+    function formatNumber(value) {
+      const n = Number(value);
+      if (!Number.isFinite(n)) return '0';
+      return new Intl.NumberFormat(currentLang || 'en').format(n);
+    }
     const UI_GIFT_CODE_DENYLIST = new Set([
       'ABOUT', 'ACTIVE', 'AUTOMATIC', 'BROWSE', 'BUTTON', 'CALCULATOR', 'CALCULATORS',
       'CHANGE', 'CLAIM', 'CODE', 'CODES', 'COMMUNITY', 'COPY', 'DATABASE', 'DISCORD',
@@ -2194,7 +2465,7 @@
       const preview = $('bulkPreview');
       const input = $('bulkIds');
       if (!preview || !input) return;
-      preview.textContent = `${parseBulkIds(input.value).length} ID`;
+      preview.textContent = `${formatNumber(parseBulkIds(input.value).length)} ID`;
     }
 
     function applyI18n() {
@@ -2208,7 +2479,7 @@
       localStorage.setItem('lang', currentLang);
       localStorage.setItem('siteLang', currentLang);
       $('registeredBadge').textContent = `${tr('registeredPlayers')}: -`;
-      $('activeCodeBadge').textContent = `${tr('activeCodes')}: ${latestVisibleActiveCodes === null ? '-' : latestVisibleActiveCodes}`;
+      $('activeCodeBadge').textContent = `${tr('activeCodes')}: ${latestVisibleActiveCodes === null ? '-' : formatNumber(latestVisibleActiveCodes)}`;
       updateBulkPreview();
     }
 
@@ -2240,11 +2511,11 @@
       const diff = Math.max(0, Date.now() - n);
       const minutes = Math.floor(diff / 60000);
       if (minutes < 1) return currentLang === 'ko' ? '방금 전' : 'just now';
-      if (minutes < 60) return currentLang === 'ko' ? `${minutes}분 전` : `${minutes}m ago`;
+      if (minutes < 60) return currentLang === 'ko' ? `${formatNumber(minutes)}분 전` : `${formatNumber(minutes)}m ago`;
       const hours = Math.floor(minutes / 60);
-      if (hours < 24) return currentLang === 'ko' ? `${hours}시간 전` : `${hours}h ago`;
+      if (hours < 24) return currentLang === 'ko' ? `${formatNumber(hours)}시간 전` : `${formatNumber(hours)}h ago`;
       const days = Math.floor(hours / 24);
-      return currentLang === 'ko' ? `${days}일 전` : `${days}d ago`;
+      return currentLang === 'ko' ? `${formatNumber(days)}일 전` : `${formatNumber(days)}d ago`;
     }
     function maskId(id) {
       const text = String(id || '');
@@ -2274,11 +2545,16 @@
       const cls = statusClass(row);
       return tr(cls) || tr('unknown');
     }
+    function playerMeta(player) {
+      const state = player.state || player.kid || '-';
+      const level = player.town_hall_level || player.stove_lv || '-';
+      return `K${state} · Lv ${level}`;
+    }
     async function loadStatus() {
       try {
         const data = await api('/api/redeem/status');
-        $('registeredBadge').textContent = `${tr('registeredPlayers')}: ${data.registeredPlayers || 0}`;
-        $('activeCodeBadge').textContent = `${tr('activeCodes')}: ${latestVisibleActiveCodes === null ? '-' : latestVisibleActiveCodes}`;
+        $('registeredBadge').textContent = `${tr('registeredPlayers')}: ${formatNumber(data.registeredPlayers || 0)}`;
+        $('activeCodeBadge').textContent = `${tr('activeCodes')}: ${latestVisibleActiveCodes === null ? '-' : formatNumber(latestVisibleActiveCodes)}`;
         renderQueueStatus(data.queue);
         renderAutomationStatus(data.automation || data.daemon);
       } catch {
@@ -2304,15 +2580,15 @@
       const retryPending = Number(queue.retryPending || 0);
       const batchSize = Number(queue.batchSize || 0);
       const priorityActive = Number(queue.priorityActive || 0);
-      const staleText = stale > 0 ? ` / ${tr('queueStale')} ${stale}` : '';
-      const deferredLabel = currentLang === 'ko' ? '보류' : 'deferred';
-      const reviewLabel = currentLang === 'ko' ? '검토' : 'review';
-      const deferredText = deferred > 0 ? ` / ${deferredLabel} ${deferred}` : '';
-      const reviewText = browserReview > 0 ? ` / ${reviewLabel} ${browserReview}` : '';
-      const priorityText = priorityActive > 0 ? ` / ${tr('queuePriority')} ${priorityActive}` : '';
-      const batchText = batchSize > 0 ? ` / ${tr('queueBatch')} ${batchSize}` : '';
-      badge.textContent = `${tr('queuePending')} ${pending} / ${tr('queueRunning')} ${running}${priorityText}${deferredText}${reviewText}${staleText}${batchText}`;
-      badge.title = `${tr('queueStale')}: ${stale} / ${tr('queuePriority')}: ${priorityActive} / ${deferredLabel}: ${deferred} / ${reviewLabel}: ${browserReview} / retry: ${retryPending} / ${tr('queueBatch')}: ${batchSize || '-'} / ${queue.claimMode || '-'} / ${queue.runningStaleMinutes || 5}m / cooldown ${queue.deferredCooldownMinutes || 60}m`;
+      const deferredLabel = tr('status_deferred');
+      const reviewLabel = tr('status_browser_review');
+      const staleText = stale > 0 ? ` / ${tr('queueStale')} ${formatNumber(stale)}` : '';
+      const deferredText = deferred > 0 ? ` / ${deferredLabel} ${formatNumber(deferred)}` : '';
+      const reviewText = browserReview > 0 ? ` / ${reviewLabel} ${formatNumber(browserReview)}` : '';
+      const priorityText = priorityActive > 0 ? ` / ${tr('queuePriority')} ${formatNumber(priorityActive)}` : '';
+      const batchText = batchSize > 0 ? ` / ${tr('queueBatch')} ${formatNumber(batchSize)}` : '';
+      badge.textContent = `${tr('queuePending')} ${formatNumber(pending)} / ${tr('queueRunning')} ${formatNumber(running)}${priorityText}${deferredText}${reviewText}${staleText}${batchText}`;
+      badge.title = `${tr('queueStale')}: ${formatNumber(stale)} / ${tr('queuePriority')}: ${formatNumber(priorityActive)} / ${deferredLabel}: ${formatNumber(deferred)} / ${reviewLabel}: ${formatNumber(browserReview)} / retry: ${formatNumber(retryPending)} / ${tr('queueBatch')}: ${batchSize ? formatNumber(batchSize) : '-'} / ${queue.claimMode || '-'} / ${queue.runningStaleMinutes || 5}m / cooldown ${queue.deferredCooldownMinutes || 60}m`;
     }
     function renderAutomationStatus(daemon) {
       const badge = $('daemonBadge');
@@ -2330,7 +2606,7 @@
           ? tr('automationWarning')
           : tr('automationOffline');
       const jobs = Number(daemon.jobsProcessed || 0);
-      const extra = jobs ? ` / ${jobs} ${tr('daemonJobs')}` : '';
+      const extra = jobs ? ` / ${formatNumber(jobs)} ${tr('daemonJobs')}` : '';
       const primarySource = daemon.primary && daemon.primary.source ? daemon.primary.source : daemon.source;
       const source = primarySource === 'cloudflare-cron' ? tr('automationCloudflare') : tr('automationPutty');
       badge.className = `engine-card daemon-badge ${uiState}`;
@@ -2347,8 +2623,8 @@
       const rows = (Array.isArray(codes) ? codes : []).filter(isDisplayableGiftCode);
       const active = rows.filter((row) => statusClass(row) === 'active').length;
       latestVisibleActiveCodes = active;
-      $('codeDockCount').textContent = `${active}/${rows.length || 0}`;
-      $('activeCodeBadge').textContent = `${tr('activeCodes')}: ${active}`;
+      $('codeDockCount').textContent = `${formatNumber(active)}/${formatNumber(rows.length || 0)}`;
+      $('activeCodeBadge').textContent = `${tr('activeCodes')}: ${formatNumber(active)}`;
       if (!rows.length) {
         $('codeDockList').innerHTML = `<div class="note">${escapeHtml(tr('noCodes'))}</div>`;
         return;
@@ -2391,10 +2667,10 @@
       const recentPlayers = Array.isArray(data.recentPlayers) ? data.recentPlayers : [];
       const recentSuccess = Array.isArray(data.recentSuccess) ? data.recentSuccess : [];
       const successTotal = Number(data.successJobs || 0);
-      $('userDockCount').textContent = `${data.registeredPlayers || recentPlayers.length || 0}`;
-      setTextById('successDockCount', `${successTotal || recentSuccess.length || 0}`);
-      $('registeredBadge').textContent = `${tr('registeredPlayers')}: ${data.registeredPlayers || 0}`;
-      $('activeCodeBadge').textContent = `${tr('activeCodes')}: ${latestVisibleActiveCodes === null ? '-' : latestVisibleActiveCodes}`;
+      $('userDockCount').textContent = `${formatNumber(data.registeredPlayers || recentPlayers.length || 0)}`;
+      setTextById('successDockCount', `${formatNumber(successTotal || recentSuccess.length || 0)}`);
+      $('registeredBadge').textContent = `${tr('registeredPlayers')}: ${formatNumber(data.registeredPlayers || 0)}`;
+      $('activeCodeBadge').textContent = `${tr('activeCodes')}: ${latestVisibleActiveCodes === null ? '-' : formatNumber(latestVisibleActiveCodes)}`;
       renderQueueStatus(data.queue);
       if (data.automation !== undefined || data.daemon !== undefined) renderAutomationStatus(data.automation || data.daemon);
       if (data.priority !== undefined) renderPriority(data.priority);
@@ -2523,7 +2799,7 @@
         priorityChallengePlayerId = '';
         $('priorityAnswer').value = '';
         renderPriority(data);
-        setStatus('priorityStatus', data.alreadyBoosted ? tr('priorityAlready') : `${tr('priorityDone')} ${tr('pendingJobs')}: ${data.updatedJobs || 0}`);
+        setStatus('priorityStatus', data.alreadyBoosted ? tr('priorityAlready') : `${tr('priorityDone')} ${tr('pendingJobs')}: ${formatNumber(data.updatedJobs || 0)}`);
         loadStatus();
         loadActivity();
       } catch (error) {
@@ -2544,7 +2820,7 @@
 
     function unitText(value, key) {
       const compact = currentLang === 'ko' || currentLang === 'zh-CN' || currentLang === 'zh-TW';
-      return compact ? `${value}${tr(key)}` : `${value} ${tr(key)}`;
+      return compact ? `${formatNumber(value)}${tr(key)}` : `${formatNumber(value)} ${tr(key)}`;
     }
 
     function kingdomDisplayLabel(kingdom) {
@@ -2577,9 +2853,9 @@
         counts[redeemStatusGroup(player.recent_redeem.status)] += 1;
       });
       return `
-        <span>${escapeHtml(tr('summarySuccess'))}: ${counts.success}</span>
-        <span>${escapeHtml(tr('summaryRunning'))}: ${counts.running}</span>
-        <span>${escapeHtml(tr('summaryFailed'))}: ${counts.failed}</span>`;
+        <span>${escapeHtml(tr('summarySuccess'))}: ${formatNumber(counts.success)}</span>
+        <span>${escapeHtml(tr('summaryRunning'))}: ${formatNumber(counts.running)}</span>
+        <span>${escapeHtml(tr('summaryFailed'))}: ${formatNumber(counts.failed)}</span>`;
     }
 
     function recentRedeemHtml(player) {
@@ -2700,7 +2976,7 @@
         if (data.status === 'duplicate') {
           setStatus('registerStatus', `${tr('duplicateNote')}\n${data.player.username || data.player.id}`);
         } else {
-          setStatus('registerStatus', `${tr('registered')}\n${tr('pendingJobs')}: ${data.jobsCreated || 0}`);
+          setStatus('registerStatus', `${tr('registered')}\n${tr('pendingJobs')}: ${formatNumber(data.jobsCreated || 0)}`);
         }
         loadStatus();
         loadActivity();
@@ -2733,7 +3009,7 @@
         }
         setStatus(
           'registerStatus',
-          `${tr('bulkDone')}\n${tr('created')}: ${result.created} / ${tr('reactivated')}: ${result.reactivated} / ${tr('duplicate')}: ${result.duplicate} / ${tr('invalid')}: ${result.invalid}\n${tr('pendingJobs')}: ${result.jobsCreated}`
+          `${tr('bulkDone')}\n${tr('created')}: ${formatNumber(result.created)} / ${tr('reactivated')}: ${formatNumber(result.reactivated)} / ${tr('duplicate')}: ${formatNumber(result.duplicate)} / ${tr('invalid')}: ${formatNumber(result.invalid)}\n${tr('pendingJobs')}: ${formatNumber(result.jobsCreated)}`
         );
         loadStatus();
         loadActivity();
@@ -2774,7 +3050,7 @@
       $('codeDockList').innerHTML = `<div class="note">${escapeHtml(tr('loadingCodes'))}</div>`;
       try {
         const data = await api('/api/redeem/codes?limit=24');
-        $('codeSummary').textContent = `${tr('registeredPlayers')}: ${data.registeredPlayers || 0}`;
+        $('codeSummary').textContent = `${tr('registeredPlayers')}: ${formatNumber(data.registeredPlayers || 0)}`;
         renderCodeDock(data.codes || []);
       } catch (error) {
         $('codeDockList').innerHTML = `<div class="note">${escapeHtml(error.message)}</div>`;
@@ -2817,3 +3093,4 @@
   </script>
 </body>
 </html>
+

@@ -1421,6 +1421,56 @@ function normalizeRedeemCodeSaveResult(payload) {
   };
 }
 
+async function expireRedeemCodeEverywhere(env, giftCode, reason = "Gift code expired.", atMs = Date.now()) {
+  const code = normalizeGiftCode(giftCode);
+  if (!code || !supabaseConfig(env).enabled) return false;
+  const rows = await supabaseJson(
+    env,
+    `/redeem_codes?code=ilike.${encodeURIComponent(code)}&select=code&limit=50`,
+  ).catch(() => []);
+  const codes = [...new Set([code, ...(rows || []).map((row) => normalizeGiftCode(row && row.code)).filter(Boolean)])];
+  for (const item of codes) {
+    const encoded = encodeURIComponent(item);
+    await supabaseJson(env, `/redeem_codes?code=eq.${encoded}`, {
+      method: "PATCH",
+      body: JSON.stringify({
+        status: "expired",
+        is_active: false,
+        last_redeem_status: "expired",
+        last_redeemed_at_ms: atMs,
+        updated_at_ms: atMs,
+      }),
+    }).catch(() => {});
+    await supabaseJson(env, `/redeem_jobs?gift_code=eq.${encoded}&status=in.(pending,running,deferred,browser_review)`, {
+      method: "PATCH",
+      body: JSON.stringify({
+        status: "expired",
+        last_error: cleanText(`Code expired: ${reason}`, 240),
+        updated_at_ms: atMs,
+      }),
+    }).catch(() => {});
+  }
+  return true;
+}
+
+async function expireTrustedPublicCodesMissingFromSource(env, sourceName, activeCodes, atMs = Date.now()) {
+  if (!supabaseConfig(env).enabled || !sourceName || !activeCodes || !activeCodes.size) return 0;
+  const source = `trusted-public:${sourceName}`;
+  const rows = await supabaseJson(
+    env,
+    `/redeem_codes?source=eq.${encodeURIComponent(source)}&status=eq.active&select=code&limit=300`,
+  ).catch(() => []);
+  let expired = 0;
+  for (const row of rows || []) {
+    const code = normalizeGiftCode(row && row.code);
+    if (!code || activeCodes.has(code)) continue;
+    if (await expireRedeemCodeEverywhere(env, code, `${sourceName} no longer lists this code as active.`, atMs).catch(() => false)) {
+      expired += 1;
+    }
+  }
+  return expired;
+}
+
 async function saveRedeemCode(env, code, source = "manual", raw = null) {
   const row = isPlainObject(code) ? code : {
     code: normalizeGiftCode(code),
@@ -1474,6 +1524,9 @@ async function saveRedeemCode(env, code, source = "manual", raw = null) {
     headers: { prefer: "resolution=merge-duplicates" },
     body: JSON.stringify([payload]),
   });
+  if (payload.status === "expired" || payload.is_active === false) {
+    await expireRedeemCodeEverywhere(env, giftCode, "Trusted source or official redeem result marked this code expired.", now);
+  }
   return normalizeRedeemCodeSaveResult(payload);
 }
 
@@ -1498,6 +1551,7 @@ async function updateRedeemCodeUsage(env, usage) {
       method: "PATCH",
       body: JSON.stringify(patch),
     });
+    if (expired) await expireRedeemCodeEverywhere(env, usage.code, "Recent redeem result reported expired.", now);
   } else {
     await saveRedeemCode(env, {
       code: usage.code,
@@ -1535,6 +1589,9 @@ async function updateRedeemCodeFromAttempt(env, giftCode, classified, atMs = Dat
     method: "PATCH",
     body: JSON.stringify(patch),
   }).catch(() => {});
+  if (status === "expired") {
+    await expireRedeemCodeEverywhere(env, code, "Official redeem attempt reported expired.", atMs);
+  }
   return true;
 }
 
@@ -1745,7 +1802,7 @@ function collectKingshotNetGiftCodes(text, source, url) {
 
   const ignored = (line) => /^(ACTIVE|EXPIRED|COPY CODE|COPY|SIGN IN TO REDEEM|SIGN IN|SHARE LINK|VIEW IMAGE|EXPIRES:?|LAST CHECKED:?|NOT SPECIFIED YET)$/i.test(line)
     || /^EXPIRES:/i.test(line)
-    || /^[-:?™\d\s]+$/.test(line);
+    || /^[-:–—\d\s]+$/.test(line);
 
   const push = (candidate, status, context) => {
     const code = normalizeGiftCode(candidate);
@@ -1878,7 +1935,12 @@ async function discoverRedeemCodesFromPublicPages(env) {
   for (const source of PUBLIC_GIFT_CODE_SOURCES) {
     try {
       const text = await fetchPublicGiftCodePage(source);
-      const rows = collectGiftCodesFromPublicTextStrict(text, source.source, source.url).slice(0, 20);
+      const rows = collectGiftCodesFromPublicTextStrict(text, source.source, source.url)
+        .slice(0, source.source === "kingshot.net" ? 180 : 30);
+      const activeFromSource = new Set(rows
+        .filter((row) => row && row.status === "active")
+        .map((row) => normalizeGiftCode(row.code))
+        .filter(Boolean));
       for (const row of rows) {
         const saved = await saveRedeemCode(env, row).catch(() => false);
         if (!saved) continue;
@@ -1890,6 +1952,10 @@ async function discoverRedeemCodesFromPublicPages(env) {
         } else {
           result.expired.push(row.code);
         }
+      }
+      if (source.source === "kingshot.net" && activeFromSource.size) {
+        const expiredMissing = await expireTrustedPublicCodesMissingFromSource(env, source.source, activeFromSource).catch(() => 0);
+        if (expiredMissing) result.expired.push(`source-sync:${expiredMissing}`);
       }
     } catch (error) {
       result.errors.push(`${source.source}: ${cleanText(error.message, 120)}`);
@@ -2941,6 +3007,9 @@ async function reportRedeemJobs(request, env) {
       headers: { prefer: "resolution=merge-duplicates" },
       body: JSON.stringify(expiredCodePayloads),
     }).catch(() => {});
+    for (const item of expiredCodePayloads) {
+      await expireRedeemCodeEverywhere(env, item.code, "Official redeem attempt reported expired.", item.updated_at_ms || now).catch(() => {});
+    }
   }
   if (codePayloads.length && !summary.saveFailed) {
     for (const item of codePayloads.filter((entry) => !entry.expired)) {
