@@ -7,6 +7,11 @@ const MAX_FEEDBACK_MESSAGE = 2000;
 const MAX_FEEDBACK_CONTACT = 160;
 const SUPABASE_MAX_CACHE_BYTES = 120000;
 const VISIT_DAILY_COUNT_CAP = 400;
+const DEFAULT_POST_MAX_BYTES = 128 * 1024;
+const ADMIN_POST_MAX_BYTES = 1024 * 1024;
+const BULK_REGISTER_MAX_BYTES = 64 * 1024;
+const DAEMON_REPORT_MAX_BYTES = 512 * 1024;
+const ALLOWED_JSON_CONTENT_TYPES = ["application/json", "text/plain"];
 const UPSTREAM_TIMEOUT_MS = 15000;
 const OFFICIAL_GIFT_PLAYER_API = "https://kingshot-giftcode.centurygame.com/api/player";
 const OFFICIAL_GIFT_REDEEM_API = "https://kingshot-giftcode.centurygame.com/api/gift_code";
@@ -64,6 +69,7 @@ const json = (payload, status = 200) =>
     headers: {
       "content-type": "application/json; charset=utf-8",
       "cache-control": "no-store",
+      "x-robots-tag": "noindex, nofollow, noarchive",
       ...baseSecurityHeaders(),
     },
   });
@@ -73,8 +79,11 @@ function baseSecurityHeaders() {
     "strict-transport-security": "max-age=31536000; includeSubDomains",
     "x-content-type-options": "nosniff",
     "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
     "referrer-policy": "strict-origin-when-cross-origin",
+    "origin-agent-cluster": "?1",
     "cross-origin-opener-policy": "same-origin",
+    "cross-origin-resource-policy": "same-origin",
     "permissions-policy": "accelerometer=(), autoplay=(), camera=(), clipboard-read=(), clipboard-write=(self), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), serial=(), usb=()",
   };
 }
@@ -129,6 +138,7 @@ function isBlockedStaticPath(pathname) {
   }
   const lower = decoded.toLowerCase().replace(/\\/g, "/");
   if (lower.includes("/../") || lower.endsWith("/..") || lower.includes("%2e")) return true;
+  if (/\.(?:php|phtml|phar|asp|aspx|jsp|cgi|pl|sql|sqlite|db|bak|backup|old|orig|swp|map|log|ini|conf|config|zip|tar|gz|7z)$/i.test(lower)) return true;
   return [
     "/.git",
     "/.github",
@@ -146,7 +156,141 @@ function isBlockedStaticPath(pathname) {
     "/requirements",
     "/package",
     "/wrangler.toml",
+    "/wp-admin",
+    "/wp-content",
+    "/wp-includes",
+    "/wp-json",
+    "/wp-login",
+    "/xmlrpc",
+    "/phpmyadmin",
+    "/adminer",
+    "/server-status",
+    "/actuator",
+    "/cgi-bin",
   ].some((prefix) => lower === prefix || lower.startsWith(`${prefix}/`));
+}
+
+function configuredOrigins(env) {
+  return String(env.ALLOWED_ORIGINS || "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function isAllowedOrigin(origin, request, env) {
+  if (!origin) return true;
+  let originUrl;
+  let requestUrl;
+  try {
+    originUrl = new URL(origin);
+    requestUrl = new URL(request.url);
+  } catch (_) {
+    return false;
+  }
+  if (originUrl.origin === requestUrl.origin) return true;
+  return configuredOrigins(env).some((allowed) => {
+    try {
+      return new URL(allowed).origin === originUrl.origin;
+    } catch (_) {
+      return allowed === originUrl.origin;
+    }
+  });
+}
+
+function maxBodyBytesForPath(pathname) {
+  if (pathname === "/api/redeem/register-bulk") return BULK_REGISTER_MAX_BYTES;
+  if (pathname === "/api/redeem/report") return DAEMON_REPORT_MAX_BYTES;
+  if (pathname === "/api/intel/import") return ADMIN_POST_MAX_BYTES;
+  if ([
+    "/api/feedback",
+    "/api/redeem/code",
+    "/api/redeem/claim",
+    "/api/redeem/register",
+    "/api/redeem/unregister",
+  ].includes(pathname)) return DEFAULT_POST_MAX_BYTES;
+  if (pathname.startsWith("/api/redeem/") || pathname.startsWith("/api/intel/")) return ADMIN_POST_MAX_BYTES;
+  return DEFAULT_POST_MAX_BYTES;
+}
+
+function contentLengthOk(request, pathname) {
+  const raw = request.headers.get("content-length");
+  if (!raw) return true;
+  const length = Number(raw);
+  if (!Number.isFinite(length) || length < 0) return false;
+  return length <= maxBodyBytesForPath(pathname);
+}
+
+function requiresJsonContentType(pathname) {
+  return new Set([
+    "/api/feedback",
+    "/api/intel/import",
+    "/api/redeem/code",
+    "/api/redeem/claim",
+    "/api/redeem/report",
+    "/api/redeem/register",
+    "/api/redeem/register-bulk",
+    "/api/redeem/unregister",
+  ]).has(pathname);
+}
+
+function hasAllowedJsonContentType(request) {
+  const contentType = String(request.headers.get("content-type") || "").toLowerCase();
+  if (!contentType) return false;
+  return ALLOWED_JSON_CONTENT_TYPES.some((allowed) => contentType.includes(allowed));
+}
+
+async function readJsonBody(request, maxBytes = DEFAULT_POST_MAX_BYTES) {
+  const raw = await request.text();
+  const size = new TextEncoder().encode(raw).length;
+  if (size > maxBytes) {
+    const error = new Error("Request body is too large.");
+    error.status = 413;
+    throw error;
+  }
+  if (!raw.trim()) return {};
+  try {
+    return JSON.parse(raw);
+  } catch (_) {
+    const error = new Error("Invalid JSON body.");
+    error.status = 400;
+    throw error;
+  }
+}
+
+async function readJsonBodyOrResponse(request, maxBytes = DEFAULT_POST_MAX_BYTES) {
+  try {
+    return { ok: true, body: await readJsonBody(request, maxBytes) };
+  } catch (error) {
+    return {
+      ok: false,
+      response: json({ ok: false, error: cleanText(error.message, 160) || "Invalid request body." }, error.status || 400),
+    };
+  }
+}
+
+function guardIncomingRequest(request, env) {
+  const url = new URL(request.url);
+  if (url.pathname.length > 1024 || url.search.length > 4096) {
+    return { ok: false, response: json({ ok: false, error: "Request URL is too large." }, 414) };
+  }
+  if (!["GET", "POST", "OPTIONS"].includes(request.method)) {
+    return { ok: false, response: json({ ok: false, error: "Method not allowed." }, 405) };
+  }
+  const origin = request.headers.get("origin") || "";
+  if (origin && !isAllowedOrigin(origin, request, env)) {
+    return { ok: false, response: json({ ok: false, error: "Origin is not allowed." }, 403) };
+  }
+  const fetchSite = String(request.headers.get("sec-fetch-site") || "").toLowerCase();
+  if (request.method === "POST" && fetchSite === "cross-site") {
+    return { ok: false, response: json({ ok: false, error: "Cross-site writes are blocked." }, 403) };
+  }
+  if (request.method === "POST" && !contentLengthOk(request, url.pathname)) {
+    return { ok: false, response: json({ ok: false, error: "Request body is too large." }, 413) };
+  }
+  if (request.method === "POST" && requiresJsonContentType(url.pathname) && !hasAllowedJsonContentType(request)) {
+    return { ok: false, response: json({ ok: false, error: "JSON content type is required." }, 415) };
+  }
+  return { ok: true };
 }
 
 function numberValue(value) {
@@ -1007,7 +1151,9 @@ async function refreshRedeemPlayerProfile(env, profile) {
 async function registerRedeemPlayer(request, env) {
   const ready = requireSupabase(env);
   if (!ready.ok) return ready.response;
-  const body = await request.json().catch(() => ({}));
+  const parsed = await readJsonBodyOrResponse(request, maxBodyBytesForPath("/api/redeem/register"));
+  if (!parsed.ok) return parsed.response;
+  const body = parsed.body;
   if (!body.consent) return json({ ok: false, error: "Consent is required before saving a player ID." }, 400);
   const playerId = meaningfulText(body.playerId || body.fid || body.id, 40);
   const result = await upsertRedeemPlayer(env, playerId, { lang: body.lang });
@@ -1019,7 +1165,9 @@ async function registerRedeemPlayer(request, env) {
 async function registerRedeemPlayersBulk(request, env) {
   const ready = requireSupabase(env);
   if (!ready.ok) return ready.response;
-  const body = await request.json().catch(() => ({}));
+  const parsed = await readJsonBodyOrResponse(request, BULK_REGISTER_MAX_BYTES);
+  if (!parsed.ok) return parsed.response;
+  const body = parsed.body;
   if (!body.consent) return json({ ok: false, error: "Consent is required before saving player IDs." }, 400);
   const ids = extractPlayerIds(body.ids || body.text || body.playerIds, 250);
   if (!ids.length) return json({ ok: false, error: "No valid player IDs were found." }, 400);
@@ -1052,7 +1200,9 @@ async function registerRedeemPlayersBulk(request, env) {
 async function unregisterRedeemPlayer(request, env) {
   const ready = requireSupabase(env);
   if (!ready.ok) return ready.response;
-  const body = await request.json().catch(() => ({}));
+  const parsed = await readJsonBodyOrResponse(request, maxBodyBytesForPath("/api/redeem/unregister"));
+  if (!parsed.ok) return parsed.response;
+  const body = parsed.body;
   const playerId = meaningfulText(body.playerId || body.fid || body.id, 40);
   if (!/^\d{3,12}$/.test(playerId)) return json({ ok: false, error: "Player ID is required." }, 400);
   const rows = await supabaseJson(env, `/redeem_players?id=eq.${encodeURIComponent(playerId)}&select=id,nickname,state,town_hall_level,enabled,consent&limit=1`);
@@ -1655,7 +1805,9 @@ async function addRedeemCode(request, env) {
   if (!ready.ok) return ready.response;
   const admin = requireAdmin(request, env);
   if (!admin.ok) return admin.response;
-  const body = await request.json().catch(() => ({}));
+  const parsed = await readJsonBodyOrResponse(request, maxBodyBytesForPath("/api/redeem/code"));
+  if (!parsed.ok) return parsed.response;
+  const body = parsed.body;
   const code = normalizeGiftCode(body.code || body.giftCode || body.cdk);
   if (!isLikelyGiftCodeValue(code)) return json({ ok: false, error: "Valid gift code is required." }, 400);
   const saved = await saveRedeemCode(env, {
@@ -1962,7 +2114,9 @@ async function claimRedeemJobs(request, env) {
   if (!cfg.enabled) return json({ ok: false, skipped: "AUTO_REDEEM_ENABLED is off.", jobs: [] });
 
   const url = new URL(request.url);
-  const body = await request.json().catch(() => ({}));
+  const parsed = await readJsonBodyOrResponse(request, maxBodyBytesForPath("/api/redeem/claim"));
+  if (!parsed.ok) return parsed.response;
+  const body = parsed.body;
   const requestedLimit = Number(body.limit || url.searchParams.get("limit"));
   const limit = Math.min(cfg.batchSize, Math.max(1, Number.isFinite(requestedLimit) ? Math.floor(requestedLimit) : cfg.batchSize));
   const recovered = await recoverStaleRedeemJobs(env, cfg).catch(() => ({ recovered: 0, failed: 0, deferredRecovered: 0 }));
@@ -2103,7 +2257,9 @@ async function reportRedeemJobs(request, env) {
   if (!admin.ok) return admin.response;
 
   const cfg = autoRedeemConfig(env);
-  const body = await request.json().catch(() => ({}));
+  const parsed = await readJsonBodyOrResponse(request, DAEMON_REPORT_MAX_BYTES);
+  if (!parsed.ok) return parsed.response;
+  const body = parsed.body;
   const rows = Array.isArray(body.results) ? body.results.slice(0, 100) : [];
   const summary = { ok: true, processed: 0, saved: 0, saveFailed: 0, success: 0, failed: 0, retrying: 0, deferred: 0, reviewing: 0, invalidPlayersDisabled: 0, results: [] };
   const now = Date.now();
@@ -2632,7 +2788,9 @@ async function importIntelData(request, env) {
     return json({ ok: false, error: "No Intel storage is configured." }, 400);
   }
 
-  const body = await request.json().catch(() => null);
+  const parsed = await readJsonBodyOrResponse(request, ADMIN_POST_MAX_BYTES);
+  if (!parsed.ok) return parsed.response;
+  const body = parsed.body;
   if (!isPlainObject(body)) return json({ ok: false, error: "JSON body is required." }, 400);
 
   const result = {
@@ -2832,12 +2990,9 @@ function clientIp(request) {
 async function submitFeedback(request, env) {
   const store = feedbackStore(env);
   if (!store) return json({ ok: false, enabled: false, error: "Feedback storage is not configured." }, 503);
-  let body;
-  try {
-    body = await request.json();
-  } catch {
-    return json({ ok: false, error: "Invalid JSON body." }, 400);
-  }
+  const parsed = await readJsonBodyOrResponse(request, maxBodyBytesForPath("/api/feedback"));
+  if (!parsed.ok) return parsed.response;
+  const body = parsed.body;
   const message = cleanMessage(body.message);
   if (message.length < 5) return json({ ok: false, error: "Message is too short." }, 400);
   const type = ["bug", "update", "translation", "other"].includes(body.type) ? body.type : "other";
@@ -2883,8 +3038,19 @@ function requireAdmin(request, env) {
   if (!env.ADMIN_TOKEN) return { ok: false, response: json({ ok: false, error: "ADMIN_TOKEN is not configured." }, 403) };
   const url = new URL(request.url);
   const token = url.searchParams.get("token") || request.headers.get("x-admin-token") || "";
-  if (token !== env.ADMIN_TOKEN) return { ok: false, response: json({ ok: false, error: "Invalid admin token." }, 403) };
+  if (!constantTimeEqual(token, env.ADMIN_TOKEN)) return { ok: false, response: json({ ok: false, error: "Invalid admin token." }, 403) };
   return { ok: true };
+}
+
+function constantTimeEqual(a, b) {
+  const left = String(a || "");
+  const right = String(b || "");
+  const max = Math.max(left.length, right.length);
+  let diff = left.length ^ right.length;
+  for (let i = 0; i < max; i += 1) {
+    diff |= (left.charCodeAt(i) || 0) ^ (right.charCodeAt(i) || 0);
+  }
+  return diff === 0;
 }
 
 async function cleanupIntel(request, env) {
@@ -3231,26 +3397,30 @@ async function runSafeIntelCycle(env, reason = "manual") {
   };
 }
 
-function corsHeaders(origin) {
-  return {
-    "access-control-allow-origin": origin || "*",
+function corsHeaders(origin, request, env) {
+  const headers = {
     "access-control-allow-methods": "GET, POST, OPTIONS",
-    "access-control-allow-headers": "Content-Type, X-API-Token",
+    "access-control-allow-headers": "Content-Type, X-API-Token, X-Admin-Token, X-Auto-Redeem-Runner",
     "access-control-max-age": "86400",
+    "vary": "Origin",
   };
+  if (origin && request && isAllowedOrigin(origin, request, env)) {
+    headers["access-control-allow-origin"] = origin;
+  }
+  return headers;
 }
 
-function jsonError(message, status, origin) {
+function jsonError(message, status, origin, request, env) {
   return new Response(JSON.stringify({ error: message }), {
     status,
-    headers: { ...corsHeaders(origin), ...baseSecurityHeaders(), "content-type": "application/json; charset=utf-8", "cache-control": "no-store" },
+    headers: { ...corsHeaders(origin, request, env), ...baseSecurityHeaders(), "content-type": "application/json; charset=utf-8", "cache-control": "no-store", "x-robots-tag": "noindex, nofollow, noarchive" },
   });
 }
 
-function upstreamError(message, status, origin) {
+function upstreamError(message, status, origin, request, env) {
   return new Response(JSON.stringify({ error: message || `Upstream ${status}`, upstreamStatus: status }), {
     status,
-    headers: { ...corsHeaders(origin), ...baseSecurityHeaders(), "content-type": "application/json; charset=utf-8", "cache-control": "no-store" },
+    headers: { ...corsHeaders(origin, request, env), ...baseSecurityHeaders(), "content-type": "application/json; charset=utf-8", "cache-control": "no-store", "x-robots-tag": "noindex, nofollow, noarchive" },
   });
 }
 
@@ -3265,8 +3435,8 @@ function buildUpstreamUrl(request) {
 
 async function proxyKingshot(request, env) {
   const origin = request.headers.get("origin") || "";
-  if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders(origin) });
-  if (!["GET", "POST"].includes(request.method)) return jsonError("Only GET and POST requests are allowed.", 405, origin);
+  if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: { ...corsHeaders(origin, request, env), ...baseSecurityHeaders() } });
+  if (!["GET", "POST"].includes(request.method)) return jsonError("Only GET and POST requests are allowed.", 405, origin, request, env);
 
   const upstream = buildUpstreamUrl(request);
   const bodyText = request.method === "POST" ? await request.text() : undefined;
@@ -3306,12 +3476,13 @@ async function proxyKingshot(request, env) {
     if (!response.ok) {
       const cached = await fallbackIntelResponse(env, request);
       if (cached) return json(cached);
-      return upstreamError(await response.text().catch(() => ""), response.status, origin);
+      return upstreamError(await response.text().catch(() => ""), response.status, origin, request, env);
     }
-    const headers = new Headers(corsHeaders(origin));
+    const headers = new Headers(corsHeaders(origin, request, env));
     Object.entries(baseSecurityHeaders()).forEach(([key, value]) => headers.set(key, value));
     headers.set("content-type", response.headers.get("content-type") || "application/json; charset=utf-8");
     headers.set("cache-control", "no-store");
+    headers.set("x-robots-tag", "noindex, nofollow, noarchive");
     const text = await response.text();
     if ((headers.get("content-type") || "").includes("json")) {
       try {
@@ -3322,7 +3493,7 @@ async function proxyKingshot(request, env) {
   } catch (error) {
     const cached = await fallbackIntelResponse(env, request);
     if (cached) return json(cached);
-    return jsonError(error.message || "Proxy request failed.", 502, origin);
+    return jsonError(error.message || "Proxy request failed.", 502, origin, request, env);
   }
 }
 
@@ -3375,6 +3546,12 @@ async function transformedTroopCalculator(request, env) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    const guard = guardIncomingRequest(request, env);
+    if (!guard.ok) return guard.response;
+    if (request.method === "OPTIONS") {
+      const origin = request.headers.get("origin") || "";
+      return new Response(null, { status: 204, headers: { ...corsHeaders(origin, request, env), ...baseSecurityHeaders() } });
+    }
     if (url.pathname === "/kingshot" || url.pathname.startsWith("/kingshot/")) return proxyKingshot(request, env);
     if (url.pathname === "/api/visit" && request.method === "POST") return json(await incrementVisit(env));
     if (url.pathname === "/api/stats" && request.method === "GET") return json(await readStats(env));
@@ -3437,15 +3614,15 @@ export default {
     if (url.pathname === "/api/feedback" && request.method === "POST") return submitFeedback(request, env);
     if (url.pathname === "/api/feedback" && request.method === "GET") return listFeedback(request, env);
 
-    if (!env.ASSETS) {
-      return new Response("Static asset binding is not available.", {
-        status: 500,
-        headers: { ...baseSecurityHeaders(), "content-type": "text/plain; charset=utf-8" },
-      });
-    }
     if (isBlockedStaticPath(url.pathname)) {
       return new Response("Not found.", {
         status: 404,
+        headers: { ...baseSecurityHeaders(), "content-type": "text/plain; charset=utf-8" },
+      });
+    }
+    if (!env.ASSETS) {
+      return new Response("Static asset binding is not available.", {
+        status: 500,
         headers: { ...baseSecurityHeaders(), "content-type": "text/plain; charset=utf-8" },
       });
     }
