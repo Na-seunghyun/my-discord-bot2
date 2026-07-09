@@ -64,8 +64,90 @@ const json = (payload, status = 200) =>
     headers: {
       "content-type": "application/json; charset=utf-8",
       "cache-control": "no-store",
+      ...baseSecurityHeaders(),
     },
   });
+
+function baseSecurityHeaders() {
+  return {
+    "strict-transport-security": "max-age=31536000; includeSubDomains",
+    "x-content-type-options": "nosniff",
+    "x-frame-options": "DENY",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "cross-origin-opener-policy": "same-origin",
+    "permissions-policy": "accelerometer=(), autoplay=(), camera=(), clipboard-read=(), clipboard-write=(self), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), serial=(), usb=()",
+  };
+}
+
+function contentSecurityPolicy() {
+  return [
+    "default-src 'self'",
+    "base-uri 'self'",
+    "object-src 'none'",
+    "frame-ancestors 'none'",
+    "form-action 'self'",
+    "script-src 'self' 'unsafe-inline'",
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: blob: https:",
+    "font-src 'self' data:",
+    "connect-src 'self' https://kingshot.jeab.dev https://kingshot.net https://ks-rewards.com https://ksredeem.com https://kingshot-giftcode.centurygame.com https://ks-giftcode.centurygame.com https://*.supabase.co",
+    "frame-src 'none'",
+    "media-src 'none'",
+    "upgrade-insecure-requests",
+  ].join("; ");
+}
+
+function applySecurityHeaders(response, options = {}) {
+  const headers = new Headers(response.headers);
+  Object.entries(baseSecurityHeaders()).forEach(([key, value]) => headers.set(key, value));
+  const contentType = headers.get("content-type") || "";
+  if (options.html || contentType.includes("text/html")) {
+    headers.set("content-security-policy", contentSecurityPolicy());
+  }
+  if (options.noStore || contentType.includes("text/html") || contentType.includes("application/json")) {
+    headers.set("cache-control", options.cacheControl || "no-store");
+  }
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+}
+
+async function fetchSiteAsset(request, env, pathname, options = {}) {
+  const response = await env.ASSETS.fetch(assetRequest(request, pathname));
+  return applySecurityHeaders(response, options);
+}
+
+function isBlockedStaticPath(pathname) {
+  const raw = String(pathname || "/");
+  let decoded = raw;
+  try {
+    decoded = decodeURIComponent(raw);
+  } catch (_) {
+    decoded = raw;
+  }
+  const lower = decoded.toLowerCase().replace(/\\/g, "/");
+  if (lower.includes("/../") || lower.endsWith("/..") || lower.includes("%2e")) return true;
+  return [
+    "/.git",
+    "/.github",
+    "/.wrangler",
+    "/.env",
+    "/.agents",
+    "/.codex",
+    "/__pycache__",
+    "/data",
+    "/migrations",
+    "/outputs",
+    "/src",
+    "/venv",
+    "/.venv",
+    "/requirements",
+    "/package",
+    "/wrangler.toml",
+  ].some((prefix) => lower === prefix || lower.startsWith(`${prefix}/`));
+}
 
 function numberValue(value) {
   const n = Number(value);
@@ -3161,14 +3243,14 @@ function corsHeaders(origin) {
 function jsonError(message, status, origin) {
   return new Response(JSON.stringify({ error: message }), {
     status,
-    headers: { ...corsHeaders(origin), "content-type": "application/json; charset=utf-8", "cache-control": "no-store" },
+    headers: { ...corsHeaders(origin), ...baseSecurityHeaders(), "content-type": "application/json; charset=utf-8", "cache-control": "no-store" },
   });
 }
 
 function upstreamError(message, status, origin) {
   return new Response(JSON.stringify({ error: message || `Upstream ${status}`, upstreamStatus: status }), {
     status,
-    headers: { ...corsHeaders(origin), "content-type": "application/json; charset=utf-8", "cache-control": "no-store" },
+    headers: { ...corsHeaders(origin), ...baseSecurityHeaders(), "content-type": "application/json; charset=utf-8", "cache-control": "no-store" },
   });
 }
 
@@ -3227,6 +3309,7 @@ async function proxyKingshot(request, env) {
       return upstreamError(await response.text().catch(() => ""), response.status, origin);
     }
     const headers = new Headers(corsHeaders(origin));
+    Object.entries(baseSecurityHeaders()).forEach(([key, value]) => headers.set(key, value));
     headers.set("content-type", response.headers.get("content-type") || "application/json; charset=utf-8");
     headers.set("cache-control", "no-store");
     const text = await response.text();
@@ -3281,6 +3364,8 @@ async function transformedTroopCalculator(request, env) {
   return new Response(html.replace("</body>", `${cleanup}</body>`), {
     status: response.status,
     headers: {
+      ...baseSecurityHeaders(),
+      "content-security-policy": contentSecurityPolicy(),
       "content-type": "text/html; charset=utf-8",
       "cache-control": "no-store",
     },
@@ -3355,12 +3440,18 @@ export default {
     if (!env.ASSETS) {
       return new Response("Static asset binding is not available.", {
         status: 500,
-        headers: { "content-type": "text/plain; charset=utf-8" },
+        headers: { ...baseSecurityHeaders(), "content-type": "text/plain; charset=utf-8" },
       });
     }
-    if (url.pathname === "/") return env.ASSETS.fetch(assetRequest(request, "/site/index.html"));
+    if (isBlockedStaticPath(url.pathname)) {
+      return new Response("Not found.", {
+        status: 404,
+        headers: { ...baseSecurityHeaders(), "content-type": "text/plain; charset=utf-8" },
+      });
+    }
+    if (url.pathname === "/") return fetchSiteAsset(request, env, "/site/index.html", { html: true });
     if (url.pathname === "/troop_training_ui.html") return transformedTroopCalculator(request, env);
-    return env.ASSETS.fetch(assetRequest(request, `/site${url.pathname}`));
+    return fetchSiteAsset(request, env, `/site${url.pathname}`);
   },
   async scheduled(event, env, ctx) {
     ctx.waitUntil(runSafeIntelCycle(env, "cron").catch(() => null));

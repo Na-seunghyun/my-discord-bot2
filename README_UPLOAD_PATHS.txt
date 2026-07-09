@@ -1,13 +1,17 @@
 ﻿Git upload paths
 
-Copy this file into your GitHub repository at the same path:
+Copy these files into your GitHub repository at the same paths:
 
+src/index.js
+site/auto_redeem.html
 site/war_academy_calculator.html
+site/robots.txt
+site/sitemap.xml
+site/.well-known/security.txt
 
-Change summary:
-- War Academy calculator now shows Infantry, Cavalry, and Archer as full sections instead of hidden tabs.
-- Top branch buttons scroll to each section.
-- Each troop section has its own Current / Target / Set All / Reset controls.
-- Result panel clearly totals all selected troop branches.
-- Mobile layout was checked for horizontal overflow.
+Included changes:
+- Safe Browsing hardening headers and blocked internal static paths.
+- Auto redeem safety notice in all supported languages.
+- robots.txt, sitemap.xml, security.txt.
+- War Academy section layout update.
 

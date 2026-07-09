@@ -1128,6 +1128,24 @@
     .consent-check {
       margin-top: 16px;
     }
+    .safety-note {
+      display: grid;
+      gap: 8px;
+      margin-top: 14px;
+      padding: 14px;
+      border: 1px solid rgba(128,246,168,.24);
+      border-radius: 18px;
+      background: linear-gradient(135deg, rgba(128,246,168,.11), rgba(67,246,215,.055));
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 13px;
+      font-weight: 800;
+    }
+    .safety-note strong {
+      color: var(--ok);
+      font-size: 13px;
+      letter-spacing: .02em;
+    }
     .bulk-head {
       display: flex;
       align-items: center;
@@ -1594,6 +1612,10 @@
                 <input id="consent" type="checkbox">
                 <span data-i18n="consent">I agree to save this player ID for automatic gift-code redemption. Only my player ID and public profile summary will be stored.</span>
               </label>
+              <div class="safety-note">
+                <strong data-i18n="safetyTitle">Safety notice</strong>
+                <span data-i18n="safetyBody">This tool only asks for your public Kingshot player ID. It never asks for your password, payment information, email login, or device access.</span>
+              </div>
             </div>
             <div class="bulk-entry">
               <div class="bulk-head"><label for="bulkIds" data-i18n="bulkLabel">Bulk Player IDs</label><span id="bulkPreview">0 ID</span></div>
@@ -1702,6 +1724,10 @@
           <input id="consent" type="checkbox">
           <span data-i18n="consent">I agree to save this player ID for automatic gift-code redemption. Only my player ID and public profile summary will be stored.</span>
         </label>
+        <div class="safety-note">
+          <strong data-i18n="safetyTitle">Safety notice</strong>
+          <span data-i18n="safetyBody">This tool only asks for your public Kingshot player ID. It never asks for your password, payment information, email login, or device access.</span>
+        </div>
         <div class="actions">
           <button class="primary" id="registerBtn" data-i18n="register">Register</button>
           <button class="ghost" id="loadBtn" data-i18n="loadToken">Show saved token</button>
@@ -2406,6 +2432,38 @@
       savedToken: '저장된 ID를 불러왔습니다.',
       noToken: '이 브라우저에 저장된 ID가 없습니다.',
       duplicateNote: '이미 등록된 ID입니다. 등록 상태는 그대로 유지됩니다.'
+    });
+    Object.assign(I18N.en, {
+      safetyTitle: 'Safety notice',
+      safetyBody: 'This tool only asks for your public Kingshot player ID. It never asks for your password, payment information, email login, or device access.'
+    });
+    Object.assign(I18N.ko, {
+      safetyTitle: '안전 안내',
+      safetyBody: '이 도구는 공개 Kingshot 플레이어 ID만 요청합니다. 비밀번호, 결제 정보, 이메일 로그인, 기기 접근 권한은 절대 요구하지 않습니다.'
+    });
+    Object.assign(I18N['zh-CN'], {
+      safetyTitle: '安全提示',
+      safetyBody: '此工具只会请求你的公开 Kingshot 玩家 ID。绝不会要求密码、付款信息、邮箱登录或设备访问权限。'
+    });
+    Object.assign(I18N['zh-TW'], {
+      safetyTitle: '安全提示',
+      safetyBody: '此工具只會要求你的公開 Kingshot 玩家 ID。絕不會要求密碼、付款資訊、電子郵件登入或裝置存取權限。'
+    });
+    Object.assign(I18N.fr, {
+      safetyTitle: 'Avis de securite',
+      safetyBody: 'Cet outil demande uniquement votre ID public Kingshot. Il ne demande jamais de mot de passe, informations de paiement, connexion e-mail ou acces a votre appareil.'
+    });
+    Object.assign(I18N.de, {
+      safetyTitle: 'Sicherheitshinweis',
+      safetyBody: 'Dieses Tool fragt nur nach deiner offentlichen Kingshot-Spieler-ID. Es fragt niemals nach Passwort, Zahlungsdaten, E-Mail-Login oder Geratezugriff.'
+    });
+    Object.assign(I18N.th, {
+      safetyTitle: 'ประกาศความปลอดภัย',
+      safetyBody: 'เครื่องมือนี้ขอเฉพาะ ID ผู้เล่น Kingshot แบบสาธารณะเท่านั้น และจะไม่ขอรหัสผ่าน ข้อมูลชำระเงิน การเข้าสู่ระบบอีเมล หรือสิทธิ์เข้าถึงอุปกรณ์'
+    });
+    Object.assign(I18N.id, {
+      safetyTitle: 'Catatan keamanan',
+      safetyBody: 'Alat ini hanya meminta ID pemain Kingshot publik. Kami tidak pernah meminta kata sandi, info pembayaran, login email, atau akses perangkat.'
     });
 
     let currentLang = new URL(location.href).searchParams.get('lang') || localStorage.getItem('siteLang') || localStorage.getItem('lang') || 'ko';
