@@ -1,4 +1,8 @@
 User-agent: *
 Allow: /
+Disallow: /api/
+Disallow: /.git/
+Disallow: /.env
+Disallow: /.wrangler/
 
 Sitemap: https://my-discord-bot2.looloo90.workers.dev/sitemap.xml

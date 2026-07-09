@@ -485,6 +485,36 @@
       font-size: 12px;
       font-weight: 750;
     }
+    .site-trustbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 12px 0 18px;
+      padding: 12px 14px;
+      border: 1px solid rgba(67,246,215,.28);
+      border-radius: 16px;
+      background: linear-gradient(135deg, rgba(67,246,215,.11), rgba(246,207,114,.08)), rgba(7,10,18,.68);
+      color: var(--text);
+      box-shadow: 0 16px 48px rgba(0,0,0,.28);
+    }
+    .site-trustbar strong { color: var(--gold); }
+    .site-trustbar span { color: var(--muted); line-height: 1.45; font-size: 13px; font-weight: 800; }
+    .site-trust-links { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+    .site-trust-links a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 32px;
+      padding: 0 10px;
+      border: 1px solid rgba(154,183,255,.22);
+      border-radius: 999px;
+      color: var(--cyan);
+      background: rgba(255,255,255,.055);
+      font-size: 12px;
+      font-weight: 950;
+      text-decoration: none;
+    }
     @media (max-width: 1060px) {
       .hero, .layout { grid-template-columns: 1fr; }
       .summary-card { position: static; }
@@ -495,6 +525,8 @@
       .top-actions, .bulk, .settings-grid, .building-grid, .result-grid { grid-template-columns: 1fr; }
       .top-actions { display: grid; }
       .pill, .top-actions select { width: 100%; }
+      .site-trustbar { display: grid; grid-template-columns: 1fr; }
+      .site-trust-links { justify-content: flex-start; }
       .hero { border-radius: 22px; }
       .hero-stats { grid-template-columns: 1fr 1fr; }
       .level-row { grid-template-columns: 1fr; }
@@ -525,6 +557,14 @@
         <a class="pill support" href="https://buymeacoffee.com/nashsh" target="_blank" rel="noreferrer" data-i18n="support">Support page</a>
       </div>
     </header>
+
+    <div class="site-trustbar" role="note" aria-label="Calculator safety notice">
+      <span><strong>HTTPS protected · 안전 연결.</strong> Building Calculator runs in your browser. 비밀번호, 결제 정보, 계정 로그인, 기기 접근 권한을 요구하지 않습니다.</span>
+      <span class="site-trust-links">
+        <a href="./security.html">Security</a>
+        <a href="./privacy.html">Privacy</a>
+      </span>
+    </div>
 
     <section class="hero">
       <div>
@@ -612,6 +652,8 @@
     <footer class="footer">
       <span>Created by #885 Legend nashsh</span>
       <span data-i18n="dataSource">Building level data is loaded locally for fast use.</span>
+      <a href="./security.html">Security</a>
+      <a href="./privacy.html">Privacy</a>
     </footer>
   </div>
 

@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="index,follow">
+  <title>Security - 885 LEGEND NASHSH</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #070a12;
+      --panel: rgba(16, 22, 38, .84);
+      --line: rgba(154, 183, 255, .22);
+      --text: #f7fbff;
+      --muted: #aab8d5;
+      --cyan: #43f6d7;
+      --gold: #f6cf72;
+      font-family: Inter, Pretendard, "Noto Sans KR", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 16% 6%, rgba(67,246,215,.16), transparent 32%),
+        radial-gradient(circle at 84% 10%, rgba(246,207,114,.15), transparent 30%),
+        linear-gradient(180deg, #070a12, #0b1020);
+    }
+    a { color: inherit; text-decoration: none; }
+    .wrap { width: min(980px, calc(100% - 32px)); margin: 0 auto; padding: 28px 0 46px; }
+    .topbar, .panel {
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: linear-gradient(180deg, rgba(255,255,255,.075), rgba(255,255,255,.026)), var(--panel);
+      box-shadow: 0 24px 72px rgba(0,0,0,.42);
+    }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; margin-bottom: 20px; }
+    .brand { display: flex; align-items: center; gap: 12px; font-weight: 1000; }
+    .mark { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 14px; color: #111; background: linear-gradient(135deg, var(--gold), var(--cyan)); }
+    .back { min-height: 40px; display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 999px; padding: 0 12px; color: var(--muted); font-weight: 900; }
+    .hero { padding: 22px 0; }
+    h1 { margin: 0 0 10px; font-size: clamp(34px, 6vw, 58px); line-height: 1; color: var(--gold); }
+    p { color: var(--muted); line-height: 1.65; font-weight: 750; }
+    .panel { padding: 20px; margin-top: 14px; }
+    h2 { margin: 0 0 10px; font-size: 20px; }
+    ul { margin: 0; padding-left: 20px; color: var(--muted); line-height: 1.75; font-weight: 750; }
+    .badge-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+    .badge { display: inline-flex; min-height: 34px; align-items: center; border: 1px solid rgba(67,246,215,.28); border-radius: 999px; padding: 0 12px; color: var(--cyan); background: rgba(67,246,215,.08); font-weight: 950; }
+    .ko { margin-top: 18px; padding-top: 18px; border-top: 1px solid rgba(154,183,255,.16); }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <nav class="topbar">
+      <a class="brand" href="./index.html"><span class="mark">885</span><span>885 LEGEND NASHSH</span></a>
+      <a class="back" href="./index.html">Back to hub</a>
+    </nav>
+
+    <section class="hero">
+      <h1>Security</h1>
+      <p>This site is served over HTTPS through Cloudflare Workers. The tools are designed to be transparent: no password, payment information, email login, or device access is requested.</p>
+      <div class="badge-row">
+        <span class="badge">HTTPS</span>
+        <span class="badge">No password collection</span>
+        <span class="badge">No payment collection</span>
+        <span class="badge">Limited API writes</span>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>What We Do</h2>
+      <ul>
+        <li>Use security headers, including HTTPS/HSTS, frame blocking, content-type protection, and a strict content security policy.</li>
+        <li>Block common scanner paths such as hidden repository files, environment files, WordPress probes, and server configuration files.</li>
+        <li>Limit cross-site write requests and reject oversized or invalid JSON API requests.</li>
+        <li>Keep admin actions behind an admin token configured in Cloudflare secrets.</li>
+      </ul>
+    </section>
+
+    <section class="panel">
+      <h2>What We Do Not Ask For</h2>
+      <ul>
+        <li>No game password or account login.</li>
+        <li>No email password, device permission, browser extension, or app installation.</li>
+        <li>No credit card or payment information.</li>
+        <li>No executable file download is required to use the website.</li>
+      </ul>
+    </section>
+
+    <section class="panel">
+      <h2>Report a Security Issue</h2>
+      <p>Please report suspicious behavior, incorrect redirects, unexpected downloads, or privacy concerns through the feedback page.</p>
+      <p><a class="back" href="./feedback.html">Open feedback</a></p>
+    </section>
+
+    <section class="panel ko" lang="ko">
+      <h2>한국어 안내</h2>
+      <p>이 사이트는 Cloudflare Workers의 HTTPS로 제공됩니다. 비밀번호, 결제 정보, 이메일 로그인, 기기 접근 권한을 요구하지 않습니다.</p>
+      <ul>
+        <li>오토리딤은 Kingshot 플레이어 ID와 공개 프로필 요약만 사용합니다.</li>
+        <li>계산기와 맵 플래너는 브라우저에서 동작하는 도구입니다.</li>
+        <li>문제가 보이면 피드백 페이지로 알려주세요.</li>
+      </ul>
+    </section>
+  </main>
+</body>
+</html>

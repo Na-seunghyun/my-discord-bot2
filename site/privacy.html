@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="index,follow">
+  <title>Privacy - 885 LEGEND NASHSH</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #070a12;
+      --panel: rgba(16, 22, 38, .84);
+      --line: rgba(154, 183, 255, .22);
+      --text: #f7fbff;
+      --muted: #aab8d5;
+      --cyan: #43f6d7;
+      --gold: #f6cf72;
+      font-family: Inter, Pretendard, "Noto Sans KR", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 16% 6%, rgba(67,246,215,.16), transparent 32%),
+        radial-gradient(circle at 84% 10%, rgba(246,207,114,.15), transparent 30%),
+        linear-gradient(180deg, #070a12, #0b1020);
+    }
+    a { color: inherit; text-decoration: none; }
+    .wrap { width: min(980px, calc(100% - 32px)); margin: 0 auto; padding: 28px 0 46px; }
+    .topbar, .panel {
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: linear-gradient(180deg, rgba(255,255,255,.075), rgba(255,255,255,.026)), var(--panel);
+      box-shadow: 0 24px 72px rgba(0,0,0,.42);
+    }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; margin-bottom: 20px; }
+    .brand { display: flex; align-items: center; gap: 12px; font-weight: 1000; }
+    .mark { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 14px; color: #111; background: linear-gradient(135deg, var(--gold), var(--cyan)); }
+    .back { min-height: 40px; display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 999px; padding: 0 12px; color: var(--muted); font-weight: 900; }
+    .hero { padding: 22px 0; }
+    h1 { margin: 0 0 10px; font-size: clamp(34px, 6vw, 58px); line-height: 1; color: var(--gold); }
+    p { color: var(--muted); line-height: 1.65; font-weight: 750; }
+    .panel { padding: 20px; margin-top: 14px; }
+    h2 { margin: 0 0 10px; font-size: 20px; }
+    ul { margin: 0; padding-left: 20px; color: var(--muted); line-height: 1.75; font-weight: 750; }
+    .ko { margin-top: 18px; padding-top: 18px; border-top: 1px solid rgba(154,183,255,.16); }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <nav class="topbar">
+      <a class="brand" href="./index.html"><span class="mark">885</span><span>885 LEGEND NASHSH</span></a>
+      <a class="back" href="./index.html">Back to hub</a>
+    </nav>
+
+    <section class="hero">
+      <h1>Privacy</h1>
+      <p>This page explains what data the Kingshot Command Hub uses and what it never asks for.</p>
+    </section>
+
+    <section class="panel">
+      <h2>Data Used by the Site</h2>
+      <ul>
+        <li>Auto Redeem may store Kingshot player IDs, public profile summaries, gift-code job status, and recent redemption result messages.</li>
+        <li>Feedback may store the message, optional contact text, related page, browser user-agent, and request IP for abuse prevention and troubleshooting.</li>
+        <li>Visitor counting is limited and used only to show lightweight site usage statistics.</li>
+        <li>Calculator and map planner data is mostly processed in the browser.</li>
+      </ul>
+    </section>
+
+    <section class="panel">
+      <h2>Data Not Requested</h2>
+      <ul>
+        <li>No Kingshot password or game account login.</li>
+        <li>No email password, payment card, bank account, or private device access.</li>
+        <li>No executable download is required to use the web tools.</li>
+      </ul>
+    </section>
+
+    <section class="panel">
+      <h2>Removal Requests</h2>
+      <p>If a player ID was registered by mistake, use the Auto Redeem removal request or send a feedback message with the player ID to review.</p>
+      <p><a class="back" href="./feedback.html">Open feedback</a></p>
+    </section>
+
+    <section class="panel ko" lang="ko">
+      <h2>한국어 안내</h2>
+      <p>이 사이트는 비밀번호, 결제 정보, 이메일 로그인, 기기 접근 권한을 요구하지 않습니다.</p>
+      <ul>
+        <li>오토리딤은 Kingshot 플레이어 ID, 공개 프로필 요약, 지급 작업 상태를 저장할 수 있습니다.</li>
+        <li>피드백은 제보 내용과 선택 입력한 연락처, 관련 페이지 정보를 저장할 수 있습니다.</li>
+        <li>잘못 등록된 ID는 오토리딤 삭제 요청 또는 피드백으로 정리 요청할 수 있습니다.</li>
+      </ul>
+    </section>
+  </main>
+</body>
+</html>
