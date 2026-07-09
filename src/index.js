@@ -54,6 +54,19 @@ const COLLECTOR_DEFAULT_STALE_HOURS = 72;
 const COLLECTOR_DEFAULT_DELAY_MS = 1000;
 const REGISTERED_INTEL_DEFAULT_LIMIT = 10;
 const REGISTERED_INTEL_DEFAULT_STALE_HOURS = 24;
+const AUTO_REDEEM_PRIORITY_SCORE = 100000;
+const AUTO_REDEEM_PRIORITY_VIP_SCORE = 99999;
+const AUTO_REDEEM_PRIORITY_TOP_LIMIT = 30;
+const AUTO_REDEEM_PRIORITY_CHALLENGE_TTL_MS = 5 * 60 * 1000;
+const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
+const AUTO_REDEEM_PRIORITY_VIP_IDS = [
+  "132400657",
+  "130500207",
+  "132498752",
+  "131598020",
+  "133662121",
+  "132891924",
+];
 
 let cachedToken = "";
 let cachedTokenExpires = 0;
@@ -245,6 +258,7 @@ function maxBodyBytesForPath(pathname) {
     "/api/feedback",
     "/api/redeem/code",
     "/api/redeem/claim",
+    "/api/redeem/priority-boost",
     "/api/redeem/register",
     "/api/redeem/unregister",
   ].includes(pathname)) return DEFAULT_POST_MAX_BYTES;
@@ -266,6 +280,7 @@ function requiresJsonContentType(pathname) {
     "/api/intel/import",
     "/api/redeem/code",
     "/api/redeem/claim",
+    "/api/redeem/priority-boost",
     "/api/redeem/report",
     "/api/redeem/register",
     "/api/redeem/register-bulk",
@@ -1109,6 +1124,119 @@ function newManageToken() {
   return [...bytes].map((value) => value.toString(16).padStart(2, "0")).join("");
 }
 
+function base64UrlEncode(text) {
+  return btoa(String(text)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+}
+
+function base64UrlDecode(text) {
+  const normalized = String(text || "").replace(/-/g, "+").replace(/_/g, "/");
+  const padded = normalized + "=".repeat((4 - (normalized.length % 4)) % 4);
+  return atob(padded);
+}
+
+function priorityDayKey(ms = Date.now()) {
+  return new Date(ms + KST_OFFSET_MS).toISOString().slice(0, 10);
+}
+
+function priorityDayStartMs(ms = Date.now()) {
+  const shifted = new Date(ms + KST_OFFSET_MS);
+  return Date.UTC(shifted.getUTCFullYear(), shifted.getUTCMonth(), shifted.getUTCDate()) - KST_OFFSET_MS;
+}
+
+function priorityResetMs(ms = Date.now(), days = 1) {
+  const shifted = new Date(ms + KST_OFFSET_MS);
+  return Date.UTC(
+    shifted.getUTCFullYear(),
+    shifted.getUTCMonth(),
+    shifted.getUTCDate() + Math.max(1, days),
+  ) - KST_OFFSET_MS;
+}
+
+function priorityBoostConfig(env) {
+  const days = envNumber(env.AUTO_REDEEM_PRIORITY_DAYS, 1, 1, 3);
+  const score = envNumber(env.AUTO_REDEEM_PRIORITY_SCORE, AUTO_REDEEM_PRIORITY_SCORE, 1, 1000000);
+  return {
+    enabled: envBool(env.AUTO_REDEEM_PRIORITY_ENABLED, true),
+    days,
+    score,
+    vipScore: envNumber(env.AUTO_REDEEM_PRIORITY_VIP_SCORE, Math.max(1, score - 1), 1, 1000000),
+    topLimit: envNumber(env.AUTO_REDEEM_PRIORITY_TOP_LIMIT, AUTO_REDEEM_PRIORITY_TOP_LIMIT, 5, 50),
+    challengeTtlMs: envNumber(env.AUTO_REDEEM_PRIORITY_CHALLENGE_TTL_SECONDS, Math.round(AUTO_REDEEM_PRIORITY_CHALLENGE_TTL_MS / 1000), 60, 1800) * 1000,
+  };
+}
+
+function priorityVipIds(env) {
+  const raw = meaningfulText(env.AUTO_REDEEM_PRIORITY_VIP_IDS, 500);
+  const ids = raw ? raw.match(/\d{3,12}/g) || [] : AUTO_REDEEM_PRIORITY_VIP_IDS;
+  return [...new Set(ids.map(String))].slice(0, 30);
+}
+
+function priorityVipSlotRank(playerId, env, ms = Date.now()) {
+  const slots = [3, 8, 13, 18, 23, 28];
+  const ids = priorityVipIds(env);
+  const index = Math.max(0, ids.indexOf(String(playerId)));
+  const day = priorityDayKey(ms);
+  const rotation = [...day].reduce((sum, ch) => sum + ch.charCodeAt(0), 0) % slots.length;
+  return slots[(index + rotation) % slots.length];
+}
+
+function priorityVipSlotMs(playerId, env, ms = Date.now()) {
+  return priorityDayStartMs(ms) + priorityVipSlotRank(playerId, env, ms) * 60 * 1000;
+}
+
+function isPriorityVip(playerId, env) {
+  return priorityVipIds(env).includes(String(playerId || ""));
+}
+
+function prioritySecret(env) {
+  return String(env.ADMIN_TOKEN || env.SUPABASE_SERVICE_ROLE_KEY || "");
+}
+
+async function signPriorityPayload(env, encodedPayload) {
+  const secret = prioritySecret(env);
+  if (!secret) return "";
+  return hashManageToken(`${secret}.${encodedPayload}`);
+}
+
+async function createPriorityChallengePayload(env, playerId) {
+  const cfg = priorityBoostConfig(env);
+  const now = Date.now();
+  const nums = new Uint32Array(2);
+  crypto.getRandomValues(nums);
+  const a = 2 + (nums[0] % 8);
+  const b = 2 + (nums[1] % 8);
+  const payload = {
+    playerId: String(playerId),
+    answer: a + b,
+    exp: now + cfg.challengeTtlMs,
+    nonce: crypto.randomUUID(),
+  };
+  const encoded = base64UrlEncode(JSON.stringify(payload));
+  const sig = await signPriorityPayload(env, encoded);
+  return {
+    token: `${encoded}.${sig}`,
+    question: `${a} + ${b}`,
+    expiresAtMs: payload.exp,
+  };
+}
+
+async function verifyPriorityChallenge(env, token, playerId, answer) {
+  const parts = String(token || "").split(".");
+  if (parts.length !== 2) return { ok: false, error: "Priority challenge is missing." };
+  const expected = await signPriorityPayload(env, parts[0]);
+  if (!expected || !constantTimeEqual(expected, parts[1])) return { ok: false, error: "Priority challenge is invalid." };
+  let payload = null;
+  try {
+    payload = JSON.parse(base64UrlDecode(parts[0]));
+  } catch (_) {
+    return { ok: false, error: "Priority challenge is invalid." };
+  }
+  if (String(payload.playerId || "") !== String(playerId || "")) return { ok: false, error: "Priority challenge is for another player ID." };
+  if (numberValue(payload.exp) < Date.now()) return { ok: false, error: "Priority challenge expired. Please try again." };
+  if (String(numberValue(answer)) !== String(numberValue(payload.answer))) return { ok: false, error: "Priority challenge answer is wrong." };
+  return { ok: true, payload };
+}
+
 function extractPlayerIds(value, max = 250) {
   const raw = Array.isArray(value) ? value.join("\n") : String(value || "");
   const ids = raw.match(/\d{3,12}/g) || [];
@@ -1908,8 +2036,14 @@ async function countSupabaseRows(env, path) {
 
 async function redeemQueueSummary(env) {
   const cfg = autoRedeemConfig(env);
+  const priorityCfg = priorityBoostConfig(env);
   const staleCutoff = Date.now() - cfg.runningStaleMs;
-  const [pending, retryPending, running, staleRunning, deferred, browserReview, success, failedTerminal] = await Promise.all([
+  const now = Date.now();
+  const vipIds = priorityVipIds(env);
+  const vipActivePath = vipIds.length
+    ? `/redeem_priority_boosts?expires_at_ms=gte.${now}&player_id=in.(${vipIds.map(encodeURIComponent).join(",")})&select=boost_key&limit=1`
+    : "";
+  const [pending, retryPending, running, staleRunning, deferred, browserReview, success, failedTerminal, priorityActive, activeVipBoosts] = await Promise.all([
     countSupabaseRows(env, "/redeem_jobs?status=eq.pending&select=job_key&limit=1").catch(() => 0),
     countSupabaseRows(env, "/redeem_jobs?status=eq.pending&attempts=gt.0&select=job_key&limit=1").catch(() => 0),
     countSupabaseRows(env, "/redeem_jobs?status=eq.running&select=job_key&limit=1").catch(() => 0),
@@ -1918,6 +2052,8 @@ async function redeemQueueSummary(env) {
     countSupabaseRows(env, "/redeem_jobs?status=eq.browser_review&select=job_key&limit=1").catch(() => 0),
     countSupabaseRows(env, "/redeem_jobs?status=eq.success&select=job_key&limit=1").catch(() => 0),
     countSupabaseRows(env, "/redeem_jobs?status=in.(failed,invalid_code,expired,already_claimed,time_window_closed,player_not_found,not_logged_in,captcha_required,claim_limit_reached,deferred,official_blocked)&select=job_key&limit=1").catch(() => 0),
+    countSupabaseRows(env, `/redeem_priority_boosts?expires_at_ms=gte.${now}&select=boost_key&limit=1`).catch(() => 0),
+    vipActivePath ? countSupabaseRows(env, vipActivePath).catch(() => 0) : Promise.resolve(0),
   ]);
   return {
     pending,
@@ -1928,11 +2064,14 @@ async function redeemQueueSummary(env) {
     browserReview,
     success,
     failedTerminal,
+    priorityActive: priorityActive + Math.max(0, vipIds.length - activeVipBoosts),
     waitingTotal: pending + running + deferred + browserReview,
     runningStaleMinutes: Math.round(cfg.runningStaleMs / 60000),
     batchSize: cfg.batchSize,
     claimMode: cfg.batchSize > 40 ? "fast-rpc" : "standard",
     deferredCooldownMinutes: Math.round((cfg.deferredCooldownMs || 0) / 60000),
+    priorityVip: vipIds.length,
+    priorityVipScore: priorityCfg.vipScore,
   };
 }
 
@@ -1976,6 +2115,298 @@ function publicRedeemJobStatus(row) {
   };
 }
 
+function publicPriorityBoost(row) {
+  const snapshot = isPlainObject(row && row.player_snapshot) ? row.player_snapshot : {};
+  return {
+    player_id: String((row && row.player_id) || snapshot.id || ""),
+    nickname: cleanText(snapshot.nickname || snapshot.username || snapshot.id, 80),
+    state: numberOrNull(snapshot.state),
+    town_hall_level: numberOrNull(snapshot.town_hall_level),
+    avatar_url: cleanText(snapshot.avatar_url, 500),
+    boost_day: cleanText(row && row.boost_day, 20),
+    boost_score: numberValue(row && row.boost_score),
+    boosted_at_ms: numberValue(row && row.boosted_at_ms),
+    expires_at_ms: numberValue(row && row.expires_at_ms),
+    vip: Boolean((row && row.vip) || snapshot.vip),
+    virtual: Boolean(row && row.virtual),
+    vip_slot_rank: numberOrNull(row && row.vip_slot_rank),
+    vip_slot_ms: numberValue(row && row.vip_slot_ms),
+  };
+}
+
+async function readRedeemPlayerForPriority(env, playerId) {
+  const id = meaningfulText(playerId, 40);
+  if (!/^\d{3,12}$/.test(id)) return null;
+  const rows = await supabaseJson(
+    env,
+    `/redeem_players?id=eq.${encodeURIComponent(id)}&enabled=eq.true&consent=eq.true&select=id,nickname,state,town_hall_level,avatar_url,profile_json&limit=1`,
+  ).catch(() => []);
+  return rows && rows[0] ? publicRedeemPlayer(rows[0]) : null;
+}
+
+function vipPriorityRowFromPlayer(playerId, player, env, cfg, now = Date.now()) {
+  const id = String(playerId || "");
+  const slotRank = priorityVipSlotRank(id, env, now);
+  const slotMs = priorityVipSlotMs(id, env, now);
+  return publicPriorityBoost({
+    player_id: id,
+    boost_day: `vip:${priorityDayKey(now)}`,
+    boost_score: cfg.vipScore,
+    boosted_at_ms: slotMs,
+    expires_at_ms: priorityResetMs(now, cfg.days),
+    vip: true,
+    virtual: true,
+    vip_slot_rank: slotRank,
+    vip_slot_ms: slotMs,
+    player_snapshot: {
+      id,
+      nickname: player && player.nickname ? player.nickname : `VIP ${id.slice(-4)}`,
+      state: player && player.state,
+      town_hall_level: player && player.town_hall_level,
+      avatar_url: player && player.avatar_url,
+      vip: true,
+    },
+  });
+}
+
+async function listPriorityVipBoosts(env, cfg = priorityBoostConfig(env), now = Date.now()) {
+  const ids = priorityVipIds(env);
+  if (!ids.length) return [];
+  const rows = await supabaseJson(
+    env,
+    `/redeem_players?id=in.(${ids.map(encodeURIComponent).join(",")})&enabled=eq.true&consent=eq.true&select=id,nickname,state,town_hall_level,avatar_url,profile_json&limit=${ids.length}`,
+  ).catch(() => []);
+  const playerMap = new Map((rows || []).map((row) => [String(row.id || ""), publicRedeemPlayer(row)]));
+  return ids.map((id) => vipPriorityRowFromPlayer(id, playerMap.get(id), env, cfg, now));
+}
+
+async function readPriorityVipBoostForPlayer(env, playerId, cfg = priorityBoostConfig(env), now = Date.now()) {
+  const id = meaningfulText(playerId, 40);
+  if (!/^\d{3,12}$/.test(id) || !isPriorityVip(id, env)) return null;
+  const player = await readRedeemPlayerForPriority(env, id).catch(() => null);
+  return vipPriorityRowFromPlayer(id, player, env, cfg, now);
+}
+
+function mergePriorityLeaderboard(regularRows, vipRows, limit = AUTO_REDEEM_PRIORITY_TOP_LIMIT) {
+  const safeLimit = Math.max(1, Number(limit) || AUTO_REDEEM_PRIORITY_TOP_LIMIT);
+  const vipById = new Map((vipRows || []).map((row) => [String(row.player_id), row]));
+  const regular = [];
+  for (const row of regularRows || []) {
+    const playerId = String(row.player_id || "");
+    const vip = vipById.get(playerId);
+    if (vip) {
+      vipById.set(playerId, {
+        ...row,
+        vip: true,
+        virtual: false,
+        vip_slot_rank: vip.vip_slot_rank,
+        vip_slot_ms: vip.vip_slot_ms,
+      });
+    } else {
+      regular.push(row);
+    }
+  }
+
+  regular.sort((a, b) => numberValue(a.boosted_at_ms) - numberValue(b.boosted_at_ms));
+  const vip = [...vipById.values()].sort((a, b) => {
+    const slotDelta = numberValue(a.vip_slot_rank) - numberValue(b.vip_slot_rank);
+    if (slotDelta) return slotDelta;
+    return String(a.player_id).localeCompare(String(b.player_id));
+  });
+  const vipSlots = new Map(vip.map((row, index) => [Math.min(safeLimit - 1, numberValue(row.vip_slot_rank) || (3 + index * 5)), row]));
+  const used = new Set();
+  const result = [];
+  let regularIndex = 0;
+
+  for (let position = 0; position < safeLimit && result.length < safeLimit; position += 1) {
+    const vipRow = vipSlots.get(position);
+    if (vipRow && !used.has(vipRow.player_id)) {
+      result.push(vipRow);
+      used.add(vipRow.player_id);
+      continue;
+    }
+    while (regularIndex < regular.length && used.has(regular[regularIndex].player_id)) regularIndex += 1;
+    if (regularIndex < regular.length) {
+      result.push(regular[regularIndex]);
+      used.add(regular[regularIndex].player_id);
+      regularIndex += 1;
+    }
+  }
+
+  for (const vipRow of vip) {
+    if (result.length >= safeLimit) break;
+    if (!used.has(vipRow.player_id)) {
+      result.push(vipRow);
+      used.add(vipRow.player_id);
+    }
+  }
+  while (result.length < safeLimit && regularIndex < regular.length) {
+    const row = regular[regularIndex];
+    regularIndex += 1;
+    if (!used.has(row.player_id)) {
+      result.push(row);
+      used.add(row.player_id);
+    }
+  }
+  return result.slice(0, safeLimit);
+}
+
+async function listPriorityBoosts(env, limit = AUTO_REDEEM_PRIORITY_TOP_LIMIT) {
+  const now = Date.now();
+  const cfg = priorityBoostConfig(env);
+  const rows = await supabaseJson(
+    env,
+    `/redeem_priority_boosts?expires_at_ms=gte.${now}&select=player_id,boost_day,boost_score,boosted_at_ms,expires_at_ms,player_snapshot&order=boosted_at_ms.asc&limit=${Math.min(limit * 2, Math.max(cfg.topLimit * 2, cfg.topLimit))}`,
+  ).catch(() => []);
+  const regular = (rows || []).map(publicPriorityBoost);
+  const vipRows = await listPriorityVipBoosts(env, cfg, now).catch(() => []);
+  return mergePriorityLeaderboard(regular, vipRows, Math.min(limit, cfg.topLimit));
+}
+
+async function readPriorityBoostForPlayer(env, playerId) {
+  const id = meaningfulText(playerId, 40);
+  if (!/^\d{3,12}$/.test(id)) return null;
+  const day = priorityDayKey();
+  const rows = await supabaseJson(
+    env,
+    `/redeem_priority_boosts?player_id=eq.${encodeURIComponent(id)}&boost_day=eq.${encodeURIComponent(day)}&select=player_id,boost_day,boost_score,boosted_at_ms,expires_at_ms,player_snapshot&limit=1`,
+  ).catch(() => []);
+  if (rows && rows[0]) {
+    const row = publicPriorityBoost(rows[0]);
+    if (isPriorityVip(id, env)) {
+      row.vip = true;
+      row.vip_slot_rank = priorityVipSlotRank(id, env);
+      row.vip_slot_ms = priorityVipSlotMs(id, env);
+    }
+    return row;
+  }
+  return readPriorityVipBoostForPlayer(env, id);
+}
+
+async function redeemPriority(request, env) {
+  const ready = requireSupabase(env);
+  if (!ready.ok) return ready.response;
+  const url = new URL(request.url);
+  const playerId = meaningfulText(url.searchParams.get("playerId"), 40);
+  const cfg = priorityBoostConfig(env);
+  const [leaderboard, mine] = await Promise.all([
+    listPriorityBoosts(env, cfg.topLimit),
+    playerId ? readPriorityBoostForPlayer(env, playerId) : Promise.resolve(null),
+  ]);
+  return json({
+    ok: true,
+    enabled: cfg.enabled,
+    day: priorityDayKey(),
+    resetAtMs: priorityResetMs(Date.now(), cfg.days),
+    topLimit: cfg.topLimit,
+    mine,
+    leaderboard,
+  });
+}
+
+async function redeemPriorityChallenge(request, env) {
+  const ready = requireSupabase(env);
+  if (!ready.ok) return ready.response;
+  const cfg = priorityBoostConfig(env);
+  if (!cfg.enabled) return json({ ok: false, error: "Priority boost is disabled." }, 403);
+  if (!prioritySecret(env)) return json({ ok: false, error: "Priority boost secret is not configured." }, 503);
+  const url = new URL(request.url);
+  const playerId = meaningfulText(url.searchParams.get("playerId"), 40);
+  if (!/^\d{3,12}$/.test(playerId)) return json({ ok: false, error: "Valid player ID is required." }, 400);
+  const player = await readRedeemPlayerForPriority(env, playerId);
+  if (!player) return json({ ok: false, error: "Register this player ID first." }, 404);
+  const existing = await readPriorityBoostForPlayer(env, playerId);
+  const leaderboard = await listPriorityBoosts(env, cfg.topLimit);
+  if (existing && existing.expires_at_ms > Date.now()) {
+    return json({ ok: true, alreadyBoosted: true, player, mine: existing, leaderboard, resetAtMs: existing.expires_at_ms });
+  }
+  const challenge = await createPriorityChallengePayload(env, playerId);
+  return json({ ok: true, player, challenge, leaderboard, resetAtMs: priorityResetMs(Date.now(), cfg.days) });
+}
+
+async function boostRedeemPriority(request, env) {
+  const ready = requireSupabase(env);
+  if (!ready.ok) return ready.response;
+  const cfg = priorityBoostConfig(env);
+  if (!cfg.enabled) return json({ ok: false, error: "Priority boost is disabled." }, 403);
+  if (!prioritySecret(env)) return json({ ok: false, error: "Priority boost secret is not configured." }, 503);
+  const parsed = await readJsonBodyOrResponse(request, maxBodyBytesForPath("/api/redeem/priority-boost"));
+  if (!parsed.ok) return parsed.response;
+  const body = parsed.body;
+  const playerId = meaningfulText(body.playerId || body.player_id || body.id, 40);
+  if (!/^\d{3,12}$/.test(playerId)) return json({ ok: false, error: "Valid player ID is required." }, 400);
+  const challenge = await verifyPriorityChallenge(env, body.challengeToken || body.challenge_token, playerId, body.answer);
+  if (!challenge.ok) return json({ ok: false, error: challenge.error }, 400);
+  const player = await readRedeemPlayerForPriority(env, playerId);
+  if (!player) return json({ ok: false, error: "Register this player ID first." }, 404);
+
+  const now = Date.now();
+  const day = priorityDayKey(now);
+  const expiresAtMs = priorityResetMs(now, cfg.days);
+  const boostKey = `${day}:${playerId}`;
+  const existing = await readPriorityBoostForPlayer(env, playerId);
+  if (existing && existing.expires_at_ms > now) {
+    return json({
+      ok: true,
+      alreadyBoosted: true,
+      boosted: false,
+      player,
+      mine: existing,
+      leaderboard: await listPriorityBoosts(env, cfg.topLimit),
+      resetAtMs: existing.expires_at_ms,
+      updatedJobs: 0,
+    });
+  }
+
+  const snapshot = {
+    id: player.id,
+    nickname: player.nickname,
+    state: player.state,
+    town_hall_level: player.town_hall_level,
+    avatar_url: player.avatar_url,
+  };
+  const inserted = await supabaseJson(env, "/redeem_priority_boosts?on_conflict=boost_key", {
+    method: "POST",
+    headers: { prefer: "resolution=ignore-duplicates,return=representation" },
+    body: JSON.stringify([{
+      boost_key: boostKey,
+      player_id: playerId,
+      boost_day: day,
+      boost_score: cfg.score,
+      boosted_at_ms: now,
+      expires_at_ms: expiresAtMs,
+      challenge_hash: (await hashManageToken(String(body.challengeToken || body.challenge_token))).slice(0, 64),
+      user_agent: cleanText(request.headers.get("user-agent"), 240),
+      player_snapshot: snapshot,
+    }]),
+  }).catch((error) => {
+    throw new Error(cleanText(error.message, 180) || "Could not save priority boost.");
+  });
+
+  const insertedRow = inserted && inserted[0] ? publicPriorityBoost(inserted[0]) : await readPriorityBoostForPlayer(env, playerId);
+  const updatedRows = await supabaseJson(env, `/redeem_jobs?player_id=eq.${encodeURIComponent(playerId)}&status=eq.pending`, {
+    method: "PATCH",
+    headers: { prefer: "return=representation" },
+    body: JSON.stringify({
+      priority_score: cfg.score,
+      priority_boosted_at_ms: now,
+      priority_until_ms: expiresAtMs,
+      updated_at_ms: now,
+    }),
+  }).catch(() => []);
+
+  return json({
+    ok: true,
+    boosted: Boolean(inserted && inserted.length),
+    alreadyBoosted: !(inserted && inserted.length),
+    player,
+    mine: insertedRow,
+    leaderboard: await listPriorityBoosts(env, cfg.topLimit),
+    resetAtMs: expiresAtMs,
+    updatedJobs: Array.isArray(updatedRows) ? updatedRows.length : 0,
+  });
+}
+
 async function redeemActivity(request, env) {
   const ready = requireSupabase(env);
   if (!ready.ok) return ready.response;
@@ -1983,7 +2414,8 @@ async function redeemActivity(request, env) {
   const playerLimit = Math.min(12, Math.max(3, Number(url.searchParams.get("players")) || 6));
   const successLimit = Math.min(50, Math.max(5, Number(url.searchParams.get("success")) || 50));
 
-  const [recentPlayersRaw, recentSuccessRaw, pendingJobs, successJobs, activeCodes, registeredPlayers, queue, daemon, automation] = await Promise.all([
+  const priorityCfg = priorityBoostConfig(env);
+  const [recentPlayersRaw, recentSuccessRaw, pendingJobs, successJobs, activeCodes, registeredPlayers, queue, daemon, automation, priorityLeaderboard] = await Promise.all([
     supabaseJson(env, `/redeem_players?enabled=eq.true&consent=eq.true&select=id,nickname,state,town_hall_level,avatar_url,created_at_ms,updated_at_ms,profile_json&order=created_at_ms.desc&limit=${playerLimit}`).catch(() => []),
     supabaseJson(env, `/redeem_jobs?status=eq.success&select=player_id,gift_code,status,redeemed_at_ms,updated_at_ms&order=redeemed_at_ms.desc&limit=${successLimit}`).catch(() => []),
     countSupabaseRows(env, "/redeem_jobs?status=in.(pending,running)&select=job_key&limit=1").catch(() => 0),
@@ -1993,6 +2425,7 @@ async function redeemActivity(request, env) {
     redeemQueueSummary(env).catch(() => null),
     readRedeemDaemonStatus(env).catch(() => null),
     readRedeemAutomationStatus(env).catch(() => null),
+    listPriorityBoosts(env, priorityCfg.topLimit).catch(() => []),
   ]);
 
   const recentPlayers = (recentPlayersRaw || []).map(publicRedeemPlayer);
@@ -2018,6 +2451,12 @@ async function redeemActivity(request, env) {
     queue,
     daemon,
     automation,
+    priority: {
+      enabled: priorityCfg.enabled,
+      day: priorityDayKey(),
+      resetAtMs: priorityResetMs(Date.now(), priorityCfg.days),
+      leaderboard: priorityLeaderboard,
+    },
     recentPlayers,
     recentSuccess: (recentSuccessRaw || []).map((row) => publicRedeemJob(row, playerMap)),
   });
@@ -2090,7 +2529,7 @@ async function runRedeemJobs(env, reason = "manual") {
   const recovered = await recoverStaleRedeemJobs(env, cfg).catch(() => ({ recovered: 0, failed: 0 }));
   result.recovered = recovered.recovered || 0;
   result.staleFailed = recovered.failed || 0;
-  const jobs = await supabaseJson(env, `/redeem_jobs?status=eq.pending&select=job_key,player_id,gift_code,attempts&order=created_at_ms.asc&limit=${batchLimit}`).catch(() => []);
+  const jobs = await supabaseJson(env, `/redeem_jobs?status=eq.pending&select=job_key,player_id,gift_code,attempts&order=priority_score.desc,priority_boosted_at_ms.asc,created_at_ms.asc&limit=${batchLimit}`).catch(() => []);
   result.pending = (jobs || []).length;
   for (const job of jobs || []) {
     await delay(cfg.delayMs);
@@ -2144,6 +2583,28 @@ async function runRedeemJobs(env, reason = "manual") {
   return result;
 }
 
+function redeemJobPriorityScore(row, env) {
+  return Math.max(
+    numberValue(row && row.priority_score),
+    isPriorityVip(row && row.player_id, env) ? priorityBoostConfig(env).vipScore : 0,
+  );
+}
+
+function redeemJobPriorityTime(row, env) {
+  if (isPriorityVip(row && row.player_id, env) && numberValue(row && row.priority_score) <= 0) {
+    return priorityVipSlotMs(row.player_id, env);
+  }
+  return numberValue(row && row.priority_boosted_at_ms) || numberValue(row && row.created_at_ms);
+}
+
+function comparePendingRedeemJobs(a, b, env) {
+  const scoreDelta = redeemJobPriorityScore(b, env) - redeemJobPriorityScore(a, env);
+  if (scoreDelta) return scoreDelta;
+  const timeDelta = redeemJobPriorityTime(a, env) - redeemJobPriorityTime(b, env);
+  if (timeDelta) return timeDelta;
+  return numberValue(a && a.created_at_ms) - numberValue(b && b.created_at_ms);
+}
+
 async function claimRedeemJobs(request, env) {
   const ready = requireSupabase(env);
   if (!ready.ok) return ready.response;
@@ -2182,7 +2643,17 @@ async function claimRedeemJobs(request, env) {
   }
 
   const fallbackLimit = Math.min(limit, 40);
-  const jobs = await supabaseJson(env, `/redeem_jobs?status=eq.${claimStatus}&select=job_key,player_id,gift_code,attempts&order=updated_at_ms.asc&limit=${fallbackLimit}`).catch(() => []);
+  const order = claimStatus === "pending"
+    ? "priority_score.desc,priority_boosted_at_ms.asc,updated_at_ms.asc"
+    : "updated_at_ms.asc";
+  const selectFields = claimStatus === "pending"
+    ? "job_key,player_id,gift_code,attempts,priority_score,priority_boosted_at_ms,created_at_ms"
+    : "job_key,player_id,gift_code,attempts";
+  const fetchLimit = claimStatus === "pending" ? Math.min(Math.max(fallbackLimit * 3, fallbackLimit), 120) : fallbackLimit;
+  const rawJobs = await supabaseJson(env, `/redeem_jobs?status=eq.${claimStatus}&select=${selectFields}&order=${order}&limit=${fetchLimit}`).catch(() => []);
+  const jobs = claimStatus === "pending"
+    ? (rawJobs || []).sort((a, b) => comparePendingRedeemJobs(a, b, env)).slice(0, fallbackLimit)
+    : rawJobs;
   const claimed = [];
   for (const job of jobs || []) {
     const attemptNumber = numberValue(job.attempts) + 1;
@@ -3617,6 +4088,9 @@ export default {
     if (url.pathname === "/api/redeem/unregister" && request.method === "POST") return unregisterRedeemPlayer(request, env);
     if (url.pathname === "/api/redeem/status" && request.method === "GET") return redeemStatus(env);
     if (url.pathname === "/api/redeem/activity" && request.method === "GET") return redeemActivity(request, env);
+    if (url.pathname === "/api/redeem/priority" && request.method === "GET") return redeemPriority(request, env);
+    if (url.pathname === "/api/redeem/priority-challenge" && request.method === "GET") return redeemPriorityChallenge(request, env);
+    if (url.pathname === "/api/redeem/priority-boost" && request.method === "POST") return boostRedeemPriority(request, env);
     if (url.pathname === "/api/redeem/kingdoms" && request.method === "GET") return redeemKingdomRegistry(request, env);
     if (url.pathname === "/api/redeem/codes" && request.method === "GET") return listRedeemCodes(request, env);
     if (url.pathname === "/api/redeem/code" && request.method === "POST") return addRedeemCode(request, env);

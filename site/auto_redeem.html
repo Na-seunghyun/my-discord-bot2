@@ -1084,6 +1084,177 @@
       gap: 18px;
       align-items: start;
     }
+    .priority-lounge {
+      position: relative;
+      display: grid;
+      gap: 14px;
+      border: 1px solid rgba(244,200,106,.30);
+      border-radius: 28px;
+      padding: 16px;
+      background:
+        linear-gradient(120deg, rgba(244,200,106,.17), rgba(82,255,224,.08) 48%, rgba(255,255,255,.045)),
+        rgba(6, 11, 22, .86);
+      box-shadow: 0 24px 72px rgba(0,0,0,.34), 0 0 34px rgba(244,200,106,.10), inset 0 1px 0 rgba(255,255,255,.10);
+      overflow: hidden;
+    }
+    .priority-lounge::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      padding: 1px;
+      background: linear-gradient(90deg, transparent, rgba(244,200,106,.76), rgba(82,255,224,.72), transparent);
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      animation: priorityGlow 5.5s linear infinite;
+      pointer-events: none;
+    }
+    @keyframes priorityGlow {
+      from { transform: translateX(-45%); opacity: .42; }
+      50% { opacity: .90; }
+      to { transform: translateX(45%); opacity: .42; }
+    }
+    .priority-head {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 16px;
+      align-items: center;
+    }
+    .priority-head h2 {
+      margin: 4px 0 4px;
+      color: #fff5c3;
+      font-size: clamp(20px, 3vw, 28px);
+    }
+    .priority-head p {
+      margin: 0;
+      color: var(--muted);
+      font-weight: 850;
+      line-height: 1.5;
+    }
+    .priority-badge {
+      min-width: 150px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(82,255,224,.30);
+      border-radius: 18px;
+      padding: 12px;
+      color: var(--cyan);
+      background: rgba(82,255,224,.09);
+      font-size: 13px;
+      font-weight: 1000;
+      text-align: center;
+    }
+    .priority-marquee {
+      position: relative;
+      z-index: 1;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 18px;
+      background: rgba(2, 7, 15, .44);
+    }
+    .priority-track {
+      min-height: 58px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: max-content;
+      padding: 10px;
+      animation: priorityTicker 44s linear infinite;
+    }
+    .priority-marquee:hover .priority-track {
+      animation-play-state: paused;
+    }
+    @keyframes priorityTicker {
+      from { transform: translateX(0); }
+      to { transform: translateX(-50%); }
+    }
+    .priority-chip {
+      min-width: 220px;
+      display: grid;
+      grid-template-columns: 38px minmax(0, 1fr);
+      gap: 10px;
+      align-items: center;
+      border: 1px solid rgba(244,200,106,.24);
+      border-radius: 16px;
+      padding: 9px;
+      background:
+        linear-gradient(135deg, rgba(244,200,106,.12), rgba(82,255,224,.07)),
+        rgba(255,255,255,.045);
+    }
+    .priority-rank {
+      display: grid;
+      place-items: center;
+      width: 38px;
+      height: 38px;
+      border-radius: 13px;
+      color: #081014;
+      background: linear-gradient(135deg, #fff5bf, var(--gold), var(--cyan));
+      font-weight: 1000;
+    }
+    .priority-name {
+      display: block;
+      color: #fff9d7;
+      font-size: 13px;
+      font-weight: 1000;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .priority-meta {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 850;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .priority-vip-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 18px;
+      margin-right: 6px;
+      padding: 0 7px;
+      border: 1px solid rgba(246,207,114,.42);
+      border-radius: 999px;
+      color: #fff3ba;
+      background: linear-gradient(135deg, rgba(246,207,114,.22), rgba(67,246,215,.09));
+      box-shadow: 0 0 18px rgba(246,207,114,.18);
+      font-size: 10px;
+      font-weight: 1000;
+      letter-spacing: .04em;
+      vertical-align: middle;
+    }
+    .priority-actions {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: minmax(200px, 1fr) minmax(120px, .45fr) auto;
+      gap: 10px;
+      align-items: center;
+    }
+    .priority-actions input {
+      min-height: 48px;
+    }
+    .priority-actions button {
+      min-height: 48px;
+      white-space: nowrap;
+    }
+    .priority-status {
+      position: relative;
+      z-index: 1;
+      min-height: 22px;
+      color: #dbe7ff;
+      font-size: 13px;
+      font-weight: 850;
+      line-height: 1.45;
+      overflow-wrap: anywhere;
+    }
     .console-card,
     .live-command-center {
       border: 1px solid rgba(168,197,255,.18);
@@ -1511,7 +1682,8 @@
       .command-rail,
       .command-hero,
       .console-card,
-      .live-command-center {
+      .live-command-center,
+      .priority-lounge {
         border-radius: 22px;
         padding: 15px;
       }
@@ -1523,8 +1695,17 @@
       .redeem-redesign .live-columns,
       .kingdom-head,
       .split-actions,
-      .input-command {
+      .input-command,
+      .priority-head,
+      .priority-actions {
         grid-template-columns: 1fr;
+      }
+      .priority-badge {
+        width: 100%;
+        min-width: 0;
+      }
+      .priority-chip {
+        min-width: 190px;
       }
       .kingdom-head {
         display: grid;
@@ -1643,6 +1824,28 @@
           <div class="orbit-core">AUTO<br>REDEEM</div>
           <span></span><span></span><span></span>
         </div>
+      </section>
+
+      <section class="priority-lounge" aria-label="Daily priority boost">
+        <div class="priority-head">
+          <div>
+            <span class="console-kicker">DAILY PRIORITY</span>
+            <h2 data-i18n="priorityTitle">Daily Priority Boost</h2>
+            <p data-i18n="priorityHelp">Visit once a day, pass a quick check, and move your waiting redeem jobs higher in the queue until the next reset.</p>
+          </div>
+          <div class="priority-badge" id="priorityBadge" data-i18n="priorityChecking">Checking priority...</div>
+        </div>
+        <div class="priority-marquee" aria-live="polite">
+          <div class="priority-track" id="priorityTrack">
+            <div class="note" data-i18n="priorityEmpty">No boosted players yet today.</div>
+          </div>
+        </div>
+        <div class="priority-actions">
+          <button class="primary" id="priorityChallengeBtn" data-i18n="priorityChallenge">Start daily boost</button>
+          <input id="priorityAnswer" inputmode="numeric" autocomplete="off" data-placeholder="priorityAnswerPlaceholder" placeholder="Answer">
+          <button class="ghost" id="priorityBoostBtn" data-i18n="priorityBoost">Boost my queue</button>
+        </div>
+        <div class="priority-status" id="priorityStatus" data-i18n="priorityReady">Register or load your ID, then start today's priority boost.</div>
       </section>
 
       <section class="mission-grid">
@@ -1862,673 +2065,85 @@
   </div>
 
   <script>
-    const I18N = {
-      en: {
-        brandSub:'Kingshot Auto Redeem', back:'Back to hub', heroA:'Auto Redeem', heroB:'Gift Code Center',
-        subtitle:'Register your Kingshot player ID once. When a new gift code is found, this hub queues a slow, safe redeem job for registered IDs.',
-        registerTitle:'Register Player ID', playerId:'Kingshot Player ID', playerPlaceholder:'Example: 123185474',
-        consent:'I agree to save this player ID for automatic gift-code redemption. Only my player ID and public profile summary will be stored.',
-        bulkLabel:'Bulk Player IDs', bulkPlaceholder:'Paste IDs separated by spaces, commas, or new lines.', bulkRegister:'Register bulk IDs',
-        register:'Register', loadToken:'Show saved token', ready:'Ready.', manageTitle:'Manage Registration',
-        manageHelp:'The manage token is stored only in this browser after registration. Keep it if you want to remove the ID later.',
-        manageToken:'Manage Token', tokenPlaceholder:'Token appears after registration', remove:'Remove my ID',
-        refreshCodes:'Refresh codes', noAction:'No action yet.', codesTitle:'Latest Gift Codes',
-        codesHelp:'Active and expired states are synced from the source site.', loadingCodes:'Loading codes...',
-        noCodes:'No codes saved yet.', enterId:'Enter your player ID first.', needConsent:'Consent is required before saving an ID.',
-        checking:'Checking official profile...', registered:'Registered.', savedToken:'Saved token loaded.', noToken:'No saved token in this browser.',
-        needToken:'Player ID and manage token are required.', removing:'Removing registration...', removed:'Registration removed.',
-        active:'Active', expired:'Expired', observed:'Observed', unknown:'Unknown', discovered:'Discovered', recent:'Recent use',
-        registeredPlayers:'Registered IDs', activeCodes:'Active codes', bulkDone:'Bulk registration finished.',
-        created:'New', duplicate:'Duplicate', invalid:'Invalid', reactivated:'Reactivated', duplicateNote:'Already registered. Existing manage token was kept.'
-      },
-      ko: {
-        brandSub:'킹샷 자동 리딤', back:'허브로 돌아가기', heroA:'자동 리딤', heroB:'기프트 코드 센터',
-        subtitle:'킹샷 플레이어 ID를 한 번 등록해두면, 새 기프트 코드가 발견될 때 등록된 ID에 천천히 안전하게 리딤 작업을 생성합니다.',
-        registerTitle:'플레이어 ID 등록', playerId:'킹샷 플레이어 ID', playerPlaceholder:'예: 123185474',
-        consent:'자동 기프트 코드 리딤을 위해 이 플레이어 ID를 저장하는 것에 동의합니다. 플레이어 ID와 공개 프로필 요약만 저장됩니다.',
-        bulkLabel:'대량 플레이어 ID', bulkPlaceholder:'ID를 공백, 쉼표, 줄바꿈으로 구분해서 붙여넣으세요.', bulkRegister:'대량 ID 등록',
-        register:'등록하기', loadToken:'저장된 토큰 보기', ready:'준비됨.', manageTitle:'등록 관리',
-        manageHelp:'관리 토큰은 등록 후 이 브라우저에만 저장됩니다. 나중에 ID를 삭제하려면 이 토큰이 필요합니다.',
-        manageToken:'관리 토큰', tokenPlaceholder:'등록 후 토큰이 표시됩니다', remove:'내 ID 삭제', refreshCodes:'코드 새로고침',
-        noAction:'아직 작업 없음.', codesTitle:'최신 기프트 코드', codesHelp:'활성/만료 상태는 원본 사이트 기준으로 동기화됩니다.',
-        loadingCodes:'코드를 불러오는 중...', noCodes:'아직 저장된 코드가 없습니다.', enterId:'먼저 플레이어 ID를 입력하세요.',
-        needConsent:'ID 저장 전 동의가 필요합니다.', checking:'공식 프로필 확인 중...', registered:'등록 완료.',
-        savedToken:'저장된 토큰을 불러왔습니다.', noToken:'이 브라우저에 저장된 토큰이 없습니다.', needToken:'플레이어 ID와 관리 토큰이 필요합니다.',
-        removing:'등록 삭제 중...', removed:'등록이 삭제되었습니다.', active:'활성', expired:'만료', observed:'확인됨', unknown:'알 수 없음',
-        discovered:'발견 시간', recent:'최근 사용', registeredPlayers:'등록된 ID', activeCodes:'활성 코드',
-        bulkDone:'대량 등록 완료.', created:'신규', duplicate:'중복', invalid:'무효', reactivated:'재활성', duplicateNote:'이미 등록된 ID입니다. 기존 관리 토큰은 유지되었습니다.'
-      },
-      'zh-CN': {
-        brandSub:'Kingshot 自动兑换', back:'返回中心', heroA:'自动兑换', heroB:'礼包码中心',
-        subtitle:'登记一次玩家 ID 后，当发现新的礼包码时，系统会为已登记 ID 建立慢速安全的兑换任务。',
-        registerTitle:'登记玩家 ID', playerId:'Kingshot 玩家 ID', playerPlaceholder:'例如: 123185474',
-        consent:'我同意保存此玩家 ID 用于自动兑换礼包码。只会保存玩家 ID 和公开资料摘要。',
-        bulkLabel:'批量玩家 ID', bulkPlaceholder:'粘贴 ID，可用空格、逗号或换行分隔。', bulkRegister:'批量登记 ID',
-        register:'登记', loadToken:'显示已保存令牌', ready:'已准备。', manageTitle:'管理登记',
-        manageHelp:'管理令牌只保存在此浏览器中。以后删除 ID 时需要它。',
-        manageToken:'管理令牌', tokenPlaceholder:'登记后显示令牌', remove:'删除我的 ID', refreshCodes:'刷新代码',
-        noAction:'尚无操作。', codesTitle:'最新礼包码', codesHelp:'启用和过期状态会从来源站点同步。',
-        loadingCodes:'正在加载代码...', noCodes:'还没有保存的代码。', enterId:'请先输入玩家 ID。', needConsent:'保存 ID 前需要同意。',
-        checking:'正在验证官方资料...', registered:'登记完成。', savedToken:'已加载保存的令牌。', noToken:'此浏览器没有保存的令牌。',
-        needToken:'需要玩家 ID 和管理令牌。', removing:'正在删除登记...', removed:'登记已删除。', active:'可用', expired:'过期',
-        observed:'已发现', unknown:'未知', discovered:'发现时间', recent:'最近使用', registeredPlayers:'已登记 ID',
-        activeCodes:'可用代码', bulkDone:'批量登记完成。', created:'新增', duplicate:'重复', invalid:'无效', reactivated:'重新启用', duplicateNote:'已登记，原管理令牌已保留。'
-      },
-      'zh-TW': {
-        brandSub:'Kingshot 自動兌換', back:'返回中心', heroA:'自動兌換', heroB:'禮包碼中心',
-        subtitle:'登記一次玩家 ID 後，發現新的禮包碼時，系統會為已登記 ID 建立慢速安全的兌換任務。',
-        registerTitle:'登記玩家 ID', playerId:'Kingshot 玩家 ID', playerPlaceholder:'例如: 123185474',
-        consent:'我同意保存此玩家 ID 用於自動兌換禮包碼。只會保存玩家 ID 和公開資料摘要。',
-        bulkLabel:'批量玩家 ID', bulkPlaceholder:'貼上 ID，可用空格、逗號或換行分隔。', bulkRegister:'批量登記 ID',
-        register:'登記', loadToken:'顯示已保存令牌', ready:'已準備。', manageTitle:'管理登記',
-        manageHelp:'管理令牌只保存在此瀏覽器中。之後刪除 ID 時需要它。',
-        manageToken:'管理令牌', tokenPlaceholder:'登記後顯示令牌', remove:'刪除我的 ID', refreshCodes:'刷新代碼',
-        noAction:'尚無操作。', codesTitle:'最新禮包碼', codesHelp:'啟用和過期狀態會從來源站點同步。',
-        loadingCodes:'正在載入代碼...', noCodes:'還沒有保存的代碼。', enterId:'請先輸入玩家 ID。', needConsent:'保存 ID 前需要同意。',
-        checking:'正在驗證官方資料...', registered:'登記完成。', savedToken:'已載入保存的令牌。', noToken:'此瀏覽器沒有保存的令牌。',
-        needToken:'需要玩家 ID 和管理令牌。', removing:'正在刪除登記...', removed:'登記已刪除。', active:'可用', expired:'過期',
-        observed:'已發現', unknown:'未知', discovered:'發現時間', recent:'最近使用', registeredPlayers:'已登記 ID',
-        activeCodes:'可用代碼', bulkDone:'批量登記完成。', created:'新增', duplicate:'重複', invalid:'無效', reactivated:'重新啟用', duplicateNote:'已登記，原管理令牌已保留。'
-      },
-      fr: {
-        brandSub:'Rédemption auto Kingshot', back:'Retour au hub', heroA:'Auto Redeem', heroB:'Centre des codes',
-        subtitle:'Enregistrez votre ID Kingshot une fois. Quand un nouveau code est trouvé, le hub crée une tâche lente et prudente pour les ID inscrits.',
-        registerTitle:'Enregistrer un ID', playerId:'ID joueur Kingshot', playerPlaceholder:'Exemple : 123185474',
-        consent:"J'accepte d'enregistrer cet ID pour la rédemption automatique. Seuls l'ID et le résumé public seront stockés.",
-        bulkLabel:'IDs joueurs en lot', bulkPlaceholder:'Collez les IDs séparés par espaces, virgules ou lignes.', bulkRegister:'Enregistrer en lot',
-        register:'Enregistrer', loadToken:'Afficher le token', ready:'Prêt.', manageTitle:'Gérer l’inscription',
-        manageHelp:'Le token de gestion est stocké uniquement dans ce navigateur après inscription.',
-        manageToken:'Token de gestion', tokenPlaceholder:'Le token apparaît après inscription', remove:'Supprimer mon ID',
-        refreshCodes:'Actualiser les codes', noAction:'Aucune action.', codesTitle:'Derniers codes', codesHelp:'Les états actif/expiré sont synchronisés depuis la source.',
-        loadingCodes:'Chargement des codes...', noCodes:'Aucun code enregistré.', enterId:"Saisissez d'abord l'ID joueur.", needConsent:'Consentement requis.',
-        checking:'Vérification du profil officiel...', registered:'Enregistré.', savedToken:'Token chargé.', noToken:'Aucun token dans ce navigateur.',
-        needToken:'ID joueur et token requis.', removing:'Suppression...', removed:'Inscription supprimée.', active:'Actif', expired:'Expiré',
-        observed:'Observé', unknown:'Inconnu', discovered:'Découvert', recent:'Utilisation récente', registeredPlayers:'ID enregistrés',
-        activeCodes:'Codes actifs', bulkDone:'Enregistrement en lot terminé.', created:'Nouveau', duplicate:'Doublon', invalid:'Invalide', reactivated:'Réactivé', duplicateNote:'Déjà enregistré. Le token existant a été conservé.'
-      },
-      de: {
-        brandSub:'Kingshot Auto Redeem', back:'Zurück zum Hub', heroA:'Auto Redeem', heroB:'Giftcode-Zentrale',
-        subtitle:'Registriere deine Kingshot-ID einmal. Wenn ein neuer Code gefunden wird, erstellt der Hub langsame, sichere Einlöseaufgaben.',
-        registerTitle:'Spieler-ID registrieren', playerId:'Kingshot Spieler-ID', playerPlaceholder:'Beispiel: 123185474',
-        consent:'Ich stimme zu, diese Spieler-ID für automatische Giftcode-Einlösung zu speichern. Nur ID und öffentliches Profil werden gespeichert.',
-        bulkLabel:'Mehrere Spieler-IDs', bulkPlaceholder:'IDs mit Leerzeichen, Kommas oder Zeilenumbrüchen einfügen.', bulkRegister:'Mehrere IDs registrieren',
-        register:'Registrieren', loadToken:'Token anzeigen', ready:'Bereit.', manageTitle:'Registrierung verwalten',
-        manageHelp:'Der Verwaltungstoken wird nur in diesem Browser gespeichert.',
-        manageToken:'Verwaltungstoken', tokenPlaceholder:'Token erscheint nach Registrierung', remove:'Meine ID entfernen',
-        refreshCodes:'Codes aktualisieren', noAction:'Noch keine Aktion.', codesTitle:'Neueste Giftcodes', codesHelp:'Aktiv/abgelaufen wird von der Quelle synchronisiert.',
-        loadingCodes:'Codes werden geladen...', noCodes:'Noch keine Codes gespeichert.', enterId:'Bitte zuerst Spieler-ID eingeben.', needConsent:'Zustimmung ist erforderlich.',
-        checking:'Offizielles Profil wird geprüft...', registered:'Registriert.', savedToken:'Token geladen.', noToken:'Kein Token in diesem Browser.',
-        needToken:'Spieler-ID und Token erforderlich.', removing:'Registrierung wird entfernt...', removed:'Registrierung entfernt.', active:'Aktiv',
-        expired:'Abgelaufen', observed:'Beobachtet', unknown:'Unbekannt', discovered:'Entdeckt', recent:'Letzte Nutzung', registeredPlayers:'Registrierte IDs',
-        activeCodes:'Aktive Codes', bulkDone:'Mehrfachregistrierung abgeschlossen.', created:'Neu', duplicate:'Duplikat', invalid:'Ungültig', reactivated:'Reaktiviert', duplicateNote:'Bereits registriert. Der vorhandene Token bleibt erhalten.'
-      },
-      th: {
-        brandSub:'Kingshot Auto Redeem', back:'กลับไปฮับ', heroA:'แลกรางวัลอัตโนมัติ', heroB:'ศูนย์โค้ดของขวัญ',
-        subtitle:'ลงทะเบียน ID ผู้เล่นครั้งเดียว เมื่อพบโค้ดใหม่ ระบบจะสร้างงานแลกรางวัลแบบช้าและปลอดภัยให้ ID ที่ลงทะเบียนไว้',
-        registerTitle:'ลงทะเบียน ID ผู้เล่น', playerId:'ID ผู้เล่น Kingshot', playerPlaceholder:'ตัวอย่าง: 123185474',
-        consent:'ฉันยินยอมให้บันทึก ID นี้สำหรับการแลกโค้ดอัตโนมัติ โดยเก็บเฉพาะ ID และข้อมูลโปรไฟล์สาธารณะ',
-        bulkLabel:'ID ผู้เล่นจำนวนมาก', bulkPlaceholder:'วาง ID โดยคั่นด้วยช่องว่าง จุลภาค หรือขึ้นบรรทัดใหม่', bulkRegister:'ลงทะเบียนหลาย ID',
-        register:'ลงทะเบียน', loadToken:'แสดงโทเคนที่บันทึก', ready:'พร้อม', manageTitle:'จัดการการลงทะเบียน',
-        manageHelp:'โทเคนจัดการจะถูกเก็บไว้ในเบราว์เซอร์นี้เท่านั้นหลังลงทะเบียน',
-        manageToken:'โทเคนจัดการ', tokenPlaceholder:'โทเคนจะแสดงหลังลงทะเบียน', remove:'ลบ ID ของฉัน', refreshCodes:'รีเฟรชโค้ด',
-        noAction:'ยังไม่มีการทำงาน', codesTitle:'โค้ดล่าสุด', codesHelp:'สถานะใช้งาน/หมดอายุซิงก์จากแหล่งข้อมูล',
-        loadingCodes:'กำลังโหลดโค้ด...', noCodes:'ยังไม่มีโค้ดที่บันทึก', enterId:'กรุณาใส่ ID ผู้เล่นก่อน', needConsent:'ต้องยินยอมก่อนบันทึก ID',
-        checking:'กำลังตรวจสอบโปรไฟล์ทางการ...', registered:'ลงทะเบียนแล้ว', savedToken:'โหลดโทเคนแล้ว', noToken:'ไม่มีโทเคนที่บันทึกในเบราว์เซอร์นี้',
-        needToken:'ต้องมี ID ผู้เล่นและโทเคนจัดการ', removing:'กำลังลบการลงทะเบียน...', removed:'ลบการลงทะเบียนแล้ว', active:'ใช้งานได้',
-        expired:'หมดอายุ', observed:'พบแล้ว', unknown:'ไม่ทราบ', discovered:'เวลาที่พบ', recent:'ใช้ล่าสุด', registeredPlayers:'ID ที่ลงทะเบียน',
-        activeCodes:'โค้ดที่ใช้ได้', bulkDone:'ลงทะเบียนหลาย ID เสร็จแล้ว', created:'ใหม่', duplicate:'ซ้ำ', invalid:'ไม่ถูกต้อง', reactivated:'เปิดใช้อีกครั้ง', duplicateNote:'ลงทะเบียนไว้แล้ว โทเคนเดิมถูกเก็บไว้'
-      },
-      id: {
-        brandSub:'Kingshot Auto Redeem', back:'Kembali ke hub', heroA:'Auto Redeem', heroB:'Pusat Gift Code',
-        subtitle:'Daftarkan ID Kingshot sekali. Saat kode baru ditemukan, hub membuat antrean redeem perlahan dan aman untuk ID terdaftar.',
-        registerTitle:'Daftarkan ID Player', playerId:'ID Player Kingshot', playerPlaceholder:'Contoh: 123185474',
-        consent:'Saya setuju menyimpan ID ini untuk redeem otomatis. Hanya ID dan ringkasan profil publik yang disimpan.',
-        bulkLabel:'Banyak ID Player', bulkPlaceholder:'Tempel ID dipisahkan spasi, koma, atau baris baru.', bulkRegister:'Daftarkan banyak ID',
-        register:'Daftar', loadToken:'Tampilkan token', ready:'Siap.', manageTitle:'Kelola pendaftaran',
-        manageHelp:'Token kelola hanya disimpan di browser ini setelah pendaftaran.',
-        manageToken:'Token Kelola', tokenPlaceholder:'Token muncul setelah pendaftaran', remove:'Hapus ID saya', refreshCodes:'Muat ulang kode',
-        noAction:'Belum ada aksi.', codesTitle:'Gift Code terbaru', codesHelp:'Status aktif/kedaluwarsa disinkronkan dari sumber.',
-        loadingCodes:'Memuat kode...', noCodes:'Belum ada kode tersimpan.', enterId:'Masukkan ID player dulu.', needConsent:'Persetujuan diperlukan.',
-        checking:'Memeriksa profil resmi...', registered:'Terdaftar.', savedToken:'Token tersimpan dimuat.', noToken:'Tidak ada token di browser ini.',
-        needToken:'ID player dan token diperlukan.', removing:'Menghapus pendaftaran...', removed:'Pendaftaran dihapus.', active:'Aktif',
-        expired:'Kedaluwarsa', observed:'Terlihat', unknown:'Tidak diketahui', discovered:'Ditemukan', recent:'Penggunaan terbaru', registeredPlayers:'ID terdaftar',
-        activeCodes:'Kode aktif', bulkDone:'Pendaftaran massal selesai.', created:'Baru', duplicate:'Duplikat', invalid:'Tidak valid', reactivated:'Diaktifkan lagi', duplicateNote:'Sudah terdaftar. Token lama tetap dipertahankan.'
-      }
-    };
-
-    const LANGUAGE_LABELS = {
-      ko: '한국어',
-      en: 'English',
-      'zh-CN': '简体中文',
-      'zh-TW': '繁體中文',
-      fr: 'Francais',
-      de: 'Deutsch',
-      th: 'ไทย',
-      id: 'Indonesia'
-    };
-    Object.assign(I18N.en, {
-      codeDockTitle: 'Code Status',
-      userDockTitle: 'Recent Users',
-      recentUsers: 'Recent users',
-      successTitle: 'Current Successes',
-      loadingActivity: 'Loading activity...',
-      noRecentUsers: 'No registered users yet.',
-      noSuccess: 'No successful redeem records yet.',
-      pendingJobs: 'Queued jobs',
-      successJobs: 'Success records',
-      success: 'Success',
-      redeemed: 'Redeemed',
-      code: 'Code',
-      unknownPlayer: 'Unknown player',
-      copyCode: 'Copy',
-      copiedCode: 'Copied',
-      daemonChecking: 'PuTTY server checking...',
-      daemonOnline: 'PuTTY server online',
-      daemonWarning: 'PuTTY server warning',
-      daemonOffline: 'PuTTY server offline',
-      daemonError: 'PuTTY server error',
-      daemonUnknown: 'PuTTY server unknown',
-      daemonNever: 'No heartbeat yet',
-      daemonJobs: 'jobs',
-      automationStable: 'Auto redeem engine stable',
-      automationWarning: 'Auto redeem engine warning',
-      automationOffline: 'Auto redeem engine needs check',
-      automationUnknown: 'Auto redeem engine checking',
-      automationCloudflare: 'Cloudflare schedule',
-      automationPutty: 'Oracle/PuTTY backup'
-    });
-    Object.assign(I18N.ko, {
-      brandSub: 'Kingshot 오토리딤',
-      back: '허브로 돌아가기',
-      heroA: '오토리딤',
-      heroB: '기프트 코드 센터',
-      subtitle: 'Kingshot 플레이어 ID를 한 번 등록해두면, 새 기프트 코드가 발견될 때 등록된 ID에 천천히 안전하게 지급 작업을 생성합니다.',
-      registerTitle: '플레이어 ID 등록',
-      playerId: 'Kingshot 플레이어 ID',
-      playerPlaceholder: '예: 123185474',
-      consent: '자동 기프트 코드 지급을 위해 이 플레이어 ID를 저장하는 데 동의합니다. 플레이어 ID와 공개 프로필 요약만 저장됩니다.',
-      bulkLabel: '대량 플레이어 ID',
-      bulkPlaceholder: 'ID를 공백, 쉼표, 줄바꿈으로 구분해서 붙여넣으세요.',
-      bulkRegister: '대량 ID 등록',
-      register: '등록하기',
-      loadToken: '저장된 토큰 보기',
-      ready: '준비됨.',
-      manageTitle: '등록 관리',
-      manageHelp: '관리 토큰은 등록 후 이 브라우저에만 저장됩니다. 나중에 ID를 제거하려면 이 토큰이 필요합니다.',
-      manageToken: '관리 토큰',
-      tokenPlaceholder: '등록 후 토큰이 표시됩니다',
-      remove: '내 ID 제거',
-      refreshCodes: '상태 새로고침',
-      noAction: '아직 작업 없음.',
-      codesTitle: '최신 기프트 코드',
-      codesHelp: '활성/만료 상태는 원본 사이트 기준으로 동기화됩니다.',
-      loadingCodes: '코드를 불러오는 중...',
-      noCodes: '아직 저장된 코드가 없습니다.',
-      enterId: '먼저 플레이어 ID를 입력하세요.',
-      needConsent: 'ID 저장에는 동의가 필요합니다.',
-      checking: '공식 프로필 확인 중...',
-      registered: '등록 완료.',
-      savedToken: '저장된 토큰을 불러왔습니다.',
-      noToken: '이 브라우저에는 저장된 토큰이 없습니다.',
-      needToken: '플레이어 ID와 관리 토큰이 필요합니다.',
-      removing: '등록 제거 중...',
-      removed: '등록이 제거되었습니다.',
-      active: '활성',
-      expired: '만료',
-      observed: '확인됨',
-      unknown: '알 수 없음',
-      discovered: '발견 시간',
-      recent: '최근 사용',
-      registeredPlayers: '등록된 ID',
-      activeCodes: '활성 코드',
-      bulkDone: '대량 등록 완료.',
-      created: '신규',
-      duplicate: '중복',
-      invalid: '무효',
-      reactivated: '재활성',
-      duplicateNote: '이미 등록된 ID입니다. 기존 관리 토큰은 유지했습니다.',
-      codeDockTitle: '코드 상황',
-      userDockTitle: '최근 등록 유저',
-      recentUsers: '최근 등록',
-      successTitle: '지금 성공 내역',
-      loadingActivity: '활동 내역을 불러오는 중...',
-      noRecentUsers: '아직 등록된 유저가 없습니다.',
-      noSuccess: '아직 지급 성공 기록이 없습니다.',
-      pendingJobs: '대기 작업',
-      successJobs: '성공 기록',
-      success: '성공',
-      redeemed: '지급됨',
-      code: '코드',
-      unknownPlayer: '알 수 없는 유저',
-      copyCode: '복사',
-      copiedCode: '복사됨',
-      daemonChecking: 'PuTTY 서버 확인 중...',
-      daemonOnline: 'PuTTY 서버 정상',
-      daemonWarning: 'PuTTY 서버 주의',
-      daemonOffline: 'PuTTY 서버 오프라인',
-      daemonError: 'PuTTY 서버 오류',
-      daemonUnknown: 'PuTTY 서버 알 수 없음',
-      daemonNever: '아직 신호 없음',
-      daemonJobs: '작업'
-    });
-
-    Object.assign(I18N.ko, {
-      brandSub: 'Kingshot 자동 리딤',
-      back: '허브로 돌아가기',
-      heroA: '자동 리딤',
-      heroB: '기프트 코드 센터',
-      subtitle: 'Kingshot 플레이어 ID를 한 번 등록하면 새 기프트 코드가 발견될 때 등록된 ID에 천천히 안전하게 지급 작업을 생성합니다.',
-      registerTitle: '플레이어 ID 등록',
-      playerId: 'Kingshot 플레이어 ID',
-      consent: '자동 기프트 코드 지급을 위해 이 플레이어 ID를 저장하는 것에 동의합니다. 플레이어 ID와 공개 프로필 요약만 저장됩니다.',
-      bulkLabel: '여러 플레이어 ID',
-      bulkPlaceholder: 'ID를 공백, 쉼표, 줄바꿈으로 구분해서 붙여넣으세요.',
-      bulkRegister: '여러 ID 등록',
-      register: '등록하기',
-      refreshCodes: '상태 새로고침',
-      codesTitle: '최신 기프트 코드',
-      codesHelp: '활성/만료 상태와 최근 지급 기록을 함께 보여줍니다.',
-      loadingCodes: '코드를 불러오는 중...',
-      noCodes: '아직 저장된 코드가 없습니다.',
-      active: '활성',
-      expired: '만료',
-      observed: '확인됨',
-      registeredPlayers: '등록된 ID',
-      activeCodes: '활성 코드',
-      codeDockTitle: '코드 상황',
-      userDockTitle: '최근 등록 유저',
-      successTitle: '지금 성공 내역',
-      noRecentUsers: '아직 등록된 유저가 없습니다.',
-      noSuccess: '아직 지급 성공 기록이 없습니다.',
-      copyCode: '복사',
-      copiedCode: '복사됨',
-      automationStable: '자동 지급 엔진 안정',
-      automationWarning: '자동 지급 엔진 주의',
-      automationOffline: '자동 지급 엔진 확인 필요',
-      automationUnknown: '자동 지급 엔진 확인 중',
-      automationCloudflare: 'Cloudflare 자동 실행',
-      automationPutty: 'Oracle/PuTTY 백업',
-      daemonJobs: '작업'
-    });
-
-    Object.assign(I18N.en, {
-      kingdomRegistryTitle: 'Registered IDs by Kingdom',
-      kingdomRegistryHelp: 'Browse saved auto-redeem IDs grouped by kingdom number.',
-      loadingKingdoms: 'Loading kingdom registry...',
-      noKingdomRegistry: 'No registered kingdom data yet.',
-      kingdomRegistryError: 'Could not load kingdom registry.',
-      kingdoms: 'kingdoms',
-      registeredIdsShort: 'IDs',
-      ids: 'IDs',
-      unknownKingdom: 'Unknown kingdom'
-    });
-    Object.assign(I18N.ko, {
-      kingdomRegistryTitle: '왕국별 등록 ID',
-      kingdomRegistryHelp: '오토리딤에 등록된 ID를 왕국 번호별로 확인할 수 있습니다.',
-      loadingKingdoms: '왕국별 등록 현황을 불러오는 중...',
-      noKingdomRegistry: '아직 표시할 왕국 등록 정보가 없습니다.',
-      kingdomRegistryError: '왕국별 등록 현황을 불러오지 못했습니다.',
-      kingdoms: '개 왕국',
-      registeredIdsShort: '개 ID',
-      ids: '명',
-      unknownKingdom: '왕국 미확인'
-    });
-    Object.assign(I18N['zh-CN'], {
-      kingdomRegistryTitle: '按王国查看登记 ID',
-      kingdomRegistryHelp: '按王国编号浏览已保存的自动兑换 ID。',
-      loadingKingdoms: '正在加载王国登记列表...',
-      noKingdomRegistry: '还没有王国登记数据。',
-      kingdomRegistryError: '无法加载王国登记列表。',
-      kingdoms: '个王国',
-      registeredIdsShort: '个 ID',
-      ids: '个 ID',
-      unknownKingdom: '未知王国'
-    });
-    Object.assign(I18N['zh-TW'], {
-      kingdomRegistryTitle: '按王國查看登記 ID',
-      kingdomRegistryHelp: '按王國編號瀏覽已保存的自動兌換 ID。',
-      loadingKingdoms: '正在載入王國登記列表...',
-      noKingdomRegistry: '還沒有王國登記資料。',
-      kingdomRegistryError: '無法載入王國登記列表。',
-      kingdoms: '個王國',
-      registeredIdsShort: '個 ID',
-      ids: '個 ID',
-      unknownKingdom: '未知王國'
-    });
-    Object.assign(I18N.fr, {
-      kingdomRegistryTitle: 'IDs inscrits par royaume',
-      kingdomRegistryHelp: 'Parcourez les IDs auto redeem enregistrés par numéro de royaume.',
-      loadingKingdoms: 'Chargement des royaumes...',
-      noKingdomRegistry: 'Aucune donnée de royaume enregistrée.',
-      kingdomRegistryError: 'Impossible de charger les royaumes.',
-      kingdoms: 'royaumes',
-      registeredIdsShort: 'IDs',
-      ids: 'IDs',
-      unknownKingdom: 'Royaume inconnu'
-    });
-    Object.assign(I18N.de, {
-      kingdomRegistryTitle: 'Registrierte IDs nach Königreich',
-      kingdomRegistryHelp: 'Gespeicherte Auto-Redeem-IDs nach Königreichsnummer ansehen.',
-      loadingKingdoms: 'Königreiche werden geladen...',
-      noKingdomRegistry: 'Noch keine Königreichsdaten.',
-      kingdomRegistryError: 'Königreichsliste konnte nicht geladen werden.',
-      kingdoms: 'Königreiche',
-      registeredIdsShort: 'IDs',
-      ids: 'IDs',
-      unknownKingdom: 'Unbekanntes Königreich'
-    });
-    Object.assign(I18N.th, {
-      kingdomRegistryTitle: 'ID ที่ลงทะเบียนตามอาณาจักร',
-      kingdomRegistryHelp: 'ดู ID auto redeem ที่บันทึกไว้แยกตามหมายเลขอาณาจักร',
-      loadingKingdoms: 'กำลังโหลดรายการอาณาจักร...',
-      noKingdomRegistry: 'ยังไม่มีข้อมูลอาณาจักร',
-      kingdomRegistryError: 'โหลดรายการอาณาจักรไม่ได้',
-      kingdoms: 'อาณาจักร',
-      registeredIdsShort: 'ID',
-      ids: 'ID',
-      unknownKingdom: 'ไม่ทราบอาณาจักร'
-    });
-    Object.assign(I18N.id, {
-      kingdomRegistryTitle: 'ID Terdaftar per Kingdom',
-      kingdomRegistryHelp: 'Lihat ID auto redeem yang tersimpan berdasarkan nomor kingdom.',
-      loadingKingdoms: 'Memuat registry kingdom...',
-      noKingdomRegistry: 'Belum ada data kingdom terdaftar.',
-      kingdomRegistryError: 'Tidak dapat memuat registry kingdom.',
-      kingdoms: 'kingdom',
-      registeredIdsShort: 'ID',
-      ids: 'ID',
-      unknownKingdom: 'Kingdom tidak diketahui'
-    });
-    Object.assign(I18N.en, {
-      latestCode: 'Latest code',
-      noRecentRedeem: 'No redeem record yet',
-      reason: 'Reason',
-      status_pending: 'Waiting',
-      status_running: 'Processing',
-      status_success: 'Success',
-      status_failed: 'Failed',
-      status_already_claimed: 'Already claimed',
-      status_expired: 'Expired',
-      status_invalid_code: 'Invalid code',
-      status_time_window_closed: 'Time closed',
-      status_not_logged_in: 'Login failed',
-      status_player_not_found: 'Player not found',
-      status_timeout: 'Timeout',
-      status_network_error: 'Network error',
-      status_server_busy: 'Server busy',
-      summarySuccess: 'success',
-      summaryRunning: 'working',
-      summaryFailed: 'failed'
-    });
-    Object.assign(I18N.ko, {
-      latestCode: '최근 코드',
-      noRecentRedeem: '아직 지급 기록 없음',
-      reason: '사유',
-      status_pending: '대기',
-      status_running: '진행 중',
-      status_success: '성공',
-      status_failed: '실패',
-      status_already_claimed: '이미 수령',
-      status_expired: '만료',
-      status_invalid_code: '잘못된 코드',
-      status_time_window_closed: '지급 시간 종료',
-      status_not_logged_in: '로그인 실패',
-      status_player_not_found: '유저 없음',
-      status_timeout: '시간 초과',
-      status_network_error: '네트워크 오류',
-      status_server_busy: '서버 혼잡',
-      summarySuccess: '성공',
-      summaryRunning: '진행',
-      summaryFailed: '실패'
-    });
-    Object.assign(I18N['zh-CN'], {
-      latestCode: '最新代码',
-      noRecentRedeem: '暂无兑换记录',
-      reason: '原因',
-      status_pending: '等待',
-      status_running: '处理中',
-      status_success: '成功',
-      status_failed: '失败',
-      status_already_claimed: '已领取',
-      status_expired: '已过期',
-      status_invalid_code: '无效代码',
-      status_time_window_closed: '时间已结束',
-      status_not_logged_in: '登录失败',
-      status_player_not_found: '找不到玩家',
-      status_timeout: '超时',
-      status_network_error: '网络错误',
-      status_server_busy: '服务器繁忙',
-      summarySuccess: '成功',
-      summaryRunning: '进行中',
-      summaryFailed: '失败'
-    });
-    Object.assign(I18N['zh-TW'], {
-      latestCode: '最新代碼',
-      noRecentRedeem: '暫無兌換記錄',
-      reason: '原因',
-      status_pending: '等待',
-      status_running: '處理中',
-      status_success: '成功',
-      status_failed: '失敗',
-      status_already_claimed: '已領取',
-      status_expired: '已過期',
-      status_invalid_code: '無效代碼',
-      status_time_window_closed: '時間已結束',
-      status_not_logged_in: '登入失敗',
-      status_player_not_found: '找不到玩家',
-      status_timeout: '逾時',
-      status_network_error: '網路錯誤',
-      status_server_busy: '伺服器繁忙',
-      summarySuccess: '成功',
-      summaryRunning: '進行中',
-      summaryFailed: '失敗'
-    });
-    Object.assign(I18N.fr, {
-      latestCode: 'Dernier code',
-      noRecentRedeem: 'Aucun historique',
-      reason: 'Raison',
-      status_pending: 'En attente',
-      status_running: 'En cours',
-      status_success: 'Succès',
-      status_failed: 'Échec',
-      status_already_claimed: 'Déjà reçu',
-      status_expired: 'Expiré',
-      status_invalid_code: 'Code invalide',
-      status_time_window_closed: 'Temps fermé',
-      status_not_logged_in: 'Connexion échouée',
-      status_player_not_found: 'Joueur introuvable',
-      status_timeout: 'Délai dépassé',
-      status_network_error: 'Erreur réseau',
-      status_server_busy: 'Serveur occupé',
-      summarySuccess: 'succès',
-      summaryRunning: 'en cours',
-      summaryFailed: 'échec'
-    });
-    Object.assign(I18N.de, {
-      latestCode: 'Letzter Code',
-      noRecentRedeem: 'Noch kein Verlauf',
-      reason: 'Grund',
-      status_pending: 'Wartet',
-      status_running: 'Läuft',
-      status_success: 'Erfolg',
-      status_failed: 'Fehlgeschlagen',
-      status_already_claimed: 'Bereits erhalten',
-      status_expired: 'Abgelaufen',
-      status_invalid_code: 'Ungültiger Code',
-      status_time_window_closed: 'Zeitfenster vorbei',
-      status_not_logged_in: 'Login fehlgeschlagen',
-      status_player_not_found: 'Spieler nicht gefunden',
-      status_timeout: 'Timeout',
-      status_network_error: 'Netzwerkfehler',
-      status_server_busy: 'Server ausgelastet',
-      summarySuccess: 'Erfolg',
-      summaryRunning: 'läuft',
-      summaryFailed: 'Fehler'
-    });
-    Object.assign(I18N.th, {
-      latestCode: 'โค้ดล่าสุด',
-      noRecentRedeem: 'ยังไม่มีประวัติ',
-      reason: 'เหตุผล',
-      status_pending: 'รอ',
-      status_running: 'กำลังทำงาน',
-      status_success: 'สำเร็จ',
-      status_failed: 'ล้มเหลว',
-      status_already_claimed: 'รับแล้ว',
-      status_expired: 'หมดอายุ',
-      status_invalid_code: 'โค้ดไม่ถูกต้อง',
-      status_time_window_closed: 'หมดเวลา',
-      status_not_logged_in: 'เข้าสู่ระบบล้มเหลว',
-      status_player_not_found: 'ไม่พบผู้เล่น',
-      status_timeout: 'หมดเวลา',
-      status_network_error: 'เครือข่ายผิดพลาด',
-      status_server_busy: 'เซิร์ฟเวอร์ยุ่ง',
-      summarySuccess: 'สำเร็จ',
-      summaryRunning: 'กำลังทำ',
-      summaryFailed: 'ล้มเหลว'
-    });
-    Object.assign(I18N.id, {
-      latestCode: 'Kode terbaru',
-      noRecentRedeem: 'Belum ada riwayat',
-      reason: 'Alasan',
-      status_pending: 'Menunggu',
-      status_running: 'Diproses',
-      status_success: 'Sukses',
-      status_failed: 'Gagal',
-      status_already_claimed: 'Sudah diterima',
-      status_expired: 'Kedaluwarsa',
-      status_invalid_code: 'Kode tidak valid',
-      status_time_window_closed: 'Waktu ditutup',
-      status_not_logged_in: 'Login gagal',
-      status_player_not_found: 'Player tidak ditemukan',
-      status_timeout: 'Timeout',
-      status_network_error: 'Error jaringan',
-      status_server_busy: 'Server sibuk',
-      summarySuccess: 'sukses',
-      summaryRunning: 'proses',
-      summaryFailed: 'gagal'
-    });
-    Object.assign(I18N.en, {
-      status_deferred: 'Deferred',
-      status_browser_review: 'Browser review',
-      status_official_blocked: 'Official blocked'
-    });
-    Object.assign(I18N.ko, {
-      status_deferred: '보류',
-      status_browser_review: '브라우저 검토',
-      status_official_blocked: '공식 거절'
-    });
-    Object.assign(I18N['zh-CN'], {
-      status_deferred: 'Deferred',
-      status_browser_review: 'Browser review',
-      status_official_blocked: 'Official blocked'
-    });
-    Object.assign(I18N['zh-TW'], {
-      status_deferred: 'Deferred',
-      status_browser_review: 'Browser review',
-      status_official_blocked: 'Official blocked'
-    });
-    Object.assign(I18N.fr, {
-      status_deferred: 'Differe',
-      status_browser_review: 'Verification navigateur',
-      status_official_blocked: 'Bloque officiel'
-    });
-    Object.assign(I18N.de, {
-      status_deferred: 'Pausiert',
-      status_browser_review: 'Browserpruefung',
-      status_official_blocked: 'Offiziell blockiert'
-    });
-    Object.assign(I18N.th, {
-      status_deferred: 'Deferred',
-      status_browser_review: 'Browser review',
-      status_official_blocked: 'Official blocked'
-    });
-    Object.assign(I18N.id, {
-      status_deferred: 'Ditunda',
-      status_browser_review: 'Review browser',
-      status_official_blocked: 'Diblokir resmi'
-    });
-
-    Object.assign(I18N.en, { queueStatus: 'Queue status', queuePending: 'waiting', queueRunning: 'running', queueStale: 'stale' });
-    Object.assign(I18N.ko, { queueStatus: '큐 상태', queuePending: '대기', queueRunning: '진행', queueStale: '복구대상' });
-    Object.assign(I18N['zh-CN'], { queueStatus: '队列状态', queuePending: '等待', queueRunning: '运行', queueStale: '需恢复' });
-    Object.assign(I18N['zh-TW'], { queueStatus: '佇列狀態', queuePending: '等待', queueRunning: '執行', queueStale: '需恢復' });
-    Object.assign(I18N.fr, { queueStatus: 'File', queuePending: 'attente', queueRunning: 'en cours', queueStale: 'a reprendre' });
-    Object.assign(I18N.de, { queueStatus: 'Warteschlange', queuePending: 'wartet', queueRunning: 'laeuft', queueStale: 'zu erholen' });
-    Object.assign(I18N.th, { queueStatus: 'คิว', queuePending: 'รอ', queueRunning: 'ทำงาน', queueStale: 'กู้คืน' });
-    Object.assign(I18N.id, { queueStatus: 'Status antrean', queuePending: 'menunggu', queueRunning: 'berjalan', queueStale: 'pulih' });
-    Object.assign(I18N.en, { queueBatch: 'batch' });
-    Object.assign(I18N.ko, { queueBatch: '배치' });
-    Object.assign(I18N['zh-CN'], { queueBatch: '批量' });
-    Object.assign(I18N['zh-TW'], { queueBatch: '批次' });
-    Object.assign(I18N.fr, { queueBatch: 'lot' });
-    Object.assign(I18N.de, { queueBatch: 'Batch' });
-    Object.assign(I18N.th, { queueBatch: 'ชุด' });
-    Object.assign(I18N.id, { queueBatch: 'batch' });
-    Object.assign(I18N.en, {
-      loadToken: 'Load saved ID',
-      manageTitle: 'Removal Request',
+    const BASE_I18N_EN = {
+      brandSub: 'Kingshot Auto Redeem', back: 'Back to hub', heroA: 'Auto Redeem', heroB: 'Gift Code Center',
+      subtitle: 'Register your Kingshot player ID once. When a new gift code is found, this hub queues a safe redeem job for registered IDs.',
+      registerTitle: 'Register Player ID', playerId: 'Kingshot Player ID', playerPlaceholder: 'Example: 123185474',
+      consent: 'I agree to save this player ID for automatic gift-code redemption. Only my player ID and public profile summary will be stored.',
+      bulkLabel: 'Bulk Player IDs', bulkPlaceholder: 'Paste IDs separated by spaces, commas, or new lines.', bulkRegister: 'Register bulk IDs',
+      register: 'Register', loadToken: 'Load saved ID', ready: 'Ready.', manageTitle: 'Removal Request',
       manageHelp: 'Direct removal is disabled for safety. Send a request here, and the admin will review it. Invalid player IDs are removed automatically when the official redeem page confirms the ID is wrong.',
-      manageToken: 'Request note',
-      tokenPlaceholder: 'Optional note for admin',
-      remove: 'Request removal',
-      needToken: 'Player ID is required.',
-      removing: 'Sending removal request...',
-      removed: 'Removal request sent. Admin will review it.',
-      savedToken: 'Saved ID loaded.',
-      noToken: 'No saved ID in this browser.',
-      duplicateNote: 'Already registered. The saved ID remains active.'
-    });
-    Object.assign(I18N.ko, {
-      loadToken: '저장된 ID 불러오기',
-      manageTitle: '삭제 요청',
-      manageHelp: '안전을 위해 사용자가 직접 삭제할 수 없어요. 여기서 요청만 보내면 관리자가 확인 후 정리합니다. 공식 리딤에서 잘못된 ID로 확인된 경우만 자동 제외됩니다.',
-      manageToken: '요청 메모',
-      tokenPlaceholder: '관리자에게 남길 메모 선택 입력',
-      remove: '삭제 요청 보내기',
-      needToken: '플레이어 ID를 입력해주세요.',
-      removing: '삭제 요청을 보내는 중...',
-      removed: '삭제 요청이 접수되었습니다. 관리자가 확인 후 정리합니다.',
-      savedToken: '저장된 ID를 불러왔습니다.',
-      noToken: '이 브라우저에 저장된 ID가 없습니다.',
-      duplicateNote: '이미 등록된 ID입니다. 등록 상태는 그대로 유지됩니다.'
-    });
-    Object.assign(I18N.en, {
-      safetyTitle: 'Safety notice',
-      safetyBody: 'This tool only asks for your public Kingshot player ID. It never asks for your password, payment information, email login, or device access.'
-    });
-    Object.assign(I18N.ko, {
-      safetyTitle: '안전 안내',
-      safetyBody: '이 도구는 공개 Kingshot 플레이어 ID만 요청합니다. 비밀번호, 결제 정보, 이메일 로그인, 기기 접근 권한은 절대 요구하지 않습니다.'
-    });
-    Object.assign(I18N['zh-CN'], {
-      safetyTitle: '安全提示',
-      safetyBody: '此工具只会请求你的公开 Kingshot 玩家 ID。绝不会要求密码、付款信息、邮箱登录或设备访问权限。'
-    });
-    Object.assign(I18N['zh-TW'], {
-      safetyTitle: '安全提示',
-      safetyBody: '此工具只會要求你的公開 Kingshot 玩家 ID。絕不會要求密碼、付款資訊、電子郵件登入或裝置存取權限。'
-    });
-    Object.assign(I18N.fr, {
-      safetyTitle: 'Avis de securite',
-      safetyBody: 'Cet outil demande uniquement votre ID public Kingshot. Il ne demande jamais de mot de passe, informations de paiement, connexion e-mail ou acces a votre appareil.'
-    });
-    Object.assign(I18N.de, {
-      safetyTitle: 'Sicherheitshinweis',
-      safetyBody: 'Dieses Tool fragt nur nach deiner offentlichen Kingshot-Spieler-ID. Es fragt niemals nach Passwort, Zahlungsdaten, E-Mail-Login oder Geratezugriff.'
-    });
-    Object.assign(I18N.th, {
-      safetyTitle: 'ประกาศความปลอดภัย',
-      safetyBody: 'เครื่องมือนี้ขอเฉพาะ ID ผู้เล่น Kingshot แบบสาธารณะเท่านั้น และจะไม่ขอรหัสผ่าน ข้อมูลชำระเงิน การเข้าสู่ระบบอีเมล หรือสิทธิ์เข้าถึงอุปกรณ์'
-    });
-    Object.assign(I18N.id, {
-      safetyTitle: 'Catatan keamanan',
-      safetyBody: 'Alat ini hanya meminta ID pemain Kingshot publik. Kami tidak pernah meminta kata sandi, info pembayaran, login email, atau akses perangkat.'
-    });
+      manageToken: 'Request note', tokenPlaceholder: 'Optional note for admin', remove: 'Request removal',
+      refreshCodes: 'Refresh status', noAction: 'No action yet.', codesTitle: 'Latest Gift Codes',
+      codesHelp: 'Active and expired states are synced from trusted sources and recent redeem results.', loadingCodes: 'Loading codes...',
+      noCodes: 'No codes saved yet.', enterId: 'Enter your player ID first.', needConsent: 'Consent is required before saving an ID.',
+      checking: 'Checking official profile...', registered: 'Registered.', savedToken: 'Saved ID loaded.', noToken: 'No saved ID in this browser.',
+      needToken: 'Player ID is required.', removing: 'Sending removal request...', removed: 'Removal request sent. Admin will review it.',
+      active: 'Active', expired: 'Expired', observed: 'Observed', unknown: 'Unknown', discovered: 'Discovered', recent: 'Recent use',
+      registeredPlayers: 'Registered IDs', activeCodes: 'Active codes', bulkDone: 'Bulk registration finished.',
+      created: 'New', duplicate: 'Duplicate', invalid: 'Invalid', reactivated: 'Reactivated', duplicateNote: 'Already registered. The saved ID remains active.',
+      codeDockTitle: 'Code Status', userDockTitle: 'Recent Users', recentUsers: 'Recent users', successTitle: 'Current Successes',
+      loadingActivity: 'Loading activity...', noRecentUsers: 'No registered users yet.', noSuccess: 'No successful redeem records yet.',
+      pendingJobs: 'Queued jobs', successJobs: 'Success records', success: 'Success', redeemed: 'Redeemed', code: 'Code', unknownPlayer: 'Unknown player',
+      copyCode: 'Copy', copiedCode: 'Copied', daemonChecking: 'PuTTY server checking...', daemonOnline: 'PuTTY server online',
+      daemonWarning: 'PuTTY server warning', daemonOffline: 'PuTTY server offline', daemonError: 'PuTTY server error', daemonUnknown: 'PuTTY server unknown',
+      daemonNever: 'No heartbeat yet', daemonJobs: 'jobs', automationStable: 'Auto redeem engine stable', automationWarning: 'Auto redeem engine warning',
+      automationOffline: 'Auto redeem engine needs check', automationUnknown: 'Auto redeem engine checking', automationCloudflare: 'Cloudflare schedule', automationPutty: 'Oracle/PuTTY backup',
+      kingdomRegistryTitle: 'Registered IDs by Kingdom', kingdomRegistryHelp: 'Browse saved auto-redeem IDs grouped by kingdom number.',
+      loadingKingdoms: 'Loading kingdom registry...', noKingdomRegistry: 'No registered kingdom data yet.', kingdomRegistryError: 'Could not load kingdom registry.',
+      kingdoms: 'kingdoms', registeredIdsShort: 'IDs', ids: 'IDs', unknownKingdom: 'Unknown kingdom', latestCode: 'Latest code', noRecentRedeem: 'No redeem record yet', reason: 'Reason',
+      status_pending: 'Waiting', status_running: 'Processing', status_success: 'Success', status_failed: 'Failed', status_already_claimed: 'Already claimed',
+      status_expired: 'Expired', status_invalid_code: 'Invalid code', status_time_window_closed: 'Time closed', status_not_logged_in: 'Login failed',
+      status_player_not_found: 'Player not found', status_timeout: 'Timeout', status_network_error: 'Network error', status_server_busy: 'Server busy',
+      status_deferred: 'Deferred', status_browser_review: 'Browser review', status_official_blocked: 'Official blocked', status_claim_limit_reached: 'Claim limit reached',
+      status_captcha_required: 'Verification required', summarySuccess: 'success', summaryRunning: 'working', summaryFailed: 'failed',
+      queueStatus: 'Queue status', queuePending: 'waiting', queueRunning: 'running', queueStale: 'stale', queueBatch: 'batch', queuePriority: 'priority',
+      safetyTitle: 'Safety notice', safetyBody: 'This tool only asks for your public Kingshot player ID. It never asks for your password, payment information, email login, or device access.',
+      priorityTitle: 'Daily Priority Boost', priorityHelp: 'Visit once a day, pass a quick check, and move your waiting redeem jobs higher in the queue until the next reset.',
+      priorityChecking: 'Checking priority...', priorityEmpty: 'No boosted players yet today.', priorityChallenge: 'Start daily boost', priorityBoost: 'Boost my queue',
+      priorityReady: 'Register or load your ID, then start today\'s priority boost.', priorityAnswerPlaceholder: 'Answer', priorityNeedId: 'Enter or load your registered player ID first.',
+      priorityChallengeReady: 'Quick check:', priorityBoosting: 'Applying priority boost...', priorityDone: 'Priority boost is active until reset.', priorityAlready: 'Today\'s priority boost is already active.',
+      priorityReset: 'Reset', priorityTop: 'Top priority', priorityActive: 'Priority active'
+    };
+    const BASE_I18N_KO = {
+      brandSub: 'Kingshot ????', back: '??? ????', heroA: '????', heroB: '??? ?? ??',
+      subtitle: 'Kingshot ???? ID? ? ? ???? ? ??? ??? ??? ? ??? ID? ?? ??? ???? ???? ????.',
+      registerTitle: '???? ID ??', playerId: 'Kingshot ???? ID', playerPlaceholder: '?: 123185474',
+      consent: '?? ??? ?? ??? ?? ? ???? ID? ???? ?? ?????. ???? ID? ?? ??? ??? ?????.',
+      bulkLabel: '?? ???? ID', bulkPlaceholder: 'ID? ??, ??, ????? ???? ??????.', bulkRegister: '?? ID ??',
+      register: '????', loadToken: '??? ID ????', ready: '???.', manageTitle: '?? ??',
+      manageHelp: '??? ?? ???? ?? ??? ? ???, ??? ??? ???? ?? ? ?????. ?? ???? ??? ID? ???? ??? ?? ?????.',
+      manageToken: '?? ??', tokenPlaceholder: '????? ?? ?? ?? ??', remove: '?? ?? ???',
+      refreshCodes: '?? ????', noAction: '?? ?? ??.', codesTitle: '?? ??? ??',
+      codesHelp: '??/?? ??? ?? ??? ?? ?? ?? ???? ?????.', loadingCodes: '??? ???? ?...',
+      noCodes: '?? ??? ??? ????.', enterId: '?? ???? ID? ?????.', needConsent: 'ID ???? ??? ?????.',
+      checking: '?? ??? ?? ?...', registered: '?? ??.', savedToken: '??? ID? ??????.', noToken: '? ?????? ??? ID? ????.',
+      needToken: '???? ID? ??? ???.', removing: '?? ??? ??? ?...', removed: '?? ??? ???????. ???? ?? ? ?????.',
+      active: '??', expired: '??', observed: '???', unknown: '? ? ??', discovered: '?? ??', recent: '?? ??',
+      registeredPlayers: '??? ID', activeCodes: '?? ??', bulkDone: '?? ?? ??.', created: '??', duplicate: '??', invalid: '??', reactivated: '???', duplicateNote: '?? ??? ID???. ?? ??? ??? ?????.',
+      codeDockTitle: '?? ??', userDockTitle: '?? ?? ??', recentUsers: '?? ??', successTitle: '?? ?? ??', loadingActivity: '?? ??? ???? ?...',
+      noRecentUsers: '?? ??? ??? ????.', noSuccess: '?? ?? ?? ??? ????.', pendingJobs: '?? ??', successJobs: '?? ??', success: '??', redeemed: '???', code: '??', unknownPlayer: '? ? ?? ??', copyCode: '??', copiedCode: '???',
+      daemonChecking: 'PuTTY ?? ?? ?...', daemonOnline: 'PuTTY ?? ??', daemonWarning: 'PuTTY ?? ??', daemonOffline: 'PuTTY ?? ????', daemonError: 'PuTTY ?? ??', daemonUnknown: 'PuTTY ?? ? ? ??', daemonNever: '?? ?? ??', daemonJobs: '??',
+      automationStable: '?? ?? ?? ??', automationWarning: '?? ?? ?? ??', automationOffline: '?? ?? ?? ?? ??', automationUnknown: '?? ?? ?? ?? ?', automationCloudflare: 'Cloudflare ?? ??', automationPutty: 'Oracle/PuTTY ??',
+      kingdomRegistryTitle: '??? ?? ID', kingdomRegistryHelp: '????? ??? ID? ?? ???? ??? ? ????.', loadingKingdoms: '??? ?? ??? ???? ?...', noKingdomRegistry: '?? ??? ?? ?? ??? ????.', kingdomRegistryError: '??? ?? ??? ???? ?????.', kingdoms: '? ??', registeredIdsShort: '? ID', ids: '?', unknownKingdom: '?? ???',
+      latestCode: '?? ??', noRecentRedeem: '?? ?? ?? ??', reason: '??', status_pending: '??', status_running: '?? ?', status_success: '??', status_failed: '??', status_already_claimed: '?? ??', status_expired: '??', status_invalid_code: '??? ??', status_time_window_closed: '?? ?? ??', status_not_logged_in: '??? ??', status_player_not_found: '?? ??', status_timeout: '?? ??', status_network_error: '???? ??', status_server_busy: '?? ??', status_deferred: '??', status_browser_review: '???? ??', status_official_blocked: '?? ??', status_claim_limit_reached: '?? ??', status_captcha_required: '?? ??',
+      summarySuccess: '??', summaryRunning: '??', summaryFailed: '??', queueStatus: '? ??', queuePending: '??', queueRunning: '??', queueStale: '????', queueBatch: '??', queuePriority: '???',
+      safetyTitle: '?? ??', safetyBody: '? ??? ?? Kingshot ???? ID? ?????. ????, ?? ??, ??? ???, ?? ?? ??? ?? ???? ????.',
+      priorityTitle: '??? ???? ???', priorityHelp: '?? ? ? ?? ??? ???? ?? ??? ??? ?? ?? ?? ??? ? ???? ?????.', priorityChecking: '???? ?? ?...', priorityEmpty: '?? ???? ??? ?? ????.', priorityChallenge: '?? ??? ??', priorityBoost: '? ? ??? ???', priorityReady: '??? ID? ????? ??? ? ??? ????? ?????.', priorityAnswerPlaceholder: '?? ??', priorityNeedId: '?? ??? ???? ID? ????? ??? ???.', priorityChallengeReady: '?? ??:', priorityBoosting: '????? ???? ?...', priorityDone: '?? ??? ??? ????? ?????.', priorityAlready: '??? ????? ?? ???? ????.', priorityReset: '???', priorityTop: '???? ??', priorityActive: '??? ??'
+    };
+    const I18N = {};
+    ['en', 'zh-CN', 'zh-TW', 'fr', 'de', 'th', 'id'].forEach((lang) => { I18N[lang] = { ...BASE_I18N_EN }; });
+    I18N.ko = { ...BASE_I18N_EN, ...BASE_I18N_KO };
+    const LANGUAGE_LABELS = {
+      ko: '???', en: 'English', 'zh-CN': '????', 'zh-TW': '????', fr: 'Francais', de: 'Deutsch', th: 'Thai', id: 'Indonesia'
+    };
 
     let currentLang = new URL(location.href).searchParams.get('lang') || localStorage.getItem('siteLang') || localStorage.getItem('lang') || 'ko';
     if (!I18N[currentLang]) currentLang = 'ko';
     const saved = JSON.parse(localStorage.getItem('autoRedeemRegistration') || '{}');
     let latestVisibleActiveCodes = null;
+    let priorityChallengeToken = '';
+    let priorityChallengeQuestion = '';
     const $ = (id) => document.getElementById(id);
     const setTextById = (id, value) => {
       document.querySelectorAll(`[id="${id}"]`).forEach((node) => { node.textContent = value; });
@@ -2680,14 +2295,16 @@
       const browserReview = Number(queue.browserReview || 0);
       const retryPending = Number(queue.retryPending || 0);
       const batchSize = Number(queue.batchSize || 0);
+      const priorityActive = Number(queue.priorityActive || 0);
       const staleText = stale > 0 ? ` / ${tr('queueStale')} ${stale}` : '';
       const deferredLabel = currentLang === 'ko' ? '보류' : 'deferred';
       const reviewLabel = currentLang === 'ko' ? '검토' : 'review';
       const deferredText = deferred > 0 ? ` / ${deferredLabel} ${deferred}` : '';
       const reviewText = browserReview > 0 ? ` / ${reviewLabel} ${browserReview}` : '';
+      const priorityText = priorityActive > 0 ? ` / ${tr('queuePriority')} ${priorityActive}` : '';
       const batchText = batchSize > 0 ? ` / ${tr('queueBatch')} ${batchSize}` : '';
-      badge.textContent = `${tr('queuePending')} ${pending} / ${tr('queueRunning')} ${running}${deferredText}${reviewText}${staleText}${batchText}`;
-      badge.title = `${tr('queueStale')}: ${stale} / ${deferredLabel}: ${deferred} / ${reviewLabel}: ${browserReview} / retry: ${retryPending} / ${tr('queueBatch')}: ${batchSize || '-'} / ${queue.claimMode || '-'} / ${queue.runningStaleMinutes || 5}m / cooldown ${queue.deferredCooldownMinutes || 60}m`;
+      badge.textContent = `${tr('queuePending')} ${pending} / ${tr('queueRunning')} ${running}${priorityText}${deferredText}${reviewText}${staleText}${batchText}`;
+      badge.title = `${tr('queueStale')}: ${stale} / ${tr('queuePriority')}: ${priorityActive} / ${deferredLabel}: ${deferred} / ${reviewLabel}: ${browserReview} / retry: ${retryPending} / ${tr('queueBatch')}: ${batchSize || '-'} / ${queue.claimMode || '-'} / ${queue.runningStaleMinutes || 5}m / cooldown ${queue.deferredCooldownMinutes || 60}m`;
     }
     function renderAutomationStatus(daemon) {
       const badge = $('daemonBadge');
@@ -2772,6 +2389,7 @@
       $('activeCodeBadge').textContent = `${tr('activeCodes')}: ${latestVisibleActiveCodes === null ? '-' : latestVisibleActiveCodes}`;
       renderQueueStatus(data.queue);
       if (data.automation !== undefined || data.daemon !== undefined) renderAutomationStatus(data.automation || data.daemon);
+      if (data.priority !== undefined) renderPriority(data.priority);
 
       $('recentUsersList').innerHTML = recentPlayers.length ? recentPlayers.map((player) => `
         <div class="mini-row">
@@ -2789,6 +2407,109 @@
             <div class="mini-sub">ID ${escapeHtml(maskId(row.player_id))} · ${escapeHtml(tr('code'))} ${escapeHtml(row.gift_code || '-')} · ${escapeHtml(formatTime(row.redeemed_at_ms || row.updated_at_ms))}</div>
           </div>
         </div>`).join('') : `<div class="note">${escapeHtml(tr('noSuccess'))}</div>`;
+    }
+
+    function currentPriorityPlayerId() {
+      const typed = $('playerId') ? $('playerId').value.replace(/\D/g, '') : '';
+      const stored = saved && saved.playerId ? String(saved.playerId).replace(/\D/g, '') : '';
+      return typed || stored;
+    }
+
+    function renderPriority(data) {
+      const priority = data && data.priority ? data.priority : data;
+      const leaderboard = Array.isArray(priority && priority.leaderboard) ? priority.leaderboard : [];
+      const mine = priority && priority.mine;
+      const resetAt = Number((mine && mine.expires_at_ms) || (priority && priority.resetAtMs) || 0);
+      const badge = $('priorityBadge');
+      const track = $('priorityTrack');
+      if (badge) {
+        badge.textContent = mine && mine.expires_at_ms > Date.now()
+          ? `${tr('priorityActive')} / ${tr('priorityReset')} ${formatTime(mine.expires_at_ms)}`
+          : `${tr('priorityReset')} ${formatTime(resetAt)}`;
+      }
+      if (!track) return;
+      if (!leaderboard.length) {
+        track.style.animation = 'none';
+        track.innerHTML = `<div class="note">${escapeHtml(tr('priorityEmpty'))}</div>`;
+        return;
+      }
+      track.style.animation = '';
+      const rows = leaderboard.slice(0, 30);
+      const chips = rows.map((row, index) => {
+        const vipPill = row.vip ? '<span class="priority-vip-pill">VIP</span>' : '';
+        const timeText = row.vip && row.virtual ? tr('priorityActive') : formatAgo(row.boosted_at_ms);
+        return `
+        <div class="priority-chip${row.vip ? ' vip' : ''}">
+          <div class="priority-rank">#${index + 1}</div>
+          <div>
+            <span class="priority-name">${escapeHtml(playerName(row))}</span>
+            <span class="priority-meta">${vipPill}${escapeHtml(playerMeta(row))} / ID ${escapeHtml(maskId(row.player_id))} / ${escapeHtml(timeText)}</span>
+          </div>
+        </div>`;
+      }).join('');
+      track.innerHTML = chips + chips;
+    }
+
+    async function loadPriority() {
+      const playerId = currentPriorityPlayerId();
+      const query = playerId ? `?playerId=${encodeURIComponent(playerId)}` : '';
+      try {
+        const data = await api(`/api/redeem/priority${query}`);
+        renderPriority(data);
+      } catch (error) {
+        setTextById('priorityBadge', '-');
+        setStatus('priorityStatus', error.message || tr('priorityReady'));
+      }
+    }
+
+    async function requestPriorityChallenge() {
+      const playerId = currentPriorityPlayerId();
+      if (!playerId) return setStatus('priorityStatus', tr('priorityNeedId'));
+      setStatus('priorityStatus', tr('checking'));
+      try {
+        const data = await api(`/api/redeem/priority-challenge?playerId=${encodeURIComponent(playerId)}`);
+        renderPriority(data);
+        if (data.alreadyBoosted) {
+          priorityChallengeToken = '';
+          priorityChallengeQuestion = '';
+          setStatus('priorityStatus', tr('priorityAlready'));
+          return;
+        }
+        priorityChallengeToken = data.challenge && data.challenge.token ? data.challenge.token : '';
+        priorityChallengeQuestion = data.challenge && data.challenge.question ? data.challenge.question : '';
+        $('priorityAnswer').value = '';
+        $('priorityAnswer').focus();
+        setStatus('priorityStatus', `${tr('priorityChallengeReady')} ${priorityChallengeQuestion}`);
+      } catch (error) {
+        setStatus('priorityStatus', error.message);
+      }
+    }
+
+    async function submitPriorityBoost() {
+      const playerId = currentPriorityPlayerId();
+      if (!playerId) return setStatus('priorityStatus', tr('priorityNeedId'));
+      if (!priorityChallengeToken) {
+        await requestPriorityChallenge();
+        return;
+      }
+      const answer = $('priorityAnswer').value.trim();
+      if (!answer) return setStatus('priorityStatus', `${tr('priorityChallengeReady')} ${priorityChallengeQuestion}`);
+      setStatus('priorityStatus', tr('priorityBoosting'));
+      try {
+        const data = await api('/api/redeem/priority-boost', {
+          method: 'POST',
+          body: JSON.stringify({ playerId, challengeToken: priorityChallengeToken, answer }),
+        });
+        priorityChallengeToken = '';
+        priorityChallengeQuestion = '';
+        $('priorityAnswer').value = '';
+        renderPriority(data);
+        setStatus('priorityStatus', data.alreadyBoosted ? tr('priorityAlready') : `${tr('priorityDone')} ${tr('pendingJobs')}: ${data.updatedJobs || 0}`);
+        loadStatus();
+        loadActivity();
+      } catch (error) {
+        setStatus('priorityStatus', error.message);
+      }
     }
 
     async function loadActivity() {
@@ -2935,6 +2656,7 @@
       loadStatus();
       loadCodes();
       loadActivity();
+      loadPriority();
       loadKingdomRegistry();
     });
     if (saved.playerId) $('playerId').value = saved.playerId;
@@ -2959,6 +2681,7 @@
         }
         loadStatus();
         loadActivity();
+        loadPriority();
         loadKingdomRegistry();
       } catch (error) {
         setStatus('registerStatus', error.message);
@@ -2991,6 +2714,7 @@
         );
         loadStatus();
         loadActivity();
+        loadPriority();
         loadKingdomRegistry();
       } catch (error) {
         setStatus('registerStatus', error.message);
@@ -3038,18 +2762,26 @@
       loadStatus();
       loadCodes();
       loadActivity();
+      loadPriority();
       loadKingdomRegistry();
+    });
+    $('priorityChallengeBtn').addEventListener('click', requestPriorityChallenge);
+    $('priorityBoostBtn').addEventListener('click', submitPriorityBoost);
+    $('priorityAnswer').addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') submitPriorityBoost();
     });
     $('bulkIds').addEventListener('input', updateBulkPreview);
     applyI18n();
     loadStatus();
     loadCodes();
     loadActivity();
+    loadPriority();
     loadKingdomRegistry();
     setInterval(() => {
       loadStatus();
       loadCodes();
       loadActivity();
+      loadPriority();
     }, 60000);
     setInterval(loadKingdomRegistry, 300000);
   </script>
