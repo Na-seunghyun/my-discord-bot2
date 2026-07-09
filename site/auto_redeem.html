@@ -909,6 +909,42 @@
       gap: 10px;
       margin: 18px 0;
     }
+    .lang-shell {
+      position: relative;
+      display: grid;
+      width: 100%;
+    }
+    .lang-shell::before {
+      content: "🌐";
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 1;
+      font-size: 15px;
+      pointer-events: none;
+      filter: drop-shadow(0 0 8px rgba(82,255,224,.28));
+    }
+    .lang-shell select {
+      appearance: none;
+      padding-left: 42px;
+      padding-right: 34px;
+      background:
+        linear-gradient(135deg, rgba(82,255,224,.13), rgba(244,200,106,.08)),
+        rgba(255,255,255,.07);
+      border-color: rgba(82,255,224,.28);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 0 20px rgba(82,255,224,.06);
+    }
+    .lang-shell::after {
+      content: "⌄";
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-55%);
+      color: var(--gold);
+      font-weight: 1000;
+      pointer-events: none;
+    }
     .rail-controls select,
     .rail-controls .back {
       width: 100%;
@@ -1436,7 +1472,7 @@
     }
     .kingdom-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 310px), 1fr));
       gap: 12px;
     }
     .kingdom-card {
@@ -1454,9 +1490,9 @@
       box-shadow: 0 20px 58px rgba(0,0,0,.28), 0 0 34px rgba(82,255,224,.08);
     }
     .kingdom-card-head {
-      display: flex;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(56px, auto) 28px;
       align-items: center;
-      justify-content: space-between;
       gap: 10px;
       padding: 13px 14px;
       border-bottom: 1px solid rgba(154,183,255,.15);
@@ -1484,18 +1520,23 @@
       font-size: 20px;
       font-weight: 1000;
       text-shadow: 0 0 18px rgba(244,200,106,.22);
+      overflow-wrap: anywhere;
     }
     .kingdom-count {
-      min-height: 26px;
+      min-height: 28px;
       display: inline-flex;
       align-items: center;
+      justify-content: center;
       border-radius: 999px;
-      padding: 0 10px;
+      padding: 5px 10px;
       color: #061512;
       background: var(--ok);
       font-size: 12px;
       font-weight: 1000;
-      white-space: nowrap;
+      white-space: normal;
+      line-height: 1.15;
+      text-align: center;
+      overflow-wrap: anywhere;
     }
     .kingdom-card-head::after {
       content: "+";
@@ -1508,6 +1549,7 @@
       color: var(--gold);
       background: rgba(244,200,106,.08);
       font-weight: 1000;
+      justify-self: end;
     }
     .kingdom-card[open] .kingdom-card-head::after {
       content: "-";
@@ -1523,7 +1565,7 @@
       display: grid;
       grid-template-columns: 38px minmax(0, 1fr);
       gap: 9px;
-      align-items: center;
+      align-items: start;
       border: 1px solid rgba(255,255,255,.08);
       border-radius: 14px;
       padding: 8px;
@@ -1536,16 +1578,19 @@
     }
     .kingdom-player-name {
       min-width: 0;
-      display: flex;
-      justify-content: space-between;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
       gap: 8px;
       color: var(--text);
       font-weight: 1000;
       font-size: 13px;
     }
     .kingdom-player-name span:first-child {
-      overflow: hidden;
-      text-overflow: ellipsis;
+      overflow-wrap: anywhere;
+      white-space: normal;
+    }
+    .kingdom-player-name span:last-child {
+      justify-self: end;
       white-space: nowrap;
     }
     .kingdom-player-meta {
@@ -1711,6 +1756,9 @@
         display: grid;
         align-items: start;
       }
+      .kingdom-card-head {
+        grid-template-columns: minmax(0, 1fr) auto 28px;
+      }
       .rail-status {
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
@@ -1737,6 +1785,24 @@
         flex-direction: row;
         justify-content: space-between;
         align-items: center;
+      }
+    }
+    @media (max-width: 520px) {
+      .kingdom-card-head {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .kingdom-count,
+      .kingdom-card-head::after {
+        justify-self: start;
+      }
+      .kingdom-player-name {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .kingdom-player-name span:last-child {
+        justify-self: start;
+      }
+      .kingdom-rollup {
+        display: grid;
       }
     }
 
@@ -1898,16 +1964,19 @@
         <span class="rail-brand-copy"><strong>885 LEGEND NASHSH</strong><small data-i18n="brandSub">Kingshot Auto Redeem</small></span>
       </a>
       <div class="rail-controls">
-        <select id="langSelect" aria-label="Language">
-          <option value="ko">한국어</option>
-          <option value="en">English</option>
-          <option value="zh-CN">简体中文</option>
-          <option value="zh-TW">繁體中文</option>
-          <option value="fr">Français</option>
-          <option value="de">Deutsch</option>
-          <option value="th">ไทย</option>
-          <option value="id">Indonesia</option>
-        </select>
+        <label class="lang-shell" aria-label="Language">
+          <select id="langSelect" aria-label="Language">
+            <option value="ko">🇰🇷 한국어</option>
+            <option value="en">🇺🇸 English</option>
+            <option value="ja">🇯🇵 日本語</option>
+            <option value="zh-CN">🇨🇳 简体中文</option>
+            <option value="zh-TW">🇹🇼 繁體中文</option>
+            <option value="fr">🇫🇷 Français</option>
+            <option value="de">🇩🇪 Deutsch</option>
+            <option value="th">🇹🇭 ไทย</option>
+            <option value="id">🇮🇩 Indonesia</option>
+          </select>
+        </label>
         <a class="back rail-back" id="backLink" href="./index.html" data-i18n="back">Back to hub</a>
       </div>
       <div class="rail-status">
@@ -1923,9 +1992,9 @@
         <span class="trust-copy" data-i18n="trustText"><strong>HTTPS protected · safe connection.</strong> Auto Redeem stores only Kingshot player IDs and public profile summaries. It never asks for passwords, payment information, email login, or device access.</span>
         <span><strong>HTTPS protected · 안전 연결.</strong> Auto Redeem stores only Kingshot player IDs and public profile summaries. 비밀번호, 결제 정보, 이메일 로그인, 기기 접근 권한을 요구하지 않습니다.</span>
         <span class="site-trust-links">
-          <a href="./security.html">Security</a>
-          <a href="./privacy.html">Privacy</a>
-          <a href="./feedback.html">Contact</a>
+            <a href="./security.html" data-i18n="security">Security</a>
+            <a href="./privacy.html" data-i18n="privacy">Privacy</a>
+            <a href="./feedback.html" data-i18n="contact">Contact</a>
         </span>
       </div>
 
@@ -1936,7 +2005,7 @@
           <p data-i18n="subtitle">Register your Kingshot player ID once. When a new gift code is found, this hub queues a slow, safe redeem job for registered IDs.</p>
         </div>
         <div class="hero-orbit" aria-hidden="true">
-          <div class="orbit-core">AUTO<br>REDEEM</div>
+          <div class="orbit-core"><span data-i18n="orbitAuto">AUTO</span><br><span data-i18n="orbitRedeem">REDEEM</span></div>
           <span></span><span></span><span></span>
         </div>
       </section>
@@ -1944,7 +2013,7 @@
       <section class="priority-lounge" aria-label="Daily priority boost">
         <div class="priority-head">
           <div>
-            <span class="console-kicker">DAILY PRIORITY</span>
+            <span class="console-kicker" data-i18n="kickerPriority">DAILY PRIORITY</span>
             <h2 data-i18n="priorityTitle">Daily Priority Boost</h2>
             <p data-i18n="priorityHelp">Visit once a day, pass a quick check, and move your waiting redeem jobs higher in the queue until the next reset.</p>
           </div>
@@ -1967,7 +2036,7 @@
       <section class="mission-grid">
         <article class="console-card id-console">
           <div class="console-head">
-            <div><span class="console-kicker">ID VAULT</span><h2 data-i18n="registerTitle">Register Player ID</h2></div>
+            <div><span class="console-kicker" data-i18n="kickerIdVault">ID VAULT</span><h2 data-i18n="registerTitle">Register Player ID</h2></div>
             <button class="ghost" id="loadBtn" data-i18n="loadToken">Show saved token</button>
           </div>
           <div class="id-entry-grid">
@@ -1997,7 +2066,7 @@
 
         <aside class="ops-stack">
           <article class="console-card profile-console">
-            <div class="console-head compact"><div><span class="console-kicker">PROFILE LINK</span><h2 data-i18n="recentUsers">Recent users</h2></div><span class="panel-count" id="userDockCount">-</span></div>
+            <div class="console-head compact"><div><span class="console-kicker" data-i18n="kickerProfile">PROFILE LINK</span><h2 data-i18n="recentUsers">Recent users</h2></div><span class="panel-count" id="userDockCount">-</span></div>
             <div class="profile" id="profileBox">
               <img id="profileAvatar" alt="">
               <div><strong id="profileName">-</strong><span id="profileMeta">-</span></div>
@@ -2007,7 +2076,7 @@
             </div>
           </article>
           <article class="console-card manage-console">
-            <div class="console-head compact"><div><span class="console-kicker">TOKEN BAY</span><h2 data-i18n="manageTitle">Manage Registration</h2></div></div>
+            <div class="console-head compact"><div><span class="console-kicker" data-i18n="kickerManage">REQUEST BAY</span><h2 data-i18n="manageTitle">Manage Registration</h2></div></div>
             <p class="note" data-i18n="manageHelp">The manage token is stored only in this browser after registration. Keep it if you want to remove the ID later.</p>
             <label for="manageToken" data-i18n="manageToken">Manage Token</label>
             <input id="manageToken" data-placeholder="tokenPlaceholder" placeholder="Token appears after registration">
@@ -2022,7 +2091,7 @@
 
       <section class="live-command-center">
         <div class="live-command-head">
-          <div><span class="console-kicker">LIVE OPERATIONS</span><h2 data-i18n="codesTitle">Latest Gift Codes</h2><p id="codeSummary" data-i18n="codesHelp">Active and expired states are synced from the source site.</p></div>
+          <div><span class="console-kicker" data-i18n="kickerLive">LIVE OPERATIONS</span><h2 data-i18n="codesTitle">Latest Gift Codes</h2><p id="codeSummary" data-i18n="codesHelp">Active and expired states are synced from the source site.</p></div>
           <div class="success-meter"><span data-i18n="successTitle">Current Successes</span><strong id="successDockCount">-</strong></div>
         </div>
         <div class="live-columns" aria-label="Auto redeem live activity">
@@ -2040,7 +2109,7 @@
       <section class="console-card kingdom-registry">
         <div class="kingdom-head">
           <div>
-            <span class="console-kicker">KINGDOM REGISTRY</span>
+            <span class="console-kicker" data-i18n="kickerKingdom">KINGDOM REGISTRY</span>
             <h2 data-i18n="kingdomRegistryTitle">Registered IDs by Kingdom</h2>
             <p data-i18n="kingdomRegistryHelp">Browse saved auto-redeem IDs grouped by kingdom number.</p>
           </div>
@@ -2060,16 +2129,19 @@
         <span><strong>885 LEGEND NASHSH</strong><span data-i18n="brandSub">Kingshot Auto Redeem</span></span>
       </a>
       <div class="top-actions">
-        <select id="langSelect" aria-label="Language">
-          <option value="ko">한국어</option>
-          <option value="en">English</option>
-          <option value="zh-CN">简体中文</option>
-          <option value="zh-TW">繁體中文</option>
-          <option value="fr">Français</option>
-          <option value="de">Deutsch</option>
-          <option value="th">ไทย</option>
-          <option value="id">Indonesia</option>
-        </select>
+        <label class="lang-shell" aria-label="Language">
+          <select id="langSelect" aria-label="Language">
+            <option value="ko">🇰🇷 한국어</option>
+            <option value="en">🇺🇸 English</option>
+            <option value="ja">🇯🇵 日本語</option>
+            <option value="zh-CN">🇨🇳 简体中文</option>
+            <option value="zh-TW">🇹🇼 繁體中文</option>
+            <option value="fr">🇫🇷 Français</option>
+            <option value="de">🇩🇪 Deutsch</option>
+            <option value="th">🇹🇭 ไทย</option>
+            <option value="id">🇮🇩 Indonesia</option>
+          </select>
+        </label>
         <a class="back" id="backLink" href="./index.html" data-i18n="back">Back to hub</a>
       </div>
     </header>
@@ -2216,6 +2288,9 @@
       queueStatus: 'Queue status', queuePending: 'waiting', queueRunning: 'running', queueStale: 'stale', queueBatch: 'batch', queuePriority: 'priority',
       safetyTitle: 'Safety notice', safetyBody: 'This tool only asks for your public Kingshot player ID. It never asks for your password, payment information, email login, or device access.',
       trustText: 'HTTPS protected · safe connection. Auto Redeem stores only Kingshot player IDs and public profile summaries. It never asks for passwords, payment information, email login, or device access.',
+      security: 'Security', privacy: 'Privacy', contact: 'Contact',
+      orbitAuto: 'AUTO', orbitRedeem: 'REDEEM',
+      kickerPriority: 'Daily priority', kickerIdVault: 'ID vault', kickerProfile: 'Profile link', kickerManage: 'Request bay', kickerLive: 'Live operations', kickerKingdom: 'Kingdom registry',
       priorityTitle: 'Daily Priority Boost', priorityHelp: 'Visit once a day, pass a quick check, and move your waiting redeem jobs higher in the queue until the next reset.',
       priorityChecking: 'Checking priority...', priorityEmpty: 'No boosted players yet today.', priorityChallenge: 'Start daily boost', priorityBoost: 'Boost my queue',
       priorityReady: 'Register or load your ID, then start today\'s priority boost.', priorityAnswerPlaceholder: 'Answer', priorityNeedId: 'Enter or load your registered player ID first.',
@@ -2255,21 +2330,22 @@
       priorityReset: '초기화', priorityTop: '상위 우선권', priorityActive: '우선권 활성'
     };
     const I18N = {};
-    ['en', 'zh-CN', 'zh-TW', 'fr', 'de', 'th', 'id'].forEach((lang) => { I18N[lang] = { ...BASE_I18N_EN }; });
+    ['en', 'ja', 'zh-CN', 'zh-TW', 'fr', 'de', 'th', 'id'].forEach((lang) => { I18N[lang] = { ...BASE_I18N_EN }; });
     I18N.ko = { ...BASE_I18N_EN, ...BASE_I18N_KO };
     const LANGUAGE_LABELS = {
-      ko: '한국어', en: 'English', 'zh-CN': '简体中文', 'zh-TW': '繁體中文', fr: 'Français', de: 'Deutsch', th: 'ไทย', id: 'Indonesia'
+      ko: '🇰🇷 한국어', en: '🇺🇸 English', ja: '🇯🇵 日本語', 'zh-CN': '🇨🇳 简体中文', 'zh-TW': '🇹🇼 繁體中文', fr: '🇫🇷 Français', de: '🇩🇪 Deutsch', th: '🇹🇭 ไทย', id: '🇮🇩 Indonesia'
     };
 
     Object.assign(LANGUAGE_LABELS, {
-      ko: '한국어',
-      en: 'English',
-      'zh-CN': '简体中文',
-      'zh-TW': '繁體中文',
-      fr: 'Français',
-      de: 'Deutsch',
-      th: 'ไทย',
-      id: 'Indonesia',
+      ko: '🇰🇷 한국어',
+      en: '🇺🇸 English',
+      ja: '🇯🇵 日本語',
+      'zh-CN': '🇨🇳 简体中文',
+      'zh-TW': '🇹🇼 繁體中文',
+      fr: '🇫🇷 Français',
+      de: '🇩🇪 Deutsch',
+      th: '🇹🇭 ไทย',
+      id: '🇮🇩 Indonesia',
     });
     Object.assign(I18N.ko, {
       brandSub: 'Kingshot 오토 리딤',
@@ -2392,6 +2468,17 @@
       safetyTitle: '안전 안내',
       safetyBody: '이 도구는 공개 Kingshot 플레이어 ID만 요청합니다. 비밀번호, 결제 정보, 이메일 로그인, 기기 접근 권한은 절대 요청하지 않습니다.',
       trustText: 'HTTPS 보호 연결 · Auto Redeem은 Kingshot 플레이어 ID와 공개 프로필 요약만 저장합니다. 비밀번호, 결제 정보, 이메일 로그인, 기기 접근 권한은 요청하지 않습니다.',
+      security: '보안',
+      privacy: '개인정보',
+      contact: '문의',
+      orbitAuto: '자동',
+      orbitRedeem: '리딤',
+      kickerPriority: '오늘의 우선권',
+      kickerIdVault: 'ID 보관함',
+      kickerProfile: '프로필 연결',
+      kickerManage: '요청 관리',
+      kickerLive: '실시간 운영',
+      kickerKingdom: '왕국 등록 현황',
       priorityTitle: '오늘의 우선권 부스트',
       priorityHelp: '하루에 한 번 방문해 간단한 확인을 통과하면 다음 초기화 전까지 대기 중인 지급 작업의 우선순위가 올라갑니다.',
       priorityChecking: '우선권 확인 중...',
@@ -2410,6 +2497,158 @@
       priorityTop: '상위 우선권',
       priorityActive: '우선권 활성',
     });
+
+    I18N.ja = {
+      ...BASE_I18N_EN,
+      brandSub: 'Kingshot オートリディーム',
+      back: 'ハブに戻る',
+      heroA: 'オートリディーム',
+      heroB: 'ギフトコードセンター',
+      subtitle: 'KingshotのプレイヤーIDを一度登録すると、新しいギフトコードが見つかった時に安全なリディーム作業としてキューに追加されます。',
+      registerTitle: 'プレイヤーID登録',
+      playerId: 'Kingshot プレイヤーID',
+      playerPlaceholder: '例: 123185474',
+      consent: '自動ギフトコードリディームのため、このプレイヤーIDを保存することに同意します。保存されるのはプレイヤーIDと公開プロフィール概要のみです。',
+      bulkLabel: '複数プレイヤーID',
+      bulkPlaceholder: 'IDをスペース、カンマ、改行で区切って貼り付けてください。',
+      bulkRegister: '複数IDを登録',
+      register: '登録',
+      loadToken: '保存済みIDを読み込む',
+      ready: '準備完了。',
+      manageTitle: '削除リクエスト',
+      manageHelp: '安全のため直接削除は無効です。ここからリクエストを送ると管理者が確認します。公式リディームページで無効なIDと確認された場合は自動的に無効化されます。',
+      manageToken: 'リクエストメモ',
+      tokenPlaceholder: '管理者への任意メモ',
+      remove: '削除を依頼',
+      refreshCodes: '状態を更新',
+      noAction: 'まだ操作はありません。',
+      codesTitle: '最新ギフトコード',
+      codesHelp: '有効/期限切れの状態は信頼できる公開ソースと最近のリディーム結果から同期されます。',
+      loadingCodes: 'コードを読み込み中...',
+      noCodes: '保存されたコードはまだありません。',
+      enterId: '先にプレイヤーIDを入力してください。',
+      needConsent: 'ID保存前に同意が必要です。',
+      checking: '公式プロフィール確認中...',
+      registered: '登録しました。',
+      savedToken: '保存済みIDを読み込みました。',
+      noToken: 'このブラウザに保存済みIDはありません。',
+      needToken: 'プレイヤーIDが必要です。',
+      removing: '削除リクエストを送信中...',
+      removed: '削除リクエストを送信しました。管理者が確認します。',
+      active: '有効',
+      expired: '期限切れ',
+      observed: '確認済み',
+      unknown: '不明',
+      discovered: '発見',
+      recent: '最近の使用',
+      registeredPlayers: '登録ID',
+      activeCodes: '有効コード',
+      bulkDone: '一括登録完了。',
+      created: '新規',
+      duplicate: '重複',
+      invalid: '無効',
+      reactivated: '再有効化',
+      duplicateNote: 'すでに登録済みです。保存されたIDは有効なままです。',
+      codeDockTitle: 'コード状況',
+      userDockTitle: '最近の登録ユーザー',
+      recentUsers: '最近のユーザー',
+      successTitle: '現在の成功履歴',
+      loadingActivity: 'アクティビティを読み込み中...',
+      noRecentUsers: '登録ユーザーはまだいません。',
+      noSuccess: '成功したリディーム記録はまだありません。',
+      pendingJobs: '待機ジョブ',
+      successJobs: '成功記録',
+      success: '成功',
+      redeemed: '受け取り済み',
+      code: 'コード',
+      unknownPlayer: '不明なユーザー',
+      copyCode: 'コピー',
+      copiedCode: 'コピー済み',
+      daemonChecking: 'PuTTYサーバー確認中...',
+      daemonOnline: 'PuTTYサーバーオンライン',
+      daemonWarning: 'PuTTYサーバー警告',
+      daemonOffline: 'PuTTYサーバーオフライン',
+      daemonError: 'PuTTYサーバーエラー',
+      daemonUnknown: 'PuTTYサーバー不明',
+      daemonNever: 'まだハートビートなし',
+      daemonJobs: 'ジョブ',
+      automationStable: 'オートリディームエンジン安定',
+      automationWarning: 'オートリディームエンジン警告',
+      automationOffline: 'オートリディームエンジン確認必要',
+      automationUnknown: 'オートリディームエンジン確認中',
+      automationCloudflare: 'Cloudflareスケジュール',
+      automationPutty: 'Oracle/PuTTYバックアップ',
+      kingdomRegistryTitle: '王国別登録ID',
+      kingdomRegistryHelp: '保存済みオートリディームIDを王国番号別に確認できます。',
+      loadingKingdoms: '王国登録状況を読み込み中...',
+      noKingdomRegistry: '王国登録データはまだありません。',
+      kingdomRegistryError: '王国登録状況を読み込めませんでした。',
+      kingdoms: '王国',
+      registeredIdsShort: 'ID',
+      ids: 'ID',
+      unknownKingdom: '不明な王国',
+      latestCode: '最新コード',
+      noRecentRedeem: '最近のリディーム記録なし',
+      reason: '理由',
+      status_pending: '待機',
+      status_running: '処理中',
+      status_success: '成功',
+      status_failed: '失敗',
+      status_already_claimed: '受取済み',
+      status_expired: '期限切れ',
+      status_invalid_code: '無効コード',
+      status_time_window_closed: '時間終了',
+      status_not_logged_in: 'ログイン失敗',
+      status_player_not_found: 'ユーザーなし',
+      status_timeout: 'タイムアウト',
+      status_network_error: 'ネットワークエラー',
+      status_server_busy: 'サーバー混雑',
+      status_deferred: '保留',
+      status_browser_review: 'ブラウザ確認',
+      status_official_blocked: '公式ブロック',
+      status_claim_limit_reached: '受取制限',
+      status_captcha_required: '認証必要',
+      summarySuccess: '成功',
+      summaryRunning: '進行',
+      summaryFailed: '失敗',
+      queueStatus: 'キュー状態',
+      queuePending: '待機',
+      queueRunning: '進行',
+      queueStale: '停止',
+      queueBatch: 'バッチ',
+      queuePriority: '優先',
+      safetyTitle: '安全案内',
+      safetyBody: 'このツールは公開KingshotプレイヤーIDのみを求めます。パスワード、決済情報、メールログイン、端末アクセス権限は要求しません。',
+      trustText: 'HTTPS保護接続 · Auto RedeemはKingshotプレイヤーIDと公開プロフィール概要のみを保存します。パスワード、決済情報、メールログイン、端末アクセス権限は要求しません。',
+      security: 'セキュリティ',
+      privacy: 'プライバシー',
+      contact: '問い合わせ',
+      orbitAuto: 'AUTO',
+      orbitRedeem: 'REDEEM',
+      kickerPriority: '本日の優先権',
+      kickerIdVault: 'ID保管庫',
+      kickerProfile: 'プロフィール連携',
+      kickerManage: 'リクエスト管理',
+      kickerLive: 'ライブ運用',
+      kickerKingdom: '王国登録状況',
+      priorityTitle: '本日の優先ブースト',
+      priorityHelp: '1日1回訪問して簡単な確認を通過すると、次のリセットまで待機中のリディーム作業の優先順位が上がります。',
+      priorityChecking: '優先権を確認中...',
+      priorityEmpty: '本日優先権を受けたユーザーはまだいません。',
+      priorityChallenge: '本日の優先権を開始',
+      priorityBoost: '自分のキューをブースト',
+      priorityReady: 'IDを登録または読み込んでから本日の優先権を開始してください。',
+      priorityAnswerPlaceholder: '答え',
+      priorityNeedId: '登録済みプレイヤーIDを先に入力または読み込んでください。',
+      priorityPlayerPlaceholder: '優先対象プレイヤーID',
+      priorityChallengeReady: '簡単確認:',
+      priorityBoosting: '優先権を適用中...',
+      priorityDone: 'リセットまで優先権が有効です。',
+      priorityAlready: '本日の優先権はすでに有効です。',
+      priorityReset: 'リセット',
+      priorityTop: '上位優先',
+      priorityActive: '優先権有効',
+    };
 
     let currentLang = new URL(location.href).searchParams.get('lang') || localStorage.getItem('siteLang') || localStorage.getItem('lang') || 'ko';
     if (!I18N[currentLang]) currentLang = 'ko';
@@ -2475,7 +2714,7 @@
       document.querySelectorAll('#langSelect option').forEach((option) => { option.textContent = LANGUAGE_LABELS[option.value] || option.textContent; });
       $('hubLink').href = `./index.html?lang=${encodeURIComponent(currentLang)}`;
       $('backLink').href = `./index.html?lang=${encodeURIComponent(currentLang)}`;
-      $('langSelect').value = currentLang;
+      document.querySelectorAll('#langSelect').forEach((select) => { select.value = currentLang; });
       localStorage.setItem('lang', currentLang);
       localStorage.setItem('siteLang', currentLang);
       $('registeredBadge').textContent = `${tr('registeredPlayers')}: -`;
@@ -2819,7 +3058,7 @@
     }
 
     function unitText(value, key) {
-      const compact = currentLang === 'ko' || currentLang === 'zh-CN' || currentLang === 'zh-TW';
+      const compact = currentLang === 'ko' || currentLang === 'ja' || currentLang === 'zh-CN' || currentLang === 'zh-TW';
       return compact ? `${formatNumber(value)}${tr(key)}` : `${formatNumber(value)} ${tr(key)}`;
     }
 
@@ -2945,14 +3184,16 @@
       }
     });
 
-    $('langSelect').addEventListener('change', (event) => {
-      currentLang = event.target.value;
-      applyI18n();
-      loadStatus();
-      loadCodes();
-      loadActivity();
-      loadPriority();
-      loadKingdomRegistry();
+    document.querySelectorAll('#langSelect').forEach((select) => {
+      select.addEventListener('change', (event) => {
+        currentLang = event.target.value;
+        applyI18n();
+        loadStatus();
+        loadCodes();
+        loadActivity();
+        loadPriority();
+        loadKingdomRegistry();
+      });
     });
     if (saved.playerId) {
       $('playerId').value = saved.playerId;

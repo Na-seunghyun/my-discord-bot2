@@ -85,6 +85,42 @@
       background: rgba(67,246,215,.1);
     }
     .actions { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
+    .lang-shell {
+      position: relative;
+      display: grid;
+      min-width: 190px;
+    }
+    .lang-shell::before {
+      content: "🌐";
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 1;
+      pointer-events: none;
+      filter: drop-shadow(0 0 8px rgba(67,246,215,.28));
+    }
+    .lang-shell select {
+      width: 100%;
+      appearance: none;
+      padding-left: 42px;
+      padding-right: 34px;
+      border-color: rgba(67,246,215,.30);
+      background:
+        linear-gradient(135deg, rgba(67,246,215,.13), rgba(246,207,114,.08)),
+        rgba(255,255,255,.07);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 0 20px rgba(67,246,215,.06);
+    }
+    .lang-shell::after {
+      content: "⌄";
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-55%);
+      color: var(--gold);
+      font-weight: 950;
+      pointer-events: none;
+    }
     select, button, input, textarea {
       border: 1px solid var(--line);
       border-radius: 13px;
@@ -328,7 +364,7 @@
     @media (max-width: 860px) {
       .nav { align-items: stretch; flex-direction: column; }
       .actions { display: grid; grid-template-columns: 1fr; }
-      select, .back, .support { width: 100%; }
+      select, .back, .support, .lang-shell { width: 100%; }
       .layout { grid-template-columns: 1fr; }
       .summary, .items, .metric-grid { grid-template-columns: 1fr 1fr; }
     }
@@ -348,16 +384,19 @@
       <a class="brand" id="backHome" href="./index.html"><span class="mark">885</span><span>885 LEGEND NASHSH</span></a>
       <div class="actions">
         <a class="back" id="hubLink" href="./index.html" data-i18n="back">Back to hub</a>
-        <select id="langSelect" aria-label="Language">
-          <option value="ko">Korean</option>
-          <option value="en">English</option>
-          <option value="zh-CN">Chinese Simplified</option>
-          <option value="zh-TW">Chinese Traditional</option>
-          <option value="fr">Francais</option>
-          <option value="de">Deutsch</option>
-          <option value="th">Thai</option>
-          <option value="id">Indonesia</option>
-        </select>
+        <label class="lang-shell" aria-label="Language">
+          <select id="langSelect" aria-label="Language">
+            <option value="ko">🇰🇷 한국어</option>
+            <option value="en">🇺🇸 English</option>
+            <option value="ja">🇯🇵 日本語</option>
+            <option value="zh-CN">🇨🇳 简体中文</option>
+            <option value="zh-TW">🇹🇼 繁體中文</option>
+            <option value="fr">🇫🇷 Français</option>
+            <option value="de">🇩🇪 Deutsch</option>
+            <option value="th">🇹🇭 ไทย</option>
+            <option value="id">🇮🇩 Indonesia</option>
+          </select>
+        </label>
         <a class="back support" href="https://buymeacoffee.com/nashsh" target="_blank" rel="noreferrer" data-i18n="support">Support page</a>
       </div>
     </nav>
@@ -366,8 +405,8 @@
       <span class="trust-copy" data-i18n="trustText"><strong>HTTPS protected · safe connection.</strong> This page runs locally in your browser and never asks for passwords, payment details, account login, or device access.</span>
       <span><strong>HTTPS protected · 안전 연결.</strong> This page runs as a local planning tool in your browser. 비밀번호, 결제 정보, 계정 로그인을 요구하지 않습니다.</span>
       <span class="site-trust-links">
-        <a href="./security.html">Security</a>
-        <a href="./privacy.html">Privacy</a>
+        <a href="./security.html" data-i18n="security">Security</a>
+        <a href="./privacy.html" data-i18n="privacy">Privacy</a>
       </span>
     </div>
 
@@ -777,6 +816,8 @@
     $('doCalc').addEventListener('click', runFortSanc);
     Object.assign(I18N.en, {
       trustText: 'HTTPS protected · safe connection. This page runs locally in your browser and never asks for passwords, payment details, account login, or device access.',
+      security: 'Security',
+      privacy: 'Privacy',
       targetPoints: 'Target points per alliance',
       emptyMin: 'San EMPTY min',
       emptyMax: 'San EMPTY max',
@@ -828,6 +869,8 @@
       noAlliance: '\uc5f0\ub9f9\uc744 2\uac1c \uc774\uc0c1 \uc785\ub825\ud574\uc8fc\uc138\uc694.',
       copied: '\ubcf5\uc0ac \uc644\ub8cc',
       trustText: 'HTTPS 보호 연결 · 이 페이지는 브라우저 안에서 실행되는 계획 도구이며 비밀번호, 결제 정보, 계정 로그인, 기기 접근 권한을 요청하지 않습니다.',
+      security: '보안',
+      privacy: '개인정보',
       targetPoints: '연맹별 목표 점수',
       emptyMin: 'San EMPTY 최소',
       emptyMax: 'San EMPTY 최대',
@@ -853,16 +896,73 @@
       sanEmptyMinError: 'San EMPTY 최소값은 최대값보다 작거나 같아야 합니다.',
       sanEmptyMaxError: 'San EMPTY 최대값은 San 개수를 넘을 수 없습니다.'
     });
-    ['zh-CN','zh-TW','fr','de','th','id'].forEach((lang) => { I18N[lang] = { ...I18N.en }; });
+    I18N.ja = {
+      ...I18N.en,
+      back: 'ハブに戻る',
+      support: '支援ページ',
+      title: 'Fort / Sanc 分配ツール',
+      tagAlliance: '同盟運営',
+      subtitle: 'FortとSanctuaryの目標をきれいに配分する同盟運営ツールです。計算機というより運営用なので独立ページにしました。',
+      setup: '設定',
+      setupHint: '同盟と目標数を入力して、公平なローテーションを生成してください。',
+      alliances: '同盟リスト',
+      rounds: 'ラウンド',
+      seed: 'シャッフル基準',
+      fortCount: 'ラウンドごとのFort',
+      sancCount: 'ラウンドごとのSanc',
+      fortPoints: 'Fortポイント',
+      sancPoints: 'Sancポイント',
+      generate: '生成',
+      copy: '結果をコピー',
+      resultTitle: '分配計画',
+      resultHint: '累計ポイントが低い同盟から次の枠に優先配分します。',
+      empty: '生成ボタンを押すと、ここにローテーションが表示されます。',
+      round: 'ラウンド',
+      fort: 'Fort',
+      sanc: 'Sanc',
+      total: '合計',
+      slots: '枠',
+      noAlliance: '同盟を2つ以上入力してください。',
+      copied: 'コピーしました',
+      trustText: 'HTTPS保護接続 · このページはブラウザ内で動作する計画ツールで、パスワード、決済情報、アカウントログイン、端末アクセス権限を要求しません。',
+      security: 'セキュリティ',
+      privacy: 'プライバシー',
+      targetPoints: '同盟ごとの目標ポイント',
+      emptyMin: 'San EMPTY 最小',
+      emptyMax: 'San EMPTY 最大',
+      maxIgnoreEmpty: 'EMPTY無視 MAX',
+      copyDiscord: 'Discord用コピー',
+      safeCap: '安全上限',
+      bestCap: '最大上限',
+      alliance: '同盟',
+      points: 'ポイント',
+      noFort: 'Fortなし',
+      noSan: 'Sanなし',
+      emptyLabel: 'San EMPTY',
+      idsLabel: 'ID',
+      discordCopy: 'Discordコピー',
+      estimatedLimit: '推定目標上限',
+      maxApplied: 'MAX適用',
+      emptyIgnored: 'EMPTY無視',
+      theoreticalCap: '理論上限',
+      failed: '失敗',
+      impossible: '不可能',
+      allianceCountError: '同盟は2〜8個である必要があります。現在:',
+      duplicateAllianceError: '同盟名が重複しています。',
+      sanEmptyMinError: 'San EMPTYの最小値は最大値以下である必要があります。',
+      sanEmptyMaxError: 'San EMPTYの最大値はSan数を超えられません。',
+    };
+    ['zh-CN','zh-TW','fr','de','th','id','ja'].forEach((lang) => { I18N[lang] = { ...I18N.en, ...(I18N[lang] || {}) }; });
     const LANGUAGE_LABELS = {
-      ko: '\ud55c\uad6d\uc5b4',
-      en: 'English',
-      'zh-CN': '\u7b80\u4f53\u4e2d\u6587',
-      'zh-TW': '\u7e41\u9ad4\u4e2d\u6587',
-      fr: 'Francais',
-      de: 'Deutsch',
-      th: '\u0e44\u0e17\u0e22',
-      id: 'Indonesia'
+      ko: '🇰🇷 한국어',
+      en: '🇺🇸 English',
+      ja: '🇯🇵 日本語',
+      'zh-CN': '🇨🇳 简体中文',
+      'zh-TW': '🇹🇼 繁體中文',
+      fr: '🇫🇷 Français',
+      de: '🇩🇪 Deutsch',
+      th: '🇹🇭 ไทย',
+      id: '🇮🇩 Indonesia'
     };
     function fixLanguageLabels() {
       document.querySelectorAll('#langSelect option').forEach((option) => {
