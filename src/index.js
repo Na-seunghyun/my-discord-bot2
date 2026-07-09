@@ -62,6 +62,80 @@ let intelSchemaReady = false;
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const todayKey = () => new Date().toISOString().slice(0, 10);
+const PUBLIC_BASE_URL = "https://my-discord-bot2.looloo90.workers.dev";
+const PUBLIC_SITEMAP_XML = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>${PUBLIC_BASE_URL}/</loc>
+    <lastmod>2026-07-09</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>${PUBLIC_BASE_URL}/auto_redeem.html</loc>
+    <lastmod>2026-07-09</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>${PUBLIC_BASE_URL}/troop_training_ui.html</loc>
+    <lastmod>2026-07-09</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>${PUBLIC_BASE_URL}/building_calculator.html</loc>
+    <lastmod>2026-07-09</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>${PUBLIC_BASE_URL}/war_academy_calculator.html</loc>
+    <lastmod>2026-07-09</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>${PUBLIC_BASE_URL}/traplace/</loc>
+    <lastmod>2026-07-09</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>${PUBLIC_BASE_URL}/fort_sanc.html</loc>
+    <lastmod>2026-07-09</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>${PUBLIC_BASE_URL}/feedback.html</loc>
+    <lastmod>2026-07-09</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>${PUBLIC_BASE_URL}/security.html</loc>
+    <lastmod>2026-07-09</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>${PUBLIC_BASE_URL}/privacy.html</loc>
+    <lastmod>2026-07-09</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+</urlset>
+`;
+const PUBLIC_ROBOTS_TXT = `User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /.git/
+Disallow: /.env
+Disallow: /.wrangler/
+
+Sitemap: ${PUBLIC_BASE_URL}/sitemap.xml
+`;
 
 const json = (payload, status = 200) =>
   new Response(JSON.stringify(payload), {
@@ -73,6 +147,17 @@ const json = (payload, status = 200) =>
       ...baseSecurityHeaders(),
     },
   });
+
+function publicTextResponse(body, contentType) {
+  return new Response(body, {
+    status: 200,
+    headers: {
+      ...baseSecurityHeaders(),
+      "content-type": contentType,
+      "cache-control": "public, max-age=300",
+    },
+  });
+}
 
 function baseSecurityHeaders() {
   return {
@@ -3551,6 +3636,12 @@ export default {
     if (request.method === "OPTIONS") {
       const origin = request.headers.get("origin") || "";
       return new Response(null, { status: 204, headers: { ...corsHeaders(origin, request, env), ...baseSecurityHeaders() } });
+    }
+    if (request.method === "GET" && url.pathname === "/sitemap.xml") {
+      return publicTextResponse(PUBLIC_SITEMAP_XML, "application/xml; charset=utf-8");
+    }
+    if (request.method === "GET" && url.pathname === "/robots.txt") {
+      return publicTextResponse(PUBLIC_ROBOTS_TXT, "text/plain; charset=utf-8");
     }
     if (url.pathname === "/kingshot" || url.pathname.startsWith("/kingshot/")) return proxyKingshot(request, env);
     if (url.pathname === "/api/visit" && request.method === "POST") return json(await incrementVisit(env));
