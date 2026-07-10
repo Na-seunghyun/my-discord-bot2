@@ -23,6 +23,8 @@ const AUTO_REDEEM_DEFAULT_CLOUDFLARE_BATCH_SIZE = 6;
 const AUTO_REDEEM_DEFAULT_DELAY_MS = 700;
 const AUTO_REDEEM_DEFAULT_MAX_ATTEMPTS = 4;
 const AUTO_REDEEM_RUNNER_STALE_MS = 25 * 60 * 1000;
+const PUBLIC_GIFT_CODE_PROBE_LIMIT = 3;
+const PUBLIC_GIFT_CODE_PROBE_PLAYER_LIMIT = 3;
 const PUBLIC_GIFT_CODE_SOURCES = [
   { source: "kingshot.net", url: "https://kingshot.net/gift-codes" },
   { source: "kingshot.net/redeem", url: "https://kingshot.net/gift-codes/redeem" },
@@ -1418,7 +1420,28 @@ function normalizeRedeemCodeSaveResult(payload) {
     code: payload.code,
     status: payload.status,
     isActive: payload.is_active,
+    source: payload.source,
   };
+}
+
+function redeemResultProvesCodeActive(status) {
+  return new Set(["success", "already_claimed", "claim_limit_reached"]).has(
+    cleanText(status, 80).toLowerCase(),
+  );
+}
+
+function redeemResultProvesCodeInactive(status) {
+  return new Set(["expired", "invalid_code", "invalid", "bad_candidate"]).has(
+    cleanText(status, 80).toLowerCase(),
+  );
+}
+
+function redeemCodeSourceTrustedForJobs(source) {
+  const value = String(source || "").toLowerCase();
+  return value === "trusted-public:kingshot.net"
+    || value === "manual"
+    || value === "official-redeem-browser"
+    || value === "official-redeem-api";
 }
 
 async function expireRedeemCodeEverywhere(env, giftCode, reason = "Gift code expired.", atMs = Date.now()) {
@@ -1450,6 +1473,67 @@ async function expireRedeemCodeEverywhere(env, giftCode, reason = "Gift code exp
       }),
     }).catch(() => {});
   }
+  return true;
+}
+
+async function deactivateRedeemCodeEverywhere(env, giftCode, status = "invalid_code", reason = "Gift code is not valid.", atMs = Date.now()) {
+  const code = normalizeGiftCode(giftCode);
+  const cleanStatus = cleanText(status, 40) || "invalid_code";
+  if (!code || !supabaseConfig(env).enabled) return false;
+  const rows = await supabaseJson(
+    env,
+    `/redeem_codes?code=ilike.${encodeURIComponent(code)}&select=code&limit=50`,
+  ).catch(() => []);
+  const codes = [...new Set([code, ...(rows || []).map((row) => normalizeGiftCode(row && row.code)).filter(Boolean)])];
+  for (const item of codes) {
+    const encoded = encodeURIComponent(item);
+    await supabaseJson(env, `/redeem_codes?code=eq.${encoded}`, {
+      method: "PATCH",
+      body: JSON.stringify({
+        status: cleanStatus,
+        is_active: false,
+        last_redeem_status: cleanStatus,
+        last_redeemed_at_ms: atMs,
+        updated_at_ms: atMs,
+      }),
+    }).catch(() => {});
+    await supabaseJson(env, `/redeem_jobs?gift_code=eq.${encoded}&status=in.(pending,running,deferred,browser_review,unverified)`, {
+      method: "PATCH",
+      body: JSON.stringify({
+        status: cleanStatus,
+        last_error: cleanText(`${cleanStatus}: ${reason}`, 240),
+        updated_at_ms: atMs,
+      }),
+    }).catch(() => {});
+  }
+  return true;
+}
+
+async function holdUnverifiedRedeemJobs(env, giftCode, reason = "Gift code is waiting for trusted verification.", atMs = Date.now()) {
+  const code = normalizeGiftCode(giftCode);
+  if (!code || !supabaseConfig(env).enabled) return false;
+  await supabaseJson(env, `/redeem_jobs?gift_code=eq.${encodeURIComponent(code)}&status=in.(pending,running,deferred,browser_review)`, {
+    method: "PATCH",
+    body: JSON.stringify({
+      status: "unverified",
+      last_error: cleanText(reason, 240),
+      updated_at_ms: atMs,
+    }),
+  }).catch(() => {});
+  return true;
+}
+
+async function reactivateVerifiedRedeemJobs(env, giftCode, atMs = Date.now()) {
+  const code = normalizeGiftCode(giftCode);
+  if (!code || !supabaseConfig(env).enabled) return false;
+  await supabaseJson(env, `/redeem_jobs?gift_code=eq.${encodeURIComponent(code)}&status=eq.unverified`, {
+    method: "PATCH",
+    body: JSON.stringify({
+      status: "pending",
+      last_error: "Verified gift code; queued for auto redeem.",
+      updated_at_ms: atMs,
+    }),
+  }).catch(() => {});
   return true;
 }
 
@@ -1487,8 +1571,14 @@ async function saveRedeemCode(env, code, source = "manual", raw = null) {
   const sourceText = cleanText(row.source || source, 80) || "unknown";
   if (!isLikelyGiftCodeValue(giftCode)) return false;
   if (sourceText.startsWith("public:") && !/\d/.test(giftCode)) return false;
-  const isActive = row.isActive === null || row.isActive === undefined ? null : Boolean(row.isActive);
-  const incomingStatus = cleanText(row.status, 40) || "active";
+  let isActive = row.isActive === null || row.isActive === undefined ? null : Boolean(row.isActive);
+  let incomingStatus = cleanText(row.status, 40) || "active";
+  const redeemStatus = cleanText(row.lastRedeemStatus, 80);
+  const passiveDiscoverySource = sourceText.startsWith("public:") || sourceText.startsWith("jeab:");
+  if (passiveDiscoverySource && !redeemResultProvesCodeActive(redeemStatus) && !redeemResultProvesCodeInactive(redeemStatus)) {
+    incomingStatus = sourceText.startsWith("public:") ? "candidate" : "observed";
+    isActive = null;
+  }
   const payload = {
     code: giftCode,
     source: sourceText,
@@ -1498,18 +1588,23 @@ async function saveRedeemCode(env, code, source = "manual", raw = null) {
     updated_at_ms: now,
     raw_json: row.raw ? { ...row.raw, saved_at_ms: now } : { source: sourceText, saved_at_ms: now },
   };
-  const redeemStatus = cleanText(row.lastRedeemStatus, 80);
   if (redeemStatus) payload.last_redeem_status = redeemStatus;
   if (numberValue(row.lastRedeemedAt)) payload.last_redeemed_at_ms = numberValue(row.lastRedeemedAt);
+  const existing = await supabaseJson(
+    env,
+    `/redeem_codes?code=eq.${encodeURIComponent(giftCode)}&select=status,is_active,last_redeem_status,source&limit=1`,
+  ).catch(() => []);
+  const existingRow = existing && existing[0];
   if (redeemStatus.toLowerCase() === "expired") {
     payload.status = "expired";
     payload.is_active = false;
-  } else if (payload.status === "active") {
-    const existing = await supabaseJson(
-      env,
-      `/redeem_codes?code=eq.${encodeURIComponent(giftCode)}&select=status,is_active,last_redeem_status&limit=1`,
-    ).catch(() => []);
-    if (redeemCodeExpiredByOfficialUse(existing && existing[0])) {
+  } else if (redeemResultProvesCodeActive(redeemStatus)) {
+    payload.status = "active";
+    payload.is_active = true;
+  } else if (redeemResultProvesCodeInactive(redeemStatus)) {
+    payload.status = redeemStatus.toLowerCase() === "expired" ? "expired" : "invalid_code";
+    payload.is_active = false;
+  } else if (redeemCodeExpiredByOfficialUse(existingRow)) {
       payload.status = "expired";
       payload.is_active = false;
       payload.last_redeem_status = payload.last_redeem_status || "expired";
@@ -1517,7 +1612,17 @@ async function saveRedeemCode(env, code, source = "manual", raw = null) {
         ...payload.raw_json,
         expired_lock: "Preserved official redeem expired result.",
       };
-    }
+  } else if ((payload.status === "candidate" || payload.status === "observed")
+    && existingRow
+    && (redeemResultProvesCodeActive(existingRow.last_redeem_status) || redeemCodeSourceTrustedForJobs(existingRow.source))) {
+    payload.status = existingRow.status || "active";
+    payload.is_active = existingRow.is_active === false ? false : true;
+    payload.source = existingRow.source || payload.source;
+    payload.last_redeem_status = payload.last_redeem_status || existingRow.last_redeem_status || null;
+    payload.raw_json = {
+      ...payload.raw_json,
+      passive_refresh_preserved_verified_code: true,
+    };
   }
   await supabaseJson(env, "/redeem_codes?on_conflict=code", {
     method: "POST",
@@ -1525,7 +1630,15 @@ async function saveRedeemCode(env, code, source = "manual", raw = null) {
     body: JSON.stringify([payload]),
   });
   if (payload.status === "expired" || payload.is_active === false) {
-    await expireRedeemCodeEverywhere(env, giftCode, "Trusted source or official redeem result marked this code expired.", now);
+    if (payload.status === "expired") {
+      await expireRedeemCodeEverywhere(env, giftCode, "Trusted source or official redeem result marked this code expired.", now);
+    } else {
+      await deactivateRedeemCodeEverywhere(env, giftCode, payload.status, "Official redeem result marked this code inactive.", now);
+    }
+  } else if (payload.status === "candidate" || payload.status === "observed") {
+    await holdUnverifiedRedeemJobs(env, giftCode, "Code was seen only on a non-authoritative source; waiting for trusted verification.", now);
+  } else if (payload.status === "active") {
+    await reactivateVerifiedRedeemJobs(env, giftCode, now);
   }
   return normalizeRedeemCodeSaveResult(payload);
 }
@@ -1536,6 +1649,8 @@ async function updateRedeemCodeUsage(env, usage) {
   const encoded = encodeURIComponent(usage.code);
   const lastRedeemStatus = cleanText(usage.lastRedeemStatus, 80);
   const expired = lastRedeemStatus.toLowerCase() === "expired";
+  const activeProof = redeemResultProvesCodeActive(lastRedeemStatus);
+  const inactiveProof = redeemResultProvesCodeInactive(lastRedeemStatus);
   const existing = await supabaseJson(env, `/redeem_codes?code=eq.${encoded}&select=code&limit=1`).catch(() => []);
   if (existing && existing.length) {
     const patch = {
@@ -1543,8 +1658,14 @@ async function updateRedeemCodeUsage(env, usage) {
       last_redeemed_at_ms: usage.lastRedeemedAt,
       updated_at_ms: now,
     };
-    if (expired) {
+    if (activeProof) {
+      patch.status = "active";
+      patch.is_active = true;
+    } else if (expired) {
       patch.status = "expired";
+      patch.is_active = false;
+    } else if (inactiveProof) {
+      patch.status = "invalid_code";
       patch.is_active = false;
     }
     await supabaseJson(env, `/redeem_codes?code=eq.${encoded}`, {
@@ -1552,12 +1673,14 @@ async function updateRedeemCodeUsage(env, usage) {
       body: JSON.stringify(patch),
     });
     if (expired) await expireRedeemCodeEverywhere(env, usage.code, "Recent redeem result reported expired.", now);
+    else if (inactiveProof) await deactivateRedeemCodeEverywhere(env, usage.code, "invalid_code", "Recent redeem result reported invalid code.", now);
+    else if (activeProof) await reactivateVerifiedRedeemJobs(env, usage.code, now);
   } else {
     await saveRedeemCode(env, {
       code: usage.code,
       source: "jeab:redemptions/recent",
-      status: expired ? "expired" : "observed",
-      isActive: expired ? false : null,
+      status: activeProof ? "active" : expired ? "expired" : inactiveProof ? "invalid_code" : "observed",
+      isActive: activeProof ? true : expired || inactiveProof ? false : null,
       discoveredAt: now,
       updatedAt: now,
       lastRedeemStatus,
@@ -1576,21 +1699,39 @@ async function updateRedeemCodeFromAttempt(env, giftCode, classified, atMs = Dat
   const code = normalizeGiftCode(giftCode);
   const status = cleanText(classified && classified.status, 80);
   if (!code || !status || !supabaseConfig(env).enabled) return false;
+  const existingRows = await supabaseJson(
+    env,
+    `/redeem_codes?code=eq.${encodeURIComponent(code)}&select=status,is_active,last_redeem_status,source&limit=1`,
+  ).catch(() => []);
+  const existing = existingRows && existingRows[0];
+  const activeProof = redeemResultProvesCodeActive(status);
+  const inactiveProof = redeemResultProvesCodeInactive(status);
+  if (status === "expired") {
+    await expireRedeemCodeEverywhere(env, code, "Official redeem attempt reported expired.", atMs);
+    return true;
+  }
+  if (inactiveProof) {
+    await deactivateRedeemCodeEverywhere(env, code, status, "Official redeem attempt reported inactive code.", atMs);
+    return true;
+  }
   const patch = {
-    last_redeem_status: status,
+    last_redeem_status: !activeProof && redeemResultProvesCodeActive(existing && existing.last_redeem_status)
+      ? existing.last_redeem_status
+      : status,
     last_redeemed_at_ms: atMs,
     updated_at_ms: atMs,
   };
-  if (status === "expired") {
-    patch.status = "expired";
-    patch.is_active = false;
+  if (activeProof) {
+    patch.status = "active";
+    patch.is_active = true;
   }
   await supabaseJson(env, `/redeem_codes?code=eq.${encodeURIComponent(code)}`, {
     method: "PATCH",
     body: JSON.stringify(patch),
   }).catch(() => {});
-  if (status === "expired") {
-    await expireRedeemCodeEverywhere(env, code, "Official redeem attempt reported expired.", atMs);
+  if (activeProof) {
+    await reactivateVerifiedRedeemJobs(env, code, atMs);
+    await createRedeemJobsForCode(env, code).catch(() => 0);
   }
   return true;
 }
@@ -1599,7 +1740,9 @@ function redeemCodeReadyForAutoRedeem(row) {
   const status = cleanText((row && row.status) || "", 40).toLowerCase();
   if (status !== "active") return false;
   if (row && row.is_active === false) return false;
-  return redeemCodeAllowedForPublicUseStrict(row);
+  if (!redeemCodeAllowedForPublicUseStrict(row)) return false;
+  return redeemCodeSourceTrustedForJobs(row && row.source)
+    || redeemResultProvesCodeActive(row && row.last_redeem_status);
 }
 
 async function listActiveRedeemPlayerIds(env, maxPlayers = 10000) {
@@ -1627,7 +1770,7 @@ async function listActiveRedeemPlayerIds(env, maxPlayers = 10000) {
 async function listActiveRedeemCodes(env, maxCodes = 200) {
   const rows = await supabaseJson(
     env,
-    `/redeem_codes?status=eq.active&select=code,source,status,is_active,discovered_at_ms&order=discovered_at_ms.desc&limit=${maxCodes}`
+    `/redeem_codes?status=eq.active&select=code,source,status,is_active,last_redeem_status,discovered_at_ms&order=discovered_at_ms.desc&limit=${maxCodes}`
   ).catch(() => []);
   return (rows || []).filter(redeemCodeReadyForAutoRedeem);
 }
@@ -1648,7 +1791,7 @@ async function insertRedeemJobRows(env, rows) {
 async function createRedeemJobsForCode(env, code) {
   const giftCode = normalizeGiftCode(code);
   if (!giftCode || !supabaseConfig(env).enabled) return 0;
-  const sourceRows = await supabaseJson(env, `/redeem_codes?code=eq.${encodeURIComponent(giftCode)}&select=code,source,status,is_active&limit=1`).catch(() => []);
+  const sourceRows = await supabaseJson(env, `/redeem_codes?code=eq.${encodeURIComponent(giftCode)}&select=code,source,status,is_active,last_redeem_status&limit=1`).catch(() => []);
   if (sourceRows && sourceRows.length && !redeemCodeReadyForAutoRedeem(sourceRows[0])) return 0;
   const players = await listActiveRedeemPlayerIds(env);
   if (!players.length) return 0;
@@ -1663,6 +1806,7 @@ async function createRedeemJobsForCode(env, code) {
     updated_at_ms: now,
   }));
   await insertRedeemJobRows(env, rows);
+  await reactivateVerifiedRedeemJobs(env, giftCode, now);
   return rows.length;
 }
 
@@ -1686,6 +1830,72 @@ async function createRedeemJobsForPlayer(env, playerId) {
     }));
   if (!rows.length) return 0;
   await insertRedeemJobRows(env, rows);
+  return rows.length;
+}
+
+async function listRedeemProbePlayerIds(env, maxPlayers = PUBLIC_GIFT_CODE_PROBE_PLAYER_LIMIT) {
+  if (!supabaseConfig(env).enabled) return [];
+  const out = [];
+  const seen = new Set();
+  const addRows = (rows) => {
+    for (const row of rows || []) {
+      const id = String(row && row.id || "");
+      if (!/^\d{3,12}$/.test(id) || seen.has(id)) continue;
+      seen.add(id);
+      out.push({ id });
+      if (out.length >= maxPlayers) break;
+    }
+  };
+  const vipIds = priorityVipIds(env).slice(0, 12);
+  if (vipIds.length) {
+    const vipRows = await supabaseJson(
+      env,
+      `/redeem_players?enabled=eq.true&consent=eq.true&id=in.(${vipIds.map(encodeURIComponent).join(",")})&select=id&limit=${Math.max(maxPlayers, vipIds.length)}`,
+    ).catch(() => []);
+    addRows(vipRows);
+  }
+  if (out.length < maxPlayers) {
+    const rows = await supabaseJson(
+      env,
+      `/redeem_players?enabled=eq.true&consent=eq.true&select=id&order=updated_at_ms.desc&limit=${maxPlayers * 4}`,
+    ).catch(() => []);
+    addRows(rows);
+  }
+  return out.slice(0, maxPlayers);
+}
+
+async function createRedeemProbeJobsForCode(env, code) {
+  const giftCode = normalizeGiftCode(code);
+  if (!giftCode || !supabaseConfig(env).enabled) return 0;
+  const players = await listRedeemProbePlayerIds(env);
+  if (!players.length) return 0;
+  const now = Date.now();
+  const rows = players.map((player) => ({
+    job_key: `${giftCode}:${player.id}`,
+    player_id: String(player.id),
+    gift_code: giftCode,
+    status: "pending",
+    attempts: 0,
+    priority_score: Math.max(1, AUTO_REDEEM_PRIORITY_SCORE - 1000),
+    priority_boosted_at_ms: now,
+    last_error: "Candidate gift code probe; will promote only after official redeem proof.",
+    created_at_ms: now,
+    updated_at_ms: now,
+  }));
+  await insertRedeemJobRows(env, rows);
+  for (const row of rows) {
+    await supabaseJson(env, `/redeem_jobs?job_key=eq.${encodeURIComponent(row.job_key)}&status=eq.unverified`, {
+      method: "PATCH",
+      body: JSON.stringify({
+        status: "pending",
+        attempts: 0,
+        priority_score: row.priority_score,
+        priority_boosted_at_ms: row.priority_boosted_at_ms,
+        last_error: row.last_error,
+        updated_at_ms: now,
+      }),
+    }).catch(() => {});
+  }
   return rows.length;
 }
 
@@ -1794,9 +2004,7 @@ async function countVisibleActiveRedeemCodes(env, scanLimit = 300) {
     env,
     `/redeem_codes?status=eq.active&select=code,source,status,is_active,last_redeem_status,updated_at_ms&order=updated_at_ms.desc&limit=${scanLimit}`
   ).catch(() => []);
-  const active = (rows || []).filter((row) => row && row.status === "active" && row.is_active !== false && redeemCodeAllowedForPublicUseStrict(row));
-  const trusted = active.filter((row) => String((row && row.source) || "") === "trusted-public:kingshot.net");
-  return trusted.length || active.length;
+  return (rows || []).filter(redeemCodeReadyForAutoRedeem).length;
 }
 
 function collectKingshotNetGiftCodes(text, source, url) {
@@ -1941,7 +2149,8 @@ async function fetchPublicGiftCodePage(source) {
 }
 
 async function discoverRedeemCodesFromPublicPages(env) {
-  const result = { discovered: [], active: [], expired: [], jobsCreated: 0, errors: [] };
+  const result = { discovered: [], active: [], expired: [], candidates: [], probesCreated: 0, jobsCreated: 0, errors: [] };
+  let probeCodesCreated = 0;
   for (const source of PUBLIC_GIFT_CODE_SOURCES) {
     try {
       const text = await fetchPublicGiftCodePage(source);
@@ -1959,8 +2168,17 @@ async function discoverRedeemCodesFromPublicPages(env) {
         if (savedStatus === "active") {
           result.active.push(row.code);
           result.jobsCreated += await createRedeemJobsForCode(env, row.code).catch(() => 0);
-        } else {
+        } else if (savedStatus === "expired" || savedStatus === "invalid_code") {
           result.expired.push(row.code);
+        } else {
+          result.candidates.push(row.code);
+          if (row.status === "active" && probeCodesCreated < PUBLIC_GIFT_CODE_PROBE_LIMIT) {
+            const probes = await createRedeemProbeJobsForCode(env, row.code).catch(() => 0);
+            if (probes) {
+              probeCodesCreated += 1;
+              result.probesCreated += probes;
+            }
+          }
         }
       }
       if (source.source === "kingshot.net" && activeFromSource.size) {
@@ -1974,6 +2192,7 @@ async function discoverRedeemCodesFromPublicPages(env) {
   result.discovered = [...new Set(result.discovered)];
   result.active = [...new Set(result.active)];
   result.expired = [...new Set(result.expired)];
+  result.candidates = [...new Set(result.candidates)];
   return result;
 }
 
@@ -1998,7 +2217,7 @@ async function refreshPublicRedeemCodesIfAllowed(env, minIntervalMs = 5 * 60 * 1
 }
 
 async function discoverRedeemCodes(env) {
-  const result = { ok: true, discovered: [], active: [], expired: [], usageUpdated: 0, jobsCreated: 0, errors: [] };
+  const result = { ok: true, discovered: [], active: [], expired: [], candidates: [], usageUpdated: 0, probesCreated: 0, jobsCreated: 0, errors: [] };
   const cfg = autoRedeemConfig(env);
   if (cfg.upstreamCodesEnabled) {
     try {
@@ -2014,8 +2233,10 @@ async function discoverRedeemCodes(env) {
         if (savedStatus === "active") {
           result.active.push(row.code);
           result.jobsCreated += await createRedeemJobsForCode(env, row.code).catch(() => 0);
-        } else {
+        } else if (savedStatus === "expired" || savedStatus === "invalid_code") {
           result.expired.push(row.code);
+        } else {
+          result.candidates.push(row.code);
         }
       }
     } catch (error) {
@@ -2044,7 +2265,14 @@ async function discoverRedeemCodes(env) {
           }).catch(() => {});
           const savedStatus = isPlainObject(saved) ? saved.status : "observed";
           result.discovered.push(code);
-          if (savedStatus !== "expired") result.jobsCreated += await createRedeemJobsForCode(env, code).catch(() => 0);
+          if (savedStatus === "active") {
+            result.active.push(code);
+            result.jobsCreated += await createRedeemJobsForCode(env, code).catch(() => 0);
+          } else if (savedStatus === "expired" || savedStatus === "invalid_code") {
+            result.expired.push(code);
+          } else {
+            result.candidates.push(code);
+          }
         }
       }
     } catch (error) {
@@ -2056,18 +2284,23 @@ async function discoverRedeemCodes(env) {
     discovered: [],
     active: [],
     expired: [],
+    candidates: [],
+    probesCreated: 0,
     jobsCreated: 0,
     errors: [cleanText(error.message, 120)],
   }));
   result.discovered.push(...(publicDiscovery.discovered || []));
   result.active.push(...(publicDiscovery.active || []));
   result.expired.push(...(publicDiscovery.expired || []));
+  result.candidates.push(...(publicDiscovery.candidates || []));
+  result.probesCreated += numberValue(publicDiscovery.probesCreated);
   result.jobsCreated += numberValue(publicDiscovery.jobsCreated);
   result.errors.push(...(publicDiscovery.errors || []).map((item) => `public: ${cleanText(item, 120)}`));
 
   result.discovered = [...new Set(result.discovered)];
   result.active = [...new Set(result.active)];
   result.expired = [...new Set(result.expired)];
+  result.candidates = [...new Set(result.candidates)];
   return result;
 }
 
@@ -2112,16 +2345,16 @@ async function listRedeemCodes(request, env) {
   ]);
   const visibleBase = (codes || []).filter(redeemCodeAllowedForPublicUseStrict);
   const trustedActive = new Set(visibleBase
-    .filter((row) => row && row.status === "active" && row.is_active !== false && String(row.source || "") === "trusted-public:kingshot.net")
+    .filter((row) => redeemCodeReadyForAutoRedeem(row) && String(row.source || "") === "trusted-public:kingshot.net")
     .map((row) => normalizeGiftCode(row.code))
     .filter(Boolean));
   const visible = visibleBase.filter((row) => {
-    const isActive = row && row.status === "active" && row.is_active !== false;
+    const isActive = redeemCodeReadyForAutoRedeem(row);
     if (!trustedActive.size || !isActive) return true;
     return trustedActive.has(normalizeGiftCode(row.code));
   }).sort((a, b) => {
-    const aActive = a && a.status === "active" && a.is_active !== false ? 1 : 0;
-    const bActive = b && b.status === "active" && b.is_active !== false ? 1 : 0;
+    const aActive = redeemCodeReadyForAutoRedeem(a) ? 1 : 0;
+    const bActive = redeemCodeReadyForAutoRedeem(b) ? 1 : 0;
     if (aActive !== bActive) return bActive - aActive;
     return numberValue(b && b.discovered_at_ms) - numberValue(a && a.discovered_at_ms);
   });
@@ -3046,37 +3279,14 @@ async function reportRedeemJobs(request, env) {
   }
 
   const codePayloads = [...codePayloadByCode.values()];
-  const expiredCodePayloads = codePayloads
-    .filter((item) => item.expired)
-    .map((item) => ({
-      code: item.code,
-      source: item.source,
-      status: "expired",
-      is_active: false,
-      last_redeem_status: "expired",
-      last_redeemed_at_ms: item.last_redeemed_at_ms,
-      updated_at_ms: item.updated_at_ms,
-    }));
-  if (expiredCodePayloads.length && !summary.saveFailed) {
-    await supabaseJson(env, "/redeem_codes?on_conflict=code", {
-      method: "POST",
-      headers: { prefer: "resolution=merge-duplicates" },
-      body: JSON.stringify(expiredCodePayloads),
-    }).catch(() => {});
-    for (const item of expiredCodePayloads) {
-      await expireRedeemCodeEverywhere(env, item.code, "Official redeem attempt reported expired.", item.updated_at_ms || now).catch(() => {});
-    }
-  }
   if (codePayloads.length && !summary.saveFailed) {
-    for (const item of codePayloads.filter((entry) => !entry.expired)) {
-      await supabaseJson(env, `/redeem_codes?code=eq.${encodeURIComponent(item.code)}`, {
-        method: "PATCH",
-        body: JSON.stringify({
-          last_redeem_status: item.last_redeem_status,
-          last_redeemed_at_ms: item.last_redeemed_at_ms,
-          updated_at_ms: item.updated_at_ms,
-        }),
-      }).catch(() => {});
+    for (const item of codePayloads) {
+      await updateRedeemCodeFromAttempt(
+        env,
+        item.code,
+        { status: item.last_redeem_status, ok: redeemResultProvesCodeActive(item.last_redeem_status) },
+        item.updated_at_ms || now,
+      ).catch(() => {});
     }
   }
 

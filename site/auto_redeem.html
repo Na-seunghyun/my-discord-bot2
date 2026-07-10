@@ -2997,6 +2997,19 @@
       if (status === 'invalid' || status === 'invalid_code' || status === 'bad_candidate') return false;
       return true;
     }
+    function redeemResultProvesDisplayActive(status) {
+      return ['success', 'already_claimed', 'claim_limit_reached'].includes(String(status || '').toLowerCase());
+    }
+    function displayCodeReadyForAutoRedeem(row) {
+      const status = String((row && row.status) || '').toLowerCase();
+      if (status !== 'active' || row.is_active === false) return false;
+      const source = String((row && row.source) || '').toLowerCase();
+      return source === 'trusted-public:kingshot.net'
+        || source === 'manual'
+        || source === 'official-redeem-browser'
+        || source === 'official-redeem-api'
+        || redeemResultProvesDisplayActive(row && row.last_redeem_status);
+    }
     function parseBulkIds(text, max = 250) {
       const matches = String(text || '').match(/\d{3,12}/g) || [];
       return [...new Set(matches)].slice(0, max);
@@ -3078,8 +3091,8 @@
     }
     function statusClass(row) {
       if (row.status === 'expired' || row.is_active === false) return 'expired';
-      if (row.status === 'observed') return 'observed';
-      return 'active';
+      if (displayCodeReadyForAutoRedeem(row)) return 'active';
+      return 'observed';
     }
     function statusLabel(row) {
       const cls = statusClass(row);
