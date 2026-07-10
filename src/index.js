@@ -1789,6 +1789,16 @@ function redeemCodeAllowedForPublicUseStrict(row) {
   return true;
 }
 
+async function countVisibleActiveRedeemCodes(env, scanLimit = 300) {
+  const rows = await supabaseJson(
+    env,
+    `/redeem_codes?status=eq.active&select=code,source,status,is_active,last_redeem_status,updated_at_ms&order=updated_at_ms.desc&limit=${scanLimit}`
+  ).catch(() => []);
+  const active = (rows || []).filter((row) => row && row.status === "active" && row.is_active !== false && redeemCodeAllowedForPublicUseStrict(row));
+  const trusted = active.filter((row) => String((row && row.source) || "") === "trusted-public:kingshot.net");
+  return trusted.length || active.length;
+}
+
 function collectKingshotNetGiftCodes(text, source, url) {
   const lines = textLinesFromHtmlStrict(text);
   const seen = new Set();
@@ -1802,7 +1812,7 @@ function collectKingshotNetGiftCodes(text, source, url) {
 
   const ignored = (line) => /^(ACTIVE|EXPIRED|COPY CODE|COPY|SIGN IN TO REDEEM|SIGN IN|SHARE LINK|VIEW IMAGE|EXPIRES:?|LAST CHECKED:?|NOT SPECIFIED YET)$/i.test(line)
     || /^EXPIRES:/i.test(line)
-    || /^[-:–—\d\s]+$/.test(line);
+    || /^[\s\-:?.\d]+$/.test(line);
 
   const push = (candidate, status, context) => {
     const code = normalizeGiftCode(candidate);
@@ -1846,7 +1856,7 @@ function collectGiftCodesFromPublicTextStrict(text, source, url) {
   const rows = [];
   const ignoredLine = (line) => /^(ACTIVE|EXPIRED|COPY CODE|COPY|SIGN IN|SIGN IN TO REDEEM|SHARE LINK|VIEW IMAGE|EXPIRES:?|LAST CHECKED:?|NO CODES YET\.?|GIFT CODES?|RECENT REDEMPTIONS?)$/i.test(line)
     || /^EXPIRES:/i.test(line)
-    || /^[-:•●\d\s]+$/.test(line);
+    || /^[\s\-:?.\d]+$/.test(line);
   const push = (candidate, status, context) => {
     const code = normalizeGiftCode(candidate);
     if (!giftCodeCandidateAllowedStrict(code, context) || seen.has(code)) return;
@@ -1967,6 +1977,26 @@ async function discoverRedeemCodesFromPublicPages(env) {
   return result;
 }
 
+async function refreshPublicRedeemCodesIfAllowed(env, minIntervalMs = 5 * 60 * 1000) {
+  const key = "redeem_public_code_refresh";
+  const now = Date.now();
+  const rows = await supabaseJson(env, `/redeem_meta?key=eq.${encodeURIComponent(key)}&select=key,value_json,updated_at_ms&limit=1`).catch(() => []);
+  const last = numberValue(rows && rows[0] && rows[0].updated_at_ms);
+  if (last && now - last < minIntervalMs) {
+    return { skipped: "cooldown", nextAtMs: last + minIntervalMs };
+  }
+  await supabaseJson(env, "/redeem_meta?on_conflict=key", {
+    method: "POST",
+    headers: { prefer: "resolution=merge-duplicates" },
+    body: JSON.stringify([{
+      key,
+      value_json: { source: "public_refresh", refreshed_at_ms: now },
+      updated_at_ms: now,
+    }]),
+  }).catch(() => {});
+  return discoverRedeemCodesFromPublicPages(env);
+}
+
 async function discoverRedeemCodes(env) {
   const result = { ok: true, discovered: [], active: [], expired: [], usageUpdated: 0, jobsCreated: 0, errors: [] };
   const cfg = autoRedeemConfig(env);
@@ -2071,29 +2101,42 @@ async function listRedeemCodes(request, env) {
   const url = new URL(request.url);
   const limit = Math.min(50, Math.max(1, Number(url.searchParams.get("limit")) || 20));
   const scanLimit = Math.max(100, limit * 5);
-  const [codes, players] = await Promise.all([
+  const refresh = url.searchParams.get("refresh") === "1";
+  const discovery = refresh
+    ? await refreshPublicRedeemCodesIfAllowed(env).catch((error) => ({ discovered: [], active: [], expired: [], jobsCreated: 0, errors: [cleanText(error.message, 120)] }))
+    : null;
+  const [codes, players, activeCodes] = await Promise.all([
     supabaseJson(env, `/redeem_codes?select=code,source,status,is_active,last_redeem_status,last_redeemed_at_ms,discovered_at_ms,updated_at_ms&order=discovered_at_ms.desc&limit=${scanLimit}`).catch(() => []),
     countRedeemPlayers(env).catch(() => 0),
+    countVisibleActiveRedeemCodes(env).catch(() => 0),
   ]);
-  const visible = (codes || []).filter(redeemCodeAllowedForPublicUseStrict).sort((a, b) => {
+  const visibleBase = (codes || []).filter(redeemCodeAllowedForPublicUseStrict);
+  const trustedActive = new Set(visibleBase
+    .filter((row) => row && row.status === "active" && row.is_active !== false && String(row.source || "") === "trusted-public:kingshot.net")
+    .map((row) => normalizeGiftCode(row.code))
+    .filter(Boolean));
+  const visible = visibleBase.filter((row) => {
+    const isActive = row && row.status === "active" && row.is_active !== false;
+    if (!trustedActive.size || !isActive) return true;
+    return trustedActive.has(normalizeGiftCode(row.code));
+  }).sort((a, b) => {
     const aActive = a && a.status === "active" && a.is_active !== false ? 1 : 0;
     const bActive = b && b.status === "active" && b.is_active !== false ? 1 : 0;
     if (aActive !== bActive) return bActive - aActive;
     return numberValue(b && b.discovered_at_ms) - numberValue(a && a.discovered_at_ms);
   });
-  return json({ ok: true, codes: visible.slice(0, limit), registeredPlayers: players });
+  return json({ ok: true, codes: visible.slice(0, limit), registeredPlayers: players, activeCodes, discovery });
 }
 
 async function redeemStatus(env) {
   if (!supabaseConfig(env).enabled) return json({ ok: true, supabase: false, registeredPlayers: 0, activeCodes: 0, queue: null, daemon: null, automation: null });
-  const [players, codes, queue, daemon, automation] = await Promise.all([
+  const [players, activeCodes, queue, daemon, automation] = await Promise.all([
     countRedeemPlayers(env).catch(() => 0),
-    supabaseJson(env, "/redeem_codes?status=eq.active&select=code,source,status,is_active&limit=200").catch(() => []),
+    countVisibleActiveRedeemCodes(env).catch(() => 0),
     redeemQueueSummary(env).catch(() => null),
     readRedeemDaemonStatus(env).catch(() => null),
     readRedeemAutomationStatus(env).catch(() => null),
   ]);
-  const activeCodes = (codes || []).filter(redeemCodeAllowedForPublicUseStrict).length;
   return json({ ok: true, supabase: true, registeredPlayers: players, activeCodes, queue, daemon, automation });
 }
 
@@ -2515,7 +2558,7 @@ async function redeemActivity(request, env) {
     supabaseJson(env, `/redeem_jobs?status=eq.success&select=player_id,gift_code,status,redeemed_at_ms,updated_at_ms&order=redeemed_at_ms.desc&limit=${successLimit}`).catch(() => []),
     countSupabaseRows(env, "/redeem_jobs?status=in.(pending,running)&select=job_key&limit=1").catch(() => 0),
     countSupabaseRows(env, "/redeem_jobs?status=eq.success&select=job_key&limit=1").catch(() => 0),
-    countSupabaseRows(env, "/redeem_codes?status=eq.active&select=code&limit=1").catch(() => 0),
+    countVisibleActiveRedeemCodes(env).catch(() => 0),
     countRedeemPlayers(env).catch(() => 0),
     redeemQueueSummary(env).catch(() => null),
     readRedeemDaemonStatus(env).catch(() => null),

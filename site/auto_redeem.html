@@ -1024,14 +1024,14 @@
       min-width: 0;
     }
     .command-hero {
-      min-height: 220px;
+      min-height: 176px;
       display: grid;
-      grid-template-columns: minmax(0, 1fr) 190px;
+      grid-template-columns: minmax(0, 1fr) 152px;
       align-items: center;
       gap: 18px;
       border: 1px solid rgba(244,200,106,.24);
       border-radius: 26px;
-      padding: clamp(18px, 3vw, 28px);
+      padding: clamp(16px, 2.4vw, 24px);
       background:
         linear-gradient(120deg, rgba(244,200,106,.16), transparent 38%, rgba(82,255,224,.12)),
         linear-gradient(180deg, rgba(255,255,255,.11), rgba(255,255,255,.035)),
@@ -1051,7 +1051,7 @@
       gap: 2px;
       max-width: 800px;
       margin: 8px 0 10px;
-      font-size: clamp(34px, 5.2vw, 64px);
+      font-size: clamp(30px, 4.6vw, 54px);
       line-height: .92;
     }
     .command-hero h1 span:last-child {
@@ -1066,7 +1066,7 @@
     }
     .hero-orbit {
       position: relative;
-      width: 176px;
+      width: 142px;
       aspect-ratio: 1;
       justify-self: center;
       border: 1px solid rgba(244,200,106,.24);
@@ -1091,7 +1091,7 @@
     }
     .orbit-core {
       position: absolute;
-      inset: 56px;
+      inset: 43px;
       display: grid;
       place-items: center;
       border-radius: 50%;
@@ -1123,14 +1123,15 @@
     .priority-lounge {
       position: relative;
       display: grid;
-      gap: 14px;
-      border: 1px solid rgba(244,200,106,.30);
-      border-radius: 28px;
+      gap: 12px;
+      border: 1px solid rgba(244,200,106,.26);
+      border-radius: 24px;
       padding: 16px;
       background:
-        linear-gradient(120deg, rgba(244,200,106,.17), rgba(82,255,224,.08) 48%, rgba(255,255,255,.045)),
+        radial-gradient(circle at top left, rgba(244,200,106,.13), transparent 38%),
+        linear-gradient(120deg, rgba(244,200,106,.12), rgba(82,255,224,.06) 48%, rgba(255,255,255,.035)),
         rgba(6, 11, 22, .86);
-      box-shadow: 0 24px 72px rgba(0,0,0,.34), 0 0 34px rgba(244,200,106,.10), inset 0 1px 0 rgba(255,255,255,.10);
+      box-shadow: 0 18px 54px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,255,255,.10);
       overflow: hidden;
     }
     .priority-lounge::before {
@@ -1138,18 +1139,8 @@
       position: absolute;
       inset: 0;
       border-radius: inherit;
-      padding: 1px;
-      background: linear-gradient(90deg, transparent, rgba(244,200,106,.76), rgba(82,255,224,.72), transparent);
-      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-      -webkit-mask-composite: xor;
-      mask-composite: exclude;
-      animation: priorityGlow 5.5s linear infinite;
+      border: 1px solid rgba(255,255,255,.06);
       pointer-events: none;
-    }
-    @keyframes priorityGlow {
-      from { transform: translateX(-45%); opacity: .42; }
-      50% { opacity: .90; }
-      to { transform: translateX(45%); opacity: .42; }
     }
     .priority-head {
       position: relative;
@@ -1186,10 +1177,19 @@
     .priority-marquee {
       position: relative;
       z-index: 1;
-      overflow: hidden;
-      border: 1px solid rgba(255,255,255,.10);
-      border-radius: 18px;
-      background: rgba(2, 7, 15, .44);
+      overflow-x: auto;
+      overflow-y: hidden;
+      touch-action: pan-x;
+      overscroll-behavior-x: contain;
+      border: 1px solid rgba(255,255,255,.11);
+      border-radius: 16px;
+      background: rgba(2, 7, 15, .38);
+      scrollbar-width: thin;
+      scrollbar-color: rgba(244,200,106,.45) transparent;
+      scroll-snap-type: x proximity;
+      -webkit-overflow-scrolling: touch;
+      -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 18px, #000 calc(100% - 18px), transparent 100%);
+      mask-image: linear-gradient(90deg, transparent 0, #000 18px, #000 calc(100% - 18px), transparent 100%);
     }
     .priority-track {
       min-height: 58px;
@@ -1198,27 +1198,28 @@
       gap: 10px;
       width: max-content;
       padding: 10px;
-      animation: priorityTicker 44s linear infinite;
-    }
-    .priority-marquee:hover .priority-track {
-      animation-play-state: paused;
-    }
-    @keyframes priorityTicker {
-      from { transform: translateX(0); }
-      to { transform: translateX(-50%); }
+      transform: translateZ(0);
     }
     .priority-chip {
-      min-width: 220px;
+      min-width: 214px;
       display: grid;
       grid-template-columns: 38px minmax(0, 1fr);
       gap: 10px;
       align-items: center;
-      border: 1px solid rgba(244,200,106,.24);
-      border-radius: 16px;
+      border: 1px solid rgba(244,200,106,.20);
+      border-radius: 15px;
       padding: 9px;
       background:
-        linear-gradient(135deg, rgba(244,200,106,.12), rgba(82,255,224,.07)),
+        linear-gradient(135deg, rgba(244,200,106,.10), rgba(82,255,224,.055)),
         rgba(255,255,255,.045);
+      scroll-snap-align: start;
+    }
+    .priority-chip.vip {
+      border-color: rgba(255, 221, 128, .58);
+      background:
+        linear-gradient(135deg, rgba(255,230,150,.18), rgba(255,255,255,.055) 46%, rgba(82,255,224,.055)),
+        rgba(9, 12, 20, .78);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.055), 0 0 0 1px rgba(255,210,104,.10);
     }
     .priority-rank {
       display: grid;
@@ -1253,14 +1254,14 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      min-height: 18px;
-      margin-right: 6px;
-      padding: 0 7px;
-      border: 1px solid rgba(246,207,114,.42);
+      min-height: 19px;
+      margin-right: 7px;
+      padding: 0 8px;
+      border: 1px solid rgba(255,224,136,.86);
       border-radius: 999px;
-      color: #fff3ba;
-      background: linear-gradient(135deg, rgba(246,207,114,.22), rgba(67,246,215,.09));
-      box-shadow: 0 0 18px rgba(246,207,114,.18);
+      color: #fff7c7;
+      background: linear-gradient(135deg, rgba(255,221,118,.26), rgba(255,255,255,.07));
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.09);
       font-size: 10px;
       font-weight: 1000;
       letter-spacing: .04em;
@@ -1270,7 +1271,7 @@
       position: relative;
       z-index: 1;
       display: grid;
-      grid-template-columns: minmax(160px, .7fr) auto minmax(120px, .45fr) auto;
+      grid-template-columns: minmax(180px, .72fr) auto;
       gap: 10px;
       align-items: center;
     }
@@ -1521,6 +1522,75 @@
       font-weight: 1000;
       text-shadow: 0 0 18px rgba(244,200,106,.22);
       overflow-wrap: anywhere;
+    }
+    .priority-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 80;
+      display: grid;
+      place-items: center;
+      padding: 18px;
+      background: rgba(2, 5, 12, .72);
+      backdrop-filter: blur(10px);
+    }
+    .priority-modal-backdrop[hidden] {
+      display: none !important;
+    }
+    .priority-modal {
+      width: min(520px, 100%);
+      border: 1px solid rgba(255,224,136,.46);
+      border-radius: 22px;
+      padding: 20px;
+      background:
+        radial-gradient(circle at top left, rgba(255,224,136,.16), transparent 34%),
+        linear-gradient(180deg, rgba(20,28,45,.985), rgba(7,12,24,.985));
+      box-shadow: 0 28px 90px rgba(0,0,0,.52), inset 0 1px 0 rgba(255,255,255,.09);
+    }
+    .priority-modal h3 {
+      margin: 0 0 6px;
+      color: #fff4bd;
+      font-size: 22px;
+    }
+    .priority-modal p {
+      margin: 0 0 14px;
+      color: var(--muted);
+      line-height: 1.55;
+      font-weight: 820;
+    }
+    .priority-question-box {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+      margin: 14px 0;
+      padding: 14px;
+      border: 1px solid rgba(244,200,106,.30);
+      border-radius: 16px;
+      background:
+        linear-gradient(135deg, rgba(244,200,106,.12), rgba(82,255,224,.05)),
+        rgba(255,255,255,.045);
+    }
+    .priority-question {
+      color: #fff8d8;
+      font-size: 24px;
+      font-weight: 1000;
+      letter-spacing: .02em;
+    }
+    .priority-modal-actions {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 10px;
+      align-items: center;
+      margin-top: 12px;
+    }
+    .priority-modal-actions input {
+      min-height: 46px;
+      font-size: 18px;
+      font-weight: 1000;
+      text-align: center;
+    }
+    .priority-modal-actions button {
+      min-height: 46px;
+      white-space: nowrap;
     }
     .kingdom-count {
       min-height: 28px;
@@ -1867,10 +1937,9 @@
       position: absolute;
       inset: 0;
       pointer-events: none;
-      background: linear-gradient(110deg, transparent 0 24%, rgba(255,255,255,.12) 34%, transparent 45% 100%);
-      transform: translateX(-110%);
-      animation: softLightSweep 8s ease-in-out infinite;
-      opacity: .55;
+      border-radius: inherit;
+      background: linear-gradient(180deg, rgba(255,255,255,.055), transparent 42%);
+      opacity: .42;
     }
     .console-card,
     .live-command-center,
@@ -1882,10 +1951,6 @@
     .kingdom-card > * {
       position: relative;
       z-index: 1;
-    }
-    @keyframes softLightSweep {
-      0%, 34% { transform: translateX(-110%); }
-      58%, 100% { transform: translateX(110%); }
     }
     .rail-stat strong,
     .panel-count,
@@ -1947,7 +2012,8 @@
     @media (max-width: 760px) {
       .priority-actions,
       .input-command,
-      .split-actions {
+      .split-actions,
+      .priority-modal-actions {
         grid-template-columns: 1fr;
       }
       .success-meter strong {
@@ -2026,8 +2092,6 @@
         <div class="priority-actions">
           <input id="priorityPlayerId" inputmode="numeric" maxlength="12" autocomplete="off" data-placeholder="priorityPlayerPlaceholder" placeholder="Priority player ID">
           <button class="primary" id="priorityChallengeBtn" data-i18n="priorityChallenge">Start daily boost</button>
-          <input id="priorityAnswer" inputmode="numeric" autocomplete="off" data-placeholder="priorityAnswerPlaceholder" placeholder="Answer">
-          <button class="ghost" id="priorityBoostBtn" data-i18n="priorityBoost">Boost my queue</button>
         </div>
         <div class="priority-status" id="priorityStatus" data-i18n="priorityReady">Register or load your ID, then start today's priority boost.</div>
       </section>
@@ -2119,6 +2183,22 @@
         </div>
       </section>
     </main>
+  </div>
+
+  <div class="priority-modal-backdrop" id="priorityModal" hidden role="dialog" aria-modal="true" aria-labelledby="priorityModalTitle">
+    <div class="priority-modal">
+      <h3 id="priorityModalTitle" data-i18n="priorityModalTitle">Confirm daily priority</h3>
+      <p data-i18n="priorityModalBody">Solve the quick calculation below. This keeps automated abuse away and applies today's priority to your waiting redeem jobs.</p>
+      <div class="priority-question-box">
+        <span class="console-kicker" data-i18n="priorityChallengeReady">Quick check:</span>
+        <strong class="priority-question" id="priorityQuestionText">-</strong>
+      </div>
+      <div class="priority-modal-actions">
+        <input id="priorityAnswer" inputmode="numeric" autocomplete="off" data-placeholder="priorityAnswerPlaceholder" placeholder="Answer">
+        <button class="ghost" id="priorityCancelBtn" type="button" data-i18n="priorityCancel">Cancel</button>
+        <button class="primary" id="priorityBoostBtn" type="button" data-i18n="priorityBoost">Boost my queue</button>
+      </div>
+    </div>
   </div>
 
   <div class="wrap legacy-wrap" aria-hidden="true">
@@ -2295,7 +2375,8 @@
       priorityReady: 'Register or load your ID, then start today\'s priority boost.', priorityAnswerPlaceholder: 'Answer', priorityNeedId: 'Enter or load your registered player ID first.',
       priorityPlayerPlaceholder: 'Priority player ID',
       priorityChallengeReady: 'Quick check:', priorityBoosting: 'Applying priority boost...', priorityDone: 'Priority boost is active until reset.', priorityAlready: 'Today\'s priority boost is already active.',
-      priorityReset: 'Reset', priorityTop: 'Top priority', priorityActive: 'Priority active'
+      priorityReset: 'Reset', priorityTop: 'Top priority', priorityActive: 'Priority active',
+      priorityModalTitle: 'Confirm daily priority', priorityModalBody: 'Solve the quick calculation below. This keeps automated abuse away and applies today\'s priority to your waiting redeem jobs.', priorityCancel: 'Cancel'
     };
     const BASE_I18N_KO = {
       brandSub: 'Kingshot 오토 리딤', back: '허브로 돌아가기', heroA: '오토 리딤', heroB: '기프트 코드 센터',
@@ -2326,7 +2407,8 @@
       priorityReady: 'ID를 등록하거나 불러온 뒤 오늘의 우선권을 시작하세요.', priorityAnswerPlaceholder: '정답 입력', priorityNeedId: '등록된 플레이어 ID를 먼저 입력하거나 불러오세요.',
       priorityPlayerPlaceholder: '우선권을 줄 플레이어 ID',
       priorityChallengeReady: '간단 확인:', priorityBoosting: '우선권 적용 중...', priorityDone: '초기화 전까지 우선권이 활성화됩니다.', priorityAlready: '오늘 우선권이 이미 활성화되어 있습니다.',
-      priorityReset: '초기화', priorityTop: '상위 우선권', priorityActive: '우선권 활성'
+      priorityReset: '초기화', priorityTop: '상위 우선권', priorityActive: '우선권 활성',
+      priorityModalTitle: '오늘의 우선권 확인', priorityModalBody: '아래 계산식을 풀면 오늘의 우선권이 대기 중인 지급 작업에 적용됩니다. 자동화 악용을 줄이기 위한 간단한 확인입니다.', priorityCancel: '취소'
     };
     const I18N = {};
     ['en', 'ja', 'zh-CN', 'zh-TW', 'fr', 'de', 'th', 'id'].forEach((lang) => { I18N[lang] = { ...BASE_I18N_EN }; });
@@ -2495,6 +2577,9 @@
       priorityReset: '초기화',
       priorityTop: '상위 우선권',
       priorityActive: '우선권 활성',
+      priorityModalTitle: '오늘의 우선권 확인',
+      priorityModalBody: '아래 계산식을 풀면 오늘의 우선권이 대기 중인 지급 작업에 적용됩니다. 자동화 악용을 줄이기 위한 간단한 확인입니다.',
+      priorityCancel: '취소',
     });
 
     I18N.ja = {
@@ -2647,6 +2732,9 @@
       priorityReset: 'リセット',
       priorityTop: '上位優先',
       priorityActive: '優先権有効',
+      priorityModalTitle: '本日の優先権を確認',
+      priorityModalBody: '下の計算を解くと、待機中のリディーム作業に本日の優先権が適用されます。自動化の悪用を防ぐための簡単な確認です。',
+      priorityCancel: 'キャンセル',
     };
 
     Object.assign(I18N['zh-CN'], {
@@ -2691,6 +2779,7 @@
       priorityReady: '请先注册或载入 ID，然后开始今日优先。', priorityAnswerPlaceholder: '答案', priorityNeedId: '请先输入或载入已注册的玩家 ID。',
       priorityPlayerPlaceholder: '优先玩家 ID', priorityChallengeReady: '快速确认:', priorityBoosting: '正在应用优先权...',
       priorityDone: '优先权在重置前保持有效。', priorityAlready: '今天的优先权已启用。', priorityReset: '重置', priorityTop: '最高优先', priorityActive: '优先权有效',
+      priorityModalTitle: '确认今日优先权', priorityModalBody: '完成下方简单计算后，今日优先权会应用到等待兑换的任务。此确认用于减少自动化滥用。', priorityCancel: '取消',
     });
 
     Object.assign(I18N['zh-TW'], {
@@ -2752,6 +2841,7 @@
       priorityReady: 'Enregistrez ou chargez votre ID, puis démarrez le boost du jour.', priorityAnswerPlaceholder: 'Réponse', priorityNeedId: 'Entrez ou chargez d’abord votre ID enregistré.',
       priorityPlayerPlaceholder: 'ID joueur prioritaire', priorityChallengeReady: 'Vérification rapide :', priorityBoosting: 'Application du boost...',
       priorityDone: 'Priorité active jusqu’à la réinitialisation.', priorityAlready: 'Le boost du jour est déjà actif.', priorityReset: 'Réinit.', priorityTop: 'Top priorité', priorityActive: 'Priorité active',
+      priorityModalTitle: 'Confirmer la priorité du jour', priorityModalBody: 'Résolvez le calcul ci-dessous. Cela limite les abus automatisés et applique la priorité du jour à vos tâches en attente.', priorityCancel: 'Annuler',
     });
 
     Object.assign(I18N.de, {
@@ -2788,6 +2878,7 @@
       priorityChecking: 'Priorität wird geprüft...', priorityEmpty: 'Heute noch keine geboosteten Spieler.', priorityChallenge: 'Boost starten', priorityBoost: 'Meine Queue boosten',
       priorityReady: 'Registriere oder lade deine ID und starte dann den heutigen Boost.', priorityAnswerPlaceholder: 'Antwort', priorityNeedId: 'Gib zuerst deine registrierte Spieler-ID ein oder lade sie.',
       priorityDone: 'Priorität ist bis zum Reset aktiv.', priorityAlready: 'Der heutige Boost ist bereits aktiv.', priorityReset: 'Reset', priorityTop: 'Top-Priorität', priorityActive: 'Priorität aktiv',
+      priorityModalTitle: 'Tagespriorität bestätigen', priorityModalBody: 'Löse die kurze Rechnung unten. So wird automatischer Missbrauch reduziert und die heutige Priorität auf wartende Aufgaben angewendet.', priorityCancel: 'Abbrechen',
     });
 
     Object.assign(I18N.th, {
@@ -2819,6 +2910,7 @@
       priorityChecking: 'กำลังตรวจลำดับพิเศษ...', priorityEmpty: 'วันนี้ยังไม่มีผู้ใช้ที่บูสต์', priorityChallenge: 'เริ่มบูสต์วันนี้', priorityBoost: 'บูสต์คิวของฉัน',
       priorityReady: 'ลงทะเบียนหรือโหลด ID ก่อนเริ่มบูสต์วันนี้', priorityAnswerPlaceholder: 'คำตอบ', priorityNeedId: 'ใส่หรือโหลด Player ID ที่ลงทะเบียนไว้ก่อน',
       priorityDone: 'ลำดับพิเศษใช้งานจนกว่าจะรีเซ็ต', priorityAlready: 'วันนี้เปิดลำดับพิเศษแล้ว', priorityReset: 'รีเซ็ต', priorityTop: 'ลำดับสูงสุด', priorityActive: 'ลำดับพิเศษใช้งาน',
+      priorityModalTitle: 'ยืนยันลำดับพิเศษวันนี้', priorityModalBody: 'แก้โจทย์คำนวณด้านล่างเพื่อเปิดลำดับพิเศษให้คิวแลกรางวัลที่รออยู่ และช่วยลดการใช้งานอัตโนมัติที่ผิดปกติ', priorityCancel: 'ยกเลิก',
     });
 
     Object.assign(I18N.id, {
@@ -2856,6 +2948,7 @@
       priorityChecking: 'Memeriksa prioritas...', priorityEmpty: 'Belum ada pemain boost hari ini.', priorityChallenge: 'Mulai boost harian', priorityBoost: 'Boost antrean saya',
       priorityReady: 'Daftarkan atau muat ID lalu mulai boost hari ini.', priorityAnswerPlaceholder: 'Jawaban', priorityNeedId: 'Masukkan atau muat ID pemain terdaftar dulu.',
       priorityDone: 'Prioritas aktif sampai reset.', priorityAlready: 'Boost hari ini sudah aktif.', priorityReset: 'Reset', priorityTop: 'Prioritas atas', priorityActive: 'Prioritas aktif',
+      priorityModalTitle: 'Konfirmasi prioritas harian', priorityModalBody: 'Selesaikan hitungan singkat di bawah. Ini membantu mencegah otomatisasi berlebihan dan menerapkan prioritas hari ini ke tugas redeem yang menunggu.', priorityCancel: 'Batal',
     });
 
     let currentLang = new URL(location.href).searchParams.get('lang') || localStorage.getItem('siteLang') || localStorage.getItem('lang') || 'ko';
@@ -3000,6 +3093,7 @@
     async function loadStatus() {
       try {
         const data = await api('/api/redeem/status');
+        if (Number.isFinite(Number(data.activeCodes))) latestVisibleActiveCodes = Number(data.activeCodes);
         $('registeredBadge').textContent = `${tr('registeredPlayers')}: ${formatNumber(data.registeredPlayers || 0)}`;
         $('activeCodeBadge').textContent = `${tr('activeCodes')}: ${latestVisibleActiveCodes === null ? '-' : formatNumber(latestVisibleActiveCodes)}`;
         renderQueueStatus(data.queue);
@@ -3066,12 +3160,13 @@
       renderAutomationStatus(daemon);
     }
 
-    function renderCodeDock(codes) {
+    function renderCodeDock(codes, activeOverride = null) {
       const rows = (Array.isArray(codes) ? codes : []).filter(isDisplayableGiftCode);
       const active = rows.filter((row) => statusClass(row) === 'active').length;
-      latestVisibleActiveCodes = active;
-      $('codeDockCount').textContent = `${formatNumber(active)}/${formatNumber(rows.length || 0)}`;
-      $('activeCodeBadge').textContent = `${tr('activeCodes')}: ${formatNumber(active)}`;
+      const trustedActive = Number.isFinite(Number(activeOverride)) ? Number(activeOverride) : active;
+      latestVisibleActiveCodes = trustedActive;
+      $('codeDockCount').textContent = `${formatNumber(trustedActive)}/${formatNumber(rows.length || 0)}`;
+      $('activeCodeBadge').textContent = `${tr('activeCodes')}: ${formatNumber(trustedActive)}`;
       if (!rows.length) {
         $('codeDockList').innerHTML = `<div class="note">${escapeHtml(tr('noCodes'))}</div>`;
         return;
@@ -3147,6 +3242,22 @@
       return priorityTyped || typed || stored;
     }
 
+    function openPriorityModal() {
+      const modal = $('priorityModal');
+      if (!modal) return;
+      setTextById('priorityQuestionText', priorityChallengeQuestion || '-');
+      modal.hidden = false;
+      setTimeout(() => {
+        const input = $('priorityAnswer');
+        if (input) input.focus();
+      }, 40);
+    }
+
+    function closePriorityModal() {
+      const modal = $('priorityModal');
+      if (modal) modal.hidden = true;
+    }
+
     function renderPriority(data) {
       const priority = data && data.priority ? data.priority : data;
       const leaderboard = Array.isArray(priority && priority.leaderboard) ? priority.leaderboard : [];
@@ -3165,7 +3276,6 @@
         track.innerHTML = `<div class="note">${escapeHtml(tr('priorityEmpty'))}</div>`;
         return;
       }
-      track.style.animation = '';
       const rows = leaderboard.slice(0, 30);
       const chips = rows.map((row, index) => {
         const vipPill = row.vip ? '<span class="priority-vip-pill">VIP</span>' : '';
@@ -3179,7 +3289,7 @@
           </div>
         </div>`;
       }).join('');
-      track.innerHTML = chips + chips;
+      track.innerHTML = chips;
     }
 
     async function loadPriority() {
@@ -3212,8 +3322,9 @@
         priorityChallengeQuestion = data.challenge && data.challenge.question ? data.challenge.question : '';
         priorityChallengePlayerId = playerId;
         $('priorityAnswer').value = '';
-        $('priorityAnswer').focus();
-        setStatus('priorityStatus', `${tr('priorityChallengeReady')} ${priorityChallengeQuestion}`);
+        setTextById('priorityQuestionText', priorityChallengeQuestion || '-');
+        setStatus('priorityStatus', tr('priorityChallengeReady'));
+        openPriorityModal();
       } catch (error) {
         setStatus('priorityStatus', error.message);
       }
@@ -3234,7 +3345,10 @@
         return;
       }
       const answer = $('priorityAnswer').value.trim();
-      if (!answer) return setStatus('priorityStatus', `${tr('priorityChallengeReady')} ${priorityChallengeQuestion}`);
+      if (!answer) {
+        openPriorityModal();
+        return setStatus('priorityStatus', tr('priorityChallengeReady'));
+      }
       setStatus('priorityStatus', tr('priorityBoosting'));
       try {
         const data = await api('/api/redeem/priority-boost', {
@@ -3245,6 +3359,7 @@
         priorityChallengeQuestion = '';
         priorityChallengePlayerId = '';
         $('priorityAnswer').value = '';
+        closePriorityModal();
         renderPriority(data);
         setStatus('priorityStatus', data.alreadyBoosted ? tr('priorityAlready') : `${tr('priorityDone')} ${tr('pendingJobs')}: ${formatNumber(data.updatedJobs || 0)}`);
         loadStatus();
@@ -3495,12 +3610,12 @@
       }
     });
 
-    async function loadCodes() {
+    async function loadCodes(refresh = false) {
       $('codeDockList').innerHTML = `<div class="note">${escapeHtml(tr('loadingCodes'))}</div>`;
       try {
-        const data = await api('/api/redeem/codes?limit=24');
+        const data = await api(`/api/redeem/codes?limit=24${refresh ? '&refresh=1' : ''}`);
         $('codeSummary').textContent = `${tr('registeredPlayers')}: ${formatNumber(data.registeredPlayers || 0)}`;
-        renderCodeDock(data.codes || []);
+        renderCodeDock(data.codes || [], data.activeCodes);
       } catch (error) {
         $('codeDockList').innerHTML = `<div class="note">${escapeHtml(error.message)}</div>`;
         $('codeDockCount').textContent = '-';
@@ -3508,27 +3623,33 @@
     }
 
     $('refreshCodesBtn').addEventListener('click', () => {
-      loadStatus();
-      loadCodes();
+      loadCodes(true).finally(loadStatus);
       loadActivity();
       loadPriority();
       loadKingdomRegistry();
     });
     $('priorityChallengeBtn').addEventListener('click', requestPriorityChallenge);
     $('priorityBoostBtn').addEventListener('click', submitPriorityBoost);
+    $('priorityCancelBtn').addEventListener('click', closePriorityModal);
+    $('priorityModal').addEventListener('click', (event) => {
+      if (event.target === $('priorityModal')) closePriorityModal();
+    });
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && !$('priorityModal').hidden) closePriorityModal();
+    });
     $('priorityPlayerId').addEventListener('input', () => {
       priorityChallengeToken = '';
       priorityChallengeQuestion = '';
       priorityChallengePlayerId = '';
       $('priorityAnswer').value = '';
+      setTextById('priorityQuestionText', '-');
     });
     $('priorityAnswer').addEventListener('keydown', (event) => {
       if (event.key === 'Enter') submitPriorityBoost();
     });
     $('bulkIds').addEventListener('input', updateBulkPreview);
     applyI18n();
-    loadStatus();
-    loadCodes();
+    loadCodes(true).finally(loadStatus);
     loadActivity();
     loadPriority();
     loadKingdomRegistry();
