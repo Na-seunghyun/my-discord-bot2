@@ -1957,3 +1957,99 @@ body[data-legend-page="intel"] .panel {
     justify-content: flex-start;
   }
 }
+
+/* Unified language selector shared by hub, calculators, redeem, feedback, intel, and map tools. */
+.legend-lang-shell,
+.lang-shell {
+  position: relative;
+  display: inline-grid;
+  align-items: center;
+  min-width: 188px;
+  max-width: 100%;
+}
+
+.legend-lang-shell::before,
+.lang-shell::before {
+  content: "🌐";
+  position: absolute;
+  left: 13px;
+  top: 50%;
+  z-index: 1;
+  transform: translateY(-50%);
+  font-size: 15px;
+  pointer-events: none;
+  filter: drop-shadow(0 0 8px rgba(67, 246, 215, 0.32));
+}
+
+.legend-lang-shell::after,
+.lang-shell::after {
+  content: "⌄";
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  z-index: 1;
+  transform: translateY(-52%);
+  color: rgba(246, 207, 114, 0.92);
+  font-size: 15px;
+  font-weight: 950;
+  pointer-events: none;
+}
+
+select.legend-lang-select,
+.legend-lang-shell select,
+.lang-shell select,
+select#langSelect,
+select.lang-select {
+  width: 100%;
+  min-height: 42px;
+  max-width: 100%;
+  padding: 0 38px 0 42px !important;
+  border: 1px solid rgba(246, 207, 114, 0.28) !important;
+  border-radius: 14px !important;
+  appearance: none;
+  -webkit-appearance: none;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.095), rgba(67, 246, 215, 0.055)),
+    rgba(10, 14, 26, 0.78) !important;
+  color: #f8fbff !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 10px 26px rgba(0, 0, 0, 0.22) !important;
+  font-size: 13px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0 !important;
+  line-height: 1.15 !important;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+select.legend-lang-select:focus,
+.legend-lang-shell select:focus,
+.lang-shell select:focus,
+select#langSelect:focus,
+select.lang-select:focus {
+  outline: none !important;
+  border-color: rgba(67, 246, 215, 0.72) !important;
+  box-shadow:
+    0 0 0 3px rgba(67, 246, 215, 0.16),
+    0 12px 32px rgba(0, 0, 0, 0.28) !important;
+}
+
+select.legend-lang-select option,
+select#langSelect option,
+select.lang-select option {
+  background: #0b1020;
+  color: #f8fbff;
+  font-weight: 800;
+}
+
+@media (max-width: 760px) {
+  .legend-lang-shell,
+  .lang-shell,
+  select.legend-lang-select,
+  select#langSelect,
+  select.lang-select {
+    width: 100%;
+    min-width: 0;
+  }
+}

@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="ko">
 <head>
   <meta charset="utf-8">
@@ -780,7 +780,7 @@
     </header>
 
     <div class="site-trustbar" role="note" aria-label="Site safety notice">
-      <span><strong>HTTPS protected · 안전 연결.</strong> 비밀번호, 결제 정보, 이메일 로그인, 기기 접근 권한을 요구하지 않습니다. Player IDs are used only for the selected Kingshot tools.</span>
+      <span><strong>HTTPS protected 쨌 ?덉쟾 ?곌껐.</strong> 鍮꾨?踰덊샇, 寃곗젣 ?뺣낫, ?대찓??濡쒓렇?? 湲곌린 ?묎렐 沅뚰븳???붽뎄?섏? ?딆뒿?덈떎. Player IDs are used only for the selected Kingshot tools.</span>
       <span class="site-trust-links">
         <a href="./security.html">Security</a>
         <a href="./privacy.html">Privacy</a>
@@ -888,102 +888,22 @@
 
   <script>
     const I18N = {
-      ko: {
-        brandSub: 'Kingshot 지휘 도구', support: '후원 페이지', footerCredit: 'Created by #885 Legend nashsh',
-        heroBadge: '실시간 지휘 덱', tagAlliance: '연맹 운영', tagIntel: '플레이어 인텔', tagMap: '전쟁 지도', tagCalc: '계산기 보관함', tagFeedback: '건의함',
-        heroA: 'Kingshot tools',
-        subtitle: '지도 계획, 플레이어 정보, 계산기, 연맹 운영 도구를 더 빠르고 고급스럽게 사용할 수 있도록 정리한 허브입니다. PC와 모바일 모두 편하게 사용할 수 있습니다.',
-        primary: '인텔 검색 열기', secondary: '전쟁 지도 열기', visitsTotal: '전체 방문', visitsToday: '오늘',
-        visitHint: 'KV 일일 안전 한도로 보호됩니다.', todayHint: '브라우저당 하루 1회 기록됩니다.', toolCount: '도구', toolHint: '지도, 인텔, 계산기, 건의함.',
-        fortTitle: 'Fort / Sanc 분배기', fortBody: '계산기 안쪽이 아니라 앞단으로 분리했습니다. 연맹 배분과 로테이션을 빠르게 만들 수 있습니다.', fortButton: '분배기 열기',
-        intelTitle: 'Kingshot Intel Lookup', intelBody: '플레이어, 왕국, 영웅 장비, 저장된 로컬 정보를 확인합니다. 원본 서버가 불안정해도 저장 데이터로 보완됩니다.', intelButton: '인텔 열기',
-        mapTitle: 'War Map Planner', mapBody: '도시, 함정, 캐슬, 포탑, 거리선, 행군 시간을 계획합니다.', mapButton: '지도 열기',
-        calcTitle: 'Kingshot 계산기', calcBody: '훈련, 장비, VIP, 패키지 가치 등 기존 계산기들을 모았습니다.', calcButton: '계산기 열기',
-        feedbackTitle: '업데이트 / 오류 건의', feedbackBody: '기능 제안, 계산 오류, 번역 문제, 모바일 불편사항을 남길 수 있습니다.', feedbackButton: '건의함 열기'
-      },
       en: {
         brandSub: 'Kingshot command tools', support: 'Support page', footerCredit: 'Created by #885 Legend nashsh',
         heroBadge: 'Live command deck', tagAlliance: 'Alliance Operations', tagIntel: 'Player Intel', tagMap: 'War Map', tagCalc: 'Calculator Vault', tagFeedback: 'Feedback',
-        heroA: 'Kingshot tools',
-        subtitle: 'A cleaner command hub for map planning, player intel, calculators, and alliance coordination. Built for fast use on desktop and mobile.',
-        primary: 'Open Intel Lookup', secondary: 'Open War Map Planner', visitsTotal: 'Total visits', visitsToday: 'Today',
-        visitHint: 'Protected by a daily KV safety cap.', todayHint: 'Counts once per browser each day.', toolCount: 'Tools', toolHint: 'Planner, intel, calculators, feedback.',
-        fortTitle: 'Fort / Sanc Distributor', fortBody: 'Moved to the front because it is an alliance coordination tool, not just a calculator. Build fair rotation plans quickly.', fortButton: 'Open distributor',
-        intelTitle: 'Kingshot Intel Lookup', intelBody: 'Search players, kingdoms, hero gear, and saved local intel when the upstream service is unstable.', intelButton: 'Open intel',
+        heroA: 'Kingshot tools', subtitle: 'A premium command hub for map planning, player intel, calculators, and alliance coordination. Built for quick use on desktop and mobile.',
+        primary: 'Open Intel Lookup', secondary: 'Open War Map Planner', visitsTotal: 'Total visits', visitsToday: 'Today', visitHint: 'Protected by a daily safety cap.', todayHint: 'Counts once per browser each day.', toolCount: 'Tools', toolHint: 'Planner, intel, calculators, feedback.',
+        fortTitle: 'Fort / Sanc Distributor', fortBody: 'Build fair Fort and Sanctuary rotation plans quickly.', fortButton: 'Open distributor',
+        intelTitle: 'Kingshot Intel Lookup', intelBody: 'Search players, kingdoms, hero gear, and saved local intel.', intelButton: 'Open intel',
         mapTitle: 'War Map Planner', mapBody: 'Plan cities, traps, castles, turrets, distance lines, and march timing.', mapButton: 'Open planner',
-        calcTitle: 'Kingshot Calculators', calcBody: 'Training, gear, VIP, pack value, and other resource planning calculators.', calcButton: 'Open calculators',
-        feedbackTitle: 'Updates / Bug Reports', feedbackBody: 'Send suggestions, calculation issues, translation fixes, or mobile feedback.', feedbackButton: 'Open feedback'
+        calcTitle: 'Kingshot Calculators', calcBody: 'Training, building, War Academy, VIP, and resource planning calculators.', calcButton: 'Open calculators',
+        feedbackTitle: 'Updates / Bug Reports', feedbackBody: 'Send suggestions, calculation issues, translation fixes, or mobile feedback.', feedbackButton: 'Open feedback',
+        warAcademyTitle: 'War Academy Calculator', warAcademyBody: 'Plan Truegold Dust, resources, research time, power gain, and troop bonuses.', warAcademyButton: 'Open War Academy calculator',
+        buildingTitle: 'Building Calculator', buildingBody: 'Plan building resources, power, and timers.', buildingButton: 'Open Building Calculator',
+        autoRedeemTitle: 'Auto Redeem Center', autoRedeemBody: 'Register your Kingshot ID and redeem new gift codes automatically.', autoRedeemButton: 'Open Auto Redeem'
       }
     };
-    ['zh-CN','zh-TW','fr','de','th','id'].forEach((lang) => { I18N[lang] = { ...I18N.en }; });
-    I18N['zh-CN'] = { ...I18N.en,
-      brandSub:'Kingshot 指挥工具', support:'支持页面', footerCredit:'Created by #885 Legend nashsh',
-      heroBadge:'实时指挥台', tagAlliance:'联盟运营', tagIntel:'玩家情报', tagMap:'战争地图', tagCalc:'计算器库', tagFeedback:'反馈',
-      heroA:'Kingshot 工具', subtitle:'用于地图规划、玩家情报、计算器和联盟协作的高级指挥中心，适合电脑和手机快速使用。',
-      primary:'打开情报搜索', secondary:'打开战争地图', visitsTotal:'总访问量', visitsToday:'今日',
-      visitHint:'受每日 KV 安全上限保护。', todayHint:'每个浏览器每天计数一次。', toolCount:'工具', toolHint:'地图、情报、计算器、反馈。',
-      fortTitle:'Fort / Sanc 分配器', fortBody:'联盟轮换工具已移到首页，方便快速制作公平的 Fort 和 Sanctuary 分配。', fortButton:'打开分配器',
-      intelTitle:'Kingshot 情报搜索', intelBody:'搜索玩家、王国、英雄装备和本地保存的情报。上游服务不稳定时也可用缓存补充。', intelButton:'打开情报',
-      mapTitle:'战争地图规划器', mapBody:'规划城市、陷阱、城堡、炮塔、距离线和行军时间。', mapButton:'打开地图',
-      calcTitle:'Kingshot 计算器', calcBody:'训练、装备、VIP、礼包价值等资源规划计算器。', calcButton:'打开计算器',
-      feedbackTitle:'更新 / 错误反馈', feedbackBody:'提交功能建议、计算错误、翻译修正或移动端反馈。', feedbackButton:'打开反馈'
-    };
-    I18N['zh-TW'] = { ...I18N.en,
-      brandSub:'Kingshot 指揮工具', support:'支援頁面', footerCredit:'Created by #885 Legend nashsh',
-      heroBadge:'即時指揮台', tagAlliance:'聯盟營運', tagIntel:'玩家情報', tagMap:'戰爭地圖', tagCalc:'計算器庫', tagFeedback:'回饋',
-      heroA:'Kingshot 工具', subtitle:'用於地圖規劃、玩家情報、計算器與聯盟協作的高級指揮中心，適合電腦與手機快速使用。',
-      primary:'開啟情報搜尋', secondary:'開啟戰爭地圖', visitsTotal:'總訪問量', visitsToday:'今日',
-      visitHint:'受每日 KV 安全上限保護。', todayHint:'每個瀏覽器每天計數一次。', toolCount:'工具', toolHint:'地圖、情報、計算器、回饋。',
-      fortTitle:'Fort / Sanc 分配器', fortBody:'聯盟輪換工具已移到首頁，方便快速製作公平的 Fort 與 Sanctuary 分配。', fortButton:'開啟分配器',
-      intelTitle:'Kingshot 情報搜尋', intelBody:'搜尋玩家、王國、英雄裝備和本機保存的情報。上游服務不穩定時也可用快取補充。', intelButton:'開啟情報',
-      mapTitle:'戰爭地圖規劃器', mapBody:'規劃城市、陷阱、城堡、砲塔、距離線和行軍時間。', mapButton:'開啟地圖',
-      calcTitle:'Kingshot 計算器', calcBody:'訓練、裝備、VIP、禮包價值等資源規劃計算器。', calcButton:'開啟計算器',
-      feedbackTitle:'更新 / 錯誤回饋', feedbackBody:'提交功能建議、計算錯誤、翻譯修正或手機版回饋。', feedbackButton:'開啟回饋'
-    };
-    I18N.fr = { ...I18N.en,
-      brandSub:'Outils de commandement Kingshot', support:'Page de soutien', heroBadge:'Tableau de commandement', tagAlliance:'Opérations alliance', tagIntel:'Intel joueur', tagMap:'Carte de guerre', tagCalc:'Coffre de calculateurs', tagFeedback:'Feedback',
-      heroA:'Outils Kingshot', subtitle:'Un hub premium pour planifier la carte, consulter l’intel joueur, utiliser les calculateurs et coordonner l’alliance sur PC comme sur mobile.',
-      primary:'Ouvrir Intel', secondary:'Ouvrir la carte', visitsTotal:'Visites totales', visitsToday:'Aujourd’hui',
-      visitHint:'Protégé par une limite KV quotidienne.', todayHint:'Compté une fois par navigateur et par jour.', toolCount:'Outils', toolHint:'Carte, intel, calculateurs, feedback.',
-      fortTitle:'Distributeur Fort / Sanc', fortBody:'Placé en page d’accueil car c’est un outil de coordination d’alliance. Créez rapidement des rotations équitables.', fortButton:'Ouvrir le distributeur',
-      intelTitle:'Recherche Intel Kingshot', intelBody:'Recherchez joueurs, royaumes, équipements de héros et données locales sauvegardées même si la source est instable.', intelButton:'Ouvrir Intel',
-      mapTitle:'Planificateur de carte', mapBody:'Planifiez villes, pièges, château, tourelles, lignes de distance et temps de marche.', mapButton:'Ouvrir la carte',
-      calcTitle:'Calculateurs Kingshot', calcBody:'Formation, équipement, VIP, valeur des packs et autres outils de planification.', calcButton:'Ouvrir les calculateurs',
-      feedbackTitle:'Mises à jour / bugs', feedbackBody:'Envoyez idées, erreurs de calcul, corrections de traduction ou retours mobile.', feedbackButton:'Ouvrir feedback'
-    };
-    I18N.de = { ...I18N.en,
-      brandSub:'Kingshot-Kommandowerkzeuge', support:'Support-Seite', heroBadge:'Kommando-Deck', tagAlliance:'Allianz-Betrieb', tagIntel:'Spieler-Intel', tagMap:'Kriegskarte', tagCalc:'Rechner-Tresor', tagFeedback:'Feedback',
-      heroA:'Kingshot-Werkzeuge', subtitle:'Ein hochwertiger Hub für Kartenplanung, Spieler-Intel, Rechner und Allianzkoordination auf Desktop und Mobilgerät.',
-      primary:'Intel öffnen', secondary:'Karte öffnen', visitsTotal:'Besuche gesamt', visitsToday:'Heute',
-      visitHint:'Durch ein tägliches KV-Limit geschützt.', todayHint:'Einmal pro Browser und Tag gezählt.', toolCount:'Werkzeuge', toolHint:'Planer, Intel, Rechner, Feedback.',
-      fortTitle:'Fort / Sanc Verteiler', fortBody:'Auf die Startseite verschoben, weil es ein Allianz-Koordinationstool ist. Faire Rotationen schnell erstellen.', fortButton:'Verteiler öffnen',
-      intelTitle:'Kingshot Intel-Suche', intelBody:'Spieler, Königreiche, Heldenausrüstung und gespeicherte lokale Intel suchen, auch wenn die Quelle instabil ist.', intelButton:'Intel öffnen',
-      mapTitle:'Kriegskarten-Planer', mapBody:'Städte, Fallen, Burg, Türme, Distanzlinien und Marschzeiten planen.', mapButton:'Karte öffnen',
-      calcTitle:'Kingshot-Rechner', calcBody:'Training, Ausrüstung, VIP, Paketwert und weitere Planungsrechner.', calcButton:'Rechner öffnen',
-      feedbackTitle:'Updates / Fehlerberichte', feedbackBody:'Vorschläge, Rechenfehler, Übersetzungen oder mobiles Feedback senden.', feedbackButton:'Feedback öffnen'
-    };
-    I18N.th = { ...I18N.en,
-      brandSub:'เครื่องมือบัญชาการ Kingshot', support:'หน้าสนับสนุน', heroBadge:'แผงบัญชาการสด', tagAlliance:'ปฏิบัติการพันธมิตร', tagIntel:'ข้อมูลผู้เล่น', tagMap:'แผนที่สงคราม', tagCalc:'คลังเครื่องคิดเลข', tagFeedback:'ข้อเสนอแนะ',
-      heroA:'เครื่องมือ Kingshot', subtitle:'ฮับคำสั่งระดับพรีเมียมสำหรับวางแผนแผนที่ ค้นหาข้อมูลผู้เล่น เครื่องคิดเลข และประสานงานพันธมิตร ทั้งบน PC และมือถือ',
-      primary:'เปิดค้นหาข้อมูล', secondary:'เปิดแผนที่สงคราม', visitsTotal:'จำนวนเข้าชมทั้งหมด', visitsToday:'วันนี้',
-      visitHint:'ป้องกันด้วยขีดจำกัด KV รายวัน', todayHint:'นับหนึ่งครั้งต่อเบราว์เซอร์ต่อวัน', toolCount:'เครื่องมือ', toolHint:'แผนที่ ข้อมูล เครื่องคิดเลข ข้อเสนอแนะ',
-      fortTitle:'ตัวแจก Fort / Sanc', fortBody:'ย้ายมาไว้หน้าแรกเพราะเป็นเครื่องมือจัดการพันธมิตร สร้างรอบหมุนเวียนที่ยุติธรรมได้รวดเร็ว', fortButton:'เปิดตัวแจกจ่าย',
-      intelTitle:'ค้นหาข้อมูล Kingshot', intelBody:'ค้นหาผู้เล่น อาณาจักร อุปกรณ์ฮีโร่ และข้อมูลที่บันทึกไว้ แม้แหล่งข้อมูลหลักไม่เสถียร', intelButton:'เปิดข้อมูล',
-      mapTitle:'ตัววางแผนแผนที่สงคราม', mapBody:'วางเมือง กับดัก ปราสาท ป้อม เส้นระยะ และเวลาการเดินทัพ', mapButton:'เปิดแผนที่',
-      calcTitle:'เครื่องคิดเลข Kingshot', calcBody:'รวมเครื่องมือคำนวณการฝึก อุปกรณ์ VIP มูลค่าแพ็ก และทรัพยากรอื่น ๆ', calcButton:'เปิดเครื่องคิดเลข',
-      feedbackTitle:'อัปเดต / รายงานปัญหา', feedbackBody:'ส่งข้อเสนอแนะ ปัญหาการคำนวณ แก้คำแปล หรือปัญหาบนมือถือ', feedbackButton:'เปิดข้อเสนอแนะ'
-    };
-    I18N.id = { ...I18N.en,
-      brandSub:'Alat komando Kingshot', support:'Halaman dukungan', heroBadge:'Dek komando langsung', tagAlliance:'Operasi aliansi', tagIntel:'Intel pemain', tagMap:'Peta perang', tagCalc:'Gudang kalkulator', tagFeedback:'Masukan',
-      heroA:'Alat Kingshot', subtitle:'Hub komando premium untuk perencanaan peta, intel pemain, kalkulator, dan koordinasi aliansi di desktop maupun mobile.',
-      primary:'Buka Intel', secondary:'Buka peta perang', visitsTotal:'Total kunjungan', visitsToday:'Hari ini',
-      visitHint:'Dilindungi batas aman KV harian.', todayHint:'Dihitung sekali per browser setiap hari.', toolCount:'Alat', toolHint:'Peta, intel, kalkulator, masukan.',
-      fortTitle:'Distributor Fort / Sanc', fortBody:'Dipindahkan ke halaman depan karena ini alat koordinasi aliansi. Buat rotasi yang adil dengan cepat.', fortButton:'Buka distributor',
-      intelTitle:'Pencarian Intel Kingshot', intelBody:'Cari pemain, kingdom, perlengkapan hero, dan intel lokal tersimpan saat sumber utama tidak stabil.', intelButton:'Buka intel',
-      mapTitle:'Perencana Peta Perang', mapBody:'Rencanakan kota, trap, kastel, turret, garis jarak, dan waktu march.', mapButton:'Buka peta',
-      calcTitle:'Kalkulator Kingshot', calcBody:'Kalkulator training, gear, VIP, nilai paket, dan perencanaan resource lainnya.', calcButton:'Buka kalkulator',
-      feedbackTitle:'Update / Laporan bug', feedbackBody:'Kirim saran, masalah kalkulasi, perbaikan terjemahan, atau masukan mobile.', feedbackButton:'Buka masukan'
-    };
+    ['ko','ja','fr','de','zh-CN','zh-TW','th','id'].forEach((code) => { I18N[code] = { ...I18N.en }; });
     function lang() {
       const q = new URL(location.href).searchParams.get('lang');
       const saved = localStorage.getItem('lang') || localStorage.getItem('siteLang');
@@ -1033,309 +953,19 @@
         }
       } catch {}
     }
-    Object.assign(I18N.ko, {
-      brandSub: '\u004b\u0069\u006e\u0067\u0073\u0068\u006f\u0074 \uc9c0\ud718 \ub3c4\uad6c',
-      support: '\ud6c4\uc6d0 \ud398\uc774\uc9c0',
-      heroA: '\u004b\u0069\u006e\u0067\u0073\u0068\u006f\u0074 \ub3c4\uad6c',
-      subtitle: '\uc9c0\ub3c4 \uacc4\ud68d, \ud50c\ub808\uc774\uc5b4 \uc815\ubcf4, \uacc4\uc0b0\uae30, \uc5f0\ub9f9 \uc6b4\uc601 \ub3c4\uad6c\ub97c \ub354 \ube60\ub974\uace0 \uace0\uae09\uc2a4\ub7fd\uac8c \uc0ac\uc6a9\ud560 \uc218 \uc788\ub3c4\ub85d \uc815\ub9ac\ud55c \ud5c8\ube0c\uc785\ub2c8\ub2e4. PC\uc640 \ubaa8\ubc14\uc77c \ubaa8\ub450 \ud3b8\ud558\uac8c \uc0ac\uc6a9\ud560 \uc218 \uc788\uc2b5\ub2c8\ub2e4.',
-      primary: '\uc778\ud154 \uac80\uc0c9 \uc5f4\uae30',
-      secondary: '\uc804\uc7c1 \uc9c0\ub3c4 \uc5f4\uae30',
-      visitsTotal: '\uc804\uccb4 \ubc29\ubb38',
-      visitsToday: '\uc624\ub298',
-      visitHint: 'KV \uc77c\uc77c \uc548\uc804 \ud55c\ub3c4\ub85c \ubcf4\ud638\ub429\ub2c8\ub2e4.',
-      todayHint: '\ube0c\ub77c\uc6b0\uc800\ub2f9 \ud558\ub8e8 1\ud68c \uae30\ub85d\ub429\ub2c8\ub2e4.',
-      toolCount: '\ub3c4\uad6c',
-      toolHint: '\uc9c0\ub3c4, \uc778\ud154, \uacc4\uc0b0\uae30, \uac74\uc758\ud568.',
-      fortTitle: '\u0046\u006f\u0072\u0074 / \u0053\u0061\u006e\u0063 \ubd84\ubc30\uae30',
-      fortBody: '\uacc4\uc0b0\uae30 \uc548\ucabd\uc774 \uc544\ub2c8\ub77c \uc55e\ub2e8\uc73c\ub85c \ubd84\ub9ac\ud588\uc2b5\ub2c8\ub2e4. \uc5f0\ub9f9 \ubc30\ubd84\uacfc \ub85c\ud14c\uc774\uc158\uc744 \ube60\ub974\uac8c \ub9cc\ub4e4 \uc218 \uc788\uc2b5\ub2c8\ub2e4.',
-      fortButton: '\ubd84\ubc30\uae30 \uc5f4\uae30',
-      intelTitle: '\u004b\u0069\u006e\u0067\u0073\u0068\u006f\u0074 \uc778\ud154 \uac80\uc0c9',
-      intelBody: '\ud50c\ub808\uc774\uc5b4, \uc655\uad6d, \uc601\uc6c5 \uc7a5\ube44, \uc800\uc7a5\ub41c \ub85c\uceec \uc815\ubcf4\ub97c \ud655\uc778\ud569\ub2c8\ub2e4. \uc6d0\ubcf8 \uc11c\ubc84\uac00 \ubd88\uc548\uc815\ud574\ub3c4 \uc800\uc7a5 \ub370\uc774\ud130\ub85c \ubcf4\uc644\ub429\ub2c8\ub2e4.',
-      intelButton: '\uc778\ud154 \uc5f4\uae30',
-      mapTitle: '\uc804\uc7c1 \uc9c0\ub3c4 \ud50c\ub798\ub108',
-      mapBody: '\ub3c4\uc2dc, \ud568\uc815, \uce90\uc2ac, \ud3ec\ud0d1, \uac70\ub9ac\uc120, \ud589\uad70 \uc2dc\uac04\uc744 \uacc4\ud68d\ud569\ub2c8\ub2e4.',
-      mapButton: '\uc9c0\ub3c4 \uc5f4\uae30',
-      calcTitle: '\u004b\u0069\u006e\u0067\u0073\u0068\u006f\u0074 \uacc4\uc0b0\uae30',
-      calcBody: '\ud6c8\ub828, \uc7a5\ube44, VIP, \ud328\ud0a4\uc9c0 \uac00\uce58 \ub4f1 \uae30\uc874 \uacc4\uc0b0\uae30\ub4e4\uc744 \ubaa8\uc558\uc2b5\ub2c8\ub2e4.',
-      calcButton: '\uacc4\uc0b0\uae30 \uc5f4\uae30',
-      feedbackTitle: '\uc5c5\ub370\uc774\ud2b8 / \uc624\ub958 \uac74\uc758',
-      feedbackBody: '\uae30\ub2a5 \uc81c\uc548, \uacc4\uc0b0 \uc624\ub958, \ubc88\uc5ed \ubb38\uc81c, \ubaa8\ubc14\uc77c \ubd88\ud3b8\uc0ac\ud56d\uc744 \ub0a8\uae38 \uc218 \uc788\uc2b5\ub2c8\ub2e4.',
-      feedbackButton: '\uac74\uc758\ud568 \uc5f4\uae30',
-      footerCredit: 'Created by #885 Legend nashsh',
-      heroBadge: '\uc2e4\uc2dc\uac04 \uc9c0\ud718 \ub371',
-      tagAlliance: '\uc5f0\ub9f9 \uc6b4\uc601',
-      tagIntel: '\ud50c\ub808\uc774\uc5b4 \uc778\ud154',
-      tagMap: '\uc804\uc7c1 \uc9c0\ub3c4',
-      tagCalc: '\uacc4\uc0b0\uae30 \ubcf4\uad00\ud568',
-      tagFeedback: '\uac74\uc758\ud568'
-    });
-    const CORE_FEATURE_I18N = {
-      ko: {
-        secondaryRedeem: '\uc624\ud1a0\ub9ac\ub524 \uc5f4\uae30',
-        toolHint: '\uc778\ud154, \uc624\ud1a0\ub9ac\ub524, \uc9c0\ub3c4, \uacc4\uc0b0\uae30.',
-        coreIntelTag: '\ud575\uc2ec \uae30\ub2a5',
-        coreIntelTitle: '\u004b\u0069\u006e\u0067\u0073\u0068\u006f\u0074 \uc778\ud154 \uac80\uc0c9',
-        coreIntelBody: '\ud50c\ub808\uc774\uc5b4, \uc655\uad6d, \uc601\uc6c5 \uc7a5\ube44\uc640 \uc800\uc7a5\ub41c \ub85c\uceec \uc815\ubcf4\ub97c \uac00\uc7a5 \uba3c\uc800 \ud655\uc778\ud569\ub2c8\ub2e4.',
-        coreIntelMetaA: '\ud50c\ub808\uc774\uc5b4 \uc815\ubcf4',
-        coreIntelMetaB: '\ub85c\uceec \uc800\uc7a5',
-        coreIntelButton: '\uc778\ud154 \uac80\uc0c9 \uc5f4\uae30',
-        coreRedeemTag: '\ud575\uc2ec \uae30\ub2a5',
-        coreRedeemTitle: '\uc624\ud1a0\ub9ac\ub524 \uc13c\ud130',
-        coreRedeemBody: '\ucd5c\uc2e0 \uae30\ud504\ud2b8\ucf54\ub4dc\ub97c \ud655\uc778\ud558\uace0 \ub4f1\ub85d\ub41c ID\uc5d0 \uc790\ub3d9 \uc9c0\uae09\uc744 \uc900\ube44\ud569\ub2c8\ub2e4.',
-        coreRedeemMetaA: '\uae30\ud504\ud2b8 \ucf54\ub4dc',
-        coreRedeemMetaB: '\uc790\ub3d9 \uc9c0\uae09',
-        coreRedeemButton: '\uc624\ud1a0\ub9ac\ub524 \uc5f4\uae30'
-      },
-      en: {
-        secondaryRedeem: 'Open Auto Redeem',
-        toolHint: 'Intel, auto redeem, planner, calculators.',
-        coreIntelTag: 'Core Feature',
-        coreIntelTitle: 'Kingshot Intel Lookup',
-        coreIntelBody: 'Search player profiles, kingdoms, hero gear, and saved local intel first.',
-        coreIntelMetaA: 'Player Intel',
-        coreIntelMetaB: 'Saved Database',
-        coreIntelButton: 'Open Intel Lookup',
-        coreRedeemTag: 'Core Feature',
-        coreRedeemTitle: 'Auto Redeem Center',
-        coreRedeemBody: 'Check the latest gift codes and prepare automatic redemption for registered player IDs.',
-        coreRedeemMetaA: 'Gift Codes',
-        coreRedeemMetaB: 'Auto Claim',
-        coreRedeemButton: 'Open Auto Redeem'
-      },
-      'zh-CN': {
-        secondaryRedeem: '打开自动兑换',
-        toolHint: '情报、自动兑换、地图、计算器。',
-        coreIntelTag: '核心功能',
-        coreIntelTitle: 'Kingshot 情报搜索',
-        coreIntelBody: '优先查看玩家、王国、英雄装备和已保存的本地情报。',
-        coreIntelMetaA: '玩家情报',
-        coreIntelMetaB: '本地保存',
-        coreIntelButton: '打开情报搜索',
-        coreRedeemTag: '核心功能',
-        coreRedeemTitle: '自动兑换中心',
-        coreRedeemBody: '查看最新礼包码，并为已登记的玩家ID准备自动领取。',
-        coreRedeemMetaA: '礼包码',
-        coreRedeemMetaB: '自动领取',
-        coreRedeemButton: '打开自动兑换'
-      },
-      'zh-TW': {
-        secondaryRedeem: '開啟自動兌換',
-        toolHint: '情報、自動兌換、地圖、計算器。',
-        coreIntelTag: '核心功能',
-        coreIntelTitle: 'Kingshot 情報搜尋',
-        coreIntelBody: '優先查看玩家、王國、英雄裝備與已儲存的本地情報。',
-        coreIntelMetaA: '玩家情報',
-        coreIntelMetaB: '本地儲存',
-        coreIntelButton: '開啟情報搜尋',
-        coreRedeemTag: '核心功能',
-        coreRedeemTitle: '自動兌換中心',
-        coreRedeemBody: '查看最新禮包碼，並為已登記的玩家ID準備自動領取。',
-        coreRedeemMetaA: '禮包碼',
-        coreRedeemMetaB: '自動領取',
-        coreRedeemButton: '開啟自動兌換'
-      },
-      fr: {
-        secondaryRedeem: 'Ouvrir Auto Redeem',
-        toolHint: 'Intel, auto redeem, carte, calculateurs.',
-        coreIntelTag: 'Fonction cle',
-        coreIntelTitle: 'Recherche Intel Kingshot',
-        coreIntelBody: 'Consultez en premier les joueurs, royaumes, equipements de heros et donnees locales sauvegardees.',
-        coreIntelMetaA: 'Intel joueur',
-        coreIntelMetaB: 'Base locale',
-        coreIntelButton: 'Ouvrir Intel',
-        coreRedeemTag: 'Fonction cle',
-        coreRedeemTitle: 'Centre Auto Redeem',
-        coreRedeemBody: 'Verifiez les derniers codes cadeau et preparez la redemption automatique pour les IDs enregistres.',
-        coreRedeemMetaA: 'Codes cadeau',
-        coreRedeemMetaB: 'Auto claim',
-        coreRedeemButton: 'Ouvrir Auto Redeem'
-      },
-      de: {
-        secondaryRedeem: 'Auto Redeem oeffnen',
-        toolHint: 'Intel, Auto Redeem, Karte, Rechner.',
-        coreIntelTag: 'Kernfunktion',
-        coreIntelTitle: 'Kingshot Intel-Suche',
-        coreIntelBody: 'Spielerprofile, Koenigreiche, Heldenausruestung und gespeicherte lokale Intel zuerst pruefen.',
-        coreIntelMetaA: 'Spieler-Intel',
-        coreIntelMetaB: 'Lokale Datenbank',
-        coreIntelButton: 'Intel oeffnen',
-        coreRedeemTag: 'Kernfunktion',
-        coreRedeemTitle: 'Auto Redeem Center',
-        coreRedeemBody: 'Neueste Geschenkcodes anzeigen und automatische Einloesung fuer registrierte Spieler-IDs vorbereiten.',
-        coreRedeemMetaA: 'Geschenkcodes',
-        coreRedeemMetaB: 'Auto Claim',
-        coreRedeemButton: 'Auto Redeem oeffnen'
-      },
-      th: {
-        secondaryRedeem: 'เปิด Auto Redeem',
-        toolHint: 'อินเทล, Auto Redeem, แผนที่, เครื่องคำนวณ',
-        coreIntelTag: 'ฟีเจอร์หลัก',
-        coreIntelTitle: 'ค้นหา Intel Kingshot',
-        coreIntelBody: 'ค้นหาโปรไฟล์ผู้เล่น อาณาจักร อุปกรณ์ฮีโร่ และข้อมูลที่บันทึกไว้ก่อน',
-        coreIntelMetaA: 'ข้อมูลผู้เล่น',
-        coreIntelMetaB: 'ฐานข้อมูลที่บันทึก',
-        coreIntelButton: 'เปิด Intel',
-        coreRedeemTag: 'ฟีเจอร์หลัก',
-        coreRedeemTitle: 'ศูนย์ Auto Redeem',
-        coreRedeemBody: 'ตรวจสอบ gift code ล่าสุด และเตรียมรับรางวัลอัตโนมัติสำหรับ ID ที่ลงทะเบียน',
-        coreRedeemMetaA: 'Gift Codes',
-        coreRedeemMetaB: 'Auto Claim',
-        coreRedeemButton: 'เปิด Auto Redeem'
-      },
-      id: {
-        secondaryRedeem: 'Buka Auto Redeem',
-        toolHint: 'Intel, auto redeem, peta, kalkulator.',
-        coreIntelTag: 'Fitur utama',
-        coreIntelTitle: 'Pencarian Intel Kingshot',
-        coreIntelBody: 'Cari profil pemain, kingdom, gear hero, dan intel lokal tersimpan terlebih dahulu.',
-        coreIntelMetaA: 'Intel pemain',
-        coreIntelMetaB: 'Database lokal',
-        coreIntelButton: 'Buka Intel',
-        coreRedeemTag: 'Fitur utama',
-        coreRedeemTitle: 'Pusat Auto Redeem',
-        coreRedeemBody: 'Cek gift code terbaru dan siapkan redeem otomatis untuk ID pemain yang terdaftar.',
-        coreRedeemMetaA: 'Gift Codes',
-        coreRedeemMetaB: 'Auto Claim',
-        coreRedeemButton: 'Buka Auto Redeem'
-      }
-    };
-    Object.entries(CORE_FEATURE_I18N).forEach(([code, values]) => {
-      if (!I18N[code]) I18N[code] = {};
-      Object.assign(I18N[code], values);
-    });
-    const BUILDING_CALCULATOR_I18N = {
-      ko: {
-        primary: '\uacc4\uc0b0\uae30 \uc5f4\uae30',
-        toolHint: '\uc778\ud154, \uc624\ud1a0\ub9ac\ub524, \uc9c0\ub3c4, \uac74\uc124 \uacc4\uc0b0\uae30.',
-        coreCalcTag: '\ud575\uc2ec \uae30\ub2a5',
-        coreCalcTitle: 'Kingshot \uacc4\uc0b0\uae30',
-        coreCalcBody: '\uac74\uc124 \uc5c5\uadf8\ub808\uc774\ub4dc, \ud6c8\ub828, \uc7a5\ube44, VIP, \ud329 \uac00\uce58, \uc804\uc7c1 \uc544\uce74\ub370\ubbf8 \uacc4\uc0b0\uae30\ub97c \ud55c \uacf3\uc5d0\uc11c \uc0ac\uc6a9\ud569\ub2c8\ub2e4.',
-        coreCalcMetaA: '\uac74\uc124 \uacc4\uc0b0\uae30',
-        coreCalcMetaB: '\uc790\uc6d0 \uacc4\ud68d',
-        coreCalcButton: '\uacc4\uc0b0\uae30 \uc5f4\uae30',
-        buildingTitle: '\uac74\uc124 \uacc4\uc0b0\uae30',
-        buildingBody: '\uac74\uc124 \uc5c5\uadf8\ub808\uc774\ub4dc \uc790\uc6d0\uacfc \uc2dc\uac04\uc744 \uc18d\ub3c4 \ubc84\ud504, \uc790\uc6d0 \uac10\uc18c, \ud2b8\ub8e8\uace8\ub4dc \ub808\ubca8\uae4c\uc9c0 \ud568\uaed8 \uacc4\uc0b0\ud569\ub2c8\ub2e4.',
-        buildingButton: '\uac74\uc124 \uacc4\uc0b0\uae30 \uc5f4\uae30',
-        intelTitle: 'Kingshot \uc778\ud154 \uac80\uc0c9',
-        intelBody: '\ud50c\ub808\uc774\uc5b4, \uc655\uad6d, \uc601\uc6c5 \uc7a5\ube44, \uc800\uc7a5\ub41c \ub85c\uceec \uc815\ubcf4\ub97c \uac80\uc0c9\ud569\ub2c8\ub2e4.',
-        intelButton: '\uc778\ud154 \uc5f4\uae30'
-      },
-      en: {
-        primary: 'Open Calculators',
-        toolHint: 'Intel, auto redeem, planner, building calculator.',
-        coreCalcTag: 'Core Feature',
-        coreCalcTitle: 'Kingshot Calculators',
-        coreCalcBody: 'Use building upgrades, training, gear, VIP, pack value, and war academy calculators in one place.',
-        coreCalcMetaA: 'Building Calculator',
-        coreCalcMetaB: 'Resource Planning',
-        coreCalcButton: 'Open Calculators',
-        buildingTitle: 'Building Calculator',
-        buildingBody: 'Plan building upgrade resources and time with speed buffs, resource discounts, and Truegold levels.',
-        buildingButton: 'Open building calculator',
-        intelTitle: 'Kingshot Intel Lookup',
-        intelBody: 'Search players, kingdoms, hero gear, and saved local intel when the upstream service is unstable.',
-        intelButton: 'Open intel'
-      }
-    };
-    ['zh-CN','zh-TW','fr','de','th','id'].forEach((code) => { BUILDING_CALCULATOR_I18N[code] = { ...BUILDING_CALCULATOR_I18N.en }; });
-    Object.assign(BUILDING_CALCULATOR_I18N['zh-CN'], {
-      primary: '打开计算器', toolHint: '情报、自动兑换、地图、建筑计算器。',
-      coreCalcTitle: 'Kingshot 计算器', coreCalcBody: '集中使用建筑升级、训练、装备、VIP、礼包价值和战争学院计算器。',
-      coreCalcMetaA: '建筑计算器', coreCalcMetaB: '资源规划', coreCalcButton: '打开计算器',
-      buildingTitle: '建筑计算器', buildingBody: '计算建筑升级资源和时间，并支持速度增益、资源减免和真金等级。', buildingButton: '打开建筑计算器'
-    });
-    Object.assign(BUILDING_CALCULATOR_I18N['zh-TW'], {
-      primary: '開啟計算器', toolHint: '情報、自動兌換、地圖、建築計算器。',
-      coreCalcTitle: 'Kingshot 計算器', coreCalcBody: '集中使用建築升級、訓練、裝備、VIP、禮包價值和戰爭學院計算器。',
-      coreCalcMetaA: '建築計算器', coreCalcMetaB: '資源規劃', coreCalcButton: '開啟計算器',
-      buildingTitle: '建築計算器', buildingBody: '計算建築升級資源和時間，並支援速度增益、資源減免和真金等級。', buildingButton: '開啟建築計算器'
-    });
-    Object.assign(BUILDING_CALCULATOR_I18N.fr, {
-      primary: 'Ouvrir les calculateurs', toolHint: 'Intel, auto redeem, carte, calculateur bâtiment.',
-      coreCalcTitle: 'Calculateurs Kingshot', coreCalcBody: 'Utilisez bâtiments, entraînement, équipement, VIP, valeur des packs et Académie de guerre au même endroit.',
-      coreCalcMetaA: 'Calculateur bâtiment', coreCalcMetaB: 'Planification ressources', coreCalcButton: 'Ouvrir les calculateurs',
-      buildingTitle: 'Calculateur bâtiment', buildingBody: 'Planifiez ressources et temps de construction avec bonus de vitesse, réductions et niveaux Truegold.', buildingButton: 'Ouvrir le calculateur'
-    });
-    Object.assign(BUILDING_CALCULATOR_I18N.de, {
-      primary: 'Rechner öffnen', toolHint: 'Intel, Auto Redeem, Karte, Gebäuderechner.',
-      coreCalcTitle: 'Kingshot-Rechner', coreCalcBody: 'Nutze Gebäude, Training, Ausrüstung, VIP, Paketwert und Kriegsakademie an einem Ort.',
-      coreCalcMetaA: 'Gebäuderechner', coreCalcMetaB: 'Ressourcenplanung', coreCalcButton: 'Rechner öffnen',
-      buildingTitle: 'Gebäuderechner', buildingBody: 'Plane Upgrade-Ressourcen und Bauzeit mit Tempo-Buffs, Rabatten und Truegold-Stufen.', buildingButton: 'Gebäuderechner öffnen'
-    });
-    Object.assign(BUILDING_CALCULATOR_I18N.th, {
-      primary: 'เปิดเครื่องคำนวณ', toolHint: 'อินเทล ออโตรีดิม แผนที่ เครื่องคำนวณอาคาร',
-      coreCalcTitle: 'เครื่องคำนวณ Kingshot', coreCalcBody: 'ใช้เครื่องคำนวณอาคาร ฝึกทหาร อุปกรณ์ VIP แพ็ก และสถาบันสงครามในที่เดียว',
-      coreCalcMetaA: 'คำนวณอาคาร', coreCalcMetaB: 'วางแผนทรัพยากร', coreCalcButton: 'เปิดเครื่องคำนวณ',
-      buildingTitle: 'เครื่องคำนวณอาคาร', buildingBody: 'คำนวณทรัพยากรและเวลาสร้างพร้อมบัฟความเร็ว ลดทรัพยากร และเลเวล Truegold', buildingButton: 'เปิดคำนวณอาคาร'
-    });
-    Object.assign(BUILDING_CALCULATOR_I18N.id, {
-      primary: 'Buka kalkulator', toolHint: 'Intel, auto redeem, peta, kalkulator bangunan.',
-      coreCalcTitle: 'Kalkulator Kingshot', coreCalcBody: 'Gunakan kalkulator bangunan, training, gear, VIP, nilai pack, dan akademi perang di satu tempat.',
-      coreCalcMetaA: 'Kalkulator bangunan', coreCalcMetaB: 'Rencana sumber daya', coreCalcButton: 'Buka kalkulator',
-      buildingTitle: 'Kalkulator bangunan', buildingBody: 'Rencanakan sumber daya dan waktu upgrade dengan buff kecepatan, diskon, dan level Truegold.', buildingButton: 'Buka kalkulator bangunan'
-    });
-    Object.entries(BUILDING_CALCULATOR_I18N).forEach(([code, values]) => {
-      if (!I18N[code]) I18N[code] = {};
-      Object.assign(I18N[code], values);
-    });
-    const WAR_ACADEMY_CARD_I18N = {
-      ko: {
-        warAcademyTitle: '전쟁 아카데미 계산기',
-        warAcademyBody: '트루골드 가루, 자원, 연구 시간, 전투력 증가, 병종 연구 보너스를 한 화면에서 계산합니다.',
-        warAcademyButton: '전쟁 아카데미 계산기 열기'
-      },
-      en: {
-        warAcademyTitle: 'War Academy Calculator',
-        warAcademyBody: 'Plan Truegold Dust, resources, research time, power gain, and troop research bonuses.',
-        warAcademyButton: 'Open war academy calculator'
-      },
-      'zh-CN': {
-        warAcademyTitle: '战争学院计算器',
-        warAcademyBody: '计算真金粉尘、资源、研究时间、战力提升和兵种研究加成。',
-        warAcademyButton: '打开战争学院计算器'
-      },
-      'zh-TW': {
-        warAcademyTitle: '戰爭學院計算器',
-        warAcademyBody: '計算真金粉塵、資源、研究時間、戰力提升和兵種研究加成。',
-        warAcademyButton: '開啟戰爭學院計算器'
-      },
-      fr: {
-        warAcademyTitle: 'Calculateur Académie de guerre',
-        warAcademyBody: 'Planifiez poussière Truegold, ressources, temps de recherche, puissance et bonus de troupes.',
-        warAcademyButton: 'Ouvrir le calculateur'
-      },
-      de: {
-        warAcademyTitle: 'Kriegsakademie-Rechner',
-        warAcademyBody: 'Plane Truegold-Staub, Ressourcen, Forschungszeit, Machtzuwachs und Truppenboni.',
-        warAcademyButton: 'Kriegsakademie öffnen'
-      },
-      th: {
-        warAcademyTitle: 'เครื่องคำนวณสถาบันสงคราม',
-        warAcademyBody: 'คำนวณ Truegold Dust ทรัพยากร เวลาวิจัย พลัง และโบนัสวิจัยทหาร',
-        warAcademyButton: 'เปิดเครื่องคำนวณสถาบันสงคราม'
-      },
-      id: {
-        warAcademyTitle: 'Kalkulator Akademi Perang',
-        warAcademyBody: 'Rencanakan Truegold Dust, sumber daya, waktu riset, kenaikan power, dan bonus troop.',
-        warAcademyButton: 'Buka kalkulator akademi perang'
-      }
-    };
-    Object.entries(WAR_ACADEMY_CARD_I18N).forEach(([code, values]) => {
-      if (!I18N[code]) I18N[code] = {};
-      Object.assign(I18N[code], values);
-    });
     const LANGUAGE_LABELS = {
-      ko: '\ud55c\uad6d\uc5b4',
-      en: 'English',
-      'zh-CN': '\u7b80\u4f53\u4e2d\u6587',
-      'zh-TW': '\u7e41\u9ad4\u4e2d\u6587',
-      fr: 'Francais',
-      de: 'Deutsch',
-      th: '\u0e44\u0e17\u0e22',
-      id: 'Indonesia'
+      ko: '???? ???',
+      ja: '???? ???',
+      en: '???? English',
+      fr: '???? Fran?ais',
+      de: '???? Deutsch',
+      'zh-CN': '???? ????',
+      'zh-TW': '???? ????',
+      th: '???? ???',
+      id: '???? Indonesia'
     };
     function fixLanguageLabels() {
-      document.querySelectorAll('#langSelect option').forEach((option) => {
+      document.querySelectorAll('#langSelect option, .lang-select option').forEach((option) => {
         option.textContent = LANGUAGE_LABELS[option.value] || option.textContent;
       });
     }
@@ -1345,5 +975,7 @@
     loadVisitStats();
     document.getElementById('langSelect').addEventListener('change', (event) => setLang(event.target.value));
   </script>
+  <script src="./static/legend-i18n.js?v=20260710-i18n-unified"></script>
 </body>
 </html>
+

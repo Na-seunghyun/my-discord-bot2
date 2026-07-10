@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="ko">
 <head>
   <meta charset="utf-8">
@@ -328,6 +328,7 @@
       .tech-icon { width: 54px; height: 54px; border-radius: 14px; }
     }
   </style>
+  <link rel="stylesheet" href="./static/legend-ui.css?v=20260710-i18n-unified">
 </head>
 <body>
   <div class="shell">
@@ -338,13 +339,13 @@
       </a>
       <div class="nav-actions">
         <select id="langSelect" class="lang-select" aria-label="Language">
-          <option value="ko">한국어</option>
+          <option value="ko">?쒓뎅??/option>
           <option value="en">English</option>
-          <option value="zh-CN">简体中文</option>
-          <option value="zh-TW">繁體中文</option>
-          <option value="fr">Français</option>
+          <option value="zh-CN">嶸鵝볞릎??/option>
+          <option value="zh-TW">濚곲쳱訝?뻼</option>
+          <option value="fr">Fran챌ais</option>
           <option value="de">Deutsch</option>
-          <option value="th">ไทย</option>
+          <option value="th">仙꾝툠錫?/option>
           <option value="id">Indonesia</option>
         </select>
         <a class="nav-link" id="calcHubLink" href="./troop_training_ui.html" data-i18n="calcHub">Calculator hub</a>
@@ -353,7 +354,7 @@
     </header>
 
     <div class="site-trustbar" role="note" aria-label="Calculator safety notice">
-      <span><strong>HTTPS protected · 안전 연결.</strong> War Academy Calculator runs in your browser. 비밀번호, 결제 정보, 계정 로그인, 기기 접근 권한을 요구하지 않습니다.</span>
+      <span><strong>HTTPS protected 쨌 ?덉쟾 ?곌껐.</strong> War Academy Calculator runs in your browser. 鍮꾨?踰덊샇, 寃곗젣 ?뺣낫, 怨꾩젙 濡쒓렇?? 湲곌린 ?묎렐 沅뚰븳???붽뎄?섏? ?딆뒿?덈떎.</span>
       <span class="site-trust-links">
         <a href="./security.html">Security</a>
         <a href="./privacy.html">Privacy</a>
@@ -437,199 +438,21 @@
 
   <script>
     const I18N = {
-      ko: {
-        brandSub: 'Kingshot 지휘 도구', calcHub: '계산기 허브', support: '후원 페이지', badge: '연구 플래너', titleA: '전쟁 아카데미', titleB: '계산기',
-        subtitle: '보병, 기병, 궁병 연구의 트루골드 가루, 자원, 연구 시간, 전투력 증가, 최종 보너스를 한 번에 계산합니다.',
-        selectedTech: '선택 기술', upgradeSteps: '업그레이드 단계', researchTime: '연구 시간', powerGain: '전투력 증가',
-        inventoryTitle: '보유 자원 및 속도', inventoryHint: '현재 보유량을 입력하면 부족 자원과 남는 자원을 함께 확인할 수 있습니다.', loading: '데이터 불러오는 중...', ready: '데이터 준비 완료',
-        truegold_dust: '트루골드 가루', bread: '빵', wood: '나무', stone: '석재', iron: '철', gold: '골드', researchSpeed: '연구 속도 보너스 (%)',
-        quickCurrent: '일괄 현재', quickTarget: '일괄 목표', current: '현재', target: '목표', applyActive: '현재 탭 적용', applyAll: '전체 적용', clearAll: '전체 초기화',
-        techTree: '기술 트리', techHint: '각 기술의 현재 레벨과 목표 레벨을 설정하세요. 현재보다 높은 단계만 계산됩니다.',
-        results: '계산 결과', resultsHint: '레벨이나 보유 자원을 바꾸면 결과가 자동으로 갱신됩니다.', noSelection: '목표 레벨을 선택하면 결과가 표시됩니다.',
-        baseTime: '기본 시간', modifiedTime: '적용 시간', savedTime: '단축 시간', resources: '필요 자원', stillNeed: '부족', leftover: '여유',
-        bonuses: '적용 보너스', breakdown: '기술별 상세', technology: '기술', upgrade: '업그레이드', time: '시간', power: '전투력',
-        all: '전체', infantry: '보병', cavalry: '기병', archer: '궁병', general: '공통', none: '없음', level: '레벨',
-        dataSource: '전쟁 아카데미 데이터는 계산기 데이터셋에서 로컬로 불러옵니다.', timeUnits: { d: '일', h: '시간', m: '분', s: '초' }
-      },
       en: {
         brandSub: 'Kingshot command tools', calcHub: 'Calculator hub', support: 'Support page', badge: 'Research planner', titleA: 'War Academy', titleB: 'Calculator',
-        subtitle: 'Plan infantry, cavalry, and archer research with Truegold Dust, resources, research time, power gain, and final bonus totals.',
-        selectedTech: 'Selected techs', upgradeSteps: 'Upgrade steps', researchTime: 'Research time', powerGain: 'Power gain',
-        inventoryTitle: 'Inventory & Speed', inventoryHint: 'Enter what you already own to see shortages and leftover resources.', loading: 'Loading data...', ready: 'Data ready',
-        truegold_dust: 'Truegold Dust', bread: 'Bread', wood: 'Wood', stone: 'Stone', iron: 'Iron', gold: 'Gold', researchSpeed: 'Research Speed Bonus (%)',
-        quickCurrent: 'Quick current', quickTarget: 'Quick target', current: 'Current', target: 'Target', applyActive: 'Apply active tab', applyAll: 'Apply all', clearAll: 'Clear all',
-        techTree: 'Technology tree', techHint: 'Set each current and target level. Only upgrades above the current level are counted.',
-        results: 'Results', resultsHint: 'Totals update whenever a level or inventory value changes.', noSelection: 'Select target levels to see results.',
-        baseTime: 'Base time', modifiedTime: 'Modified time', savedTime: 'Saved time', resources: 'Required resources', stillNeed: 'Need', leftover: 'Extra',
-        bonuses: 'Upgrade bonuses', breakdown: 'Technology breakdown', technology: 'Technology', upgrade: 'Upgrade', time: 'Time', power: 'Power',
-        all: 'All', infantry: 'Infantry', cavalry: 'Cavalry', archer: 'Archer', general: 'General', none: 'None', level: 'Level',
-        dataSource: 'War Academy data is loaded locally from the calculator dataset.', timeUnits: { d: 'd', h: 'h', m: 'm', s: 's' }
-      },
-      'zh-CN': {
-        brandSub: 'Kingshot 指挥工具', calcHub: '计算器中心', support: '支持页面', badge: '研究规划', titleA: '战争学院', titleB: '计算器',
-        subtitle: '计算步兵、骑兵、射手研究所需的真金粉尘、资源、研究时间、战力提升和最终加成。',
-        selectedTech: '已选科技', upgradeSteps: '升级阶段', researchTime: '研究时间', powerGain: '战力提升',
-        inventoryTitle: '库存与速度', inventoryHint: '输入已有资源即可查看缺口与剩余。', loading: '正在加载数据...', ready: '数据已准备',
-        truegold_dust: '真金粉尘', bread: '面包', wood: '木材', stone: '石头', iron: '铁', gold: '金币', researchSpeed: '研究速度加成 (%)',
-        quickCurrent: '批量当前', quickTarget: '批量目标', current: '当前', target: '目标', applyActive: '应用当前页', applyAll: '应用全部', clearAll: '全部清除',
-        techTree: '科技树', techHint: '设置每项科技的当前等级和目标等级。只计算高于当前等级的升级。',
-        results: '结果', resultsHint: '等级或库存变化时会自动更新。', noSelection: '选择目标等级后即可查看结果。',
-        baseTime: '基础时间', modifiedTime: '调整后时间', savedTime: '节省时间', resources: '所需资源', stillNeed: '缺少', leftover: '剩余',
-        bonuses: '升级加成', breakdown: '科技明细', technology: '科技', upgrade: '升级', time: '时间', power: '战力',
-        all: '全部', infantry: '步兵', cavalry: '骑兵', archer: '射手', general: '通用', none: '无', level: '等级',
-        dataSource: '战争学院数据从本地计算器数据集中加载。', timeUnits: { d: '天', h: '小时', m: '分钟', s: '秒' }
-      },
-      'zh-TW': {
-        brandSub: 'Kingshot 指揮工具', calcHub: '計算器中心', support: '支援頁面', badge: '研究規劃', titleA: '戰爭學院', titleB: '計算器',
-        subtitle: '計算步兵、騎兵、射手研究所需的真金粉塵、資源、研究時間、戰力提升和最終加成。',
-        selectedTech: '已選科技', upgradeSteps: '升級階段', researchTime: '研究時間', powerGain: '戰力提升',
-        inventoryTitle: '庫存與速度', inventoryHint: '輸入已有資源即可查看缺口與剩餘。', loading: '正在載入資料...', ready: '資料已準備',
-        truegold_dust: '真金粉塵', bread: '麵包', wood: '木材', stone: '石頭', iron: '鐵', gold: '金幣', researchSpeed: '研究速度加成 (%)',
-        quickCurrent: '批量目前', quickTarget: '批量目標', current: '目前', target: '目標', applyActive: '套用目前頁', applyAll: '套用全部', clearAll: '全部清除',
-        techTree: '科技樹', techHint: '設定每項科技的目前等級和目標等級。只計算高於目前等級的升級。',
-        results: '結果', resultsHint: '等級或庫存變化時會自動更新。', noSelection: '選擇目標等級後即可查看結果。',
-        baseTime: '基礎時間', modifiedTime: '調整後時間', savedTime: '節省時間', resources: '所需資源', stillNeed: '缺少', leftover: '剩餘',
-        bonuses: '升級加成', breakdown: '科技明細', technology: '科技', upgrade: '升級', time: '時間', power: '戰力',
-        all: '全部', infantry: '步兵', cavalry: '騎兵', archer: '射手', general: '通用', none: '無', level: '等級',
-        dataSource: '戰爭學院資料從本機計算器資料集中載入。', timeUnits: { d: '天', h: '小時', m: '分鐘', s: '秒' }
-      },
-      fr: {
-        brandSub: 'Outils de commandement Kingshot', calcHub: 'Hub des calculateurs', support: 'Page de soutien', badge: 'Planificateur de recherche', titleA: 'Académie de guerre', titleB: 'Calculateur',
-        subtitle: 'Planifiez les recherches infanterie, cavalerie et archer avec poussière Truegold, ressources, temps, puissance et bonus finaux.',
-        selectedTech: 'Technos choisies', upgradeSteps: 'Étapes', researchTime: 'Temps de recherche', powerGain: 'Gain de puissance',
-        inventoryTitle: 'Inventaire et vitesse', inventoryHint: 'Saisissez vos ressources pour voir les manques et surplus.', loading: 'Chargement...', ready: 'Données prêtes',
-        truegold_dust: 'Poussière Truegold', bread: 'Pain', wood: 'Bois', stone: 'Pierre', iron: 'Fer', gold: 'Or', researchSpeed: 'Bonus de vitesse recherche (%)',
-        quickCurrent: 'Actuel rapide', quickTarget: 'Cible rapide', current: 'Actuel', target: 'Cible', applyActive: 'Appliquer l’onglet', applyAll: 'Tout appliquer', clearAll: 'Tout effacer',
-        techTree: 'Arbre technologique', techHint: 'Définissez le niveau actuel et cible. Seules les hausses au-dessus du niveau actuel sont comptées.',
-        results: 'Résultats', resultsHint: 'Les totaux se mettent à jour automatiquement.', noSelection: 'Sélectionnez des niveaux cibles pour voir les résultats.',
-        baseTime: 'Temps de base', modifiedTime: 'Temps ajusté', savedTime: 'Temps gagné', resources: 'Ressources requises', stillNeed: 'Manque', leftover: 'Surplus',
-        bonuses: 'Bonus', breakdown: 'Détail des technologies', technology: 'Technologie', upgrade: 'Amélioration', time: 'Temps', power: 'Puissance',
-        all: 'Tout', infantry: 'Infanterie', cavalry: 'Cavalerie', archer: 'Archer', general: 'Général', none: 'Aucun', level: 'Niveau',
-        dataSource: 'Les données de l’Académie de guerre sont chargées localement.', timeUnits: { d: 'j', h: 'h', m: 'min', s: 's' }
-      },
-      de: {
-        brandSub: 'Kingshot-Kommandowerkzeuge', calcHub: 'Rechner-Hub', support: 'Support-Seite', badge: 'Forschungsplaner', titleA: 'Kriegsakademie', titleB: 'Rechner',
-        subtitle: 'Plane Infanterie-, Kavallerie- und Bogenschützenforschung mit Truegold-Staub, Ressourcen, Zeit, Macht und Gesamtboni.',
-        selectedTech: 'Gewählte Forschung', upgradeSteps: 'Schritte', researchTime: 'Forschungszeit', powerGain: 'Machtzuwachs',
-        inventoryTitle: 'Inventar und Tempo', inventoryHint: 'Gib vorhandene Ressourcen ein, um Fehlmengen und Überschüsse zu sehen.', loading: 'Daten werden geladen...', ready: 'Daten bereit',
-        truegold_dust: 'Truegold-Staub', bread: 'Brot', wood: 'Holz', stone: 'Stein', iron: 'Eisen', gold: 'Gold', researchSpeed: 'Forschungstempo (%)',
-        quickCurrent: 'Schnell aktuell', quickTarget: 'Schnell Ziel', current: 'Aktuell', target: 'Ziel', applyActive: 'Aktiven Tab anwenden', applyAll: 'Alles anwenden', clearAll: 'Alles löschen',
-        techTree: 'Technologiebaum', techHint: 'Setze aktuelle und Zielstufe. Gezählt werden nur Upgrades über der aktuellen Stufe.',
-        results: 'Ergebnisse', resultsHint: 'Summen aktualisieren sich automatisch.', noSelection: 'Wähle Zielstufen, um Ergebnisse zu sehen.',
-        baseTime: 'Basiszeit', modifiedTime: 'Angepasste Zeit', savedTime: 'Gesparte Zeit', resources: 'Benötigte Ressourcen', stillNeed: 'Fehlt', leftover: 'Übrig',
-        bonuses: 'Upgrade-Boni', breakdown: 'Technologie-Details', technology: 'Technologie', upgrade: 'Upgrade', time: 'Zeit', power: 'Macht',
-        all: 'Alle', infantry: 'Infanterie', cavalry: 'Kavallerie', archer: 'Bogenschützen', general: 'Allgemein', none: 'Keine', level: 'Stufe',
-        dataSource: 'Kriegsakademie-Daten werden lokal geladen.', timeUnits: { d: 'T', h: 'Std', m: 'Min', s: 'Sek' }
-      },
-      th: {
-        brandSub: 'เครื่องมือบัญชาการ Kingshot', calcHub: 'ศูนย์คำนวณ', support: 'หน้าสนับสนุน', badge: 'วางแผนวิจัย', titleA: 'สถาบันสงคราม', titleB: 'คำนวณ',
-        subtitle: 'คำนวณงานวิจัยทหารราบ ทหารม้า และธนู พร้อม Truegold Dust ทรัพยากร เวลา พลัง และโบนัสรวม',
-        selectedTech: 'เทคที่เลือก', upgradeSteps: 'ขั้นอัปเกรด', researchTime: 'เวลาวิจัย', powerGain: 'พลังที่เพิ่ม',
-        inventoryTitle: 'ทรัพยากรและความเร็ว', inventoryHint: 'ใส่ทรัพยากรที่มีเพื่อดูส่วนที่ขาดและเหลือ', loading: 'กำลังโหลดข้อมูล...', ready: 'ข้อมูลพร้อมแล้ว',
-        truegold_dust: 'Truegold Dust', bread: 'ขนมปัง', wood: 'ไม้', stone: 'หิน', iron: 'เหล็ก', gold: 'ทอง', researchSpeed: 'โบนัสความเร็ววิจัย (%)',
-        quickCurrent: 'ปัจจุบันรวม', quickTarget: 'เป้าหมายรวม', current: 'ปัจจุบัน', target: 'เป้าหมาย', applyActive: 'ใช้กับแท็บนี้', applyAll: 'ใช้ทั้งหมด', clearAll: 'ล้างทั้งหมด',
-        techTree: 'ผังเทคโนโลยี', techHint: 'ตั้งค่าเลเวลปัจจุบันและเป้าหมาย ระบบจะนับเฉพาะเลเวลที่สูงกว่าปัจจุบัน',
-        results: 'ผลลัพธ์', resultsHint: 'ผลรวมจะอัปเดตเมื่อเปลี่ยนเลเวลหรือทรัพยากร', noSelection: 'เลือกเลเวลเป้าหมายเพื่อดูผลลัพธ์',
-        baseTime: 'เวลาเดิม', modifiedTime: 'เวลาหลังปรับ', savedTime: 'เวลาที่ลด', resources: 'ทรัพยากรที่ใช้', stillNeed: 'ขาด', leftover: 'เหลือ',
-        bonuses: 'โบนัสอัปเกรด', breakdown: 'รายละเอียดเทค', technology: 'เทคโนโลยี', upgrade: 'อัปเกรด', time: 'เวลา', power: 'พลัง',
-        all: 'ทั้งหมด', infantry: 'ทหารราบ', cavalry: 'ทหารม้า', archer: 'ธนู', general: 'ทั่วไป', none: 'ไม่มี', level: 'เลเวล',
-        dataSource: 'ข้อมูลสถาบันสงครามโหลดจากไฟล์ในไซต์', timeUnits: { d: 'วัน', h: 'ชม.', m: 'นาที', s: 'วิ' }
-      },
-      id: {
-        brandSub: 'Alat komando Kingshot', calcHub: 'Hub kalkulator', support: 'Halaman dukungan', badge: 'Perencana riset', titleA: 'Akademi Perang', titleB: 'Kalkulator',
-        subtitle: 'Rencanakan riset infantry, cavalry, dan archer dengan Truegold Dust, sumber daya, waktu, power, dan total bonus akhir.',
-        selectedTech: 'Teknologi dipilih', upgradeSteps: 'Langkah upgrade', researchTime: 'Waktu riset', powerGain: 'Kenaikan power',
-        inventoryTitle: 'Inventori & kecepatan', inventoryHint: 'Masukkan stok milikmu untuk melihat kekurangan dan sisa.', loading: 'Memuat data...', ready: 'Data siap',
-        truegold_dust: 'Truegold Dust', bread: 'Roti', wood: 'Kayu', stone: 'Batu', iron: 'Besi', gold: 'Gold', researchSpeed: 'Bonus kecepatan riset (%)',
-        quickCurrent: 'Current cepat', quickTarget: 'Target cepat', current: 'Saat ini', target: 'Target', applyActive: 'Terapkan tab aktif', applyAll: 'Terapkan semua', clearAll: 'Hapus semua',
-        techTree: 'Pohon teknologi', techHint: 'Atur level saat ini dan target. Hanya upgrade di atas level saat ini yang dihitung.',
-        results: 'Hasil', resultsHint: 'Total berubah otomatis saat level atau inventori diubah.', noSelection: 'Pilih level target untuk melihat hasil.',
-        baseTime: 'Waktu dasar', modifiedTime: 'Waktu akhir', savedTime: 'Waktu hemat', resources: 'Sumber daya perlu', stillNeed: 'Kurang', leftover: 'Sisa',
-        bonuses: 'Bonus upgrade', breakdown: 'Rincian teknologi', technology: 'Teknologi', upgrade: 'Upgrade', time: 'Waktu', power: 'Power',
-        all: 'Semua', infantry: 'Infantry', cavalry: 'Cavalry', archer: 'Archer', general: 'Umum', none: 'Tidak ada', level: 'Level',
-        dataSource: 'Data Akademi Perang dimuat lokal dari dataset kalkulator.', timeUnits: { d: 'h', h: 'jam', m: 'mnt', s: 'dtk' }
+        subtitle: 'Plan infantry, cavalry, and archer research with Truegold Dust, resources, research time, power gain, and final bonus totals.', selectedTech: 'Selected techs', upgradeSteps: 'Upgrade steps', researchTime: 'Research time', powerGain: 'Power gain',
+        inventoryTitle: 'Inventory & Speed', inventoryHint: 'Enter what you already own to see shortages and leftover resources.', loading: 'Loading data...', ready: 'Data ready', truegold_dust: 'Truegold Dust', bread: 'Bread', wood: 'Wood', stone: 'Stone', iron: 'Iron', gold: 'Gold', researchSpeed: 'Research Speed Bonus (%)',
+        quickCurrent: 'Quick current', quickTarget: 'Quick target', current: 'Current', target: 'Target', applyActive: 'Apply active tab', applyAll: 'Apply all', clearAll: 'Clear all', techTree: 'Technology tree', techHint: 'Set each current and target level. Only upgrades above the current level are counted.',
+        results: 'Results', resultsHint: 'Totals update whenever a level or inventory value changes.', noSelection: 'Select target levels to see results.', baseTime: 'Base time', modifiedTime: 'Modified time', savedTime: 'Saved time', resources: 'Required resources', stillNeed: 'Need', leftover: 'Extra',
+        bonuses: 'Upgrade bonuses', breakdown: 'Technology breakdown', technology: 'Technology', upgrade: 'Upgrade', time: 'Time', power: 'Power', all: 'All', infantry: 'Infantry', cavalry: 'Cavalry', archer: 'Archer', general: 'General', none: 'None', level: 'Level', dataSource: 'War Academy data is loaded locally from the calculator dataset.',
+        scopeTitle: 'All troop branches are calculated together', scopeHint: 'Use each section Set All controls below. The result panel totals every selected Infantry, Cavalry, and Archer upgrade.', scrollTo: 'Scroll to', researchUpgrades: 'research upgrades', smartSetAll: 'Set every tech in this branch to the selected current and target levels.', setAll: 'Set All', reset: 'Reset',
+        timeUnits: { d: 'd', h: 'h', m: 'm', s: 's' }
       }
     };
-
-    const SECTION_I18N = {
-      ko: {
-        scopeTitle: '모든 병종 섹션을 함께 계산합니다',
-        scopeHint: '아래 병종별 Set All을 사용하세요. 결과 패널은 선택된 보병, 기병, 궁병 연구를 모두 합산합니다.',
-        scrollTo: '이동',
-        researchUpgrades: '연구 업그레이드',
-        smartSetAll: '해당 병종의 각 기술을 선택한 현재/목표 레벨로 한 번에 설정합니다.',
-        setAll: 'Set All',
-        reset: '초기화'
-      },
-      en: {
-        scopeTitle: 'All troop branches are calculated together',
-        scopeHint: "Use each section's Set All controls below. The result panel totals every selected Infantry, Cavalry, and Archer upgrade.",
-        scrollTo: 'Scroll to',
-        researchUpgrades: 'research upgrades',
-        smartSetAll: 'Set every tech in this branch to the selected current and target levels.',
-        setAll: 'Set All',
-        reset: 'Reset'
-      },
-      'zh-CN': {
-        scopeTitle: '所有兵种分支会一起计算',
-        scopeHint: '请使用下方各兵种区域的 Set All。结果面板会合计已选择的步兵、骑兵、射手升级。',
-        scrollTo: '前往',
-        researchUpgrades: '研究升级',
-        smartSetAll: '将此兵种的所有科技设为所选当前等级和目标等级。',
-        setAll: '全部设置',
-        reset: '重置'
-      },
-      'zh-TW': {
-        scopeTitle: '所有兵種分支會一起計算',
-        scopeHint: '請使用下方各兵種區域的 Set All。結果面板會合計已選擇的步兵、騎兵、射手升級。',
-        scrollTo: '前往',
-        researchUpgrades: '研究升級',
-        smartSetAll: '將此兵種的所有科技設為所選目前等級和目標等級。',
-        setAll: '全部設定',
-        reset: '重置'
-      },
-      fr: {
-        scopeTitle: 'Toutes les branches sont calculees ensemble',
-        scopeHint: 'Utilisez Set All dans chaque section. Le panneau de resultats additionne infanterie, cavalerie et archer.',
-        scrollTo: 'Aller a',
-        researchUpgrades: 'recherches',
-        smartSetAll: 'Regle toutes les technologies de cette branche sur les niveaux choisis.',
-        setAll: 'Tout regler',
-        reset: 'Reinitialiser'
-      },
-      de: {
-        scopeTitle: 'Alle Truppengattungen werden gemeinsam berechnet',
-        scopeHint: 'Nutze Set All in jedem Abschnitt. Die Ergebnisse summieren Infanterie, Kavallerie und Bogenschuetzen.',
-        scrollTo: 'Zu',
-        researchUpgrades: 'Forschungen',
-        smartSetAll: 'Setzt jede Technologie dieser Gattung auf die gewaehlten aktuellen und Zielstufen.',
-        setAll: 'Alle setzen',
-        reset: 'Zuruecksetzen'
-      },
-      th: {
-        scopeTitle: 'คำนวณทุกสายทหารรวมกัน',
-        scopeHint: 'ใช้ Set All ในแต่ละส่วนด้านล่าง ผลลัพธ์จะรวมอัปเกรดของทหารราบ ทหารม้า และธนูที่เลือกไว้ทั้งหมด',
-        scrollTo: 'ไปที่',
-        researchUpgrades: 'งานวิจัย',
-        smartSetAll: 'ตั้งค่าเทคทั้งหมดในสายนี้ตามเลเวลปัจจุบันและเป้าหมายที่เลือก',
-        setAll: 'ตั้งค่าทั้งหมด',
-        reset: 'รีเซ็ต'
-      },
-      id: {
-        scopeTitle: 'Semua cabang pasukan dihitung bersama',
-        scopeHint: 'Gunakan Set All di tiap bagian. Panel hasil menjumlahkan semua upgrade Infantry, Cavalry, dan Archer yang dipilih.',
-        scrollTo: 'Ke',
-        researchUpgrades: 'upgrade riset',
-        smartSetAll: 'Atur semua teknologi di cabang ini ke level saat ini dan target yang dipilih.',
-        setAll: 'Set All',
-        reset: 'Reset'
-      }
-    };
-    Object.entries(SECTION_I18N).forEach(([key, value]) => Object.assign(I18N[key], value));
-
+    ['ko','ja','fr','de','zh-CN','zh-TW','th','id'].forEach((code) => { I18N[code] = { ...I18N.en, timeUnits: I18N.en.timeUnits }; });
     const RESOURCE_KEYS = ['truegold_dust', 'bread', 'wood', 'stone', 'iron', 'gold'];
     const DEFAULT_TYPES = ['infantry', 'cavalry', 'archer'];
-    const ICONS = { infantry: '⚔', cavalry: '♞', archer: '⌖', general: '✦' };
+    const ICONS = { infantry: 'INF', cavalry: 'CAV', archer: 'ARC', general: 'GEN' };
     const state = { academy: null, techs: [], selected: {}, inventory: {}, activeType: 'infantry' };
     const $ = (id) => document.getElementById(id);
     const normalizeLang = (value) => {
@@ -711,7 +534,7 @@
     function renderTabs() {
       const types = getTypes();
       if (!types.includes(state.activeType)) state.activeType = types[0] || 'general';
-      $('branchTabs').innerHTML = types.map((type) => `<button class="tab ${type === state.activeType ? 'active' : ''}" type="button" data-type="${type}">${ICONS[type] || '✦'} ${tr('scrollTo')} ${tr(type)}</button>`).join('');
+      $('branchTabs').innerHTML = types.map((type) => `<button class="tab ${type === state.activeType ? 'active' : ''}" type="button" data-type="${type}">${ICONS[type] || 'GEN'} ${tr('scrollTo')} ${tr(type)}</button>`).join('');
       document.querySelectorAll('#branchTabs .tab').forEach((button) => {
         button.addEventListener('click', () => {
           state.activeType = button.dataset.type;
@@ -730,7 +553,7 @@
       return `
         <article class="tech-card ${active ? 'active' : ''}" data-id="${esc(tech.id)}">
           <div class="tech-top">
-            <div class="tech-icon">${image ? `<img src="${image}" alt="" loading="lazy" onerror="this.remove()">` : esc(tech.icon || ICONS[tech.type] || '✦')}</div>
+            <div class="tech-icon">${image ? `<img src="${image}" alt="" loading="lazy" onerror="this.remove()">` : esc(tech.icon || ICONS[tech.type] || 'GEN')}</div>
             <div class="tech-title">
               <h3>${esc(tech.name)}</h3>
               <p>${esc(tech.description || tr(tech.type || 'general'))}</p>
@@ -753,7 +576,7 @@
           <section class="type-section" id="academy-${esc(type)}" data-type="${esc(type)}">
             <div class="type-section-head">
               <div class="type-title">
-                <span class="type-icon">${ICONS[type] || '✦'}</span>
+                <span class="type-icon">${ICONS[type] || 'GEN'}</span>
                 <div>
                   <h3>${tr(type)}</h3>
                   <small>${tr(type)} ${tr('researchUpgrades')}</small>
@@ -911,7 +734,7 @@
             <tbody>${breakdown.map(({ tech, current, target, costs }) => `
               <tr>
                 <td>${esc(tech.name)}</td>
-                <td>${current} → ${target}</td>
+                <td>${current} ??${target}</td>
                 ${RESOURCE_KEYS.map((key) => `<td>${fmt(costs[key])}</td>`).join('')}
                 <td>${timeText(Math.round(costs.time / (1 + speed / 100)) * 60)}</td>
                 <td>${fmt(costs.power)}</td>
@@ -961,5 +784,7 @@
       $('dataStatus').textContent = error.message || 'Data error';
     });
   </script>
+  <script src="./static/legend-i18n.js?v=20260710-i18n-unified"></script>
 </body>
 </html>
+

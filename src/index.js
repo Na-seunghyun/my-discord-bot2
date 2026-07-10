@@ -1999,12 +1999,20 @@ function redeemCodeAllowedForPublicUseStrict(row) {
   return true;
 }
 
+function redeemCodeLooksActiveForDisplay(row) {
+  const status = cleanText((row && row.status) || "", 40).toLowerCase();
+  if (status !== "active") return false;
+  if (row && row.is_active === false) return false;
+  return redeemCodeAllowedForPublicUseStrict(row);
+}
+
 async function countVisibleActiveRedeemCodes(env, scanLimit = 300) {
   const rows = await supabaseJson(
     env,
     `/redeem_codes?status=eq.active&select=code,source,status,is_active,last_redeem_status,updated_at_ms&order=updated_at_ms.desc&limit=${scanLimit}`
   ).catch(() => []);
-  return (rows || []).filter(redeemCodeReadyForAutoRedeem).length;
+  const strictCount = (rows || []).filter(redeemCodeReadyForAutoRedeem).length;
+  return strictCount || (rows || []).filter(redeemCodeLooksActiveForDisplay).length;
 }
 
 function collectKingshotNetGiftCodes(text, source, url) {
@@ -2349,12 +2357,12 @@ async function listRedeemCodes(request, env) {
     .map((row) => normalizeGiftCode(row.code))
     .filter(Boolean));
   const visible = visibleBase.filter((row) => {
-    const isActive = redeemCodeReadyForAutoRedeem(row);
+    const isActive = redeemCodeReadyForAutoRedeem(row) || redeemCodeLooksActiveForDisplay(row);
     if (!trustedActive.size || !isActive) return true;
     return trustedActive.has(normalizeGiftCode(row.code));
   }).sort((a, b) => {
-    const aActive = redeemCodeReadyForAutoRedeem(a) ? 1 : 0;
-    const bActive = redeemCodeReadyForAutoRedeem(b) ? 1 : 0;
+    const aActive = (redeemCodeReadyForAutoRedeem(a) || redeemCodeLooksActiveForDisplay(a)) ? 1 : 0;
+    const bActive = (redeemCodeReadyForAutoRedeem(b) || redeemCodeLooksActiveForDisplay(b)) ? 1 : 0;
     if (aActive !== bActive) return bActive - aActive;
     return numberValue(b && b.discovered_at_ms) - numberValue(a && a.discovered_at_ms);
   });

@@ -2021,6 +2021,7 @@
       }
     }
   </style>
+  <link rel="stylesheet" href="./static/legend-ui.css?v=20260710-i18n-unified">
 </head>
 <body class="redeem-redesign">
   <div class="redeem-shell">
@@ -2199,136 +2200,6 @@
         <button class="primary" id="priorityBoostBtn" type="button" data-i18n="priorityBoost">Boost my queue</button>
       </div>
     </div>
-  </div>
-
-  <div class="wrap legacy-wrap" aria-hidden="true">
-    <header class="topbar">
-      <a class="brand" id="hubLink" href="./index.html">
-        <span class="mark">885</span>
-        <span><strong>885 LEGEND NASHSH</strong><span data-i18n="brandSub">Kingshot Auto Redeem</span></span>
-      </a>
-      <div class="top-actions">
-        <label class="lang-shell" aria-label="Language">
-          <select id="langSelect" aria-label="Language">
-            <option value="ko">🇰🇷 한국어</option>
-            <option value="en">🇺🇸 English</option>
-            <option value="ja">🇯🇵 日本語</option>
-            <option value="zh-CN">🇨🇳 简体中文</option>
-            <option value="zh-TW">🇹🇼 繁體中文</option>
-            <option value="fr">🇫🇷 Français</option>
-            <option value="de">🇩🇪 Deutsch</option>
-            <option value="th">🇹🇭 ไทย</option>
-            <option value="id">🇮🇩 Indonesia</option>
-          </select>
-        </label>
-        <a class="back" id="backLink" href="./index.html" data-i18n="back">Back to hub</a>
-      </div>
-    </header>
-
-    <div class="site-trustbar" role="note" aria-label="Auto redeem safety notice">
-      <span><strong>HTTPS protected · 안전 연결.</strong> This tool only asks for public Kingshot player IDs. 비밀번호, 결제 정보, 이메일 로그인, 기기 접근 권한을 요구하지 않습니다.</span>
-      <span class="site-trust-links">
-        <a href="./security.html">Security</a>
-        <a href="./privacy.html">Privacy</a>
-        <a href="./feedback.html">Contact</a>
-      </span>
-    </div>
-
-    <section class="hero">
-      <h1><span class="gold" data-i18n="heroA">Auto Redeem</span><br><span data-i18n="heroB">Gift Code Center</span></h1>
-      <p data-i18n="subtitle">Register your Kingshot player ID once. When a new gift code is found, this hub queues a slow, safe redeem job for registered IDs.</p>
-      <div class="trust">
-        <span id="registeredBadge">0</span>
-        <span id="activeCodeBadge">0</span>
-        <span id="daemonBadge" class="daemon-badge unknown" data-i18n="automationUnknown">Auto redeem engine checking...</span>
-      </div>
-    </section>
-
-    <main class="grid">
-      <section class="card">
-        <h2 data-i18n="registerTitle">Register Player ID</h2>
-        <label for="playerId" data-i18n="playerId">Kingshot Player ID</label>
-        <input id="playerId" inputmode="numeric" maxlength="12" data-placeholder="playerPlaceholder" placeholder="Example: 123185474">
-        <label class="check">
-          <input id="consent" type="checkbox">
-          <span data-i18n="consent">I agree to save this player ID for automatic gift-code redemption. Only my player ID and public profile summary will be stored.</span>
-        </label>
-        <div class="safety-note">
-          <strong data-i18n="safetyTitle">Safety notice</strong>
-          <span data-i18n="safetyBody">This tool only asks for your public Kingshot player ID. It never asks for your password, payment information, email login, or device access.</span>
-        </div>
-        <div class="actions">
-          <button class="primary" id="registerBtn" data-i18n="register">Register</button>
-          <button class="ghost" id="loadBtn" data-i18n="loadToken">Show saved token</button>
-        </div>
-        <label for="bulkIds" data-i18n="bulkLabel">Bulk Player IDs</label>
-        <textarea id="bulkIds" data-placeholder="bulkPlaceholder" placeholder="Paste IDs separated by spaces, commas, or new lines."></textarea>
-        <div class="actions">
-          <button class="ghost" id="bulkBtn" data-i18n="bulkRegister">Register bulk IDs</button>
-        </div>
-        <div class="profile" id="profileBox">
-          <img id="profileAvatar" alt="">
-          <div><strong id="profileName">-</strong><span id="profileMeta">-</span></div>
-        </div>
-        <div class="status" id="registerStatus" data-i18n="ready">Ready.</div>
-      </section>
-
-      <section class="card">
-        <h2 data-i18n="manageTitle">Manage Registration</h2>
-        <p class="note" data-i18n="manageHelp">The manage token is stored only in this browser after registration. Keep it if you want to remove the ID later.</p>
-        <label for="manageToken" data-i18n="manageToken">Manage Token</label>
-        <input id="manageToken" data-placeholder="tokenPlaceholder" placeholder="Token appears after registration">
-        <div class="actions">
-          <button class="danger" id="removeBtn" data-i18n="remove">Remove my ID</button>
-          <button class="ghost" id="refreshCodesBtn" data-i18n="refreshCodes">Refresh codes</button>
-        </div>
-        <div class="status" id="manageStatus" data-i18n="noAction">No action yet.</div>
-      </section>
-
-      <section class="card live-card" style="grid-column: 1 / -1;">
-        <div class="latest-head">
-          <div>
-            <h2 data-i18n="codesTitle">Latest Gift Codes</h2>
-            <p id="codeSummary" data-i18n="codesHelp">Active and expired states are synced from the source site.</p>
-          </div>
-        </div>
-        <div class="live-columns" aria-label="Auto redeem live activity">
-          <div class="live-panel code-panel">
-            <div class="panel-head">
-              <span data-i18n="codeDockTitle">Code Situation</span>
-              <span class="panel-count" id="codeDockCount">-</span>
-            </div>
-            <div class="dock-body">
-              <div class="dock-grid" id="codeDockList">
-                <div class="note" data-i18n="loadingCodes">Loading codes...</div>
-              </div>
-            </div>
-          </div>
-          <div class="live-panel user-panel">
-            <div class="panel-head">
-              <span data-i18n="userDockTitle">Recent Registered Users</span>
-              <span class="panel-count" id="userDockCount">-</span>
-            </div>
-            <div class="dock-body">
-              <div class="dock-grid" id="recentUsersList">
-                <div class="note" data-i18n="loadingActivity">Loading activity...</div>
-              </div>
-            </div>
-          </div>
-          <div class="live-panel success-panel">
-            <div class="panel-head">
-              <span data-i18n="successTitle">Redeem success</span>
-              <span class="panel-count" id="successDockCount">-</span>
-            </div>
-            <div class="dock-body">
-              <div class="dock-grid" id="successList">
-                <div class="note" data-i18n="loadingActivity">Loading activity...</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-    </main>
   </div>
 
   <script>
@@ -3010,6 +2881,10 @@
         || source === 'official-redeem-api'
         || redeemResultProvesDisplayActive(row && row.last_redeem_status);
     }
+    function displayCodeLooksActive(row) {
+      const status = String((row && row.status) || '').toLowerCase();
+      return status === 'active' && row && row.is_active !== false && isDisplayableGiftCode(row);
+    }
     function parseBulkIds(text, max = 250) {
       const matches = String(text || '').match(/\d{3,12}/g) || [];
       return [...new Set(matches)].slice(0, max);
@@ -3091,7 +2966,7 @@
     }
     function statusClass(row) {
       if (row.status === 'expired' || row.is_active === false) return 'expired';
-      if (displayCodeReadyForAutoRedeem(row)) return 'active';
+      if (displayCodeReadyForAutoRedeem(row) || displayCodeLooksActive(row)) return 'active';
       return 'observed';
     }
     function statusLabel(row) {
@@ -3176,7 +3051,8 @@
     function renderCodeDock(codes, activeOverride = null) {
       const rows = (Array.isArray(codes) ? codes : []).filter(isDisplayableGiftCode);
       const active = rows.filter((row) => statusClass(row) === 'active').length;
-      const trustedActive = Number.isFinite(Number(activeOverride)) ? Number(activeOverride) : active;
+      const overrideCount = Number(activeOverride);
+      const trustedActive = Number.isFinite(overrideCount) && overrideCount > 0 ? overrideCount : active;
       latestVisibleActiveCodes = trustedActive;
       $('codeDockCount').textContent = `${formatNumber(trustedActive)}/${formatNumber(rows.length || 0)}`;
       $('activeCodeBadge').textContent = `${tr('activeCodes')}: ${formatNumber(trustedActive)}`;
@@ -3674,6 +3550,8 @@
     }, 60000);
     setInterval(loadKingdomRegistry, 300000);
   </script>
+  <script src="./static/legend-i18n.js?v=20260710-i18n-unified"></script>
 </body>
 </html>
+
 

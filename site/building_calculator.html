@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="ko">
 <head>
   <meta charset="utf-8">
@@ -540,6 +540,7 @@
       h1 { font-size: clamp(30px, 9vw, 44px); }
     }
   </style>
+  <link rel="stylesheet" href="./static/legend-ui.css?v=20260710-i18n-unified">
 </head>
 <body>
   <div class="wrap">
@@ -565,7 +566,7 @@
     </header>
 
     <div class="site-trustbar" role="note" aria-label="Calculator safety notice">
-      <span><strong>HTTPS protected · 안전 연결.</strong> Building Calculator runs in your browser. 비밀번호, 결제 정보, 계정 로그인, 기기 접근 권한을 요구하지 않습니다.</span>
+      <span><strong>HTTPS protected 쨌 ?덉쟾 ?곌껐.</strong> Building Calculator runs in your browser. 鍮꾨?踰덊샇, 寃곗젣 ?뺣낫, 怨꾩젙 濡쒓렇?? 湲곌린 ?묎렐 沅뚰븳???붽뎄?섏? ?딆뒿?덈떎.</span>
       <span class="site-trust-links">
         <a href="./security.html">Security</a>
         <a href="./privacy.html">Privacy</a>
@@ -665,157 +666,19 @@
 
   <script>
     const I18N = {
-      ko: {
-        brandSub: 'Kingshot 명령 도구', support: '후원 페이지', calcHub: '계산기 허브',
-        badge: '계산기 보관함', titleA: '건설', titleB: '계산기',
-        subtitle: '현재 레벨과 목표 레벨을 선택하면 건설 시간과 자원을 합산합니다. 건설 속도, 자원 감소, 늑대 펫, 장관 버프, 왕국 스킬, 더블타임을 즉시 반영합니다.',
-        badgeTg: 'TG6-10 지원', badgeBuff: '속도 버프', badgeCost: '자원 감소',
-        selectedBuildings: '선택 건물', upgradeSteps: '업그레이드 단계', truegoldSupport: '트루골드 지원', powerGain: '전투력 증가',
-        setAllTitle: '전체 건물 레벨 설정', loading: '데이터 불러오는 중...', ready: '데이터 준비 완료',
-        allCurrent: '전체 현재 레벨', allTarget: '전체 목표 레벨', allMode: '적용 범위',
-        enabledOnly: '선택된 건물만', allBuildings: '모든 건물', apply: '적용',
-        current: '현재 레벨', target: '목표 레벨', settingsTitle: '시간 및 자원 계산',
-        speedUp: '건설 속도 증가 (%)', costDown: '건설 비용 감소 (%)', wolf: '늑대 펫 속도 증가', minister: '수석 장관 버프',
-        groundWorks: '토목 공사 왕국 스킬 (+10% 속도)', doubleTime: '더블타임 활성화 (-20% 총 시간)', combined: '합산 속도 보너스',
-        originalTime: '기본 시간', modifiedTime: '적용 시간', noSelection: '건물을 선택하고 목표 레벨을 올리면 결과가 표시됩니다.',
-        dataSource: '건물 레벨 데이터는 빠른 사용을 위해 로컬에서 불러옵니다.',
-        none: '없음', keep: '유지', level: '레벨', start: '시작',
-        resources: { bread: '빵', wood: '나무', stone: '석재', iron: '철', truegold: '트루골드', tempered_truegold: '정제 트루골드' },
-        buildings: {
-          town_center: '타운 센터', barracks: '보병 훈련소', stable: '기병 훈련소', range: '궁병 훈련소',
-          embassy: '대사관', command_center: '지휘부', academy: '아카데미', infirmary: '의무대',
-          storehouse: '창고', war_academy: '전쟁 아카데미'
-        }
-      },
       en: {
-        brandSub: 'Kingshot command tools', support: 'Support page', calcHub: 'Calculator hub',
-        badge: 'Calculator Vault', titleA: 'Building', titleB: 'Calculator',
-        subtitle: 'Select current and target levels to total building time and resources. Construction speed, cost reduction, wolf pet, minister buff, kingdom skill, and Double Time are reflected instantly.',
-        badgeTg: 'TG6-10 ready', badgeBuff: 'Speed buffs', badgeCost: 'Resource discount',
-        selectedBuildings: 'Buildings selected', upgradeSteps: 'Upgrade steps', truegoldSupport: 'Truegold support', powerGain: 'Power gain',
-        setAllTitle: 'Set All Buildings', loading: 'Loading data...', ready: 'Data ready',
-        allCurrent: 'Set All Current Level', allTarget: 'Set All Target Level', allMode: 'Apply Mode',
-        enabledOnly: 'Enabled only', allBuildings: 'All buildings', apply: 'Apply',
-        current: 'Current Level', target: 'Target Level', settingsTitle: 'Time & Resource Calculation',
-        speedUp: 'Construction Speed Up (%)', costDown: 'Construction Cost Down (%)', wolf: 'Wolf Pet Speed Up', minister: 'Chief Minister Buff',
-        groundWorks: 'Ground Works (+10% Speed)', doubleTime: 'Double Time Active (-20% Total Time)', combined: 'Combined Speed Bonus',
-        originalTime: 'Original Time', modifiedTime: 'Modified Time', noSelection: 'Select buildings and raise target levels to see results.',
-        dataSource: 'Building level data is loaded locally for fast use.',
-        none: 'None', keep: 'Keep current', level: 'Level', start: 'Start',
+        brandSub: 'Kingshot command tools', support: 'Support page', calcHub: 'Calculator hub', badge: 'Calculator Vault', titleA: 'Building', titleB: 'Calculator',
+        subtitle: 'Select current and target levels to total building time and resources.', badgeTg: 'TG6-10 ready', badgeBuff: 'Speed buffs', badgeCost: 'Resource discount',
+        selectedBuildings: 'Buildings selected', upgradeSteps: 'Upgrade steps', truegoldSupport: 'Truegold support', powerGain: 'Power gain', setAllTitle: 'Set All Buildings', loading: 'Loading data...', ready: 'Data ready',
+        allCurrent: 'Set All Current Level', allTarget: 'Set All Target Level', allMode: 'Apply Mode', enabledOnly: 'Enabled only', allBuildings: 'All buildings', apply: 'Apply', current: 'Current Level', target: 'Target Level', settingsTitle: 'Time & Resource Calculation',
+        speedUp: 'Construction Speed Up (%)', costDown: 'Construction Cost Down (%)', wolf: 'Wolf Pet Speed Up', minister: 'Chief Minister Buff', groundWorks: 'Ground Works (+10% Speed)', doubleTime: 'Double Time Active (-20% Total Time)', combined: 'Combined Speed Bonus',
+        originalTime: 'Original Time', modifiedTime: 'Modified Time', noSelection: 'Select buildings and raise target levels to see results.', dataSource: 'Building level data is loaded locally for fast use.', none: 'None', keep: 'Keep current', level: 'Level', start: 'Start',
         resources: { bread: 'Bread', wood: 'Wood', stone: 'Stone', iron: 'Iron', truegold: 'Truegold', tempered_truegold: 'Tempered Truegold' },
-        buildings: {
-          town_center: 'Town Center', barracks: 'Barracks', stable: 'Stable', range: 'Range',
-          embassy: 'Embassy', command_center: 'Command Center', academy: 'Academy', infirmary: 'Infirmary',
-          storehouse: 'Storehouse', war_academy: 'War Academy'
-        }
+        buildings: { town_center: 'Town Center', barracks: 'Barracks', stable: 'Stable', range: 'Range', embassy: 'Embassy', command_center: 'Command Center', academy: 'Academy', infirmary: 'Infirmary', storehouse: 'Storehouse', war_academy: 'War Academy' },
+        timeUnits: { d: 'd', h: 'h', m: 'm', s: 's' }
       }
     };
-    ['zh-CN','zh-TW','fr','de','th','id'].forEach((lang) => { I18N[lang] = { ...I18N.en, resources: I18N.en.resources, buildings: I18N.en.buildings }; });
-    const BUILDING_I18N_PATCH = {
-      en: { timeUnits: { d: 'd', h: 'h', m: 'm', s: 's' } },
-      ko: {
-        brandSub: 'Kingshot 지휘 도구', support: '후원 페이지', calcHub: '계산기 허브', badge: '계산기 보관함', titleA: '건설', titleB: '계산기',
-        subtitle: '현재 레벨과 목표 레벨을 선택하면 건설 시간과 자원을 합산합니다. 건설 속도, 자원 감소, 늑대 펫, 장관 버프, 왕국 스킬, 더블타임을 즉시 반영합니다.',
-        badgeTg: 'TG6-10 지원', badgeBuff: '속도 버프', badgeCost: '자원 감소', selectedBuildings: '선택 건물', upgradeSteps: '업그레이드 단계', truegoldSupport: '트루골드 지원', powerGain: '전투력 증가',
-        setAllTitle: '전체 건물 레벨 설정', loading: '데이터 불러오는 중...', ready: '데이터 준비 완료', allCurrent: '전체 현재 레벨', allTarget: '전체 목표 레벨', allMode: '적용 범위',
-        enabledOnly: '선택한 건물만', allBuildings: '모든 건물', apply: '적용', current: '현재 레벨', target: '목표 레벨', settingsTitle: '시간 및 자원 계산',
-        speedUp: '건설 속도 증가 (%)', costDown: '건설 비용 감소 (%)', wolf: '늑대 펫 속도 증가', minister: '수석 장관 버프', groundWorks: '토목 공사 왕국 스킬 (+10% 속도)', doubleTime: '더블타임 활성화 (-20% 총 시간)', combined: '합산 속도 보너스',
-        originalTime: '기본 시간', modifiedTime: '적용 시간', noSelection: '건물을 선택하고 목표 레벨을 올리면 결과가 표시됩니다.', dataSource: '건물 레벨 데이터는 빠른 사용을 위해 로컬에서 불러옵니다.',
-        none: '없음', keep: '유지', level: '레벨', start: '시작',
-        resources: { bread: '빵', wood: '나무', stone: '석재', iron: '철', truegold: '트루골드', tempered_truegold: '정제 트루골드' },
-        buildings: { town_center: '타운 센터', barracks: '보병 훈련소', stable: '기병 훈련소', range: '궁병 훈련소', embassy: '대사관', command_center: '지휘부', academy: '아카데미', infirmary: '의무대', storehouse: '창고', war_academy: '전쟁 아카데미' },
-        timeUnits: { d: '일', h: '시간', m: '분', s: '초' }
-      },
-      'zh-CN': {
-        brandSub: 'Kingshot 指挥工具', support: '支持页面', calcHub: '计算器中心', badge: '计算器库', titleA: '建筑', titleB: '计算器',
-        subtitle: '选择当前等级和目标等级，即可汇总建筑时间与资源。建筑速度、资源减免、狼宠、部长增益、王国技能和双倍时间会即时计算。',
-        badgeTg: '支持 TG6-10', badgeBuff: '速度增益', badgeCost: '资源减免', selectedBuildings: '已选建筑', upgradeSteps: '升级阶段', truegoldSupport: '真金支持', powerGain: '战力提升',
-        setAllTitle: '设置全部建筑', loading: '正在加载数据...', ready: '数据已准备', allCurrent: '全部当前等级', allTarget: '全部目标等级', allMode: '应用范围',
-        enabledOnly: '仅已选建筑', allBuildings: '全部建筑', apply: '应用', current: '当前等级', target: '目标等级', settingsTitle: '时间与资源计算',
-        speedUp: '建筑速度提升 (%)', costDown: '建筑消耗减少 (%)', wolf: '狼宠速度提升', minister: '首席部长增益', groundWorks: '土木工程王国技能 (+10% 速度)', doubleTime: '双倍时间启用 (-20% 总时间)', combined: '综合速度加成',
-        originalTime: '原始时间', modifiedTime: '调整后时间', noSelection: '选择建筑并提高目标等级后即可查看结果。', dataSource: '建筑等级数据从本地加载，以便快速使用。',
-        none: '无', keep: '保持当前', level: '等级', start: '开始',
-        resources: { bread: '面包', wood: '木材', stone: '石头', iron: '铁', truegold: '真金', tempered_truegold: '精炼真金' },
-        buildings: { town_center: '市政中心', barracks: '步兵营', stable: '骑兵营', range: '射手营', embassy: '大使馆', command_center: '指挥中心', academy: '学院', infirmary: '医务所', storehouse: '仓库', war_academy: '战争学院' },
-        timeUnits: { d: '天', h: '小时', m: '分钟', s: '秒' }
-      },
-      'zh-TW': {
-        brandSub: 'Kingshot 指揮工具', support: '支援頁面', calcHub: '計算器中心', badge: '計算器庫', titleA: '建築', titleB: '計算器',
-        subtitle: '選擇目前等級和目標等級，即可彙總建築時間與資源。建築速度、資源減免、狼寵、部長增益、王國技能和雙倍時間會即時計算。',
-        badgeTg: '支援 TG6-10', badgeBuff: '速度增益', badgeCost: '資源減免', selectedBuildings: '已選建築', upgradeSteps: '升級階段', truegoldSupport: '真金支援', powerGain: '戰力提升',
-        setAllTitle: '設定全部建築', loading: '正在載入資料...', ready: '資料已準備', allCurrent: '全部目前等級', allTarget: '全部目標等級', allMode: '套用範圍',
-        enabledOnly: '僅已選建築', allBuildings: '全部建築', apply: '套用', current: '目前等級', target: '目標等級', settingsTitle: '時間與資源計算',
-        speedUp: '建築速度提升 (%)', costDown: '建築消耗減少 (%)', wolf: '狼寵速度提升', minister: '首席部長增益', groundWorks: '土木工程王國技能 (+10% 速度)', doubleTime: '雙倍時間啟用 (-20% 總時間)', combined: '綜合速度加成',
-        originalTime: '原始時間', modifiedTime: '調整後時間', noSelection: '選擇建築並提高目標等級後即可查看結果。', dataSource: '建築等級資料從本機載入，以便快速使用。',
-        none: '無', keep: '維持目前', level: '等級', start: '開始',
-        resources: { bread: '麵包', wood: '木材', stone: '石頭', iron: '鐵', truegold: '真金', tempered_truegold: '精煉真金' },
-        buildings: { town_center: '市政中心', barracks: '步兵營', stable: '騎兵營', range: '射手營', embassy: '大使館', command_center: '指揮中心', academy: '學院', infirmary: '醫務所', storehouse: '倉庫', war_academy: '戰爭學院' },
-        timeUnits: { d: '天', h: '小時', m: '分鐘', s: '秒' }
-      },
-      fr: {
-        brandSub: 'Outils de commandement Kingshot', support: 'Page de soutien', calcHub: 'Hub des calculateurs', badge: 'Coffre des calculateurs', titleA: 'Bâtiment', titleB: 'Calculateur',
-        subtitle: 'Choisissez les niveaux actuel et cible pour totaliser le temps et les ressources. Vitesse de construction, réduction de coût, familier loup, ministre, compétence royaume et Double Time sont appliqués.',
-        badgeTg: 'TG6-10 prêt', badgeBuff: 'Bonus de vitesse', badgeCost: 'Réduction de ressources', selectedBuildings: 'Bâtiments choisis', upgradeSteps: 'Étapes', truegoldSupport: 'Support Truegold', powerGain: 'Gain de puissance',
-        setAllTitle: 'Régler tous les bâtiments', loading: 'Chargement des données...', ready: 'Données prêtes', allCurrent: 'Niveau actuel global', allTarget: 'Niveau cible global', allMode: 'Mode d’application',
-        enabledOnly: 'Sélection seulement', allBuildings: 'Tous les bâtiments', apply: 'Appliquer', current: 'Niveau actuel', target: 'Niveau cible', settingsTitle: 'Temps et ressources',
-        speedUp: 'Vitesse de construction (%)', costDown: 'Réduction du coût (%)', wolf: 'Vitesse familier loup', minister: 'Bonus ministre', groundWorks: 'Compétence Travaux (+10% vitesse)', doubleTime: 'Double Time actif (-20% temps total)', combined: 'Bonus de vitesse total',
-        originalTime: 'Temps original', modifiedTime: 'Temps ajusté', noSelection: 'Sélectionnez des bâtiments et augmentez les niveaux cibles pour voir les résultats.', dataSource: 'Les données de bâtiments sont chargées localement pour un usage rapide.',
-        none: 'Aucun', keep: 'Garder', level: 'Niveau', start: 'Début',
-        resources: { bread: 'Pain', wood: 'Bois', stone: 'Pierre', iron: 'Fer', truegold: 'Truegold', tempered_truegold: 'Truegold raffiné' },
-        buildings: { town_center: 'Centre-ville', barracks: 'Caserne', stable: 'Écurie', range: 'Champ de tir', embassy: 'Ambassade', command_center: 'Centre de commandement', academy: 'Académie', infirmary: 'Infirmerie', storehouse: 'Entrepôt', war_academy: 'Académie de guerre' },
-        timeUnits: { d: 'j', h: 'h', m: 'min', s: 's' }
-      },
-      de: {
-        brandSub: 'Kingshot-Kommandowerkzeuge', support: 'Support-Seite', calcHub: 'Rechner-Hub', badge: 'Rechner-Tresor', titleA: 'Gebäude', titleB: 'Rechner',
-        subtitle: 'Wähle aktuelle und Zielstufen, um Bauzeit und Ressourcen zu summieren. Baugeschwindigkeit, Kostenreduktion, Wolf, Minister, Königreichsfähigkeit und Double Time werden sofort einberechnet.',
-        badgeTg: 'TG6-10 bereit', badgeBuff: 'Tempo-Buffs', badgeCost: 'Ressourcenrabatt', selectedBuildings: 'Gewählte Gebäude', upgradeSteps: 'Upgrade-Schritte', truegoldSupport: 'Truegold-Unterstützung', powerGain: 'Machtzuwachs',
-        setAllTitle: 'Alle Gebäude setzen', loading: 'Daten werden geladen...', ready: 'Daten bereit', allCurrent: 'Alle aktuellen Stufen', allTarget: 'Alle Zielstufen', allMode: 'Anwendungsbereich',
-        enabledOnly: 'Nur aktivierte', allBuildings: 'Alle Gebäude', apply: 'Anwenden', current: 'Aktuelle Stufe', target: 'Zielstufe', settingsTitle: 'Zeit und Ressourcen',
-        speedUp: 'Baugeschwindigkeit (%)', costDown: 'Baukostenreduktion (%)', wolf: 'Wolf-Tempo', minister: 'Minister-Buff', groundWorks: 'Erdarbeiten (+10% Tempo)', doubleTime: 'Double Time aktiv (-20% Gesamtzeit)', combined: 'Gesamter Tempo-Bonus',
-        originalTime: 'Originalzeit', modifiedTime: 'Angepasste Zeit', noSelection: 'Wähle Gebäude und erhöhe Zielstufen, um Ergebnisse zu sehen.', dataSource: 'Gebäudedaten werden für schnelle Nutzung lokal geladen.',
-        none: 'Keine', keep: 'Behalten', level: 'Stufe', start: 'Start',
-        resources: { bread: 'Brot', wood: 'Holz', stone: 'Stein', iron: 'Eisen', truegold: 'Truegold', tempered_truegold: 'Gehärtetes Truegold' },
-        buildings: { town_center: 'Stadtzentrum', barracks: 'Kaserne', stable: 'Stall', range: 'Schießstand', embassy: 'Botschaft', command_center: 'Kommandozentrale', academy: 'Akademie', infirmary: 'Lazarett', storehouse: 'Lagerhaus', war_academy: 'Kriegsakademie' },
-        timeUnits: { d: 'T', h: 'Std', m: 'Min', s: 'Sek' }
-      },
-      th: {
-        brandSub: 'เครื่องมือบัญชาการ Kingshot', support: 'หน้าสนับสนุน', calcHub: 'ศูนย์คำนวณ', badge: 'คลังเครื่องคำนวณ', titleA: 'อาคาร', titleB: 'คำนวณ',
-        subtitle: 'เลือกเลเวลปัจจุบันและเป้าหมายเพื่อรวมเวลาและทรัพยากร พร้อมคำนวณบัฟความเร็ว ลดทรัพยากร หมาป่า รัฐมนตรี สกิลอาณาจักร และ Double Time ทันที',
-        badgeTg: 'รองรับ TG6-10', badgeBuff: 'บัฟความเร็ว', badgeCost: 'ลดทรัพยากร', selectedBuildings: 'อาคารที่เลือก', upgradeSteps: 'ขั้นอัปเกรด', truegoldSupport: 'รองรับ Truegold', powerGain: 'พลังที่เพิ่ม',
-        setAllTitle: 'ตั้งค่าอาคารทั้งหมด', loading: 'กำลังโหลดข้อมูล...', ready: 'ข้อมูลพร้อมแล้ว', allCurrent: 'เลเวลปัจจุบันทั้งหมด', allTarget: 'เลเวลเป้าหมายทั้งหมด', allMode: 'ขอบเขตการใช้',
-        enabledOnly: 'เฉพาะที่เลือก', allBuildings: 'ทุกอาคาร', apply: 'ใช้ค่า', current: 'เลเวลปัจจุบัน', target: 'เลเวลเป้าหมาย', settingsTitle: 'เวลาและทรัพยากร',
-        speedUp: 'เพิ่มความเร็วสร้าง (%)', costDown: 'ลดค่าสร้าง (%)', wolf: 'ความเร็วจากหมาป่า', minister: 'บักรัฐมนตรี', groundWorks: 'สกิล Ground Works (+10% ความเร็ว)', doubleTime: 'เปิด Double Time (-20% เวลารวม)', combined: 'โบนัสความเร็วรวม',
-        originalTime: 'เวลาเดิม', modifiedTime: 'เวลาหลังปรับ', noSelection: 'เลือกอาคารและเพิ่มเลเวลเป้าหมายเพื่อดูผลลัพธ์', dataSource: 'โหลดข้อมูลอาคารจากไฟล์ในไซต์เพื่อใช้งานรวดเร็ว',
-        none: 'ไม่มี', keep: 'คงไว้', level: 'เลเวล', start: 'เริ่ม',
-        resources: { bread: 'ขนมปัง', wood: 'ไม้', stone: 'หิน', iron: 'เหล็ก', truegold: 'Truegold', tempered_truegold: 'Tempered Truegold' },
-        buildings: { town_center: 'ศูนย์เมือง', barracks: 'ค่ายทหารราบ', stable: 'ค่ายทหารม้า', range: 'ค่ายธนู', embassy: 'สถานทูต', command_center: 'ศูนย์บัญชาการ', academy: 'สถาบัน', infirmary: 'โรงพยาบาล', storehouse: 'คลังเก็บของ', war_academy: 'สถาบันสงคราม' },
-        timeUnits: { d: 'วัน', h: 'ชม.', m: 'นาที', s: 'วิ' }
-      },
-      id: {
-        brandSub: 'Alat komando Kingshot', support: 'Halaman dukungan', calcHub: 'Hub kalkulator', badge: 'Ruang kalkulator', titleA: 'Bangunan', titleB: 'Kalkulator',
-        subtitle: 'Pilih level saat ini dan target untuk menjumlahkan waktu serta sumber daya. Kecepatan konstruksi, diskon sumber daya, pet serigala, menteri, skill kingdom, dan Double Time langsung dihitung.',
-        badgeTg: 'Siap TG6-10', badgeBuff: 'Buff kecepatan', badgeCost: 'Diskon sumber daya', selectedBuildings: 'Bangunan dipilih', upgradeSteps: 'Langkah upgrade', truegoldSupport: 'Dukungan Truegold', powerGain: 'Kenaikan power',
-        setAllTitle: 'Atur semua bangunan', loading: 'Memuat data...', ready: 'Data siap', allCurrent: 'Semua level saat ini', allTarget: 'Semua level target', allMode: 'Mode penerapan',
-        enabledOnly: 'Yang dipilih saja', allBuildings: 'Semua bangunan', apply: 'Terapkan', current: 'Level saat ini', target: 'Level target', settingsTitle: 'Waktu dan sumber daya',
-        speedUp: 'Kecepatan konstruksi (%)', costDown: 'Pengurangan biaya (%)', wolf: 'Kecepatan pet serigala', minister: 'Buff menteri utama', groundWorks: 'Skill Ground Works (+10% kecepatan)', doubleTime: 'Double Time aktif (-20% total waktu)', combined: 'Bonus kecepatan gabungan',
-        originalTime: 'Waktu asli', modifiedTime: 'Waktu setelah buff', noSelection: 'Pilih bangunan dan naikkan level target untuk melihat hasil.', dataSource: 'Data level bangunan dimuat lokal agar cepat digunakan.',
-        none: 'Tidak ada', keep: 'Pertahankan', level: 'Level', start: 'Mulai',
-        resources: { bread: 'Roti', wood: 'Kayu', stone: 'Batu', iron: 'Besi', truegold: 'Truegold', tempered_truegold: 'Tempered Truegold' },
-        buildings: { town_center: 'Town Center', barracks: 'Barak', stable: 'Kandang', range: 'Range', embassy: 'Kedutaan', command_center: 'Pusat komando', academy: 'Akademi', infirmary: 'Rumah sakit', storehouse: 'Gudang', war_academy: 'Akademi perang' },
-        timeUnits: { d: 'h', h: 'jam', m: 'mnt', s: 'dtk' }
-      }
-    };
-    Object.entries(BUILDING_I18N_PATCH).forEach(([code, patch]) => {
-      I18N[code] = {
-        ...I18N.en,
-        ...(I18N[code] || {}),
-        ...patch,
-        resources: { ...I18N.en.resources, ...(patch.resources || {}) },
-        buildings: { ...I18N.en.buildings, ...(patch.buildings || {}) },
-        timeUnits: patch.timeUnits || I18N.en.timeUnits
-      };
-    });
-
+    ['ko','ja','fr','de','zh-CN','zh-TW','th','id'].forEach((code) => { I18N[code] = { ...I18N.en, resources: I18N.en.resources, buildings: I18N.en.buildings, timeUnits: I18N.en.timeUnits }; });
     const RESOURCE_KEYS = ['bread', 'wood', 'stone', 'iron', 'truegold', 'tempered_truegold'];
     const WOLF = { 0: 0, 1: 5, 2: 7, 3: 9, 4: 12, 5: 15 };
     const MINISTER = { none: 0, 10: 10, 15: 15 };
@@ -1021,8 +884,8 @@
         const resources = RESOURCE_KEYS.map((key) => {
           const value = row.totals[key];
           return value ? `${nested('resources', key)} ${fmt(key === 'truegold' || key === 'tempered_truegold' ? value : Math.round(value * costMul))}` : '';
-        }).filter(Boolean).join(' · ');
-        return `<div class="break-card"><strong>${nested('buildings', row.building.building)}: ${labelOf(row.building, row.item.current)} -> ${labelOf(row.building, row.item.target)}</strong><small>${row.levels.length} steps · ${timeText(row.totals.seconds)} · ${resources || '-'}</small></div>`;
+        }).filter(Boolean).join(' 쨌 ');
+        return `<div class="break-card"><strong>${nested('buildings', row.building.building)}: ${labelOf(row.building, row.item.current)} -> ${labelOf(row.building, row.item.target)}</strong><small>${row.levels.length} steps 쨌 ${timeText(row.totals.seconds)} 쨌 ${resources || '-'}</small></div>`;
       }).join('') : `<div class="empty">${tr('noSelection')}</div>`;
     }
 
@@ -1094,5 +957,7 @@
       $('dataStatus').textContent = error.message || 'Data error';
     });
   </script>
+  <script src="./static/legend-i18n.js?v=20260710-i18n-unified"></script>
 </body>
 </html>
+
