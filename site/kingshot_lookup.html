@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="ko">
 <head>
   <meta charset="utf-8">
@@ -834,7 +834,7 @@
     </nav>
 
     <div class="site-trustbar" role="note" aria-label="Intel safety notice">
-      <span><strong>HTTPS protected 쨌 ?덉쟾 ?곌껐.</strong> Intel Lookup shows public game profile data and local cached summaries only. 鍮꾨?踰덊샇, 寃곗젣 ?뺣낫, ?대찓??濡쒓렇?? 湲곌린 ?묎렐 沅뚰븳???붽뎄?섏? ?딆뒿?덈떎.</span>
+      <span class="trust-copy" data-i18n="trustText"><strong>HTTPS protected · safe connection.</strong> Intel Lookup shows public game profile data and local cached summaries only. It never asks for passwords, payment details, account login, or device access.</span>
       <span class="site-trust-links">
         <a href="./security.html">Security</a>
         <a href="./privacy.html">Privacy</a>
@@ -1001,7 +1001,7 @@
       const town = player.town_hall_level ? `<span class="chip">TC ${player.town_hall_level}</span>` : '';
       const alliance = player.alliance_abbr || player.alliance_name ? `<span class="chip pink">${escapeHtml(player.alliance_abbr || player.alliance_name)}</span>` : '';
       return `<article class="card" data-player-id="${escapeHtml(player.id)}">
-        <div class="person">${avatar(player)}<div><div class="name">${escapeHtml(player.username || player.id)}</div><div class="sub">ID ${escapeHtml(player.id || '-')} 쨌 K${escapeHtml(player.state || '-')}</div></div></div>
+        <div class="person">${avatar(player)}<div><div class="name">${escapeHtml(player.username || player.id)}</div><div class="sub">ID ${escapeHtml(player.id || '-')} · K${escapeHtml(player.state || '-')}</div></div></div>
         <div class="chips">${town}${power}${alliance}<span class="chip">${tr('updated')} ${ago(player.last_refreshed_at)}</span></div>
       </article>`;
     }
@@ -1063,7 +1063,7 @@
       try {
         const data = await api(`/players/search?q=${encodeURIComponent(q)}&limit=80`);
         renderPlayers(data.players || [], `${tr('resultsTitle')}: ${q}`);
-        setStatus(`<strong>${fmt(data.total || (data.players || []).length)}</strong> ${tr('found')}${data._cache ? ` 쨌 ${tr('localCache')}` : ''}`);
+        setStatus(`<strong>${fmt(data.total || (data.players || []).length)}</strong> ${tr('found')}${data._cache ? ` · ${tr('localCache')}` : ''}`);
         await loadIntelStatus();
       } catch (error) {
         setStatus(`<span class="bad">${tr('searchFail')}: ${escapeHtml(error.message)}</span>`);
@@ -1081,7 +1081,7 @@
         const data = await api(`/kingdoms/${kid}`);
         renderKingdom(data);
         renderPlayers(data.top_players || [], `K${kid} ${tr('topPlayers')}`);
-        setStatus(`K<strong>${escapeHtml(kid)}</strong> 쨌 ${tr('trackedPlayers')} ${fmt(data.tracked_players || 0)} 쨌 ${tr('alliances')} ${(data.alliances || []).length}`);
+        setStatus(`K<strong>${escapeHtml(kid)}</strong> · ${tr('trackedPlayers')} ${fmt(data.tracked_players || 0)} · ${tr('alliances')} ${(data.alliances || []).length}`);
         await loadIntelStatus();
       } catch (error) {
         setStatus(`<span class="bad">${tr('kingdomFail')}: ${escapeHtml(error.message)}</span>`);
@@ -1102,8 +1102,8 @@
         <div class="metric-item"><span>${tr('castle')}</span><strong>${escapeHtml(kvk.castle_name || '-')}</strong></div>
         <div class="metric-item"><span>${tr('alliances')}</span><strong>${fmt(alliances.length)}</strong></div>
       </div>
-      <div class="chips">${stats.slice(0, 6).map(item => `<span class="chip">${escapeHtml(item.label)} #${fmt(item.rank)} 쨌 ${fmt(item.total)}</span>`).join('')}</div>
-      ${alliances.slice(0, 18).map(a => `<div class="alliance"><div><strong>${escapeHtml(a.abbr || '-')} ${escapeHtml(a.name || '')}</strong><div class="sub">${tr('members')} ${fmt(a.tracked_members || a.member_count || 0)} 쨌 ${tr('rank')} ${escapeHtml(a.power_rank || '-')}</div></div><strong>${fmt(a.power || 0)}</strong></div>`).join('')}`;
+      <div class="chips">${stats.slice(0, 6).map(item => `<span class="chip">${escapeHtml(item.label)} #${fmt(item.rank)} · ${fmt(item.total)}</span>`).join('')}</div>
+      ${alliances.slice(0, 18).map(a => `<div class="alliance"><div><strong>${escapeHtml(a.abbr || '-')} ${escapeHtml(a.name || '')}</strong><div class="sub">${tr('members')} ${fmt(a.tracked_members || a.member_count || 0)} · ${tr('rank')} ${escapeHtml(a.power_rank || '-')}</div></div><strong>${fmt(a.power || 0)}</strong></div>`).join('')}`;
     }
     async function openPlayer(id) {
       if (!id) return;
@@ -1123,7 +1123,7 @@
           api(`/players/${encodeURIComponent(id)}/loadout?cached=1`).catch(() => null),
         ]);
         renderPlayerModal(player, history || [], redemptions || {}, kingdata, standings || {}, loadout);
-        setStatus(`${tr('loaded')} <strong>${escapeHtml(player.username || player.id)}</strong>${player._cache ? ` 쨌 ${tr('localCache')}` : ''}`);
+        setStatus(`${tr('loaded')} <strong>${escapeHtml(player.username || player.id)}</strong>${player._cache ? ` · ${tr('localCache')}` : ''}`);
         await loadIntelStatus();
       } catch (error) {
         $('modalTitle').innerHTML = `<div class="sub">${tr('loadFailed')}</div>`;
@@ -1177,7 +1177,7 @@
       if (!value) return '-';
       const rarity = Math.max(0, Math.floor((value - 1) / 5));
       const stars = ((value - 1) % 5) + 1;
-      return `R${rarity} 쨌 ${stars} ${tr('stars')}`;
+      return `R${rarity} · ${stars} ${tr('stars')}`;
     }
     function renderLoadout(loadout) {
       const heroes = loadout && Array.isArray(loadout.heroes) ? loadout.heroes : [];
@@ -1197,7 +1197,7 @@
       return `<h2>${tr('heroesGear')}</h2><div class="chips">${tags}</div><div class="loadout-grid">${cards}</div>`;
     }
     function renderPlayerModal(player, history, redemptions, kingdata, standings, loadout) {
-      $('modalTitle').innerHTML = `${avatar(player)}<div><div class="name">${escapeHtml(player.username || player.id)}</div><div class="sub">ID ${escapeHtml(player.id)} 쨌 K${escapeHtml(player.state || '-')} 쨌 ${escapeHtml(player.alliance_abbr || player.alliance_name || '-')}</div></div>`;
+      $('modalTitle').innerHTML = `${avatar(player)}<div><div class="name">${escapeHtml(player.username || player.id)}</div><div class="sub">ID ${escapeHtml(player.id)} · K${escapeHtml(player.state || '-')} · ${escapeHtml(player.alliance_abbr || player.alliance_name || '-')}</div></div>`;
       const portrait = imgUrl(player.avatar_url);
       const boxes = [
         [tr('power'), fmt(player.power)], [tr('townCenter'), player.town_hall_level || '-'], [tr('lifeTree'), player.life_tree_level || '-'], [tr('mysticScore'), fmt(player.mystic_trial_score)],
@@ -1301,7 +1301,7 @@
         });
         const partial = detailResults.some(result => result.status === 'rejected');
         renderPlayerModal(player, history || [], redemptions || {}, kingdata, standings || {}, loadout, { partial });
-        setStatus(`${tr('loaded')} <strong>${escapeHtml(player.username || player.id)}</strong>${player._cache ? ` 쨌 ${tr('localCache')}` : ''}${partial ? ` 쨌 ${tr('partialDetail')}` : ''}`);
+        setStatus(`${tr('loaded')} <strong>${escapeHtml(player.username || player.id)}</strong>${player._cache ? ` · ${tr('localCache')}` : ''}${partial ? ` · ${tr('partialDetail')}` : ''}`);
         await loadIntelStatus();
       } catch (error) {
         $('modalTitle').innerHTML = `<div class="sub">${tr('loadFailed')}</div>`;
@@ -1331,7 +1331,7 @@
       const standingRows = (standings.standings || []).slice(0, 12).map(row => `<tr><td>${escapeHtml(row.label || row.board_type)}</td><td>#${fmt(row.rank)}</td><td>${fmt(row.score)}</td><td>${row.kid ? `K${escapeHtml(row.kid)}` : '-'}</td></tr>`).join('');
       const historyRows = history.slice(0, 10).map(row => `<tr><td>${escapeHtml(row.username || '-')}</td><td>K${escapeHtml(row.state || '-')}</td><td>${escapeHtml(row.alliance_abbr || row.alliance_name || '-')}</td><td>${fmt(row.power || '')}</td><td>${ago(row.recorded_at)}</td></tr>`).join('');
       const codeRows = (redemptions.redemptions || []).slice(0, 10).map(row => `<tr><td>${escapeHtml(row.Code || row.code || '-')}</td><td>${escapeHtml(row.Status || row.status || '-')}</td><td>${ago(row.RedeemedAt || row.redeemed_at)}</td></tr>`).join('');
-      $('modalTitle').innerHTML = `${avatar(player)}<div><div class="name">${escapeHtml(player.username || player.id)}</div><div class="sub">ID ${escapeHtml(player.id)} 쨌 K${escapeHtml(kingdom)} 쨌 ${escapeHtml(alliance)}</div></div>`;
+      $('modalTitle').innerHTML = `${avatar(player)}<div><div class="name">${escapeHtml(player.username || player.id)}</div><div class="sub">ID ${escapeHtml(player.id)} · K${escapeHtml(kingdom)} · ${escapeHtml(alliance)}</div></div>`;
       $('modalBody').className = 'modal-body premium';
       $('modalBody').innerHTML = `<section class="intel-passport">
           <div class="intel-image-card">
@@ -1342,7 +1342,7 @@
             <div class="intel-head-card">
               <div class="brand">885 LEGEND NASHSH INTEL</div>
               <h2>${escapeHtml(player.username || player.id)}</h2>
-              <div class="intel-meta-line">ID ${escapeHtml(player.id)} 쨌 ${tr('kingdom')} ${escapeHtml(kingdom)} 쨌 ${escapeHtml(alliance)}</div>
+              <div class="intel-meta-line">ID ${escapeHtml(player.id)} · ${tr('kingdom')} ${escapeHtml(kingdom)} · ${escapeHtml(alliance)}</div>
               <div class="intel-badges">
                 <span class="intel-badge gold">${tr('power')} ${fmt(player.power)}</span>
                 <span class="intel-badge">${tr('townCenter')} ${escapeHtml(player.town_hall_level || '-')}</span>

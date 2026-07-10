@@ -128,7 +128,7 @@
     </header>
 
     <div class="site-trustbar" role="note" aria-label="Site safety notice">
-      <span><strong>HTTPS protected 쨌 ?덉쟾 ?곌껐.</strong> Feedback is used only to improve the tools. 鍮꾨?踰덊샇, 寃곗젣 ?뺣낫, 媛쒖씤 怨꾩젙 ?뺣낫??蹂대궡吏 留덉꽭??</span>
+      <span class="trust-copy" data-i18n="trustText"><strong>HTTPS protected · safe connection.</strong> Feedback is used only to improve the tools. Do not send passwords, payment details, account login, or private device information.</span>
       <span class="site-trust-links">
         <a href="./security.html">Security</a>
         <a href="./privacy.html">Privacy</a>
@@ -191,8 +191,8 @@
     };
     ['ko','ja','fr','de','zh-CN','zh-TW','th','id'].forEach((code) => { I18N[code] = { ...I18N.en }; });
     const LANGUAGE_LABELS = {
-      ko: '???? ???', ja: '???? ???', en: '???? English', fr: '???? Fran?ais', de: '???? Deutsch',
-      'zh-CN': '???? ????', 'zh-TW': '???? ????', th: '???? ???', id: '???? Indonesia'
+      ko: '🇰🇷 한국어', ja: '🇯🇵 日本語', en: '🇺🇸 English', fr: '🇫🇷 Français', de: '🇩🇪 Deutsch',
+      'zh-CN': '🇨🇳 简体中文', 'zh-TW': '🇹🇼 繁體中文', th: '🇹🇭 ไทย', id: '🇮🇩 Indonesia'
     };
     let currentLang = new URL(location.href).searchParams.get('lang') || localStorage.getItem('siteLang') || localStorage.getItem('lang') || 'ko';
     if (!I18N[currentLang]) currentLang = 'ko';

@@ -780,7 +780,7 @@
     </header>
 
     <div class="site-trustbar" role="note" aria-label="Site safety notice">
-      <span><strong>HTTPS protected 쨌 ?덉쟾 ?곌껐.</strong> 鍮꾨?踰덊샇, 寃곗젣 ?뺣낫, ?대찓??濡쒓렇?? 湲곌린 ?묎렐 沅뚰븳???붽뎄?섏? ?딆뒿?덈떎. Player IDs are used only for the selected Kingshot tools.</span>
+      <span class="trust-copy" data-i18n="trustText"><strong>HTTPS protected · safe connection.</strong> This site never asks for passwords, payment details, account login, or device access. Player IDs are used only for the selected Kingshot tools.</span>
       <span class="site-trust-links">
         <a href="./security.html">Security</a>
         <a href="./privacy.html">Privacy</a>
@@ -954,15 +954,15 @@
       } catch {}
     }
     const LANGUAGE_LABELS = {
-      ko: '???? ???',
-      ja: '???? ???',
-      en: '???? English',
-      fr: '???? Fran?ais',
-      de: '???? Deutsch',
-      'zh-CN': '???? ????',
-      'zh-TW': '???? ????',
-      th: '???? ???',
-      id: '???? Indonesia'
+      ko: '🇰🇷 한국어',
+      ja: '🇯🇵 日本語',
+      en: '🇺🇸 English',
+      fr: '🇫🇷 Français',
+      de: '🇩🇪 Deutsch',
+      'zh-CN': '🇨🇳 简体中文',
+      'zh-TW': '🇹🇼 繁體中文',
+      th: '🇹🇭 ไทย',
+      id: '🇮🇩 Indonesia'
     };
     function fixLanguageLabels() {
       document.querySelectorAll('#langSelect option, .lang-select option').forEach((option) => {

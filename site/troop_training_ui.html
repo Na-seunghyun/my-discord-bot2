@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="ko">
 <head>
   <meta charset="utf-8">
@@ -630,7 +630,7 @@
     </div>
 
     <div class="site-trustbar" role="note" aria-label="Calculator safety notice">
-      <span><strong>HTTPS protected 쨌 ?덉쟾 ?곌껐.</strong> Calculator pages run in your browser. 鍮꾨?踰덊샇, 寃곗젣 ?뺣낫, 怨꾩젙 濡쒓렇?? 湲곌린 ?묎렐 沅뚰븳???붽뎄?섏? ?딆뒿?덈떎.</span>
+      <span class="trust-copy" data-i18n="trustText"><strong>HTTPS protected · safe connection.</strong> Calculator pages run in your browser and never ask for passwords, payment details, account login, or device access.</span>
       <span class="site-trust-links">
         <a href="./security.html">Security</a>
         <a href="./privacy.html">Privacy</a>
@@ -1818,7 +1818,7 @@
           return;
         }
         if (!countedToday) localStorage.setItem(visitKey, "1");
-        target.textContent = `${t("visitors")} ${fmt(stats.total || 0)} 쨌 ${t("today")} ${fmt(stats.today || 0)}`;
+        target.textContent = `${t("visitors")} ${fmt(stats.total || 0)} · ${t("today")} ${fmt(stats.today || 0)}`;
       } catch {
         target.textContent = t("visitorsOffline");
       }
