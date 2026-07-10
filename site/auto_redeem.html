@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="ko">
 <head>
   <meta charset="utf-8">
@@ -2020,89 +2020,597 @@
         font-size: clamp(24px, 10vw, 32px);
       }
     }
+
+    /* Premium auto redeem redesign 20260710 */
+    body.redeem-redesign {
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 12% 0%, rgba(250, 204, 21, 0.16), transparent 28%),
+        radial-gradient(circle at 88% 6%, rgba(20, 184, 166, 0.14), transparent 30%),
+        linear-gradient(135deg, #090b13 0%, #111827 45%, #070a10 100%);
+      color: #f8fafc;
+    }
+    .redeem-shell.redeem-suite {
+      width: min(1480px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 18px 0 34px;
+      display: block;
+      grid-template-columns: none;
+      gap: 0;
+    }
+    .redeem-topbar {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      display: grid;
+      grid-template-columns: minmax(220px, 1fr) auto minmax(220px, 1fr);
+      gap: 14px;
+      align-items: center;
+      padding: 12px;
+      margin-bottom: 16px;
+      border: 1px solid rgba(250, 204, 21, 0.18);
+      border-radius: 22px;
+      background: rgba(8, 12, 20, 0.86);
+      backdrop-filter: blur(18px);
+      box-shadow: 0 18px 60px rgba(0, 0, 0, 0.28);
+    }
+    .redeem-brand,
+    .redeem-actions,
+    .redeem-nav {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+    .redeem-brand {
+      color: inherit;
+      text-decoration: none;
+    }
+    .redeem-brand-mark {
+      display: grid;
+      place-items: center;
+      width: 44px;
+      height: 44px;
+      flex: 0 0 44px;
+      border-radius: 14px;
+      color: #161103;
+      font-weight: 950;
+      letter-spacing: 0;
+      background: linear-gradient(135deg, #fef3c7, #facc15 45%, #d97706);
+      box-shadow: 0 0 24px rgba(250, 204, 21, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    }
+    .redeem-brand-copy {
+      display: grid;
+      gap: 2px;
+      min-width: 0;
+    }
+    .redeem-brand-copy strong {
+      font-size: clamp(13px, 1.6vw, 18px);
+      overflow-wrap: anywhere;
+    }
+    .redeem-brand-copy small,
+    .card-note,
+    .status-card small {
+      color: rgba(226, 232, 240, 0.72);
+    }
+    .redeem-nav {
+      justify-content: center;
+    }
+    .redeem-nav a,
+    .redeem-actions .back {
+      color: rgba(248, 250, 252, 0.82);
+      text-decoration: none;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      background: rgba(15, 23, 42, 0.68);
+      border-radius: 999px;
+      padding: 10px 14px;
+      font-size: 13px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+    .redeem-actions {
+      justify-content: flex-end;
+    }
+    .redeem-actions .lang-shell {
+      min-width: 178px;
+      margin: 0;
+    }
+    .redeem-main {
+      display: grid;
+      gap: 18px;
+    }
+    .redeem-main .site-trustbar {
+      margin: 0;
+      border-radius: 18px;
+      border-color: rgba(34, 197, 94, 0.28);
+      background: linear-gradient(135deg, rgba(6, 78, 59, 0.48), rgba(15, 23, 42, 0.74));
+    }
+    .redeem-hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) minmax(260px, 0.6fr);
+      align-items: center;
+      gap: 22px;
+      padding: clamp(22px, 4vw, 42px);
+      border: 1px solid rgba(250, 204, 21, 0.22);
+      border-radius: 28px;
+      background:
+        linear-gradient(135deg, rgba(15, 23, 42, 0.94), rgba(24, 28, 42, 0.82)),
+        radial-gradient(circle at 70% 0%, rgba(250, 204, 21, 0.25), transparent 36%);
+      box-shadow: 0 26px 90px rgba(0, 0, 0, 0.34);
+      overflow: hidden;
+    }
+    .hero-kicker,
+    .console-kicker {
+      display: inline-flex;
+      width: fit-content;
+      align-items: center;
+      gap: 6px;
+      color: #facc15;
+      font-size: 11px;
+      font-weight: 950;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    .redeem-hero h1 {
+      display: grid;
+      gap: 4px;
+      margin: 12px 0;
+      font-size: clamp(36px, 7vw, 76px);
+      line-height: 0.95;
+      letter-spacing: 0;
+    }
+    .redeem-hero h1 span:first-child {
+      color: #fde68a;
+      text-shadow: 0 0 24px rgba(250, 204, 21, 0.22);
+    }
+    .redeem-hero p {
+      max-width: 760px;
+      margin: 0;
+      color: rgba(226, 232, 240, 0.82);
+      font-size: clamp(15px, 2.2vw, 18px);
+      line-height: 1.7;
+    }
+    .hero-trust-line {
+      display: inline-flex;
+      margin-top: 18px;
+      padding: 9px 12px;
+      border-radius: 999px;
+      color: #bbf7d0;
+      background: rgba(22, 101, 52, 0.3);
+      border: 1px solid rgba(74, 222, 128, 0.24);
+      font-size: 13px;
+      font-weight: 800;
+    }
+    .redeem-emblem {
+      justify-self: center;
+      display: grid;
+      justify-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+    .emblem-ring {
+      position: relative;
+      display: grid;
+      place-items: center;
+      width: clamp(160px, 22vw, 240px);
+      aspect-ratio: 1;
+      border-radius: 50%;
+      border: 1px solid rgba(250, 204, 21, 0.38);
+      background: linear-gradient(145deg, rgba(15, 23, 42, 0.98), rgba(67, 56, 202, 0.18)), radial-gradient(circle, rgba(250, 204, 21, 0.18), transparent 62%);
+      box-shadow: 0 0 0 10px rgba(250, 204, 21, 0.035), 0 0 46px rgba(250, 204, 21, 0.2), inset 0 0 40px rgba(0, 0, 0, 0.34);
+    }
+    .emblem-ring::before {
+      content: '';
+      position: absolute;
+      inset: 12px;
+      border-radius: inherit;
+      border: 1px dashed rgba(251, 191, 36, 0.34);
+    }
+    .emblem-kingdom {
+      font-size: clamp(44px, 6vw, 70px);
+      line-height: 0.9;
+      font-weight: 1000;
+      color: #fff7ed;
+      text-shadow: 0 0 28px rgba(250, 204, 21, 0.38);
+    }
+    .emblem-title {
+      margin-top: 76px;
+      position: absolute;
+      color: #facc15;
+      font-size: clamp(13px, 1.8vw, 18px);
+      font-weight: 950;
+      letter-spacing: 0.08em;
+    }
+    .emblem-caption {
+      color: rgba(226, 232, 240, 0.78);
+      font-size: 13px;
+      font-weight: 800;
+    }
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .status-card,
+    .neo-card,
+    .live-board {
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      border-radius: 24px;
+      background: linear-gradient(150deg, rgba(15, 23, 42, 0.9), rgba(2, 6, 23, 0.82));
+      box-shadow: 0 18px 60px rgba(0, 0, 0, 0.24);
+    }
+    .status-card {
+      display: grid;
+      gap: 6px;
+      min-width: 0;
+      padding: 18px;
+    }
+    .status-card span {
+      color: rgba(226, 232, 240, 0.76);
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .status-card strong {
+      min-width: 0;
+      color: #f8fafc;
+      font-size: clamp(21px, 3.4vw, 34px);
+      line-height: 1.1;
+      overflow-wrap: anywhere;
+    }
+    .server-card .engine-card {
+      margin-top: 4px;
+      padding: 10px 12px;
+      border-radius: 16px;
+      overflow-wrap: anywhere;
+      font-size: 13px;
+    }
+    .redeem-workbench,
+    .side-grid,
+    .live-columns {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+      gap: 18px;
+      align-items: stretch;
+    }
+    .neo-card,
+    .live-board {
+      padding: clamp(18px, 2.4vw, 26px);
+      min-width: 0;
+    }
+    .card-head,
+    .live-command-head,
+    .kingdom-head,
+    .panel-head,
+    .bulk-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 14px;
+      min-width: 0;
+    }
+    .card-head h2,
+    .live-command-head h2,
+    .kingdom-head h2 {
+      margin: 4px 0 0;
+      font-size: clamp(20px, 2.5vw, 30px);
+      letter-spacing: 0;
+    }
+    .card-note {
+      margin: 10px 0 18px;
+      line-height: 1.55;
+    }
+    .compact-button,
+    .bulk-action {
+      min-height: 40px;
+      padding: 9px 13px;
+      font-size: 13px;
+    }
+    .id-entry-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 0.95fr) minmax(280px, 0.75fr);
+      gap: 16px;
+    }
+    .single-entry,
+    .bulk-entry {
+      min-width: 0;
+    }
+    .bulk-entry textarea {
+      min-height: 154px;
+    }
+    .command-status,
+    .priority-status,
+    .status {
+      overflow-wrap: anywhere;
+    }
+    .priority-card {
+      border-color: rgba(250, 204, 21, 0.24);
+      background: linear-gradient(150deg, rgba(36, 28, 9, 0.84), rgba(15, 23, 42, 0.9));
+    }
+    .priority-badge,
+    .panel-count,
+    .kingdom-summary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 34px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(250, 204, 21, 0.24);
+      color: #fde68a;
+      background: rgba(250, 204, 21, 0.08);
+      font-size: 12px;
+      font-weight: 900;
+      overflow-wrap: anywhere;
+    }
+    .vip-strip {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 4px 2px 12px;
+      scrollbar-width: thin;
+    }
+    .vip-chip {
+      flex: 0 0 auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 11px;
+      border-radius: 999px;
+      border: 1px solid rgba(250, 204, 21, 0.2);
+      background: rgba(15, 23, 42, 0.62);
+      color: rgba(248, 250, 252, 0.9);
+      font-size: 12px;
+      font-weight: 900;
+    }
+    .vip-gold {
+      color: #1f1302;
+      background: linear-gradient(135deg, #fef3c7, #facc15 60%, #d97706);
+      box-shadow: 0 0 20px rgba(250, 204, 21, 0.22);
+    }
+    .vip-chip em {
+      font-style: normal;
+      opacity: 0.72;
+    }
+    .priority-marquee {
+      min-height: 70px;
+      border-radius: 18px;
+      border: 1px solid rgba(250, 204, 21, 0.12);
+      background: rgba(2, 6, 23, 0.34);
+      overflow: hidden;
+    }
+    .priority-track {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 70px;
+      padding: 10px;
+      overflow-x: auto;
+      scrollbar-width: thin;
+    }
+    .priority-actions,
+    .input-command,
+    .split-actions {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+      margin-top: 12px;
+    }
+    .side-grid {
+      grid-template-columns: minmax(0, 1fr) minmax(280px, 0.72fr);
+    }
+    .profile-card .profile {
+      border-radius: 18px;
+      border: 1px solid rgba(148, 163, 184, 0.14);
+      background: rgba(15, 23, 42, 0.62);
+    }
+    .compact-list {
+      max-height: 390px;
+      overflow: auto;
+      padding-right: 2px;
+    }
+    .live-board {
+      padding: clamp(18px, 2.5vw, 28px);
+    }
+    .live-command-head {
+      margin-bottom: 18px;
+    }
+    .success-meter {
+      display: grid;
+      justify-items: end;
+      min-width: 140px;
+    }
+    .success-meter span {
+      color: rgba(226, 232, 240, 0.72);
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+    .success-meter strong {
+      font-size: clamp(34px, 5vw, 58px);
+      line-height: 1;
+      color: #86efac;
+      overflow-wrap: anywhere;
+    }
+    .live-panel {
+      min-width: 0;
+      border-radius: 20px;
+      border: 1px solid rgba(148, 163, 184, 0.14);
+      background: rgba(2, 6, 23, 0.32);
+      padding: 14px;
+    }
+    .dock-body {
+      max-height: 480px;
+      overflow: auto;
+      padding-right: 2px;
+    }
+    .kingdom-registry {
+      overflow: hidden;
+    }
+    .kingdom-grid {
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+      max-height: none;
+      overflow: visible;
+    }
+    .kingdom-card,
+    .kingdom-player {
+      min-width: 0;
+    }
+    .kingdom-player-meta,
+    .kingdom-player-name,
+    .kingdom-title-pack {
+      overflow-wrap: anywhere;
+    }
+    @media (max-width: 1100px) {
+      .redeem-topbar {
+        grid-template-columns: 1fr;
+      }
+      .redeem-nav,
+      .redeem-actions {
+        justify-content: flex-start;
+        flex-wrap: wrap;
+      }
+      .redeem-hero,
+      .redeem-workbench,
+      .side-grid,
+      .live-columns,
+      .id-entry-grid {
+        grid-template-columns: 1fr;
+      }
+      .status-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+    @media (max-width: 680px) {
+      .redeem-suite {
+        width: min(100% - 18px, 1480px);
+        padding-top: 9px;
+      }
+      .redeem-topbar {
+        position: static;
+        border-radius: 18px;
+      }
+      .redeem-nav {
+        display: none;
+      }
+      .redeem-actions .lang-shell,
+      .redeem-actions .back {
+        width: 100%;
+      }
+      .redeem-hero {
+        padding: 20px;
+        border-radius: 22px;
+      }
+      .status-grid {
+        grid-template-columns: 1fr;
+      }
+      .priority-actions,
+      .input-command,
+      .split-actions {
+        grid-template-columns: 1fr;
+      }
+      .card-head,
+      .live-command-head,
+      .kingdom-head {
+        flex-direction: column;
+      }
+      .success-meter {
+        justify-items: start;
+      }
+      .emblem-ring {
+        width: min(180px, 62vw);
+      }
+    }
   </style>
   <link rel="stylesheet" href="./static/legend-ui.css?v=20260710-i18n-unified">
 </head>
 <body class="redeem-redesign">
-  <div class="redeem-shell">
-    <aside class="command-rail">
-      <a class="rail-brand" id="hubLink" href="./index.html">
-        <span class="rail-mark">885</span>
-        <span class="rail-brand-copy"><strong>885 LEGEND NASHSH</strong><small data-i18n="brandSub">Kingshot Auto Redeem</small></span>
+  <div class="redeem-shell redeem-suite">
+    <header class="redeem-topbar">
+      <a class="redeem-brand" id="hubLink" href="./index.html" aria-label="885 Legend Nashsh hub">
+        <span class="redeem-brand-mark">885</span>
+        <span class="redeem-brand-copy"><strong>885 LEGEND NASHSH</strong><small data-i18n="brandSub">Kingshot Auto Redeem</small></span>
       </a>
-      <div class="rail-controls">
+      <nav class="redeem-nav" aria-label="Auto redeem sections">
+        <a href="#registerZone" data-i18n="navRegister">Register</a>
+        <a href="#priorityZone" data-i18n="navPriority">Priority</a>
+        <a href="#liveZone" data-i18n="navLive">Live</a>
+      </nav>
+      <div class="redeem-actions">
         <label class="lang-shell" aria-label="Language">
           <select id="langSelect" aria-label="Language">
             <option value="ko">🇰🇷 한국어</option>
-            <option value="en">🇺🇸 English</option>
             <option value="ja">🇯🇵 日本語</option>
-            <option value="zh-CN">🇨🇳 简体中文</option>
-            <option value="zh-TW">🇹🇼 繁體中文</option>
+            <option value="en">🇺🇸 English</option>
             <option value="fr">🇫🇷 Français</option>
             <option value="de">🇩🇪 Deutsch</option>
+            <option value="zh-CN">🇨🇳 简体中文</option>
+            <option value="zh-TW">🇹🇼 繁體中文</option>
             <option value="th">🇹🇭 ไทย</option>
             <option value="id">🇮🇩 Indonesia</option>
           </select>
         </label>
         <a class="back rail-back" id="backLink" href="./index.html" data-i18n="back">Back to hub</a>
       </div>
-      <div class="rail-status">
-        <div class="rail-stat"><span data-i18n="registeredPlayers">Registered IDs</span><strong id="registeredBadge">-</strong></div>
-        <div class="rail-stat"><span data-i18n="activeCodes">Active codes</span><strong id="activeCodeBadge">-</strong></div>
-        <div class="rail-stat queue-stat"><span data-i18n="queueStatus">Queue status</span><strong id="queueBadge">-</strong></div>
-        <div id="daemonBadge" class="engine-card daemon-badge unknown" data-i18n="automationUnknown">Auto redeem engine checking...</div>
-      </div>
-    </aside>
+    </header>
 
-    <main class="command-stage">
-      <div class="site-trustbar" role="note" aria-label="Auto redeem safety notice">
-        <span class="trust-copy" data-i18n="trustText"><strong>HTTPS protected · safe connection.</strong> Auto Redeem stores only Kingshot player IDs and public profile summaries. It never asks for passwords, payment information, email login, or device access.</span>
+    <main class="redeem-main">
+      <section class="site-trustbar" role="note" aria-label="Auto redeem safety notice">
+        <span class="trust-copy" data-i18n="trustText">HTTPS protected · safe connection. Auto Redeem stores only Kingshot player IDs and public profile summaries. It never asks for passwords, payment information, email login, or device access.</span>
         <span class="site-trust-links">
-            <a href="./security.html" data-i18n="security">Security</a>
-            <a href="./privacy.html" data-i18n="privacy">Privacy</a>
-            <a href="./feedback.html" data-i18n="contact">Contact</a>
+          <a href="./security.html" data-i18n="security">Security</a>
+          <a href="./privacy.html" data-i18n="privacy">Privacy</a>
+          <a href="./feedback.html" data-i18n="contact">Contact</a>
         </span>
-      </div>
+      </section>
 
-      <section class="command-hero">
+      <section class="redeem-hero">
         <div class="hero-copy">
-          <div class="hero-kicker">885 LEGEND NASHSH</div>
-          <h1><span class="gold" data-i18n="heroA">Auto Redeem</span><span data-i18n="heroB">Gift Code Center</span></h1>
-          <p data-i18n="subtitle">Register your Kingshot player ID once. When a new gift code is found, this hub queues a slow, safe redeem job for registered IDs.</p>
+          <span class="hero-kicker" data-i18n="heroEyebrow">AUTO REDEEM OPERATIONS</span>
+          <h1><span data-i18n="heroA">Auto Redeem</span><span data-i18n="heroB">Gift Code Center</span></h1>
+          <p data-i18n="subtitle">Register your Kingshot player ID once. When a new gift code is found, this hub queues a safe redeem job for registered IDs.</p>
+          <div class="hero-trust-line"><span data-i18n="heroTrust">No password · No login · Player ID only</span></div>
         </div>
-        <div class="hero-orbit" aria-hidden="true">
-          <div class="orbit-core"><span data-i18n="orbitAuto">AUTO</span><br><span data-i18n="orbitRedeem">REDEEM</span></div>
-          <span></span><span></span><span></span>
+        <div class="redeem-emblem" aria-label="885 Nashsh auto redeem badge">
+          <div class="emblem-ring">
+            <span class="emblem-kingdom">885</span>
+            <span class="emblem-title">NASHSH</span>
+          </div>
+          <span class="emblem-caption" data-i18n="emblemCaption">Secure redeem queue</span>
         </div>
       </section>
 
-      <section class="priority-lounge" aria-label="Daily priority boost">
-        <div class="priority-head">
-          <div>
-            <span class="console-kicker" data-i18n="kickerPriority">DAILY PRIORITY</span>
-            <h2 data-i18n="priorityTitle">Daily Priority Boost</h2>
-            <p data-i18n="priorityHelp">Visit once a day, pass a quick check, and move your waiting redeem jobs higher in the queue until the next reset.</p>
-          </div>
-          <div class="priority-badge" id="priorityBadge" data-i18n="priorityChecking">Checking priority...</div>
-        </div>
-        <div class="priority-marquee" aria-live="polite">
-          <div class="priority-track" id="priorityTrack">
-            <div class="note" data-i18n="priorityEmpty">No boosted players yet today.</div>
-          </div>
-        </div>
-        <div class="priority-actions">
-          <input id="priorityPlayerId" inputmode="numeric" maxlength="12" autocomplete="off" data-placeholder="priorityPlayerPlaceholder" placeholder="Priority player ID">
-          <button class="primary" id="priorityChallengeBtn" data-i18n="priorityChallenge">Start daily boost</button>
-        </div>
-        <div class="priority-status" id="priorityStatus" data-i18n="priorityReady">Register or load your ID, then start today's priority boost.</div>
+      <section class="status-grid" aria-label="Auto redeem status">
+        <article class="status-card">
+          <span data-i18n="registeredPlayers">Registered IDs</span>
+          <strong id="registeredBadge">-</strong>
+          <small data-i18n="registeredHelp">Stored player IDs</small>
+        </article>
+        <article class="status-card">
+          <span data-i18n="activeCodes">Active codes</span>
+          <strong id="activeCodeBadge">-</strong>
+          <small data-i18n="activeCodesHelp">Redeem-ready list</small>
+        </article>
+        <article class="status-card wide">
+          <span data-i18n="queueStatus">Queue status</span>
+          <strong id="queueBadge">-</strong>
+          <small data-i18n="queueHelp">Waiting / running / review</small>
+        </article>
+        <article class="status-card server-card">
+          <span data-i18n="serverStatusTitle">Oracle/PuTTY server</span>
+          <div id="daemonBadge" class="engine-card daemon-badge unknown" data-i18n="automationUnknown">Auto redeem engine checking...</div>
+        </article>
       </section>
 
-      <section class="mission-grid">
-        <article class="console-card id-console">
-          <div class="console-head">
+      <section class="redeem-workbench">
+        <article class="neo-card register-card" id="registerZone">
+          <div class="card-head">
             <div><span class="console-kicker" data-i18n="kickerIdVault">ID VAULT</span><h2 data-i18n="registerTitle">Register Player ID</h2></div>
-            <button class="ghost" id="loadBtn" data-i18n="loadToken">Show saved token</button>
+            <button class="ghost compact-button" id="loadBtn" data-i18n="loadToken">Load saved ID</button>
           </div>
+          <p class="card-note" data-i18n="registerHint">Use one ID or paste many IDs. Duplicate IDs are ignored safely.</p>
           <div class="id-entry-grid">
             <div class="single-entry">
               <label for="playerId" data-i18n="playerId">Kingshot Player ID</label>
@@ -2128,39 +2636,64 @@
           <div class="status command-status" id="registerStatus" data-i18n="ready">Ready.</div>
         </article>
 
-        <aside class="ops-stack">
-          <article class="console-card profile-console">
-            <div class="console-head compact"><div><span class="console-kicker" data-i18n="kickerProfile">PROFILE LINK</span><h2 data-i18n="recentUsers">Recent users</h2></div><span class="panel-count" id="userDockCount">-</span></div>
-            <div class="profile" id="profileBox">
-              <img id="profileAvatar" alt="">
-              <div><strong id="profileName">-</strong><span id="profileMeta">-</span></div>
-            </div>
-            <div class="dock-grid compact-list" id="recentUsersList">
-              <div class="note" data-i18n="loadingActivity">Loading activity...</div>
-            </div>
-          </article>
-          <article class="console-card manage-console">
-            <div class="console-head compact"><div><span class="console-kicker" data-i18n="kickerManage">REQUEST BAY</span><h2 data-i18n="manageTitle">Manage Registration</h2></div></div>
-            <p class="note" data-i18n="manageHelp">The manage token is stored only in this browser after registration. Keep it if you want to remove the ID later.</p>
-            <label for="manageToken" data-i18n="manageToken">Manage Token</label>
-            <input id="manageToken" data-placeholder="tokenPlaceholder" placeholder="Token appears after registration">
-            <div class="actions split-actions">
-              <button class="danger" id="removeBtn" data-i18n="remove">Remove my ID</button>
-              <button class="ghost" id="refreshCodesBtn" data-i18n="refreshCodes">Refresh codes</button>
-            </div>
-            <div class="status" id="manageStatus" data-i18n="noAction">No action yet.</div>
-          </article>
-        </aside>
+        <article class="neo-card priority-card" id="priorityZone">
+          <div class="card-head">
+            <div><span class="console-kicker" data-i18n="kickerPriority">DAILY PRIORITY</span><h2 data-i18n="priorityTitle">Daily Priority Boost</h2></div>
+            <div class="priority-badge" id="priorityBadge" data-i18n="priorityChecking">Checking priority...</div>
+          </div>
+          <p class="card-note" data-i18n="priorityHelp">Visit once a day, pass a quick check, and move your waiting redeem jobs higher in the queue until the next reset.</p>
+          <div class="vip-strip" aria-label="VIP priority players">
+            <span class="vip-chip vip-gold"><strong data-i18n="vipAlways">VIP lane</strong><em>885</em></span>
+            <span class="vip-chip">132400657</span>
+            <span class="vip-chip">130500207</span>
+            <span class="vip-chip">132498752</span>
+            <span class="vip-chip">131598020</span>
+            <span class="vip-chip">133662121</span>
+            <span class="vip-chip">132891924</span>
+          </div>
+          <div class="priority-marquee" aria-live="polite">
+            <div class="priority-track" id="priorityTrack"><div class="note" data-i18n="priorityEmpty">No boosted players yet today.</div></div>
+          </div>
+          <div class="priority-actions">
+            <input id="priorityPlayerId" inputmode="numeric" maxlength="12" autocomplete="off" data-placeholder="priorityPlayerPlaceholder" placeholder="Priority player ID">
+            <button class="primary" id="priorityChallengeBtn" data-i18n="priorityChallenge">Start daily boost</button>
+          </div>
+          <div class="priority-status" id="priorityStatus" data-i18n="priorityReady">Register or load your ID, then start today's priority boost.</div>
+        </article>
       </section>
 
-      <section class="live-command-center">
+      <section class="side-grid">
+        <article class="neo-card profile-card">
+          <div class="card-head compact"><div><span class="console-kicker" data-i18n="kickerProfile">PROFILE LINK</span><h2 data-i18n="recentUsers">Recent users</h2></div><span class="panel-count" id="userDockCount">-</span></div>
+          <p class="card-note" data-i18n="recentHint">Newest verified registrations appear here.</p>
+          <div class="profile" id="profileBox">
+            <img id="profileAvatar" alt="">
+            <div><strong id="profileName">-</strong><span id="profileMeta">-</span></div>
+          </div>
+          <div class="dock-grid compact-list" id="recentUsersList"><div class="note" data-i18n="loadingActivity">Loading activity...</div></div>
+        </article>
+
+        <article class="neo-card manage-card">
+          <div class="card-head compact"><div><span class="console-kicker" data-i18n="kickerManage">REQUEST BAY</span><h2 data-i18n="manageTitle">Manage Registration</h2></div></div>
+          <p class="card-note" data-i18n="manageHelp">Direct removal is disabled for safety. Send a request here, and the admin will review it.</p>
+          <label for="manageToken" data-i18n="manageToken">Request note</label>
+          <input id="manageToken" data-placeholder="tokenPlaceholder" placeholder="Optional note for admin">
+          <div class="actions split-actions">
+            <button class="danger" id="removeBtn" data-i18n="remove">Request removal</button>
+            <button class="ghost" id="refreshCodesBtn" data-i18n="refreshCodes">Refresh status</button>
+          </div>
+          <div class="status" id="manageStatus" data-i18n="noAction">No action yet.</div>
+        </article>
+      </section>
+
+      <section class="live-board" id="liveZone">
         <div class="live-command-head">
-          <div><span class="console-kicker" data-i18n="kickerLive">LIVE OPERATIONS</span><h2 data-i18n="codesTitle">Latest Gift Codes</h2><p id="codeSummary" data-i18n="codesHelp">Active and expired states are synced from the source site.</p></div>
+          <div><span class="console-kicker" data-i18n="kickerLive">LIVE OPERATIONS</span><h2 data-i18n="codesTitle">Latest Gift Codes</h2><p id="codeSummary" data-i18n="codesHelp">Active and expired states are synced from trusted sources and recent redeem results.</p></div>
           <div class="success-meter"><span data-i18n="successTitle">Current Successes</span><strong id="successDockCount">-</strong></div>
         </div>
         <div class="live-columns" aria-label="Auto redeem live activity">
           <div class="live-panel code-panel">
-            <div class="panel-head"><span data-i18n="codeDockTitle">Code Situation</span><span class="panel-count" id="codeDockCount">-</span></div>
+            <div class="panel-head"><span data-i18n="codeDockTitle">Code Status</span><span class="panel-count" id="codeDockCount">-</span></div>
             <div class="dock-body"><div class="dock-grid" id="codeDockList"><div class="note" data-i18n="loadingCodes">Loading codes...</div></div></div>
           </div>
           <div class="live-panel success-panel">
@@ -2170,22 +2703,15 @@
         </div>
       </section>
 
-      <section class="console-card kingdom-registry">
+      <section class="neo-card kingdom-registry">
         <div class="kingdom-head">
-          <div>
-            <span class="console-kicker" data-i18n="kickerKingdom">KINGDOM REGISTRY</span>
-            <h2 data-i18n="kingdomRegistryTitle">Registered IDs by Kingdom</h2>
-            <p data-i18n="kingdomRegistryHelp">Browse saved auto-redeem IDs grouped by kingdom number.</p>
-          </div>
+          <div><span class="console-kicker" data-i18n="kickerKingdom">KINGDOM REGISTRY</span><h2 data-i18n="kingdomRegistryTitle">Registered IDs by Kingdom</h2><p data-i18n="kingdomRegistryHelp">Browse saved auto-redeem IDs grouped by kingdom number.</p></div>
           <span class="kingdom-summary" id="kingdomSummary">-</span>
         </div>
-        <div class="kingdom-grid" id="kingdomGrid">
-          <div class="note" data-i18n="loadingKingdoms">Loading kingdom registry...</div>
-        </div>
+        <div class="kingdom-grid" id="kingdomGrid"><div class="note" data-i18n="loadingKingdoms">Loading kingdom registry...</div></div>
       </section>
     </main>
   </div>
-
   <div class="priority-modal-backdrop" id="priorityModal" hidden role="dialog" aria-modal="true" aria-labelledby="priorityModalTitle">
     <div class="priority-modal">
       <h3 id="priorityModalTitle" data-i18n="priorityModalTitle">Confirm daily priority</h3>
@@ -2822,6 +3348,37 @@
       priorityModalTitle: 'Konfirmasi prioritas harian', priorityModalBody: 'Selesaikan hitungan singkat di bawah. Ini membantu mencegah otomatisasi berlebihan dan menerapkan prioritas hari ini ke tugas redeem yang menunggu.', priorityCancel: 'Batal',
     });
 
+
+    const PREMIUM_I18N = {
+      en: {
+        navRegister: 'Register', navPriority: 'Priority', navLive: 'Live', heroEyebrow: 'AUTO REDEEM OPERATIONS', heroTrust: 'No password · No login · Player ID only', emblemCaption: 'Secure redeem queue', registeredHelp: 'Stored player IDs', activeCodesHelp: 'Redeem-ready list', queueHelp: 'Waiting / running / review', serverStatusTitle: 'Oracle/PuTTY server', registerHint: 'Use one ID or paste many IDs. Duplicate IDs are ignored safely.', recentHint: 'Newest verified registrations appear here.', vipAlways: 'VIP lane'
+      },
+      ko: {
+        navRegister: '등록', navPriority: '우선권', navLive: '실시간', heroEyebrow: '오토 리딤 운영센터', heroTrust: '비밀번호 없음 · 로그인 없음 · 플레이어 ID만 사용', emblemCaption: '안전한 리딤 대기열', registeredHelp: '저장된 플레이어 ID', activeCodesHelp: '지급 가능한 코드 목록', queueHelp: '대기 / 진행 / 검토', serverStatusTitle: 'Oracle/PuTTY 서버', registerHint: 'ID 하나 또는 여러 ID를 붙여넣어 등록하세요. 중복 ID는 안전하게 무시됩니다.', recentHint: '최근 검증된 등록 유저가 표시됩니다.', vipAlways: 'VIP 우선권'
+      },
+      ja: {
+        navRegister: '登録', navPriority: '優先', navLive: 'ライブ', heroEyebrow: '自動交換オペレーション', heroTrust: 'パスワード不要 · ログイン不要 · プレイヤーIDのみ', emblemCaption: '安全な交換キュー', registeredHelp: '保存済みプレイヤーID', activeCodesHelp: '交換可能なコード一覧', queueHelp: '待機 / 実行 / 確認', serverStatusTitle: 'Oracle/PuTTYサーバー', registerHint: 'IDを1つ、または複数貼り付けて登録できます。重複IDは安全に無視されます。', recentHint: '最近確認された登録ユーザーを表示します。', vipAlways: 'VIP優先枠'
+      },
+      fr: {
+        navRegister: 'Inscription', navPriority: 'Priorité', navLive: 'Direct', heroEyebrow: 'CENTRE AUTO REDEEM', heroTrust: 'Aucun mot de passe · Aucun login · ID joueur seulement', emblemCaption: 'File de redemption sécurisée', registeredHelp: 'IDs joueur enregistrés', activeCodesHelp: 'Codes prêts', queueHelp: 'Attente / cours / revue', serverStatusTitle: 'Serveur Oracle/PuTTY', registerHint: 'Ajoutez un ID ou collez plusieurs IDs. Les doublons sont ignorés.', recentHint: 'Dernières inscriptions vérifiées.', vipAlways: 'Voie VIP'
+      },
+      de: {
+        navRegister: 'Registrieren', navPriority: 'Priorität', navLive: 'Live', heroEyebrow: 'AUTO REDEEM ZENTRALE', heroTrust: 'Kein Passwort · Kein Login · Nur Spieler-ID', emblemCaption: 'Sichere Redeem-Warteschlange', registeredHelp: 'Gespeicherte Spieler-IDs', activeCodesHelp: 'Einlösbare Codes', queueHelp: 'Warten / läuft / Prüfung', serverStatusTitle: 'Oracle/PuTTY Server', registerHint: 'Eine ID oder mehrere IDs einfügen. Duplikate werden ignoriert.', recentHint: 'Neueste geprüfte Registrierungen.', vipAlways: 'VIP-Spur'
+      },
+      'zh-CN': {
+        navRegister: '登记', navPriority: '优先', navLive: '实时', heroEyebrow: '自动兑换中心', heroTrust: '无需密码 · 无需登录 · 仅使用玩家ID', emblemCaption: '安全兑换队列', registeredHelp: '已保存玩家ID', activeCodesHelp: '可兑换代码列表', queueHelp: '等待 / 运行 / 检查', serverStatusTitle: 'Oracle/PuTTY服务器', registerHint: '输入一个ID或粘贴多个ID。重复ID会被安全忽略。', recentHint: '显示最近验证的登记用户。', vipAlways: 'VIP优先'
+      },
+      'zh-TW': {
+        navRegister: '登錄', navPriority: '優先', navLive: '即時', heroEyebrow: '自動兌換中心', heroTrust: '無需密碼 · 無需登入 · 僅使用玩家ID', emblemCaption: '安全兌換佇列', registeredHelp: '已儲存玩家ID', activeCodesHelp: '可兌換代碼清單', queueHelp: '等待 / 執行 / 檢查', serverStatusTitle: 'Oracle/PuTTY伺服器', registerHint: '輸入一個ID或貼上多個ID。重複ID會被安全忽略。', recentHint: '顯示最近驗證的登錄玩家。', vipAlways: 'VIP優先'
+      },
+      th: {
+        navRegister: 'ลงทะเบียน', navPriority: 'ลำดับพิเศษ', navLive: 'สด', heroEyebrow: 'ศูนย์แลกโค้ดอัตโนมัติ', heroTrust: 'ไม่ใช้รหัสผ่าน · ไม่ต้องล็อกอิน · ใช้แค่ Player ID', emblemCaption: 'คิวแลกโค้ดที่ปลอดภัย', registeredHelp: 'Player ID ที่บันทึกไว้', activeCodesHelp: 'รายการโค้ดที่ใช้ได้', queueHelp: 'รอ / ทำงาน / ตรวจสอบ', serverStatusTitle: 'เซิร์ฟเวอร์ Oracle/PuTTY', registerHint: 'ใส่ ID เดียวหรือวางหลาย ID ได้ ระบบจะข้าม ID ซ้ำอย่างปลอดภัย', recentHint: 'ผู้ใช้ที่ลงทะเบียนล่าสุดจะแสดงที่นี่', vipAlways: 'ช่อง VIP'
+      },
+      id: {
+        navRegister: 'Daftar', navPriority: 'Prioritas', navLive: 'Live', heroEyebrow: 'PUSAT AUTO REDEEM', heroTrust: 'Tanpa kata sandi · Tanpa login · Hanya Player ID', emblemCaption: 'Antrean redeem aman', registeredHelp: 'Player ID tersimpan', activeCodesHelp: 'Daftar kode aktif', queueHelp: 'Menunggu / berjalan / review', serverStatusTitle: 'Server Oracle/PuTTY', registerHint: 'Masukkan satu ID atau tempel banyak ID. ID duplikat diabaikan.', recentHint: 'Pendaftaran terbaru yang tervalidasi muncul di sini.', vipAlways: 'Jalur VIP'
+      }
+    };
+    Object.entries(PREMIUM_I18N).forEach(([lang, dict]) => Object.assign(I18N[lang] || (I18N[lang] = {}), dict));
     let currentLang = new URL(location.href).searchParams.get('lang') || localStorage.getItem('siteLang') || localStorage.getItem('lang') || 'ko';
     if (!I18N[currentLang]) currentLang = 'ko';
     const saved = JSON.parse(localStorage.getItem('autoRedeemRegistration') || '{}');
@@ -2906,8 +3463,8 @@
       document.querySelectorAll('.redeem-shell #langSelect').forEach((select) => { select.value = currentLang; });
       localStorage.setItem('lang', currentLang);
       localStorage.setItem('siteLang', currentLang);
-      $('registeredBadge').textContent = `${tr('registeredPlayers')}: -`;
-      $('activeCodeBadge').textContent = `${tr('activeCodes')}: ${latestVisibleActiveCodes === null ? '-' : formatNumber(latestVisibleActiveCodes)}`;
+      $('registeredBadge').textContent = '-';
+      $('activeCodeBadge').textContent = latestVisibleActiveCodes === null ? '-' : formatNumber(latestVisibleActiveCodes);
       updateBulkPreview();
     }
 
@@ -2982,13 +3539,13 @@
       try {
         const data = await api('/api/redeem/status');
         if (Number.isFinite(Number(data.activeCodes))) latestVisibleActiveCodes = Number(data.activeCodes);
-        $('registeredBadge').textContent = `${tr('registeredPlayers')}: ${formatNumber(data.registeredPlayers || 0)}`;
-        $('activeCodeBadge').textContent = `${tr('activeCodes')}: ${latestVisibleActiveCodes === null ? '-' : formatNumber(latestVisibleActiveCodes)}`;
+        $('registeredBadge').textContent = formatNumber(data.registeredPlayers || 0);
+        $('activeCodeBadge').textContent = latestVisibleActiveCodes === null ? '-' : formatNumber(latestVisibleActiveCodes);
         renderQueueStatus(data.queue);
         renderAutomationStatus(data.automation || data.daemon);
       } catch {
-        $('registeredBadge').textContent = `${tr('registeredPlayers')}: -`;
-        $('activeCodeBadge').textContent = `${tr('activeCodes')}: -`;
+        $('registeredBadge').textContent = '-';
+        $('activeCodeBadge').textContent = '-';
         renderQueueStatus(null);
         renderAutomationStatus(null);
       }
@@ -3055,7 +3612,7 @@
       const trustedActive = Number.isFinite(overrideCount) && overrideCount > 0 ? overrideCount : active;
       latestVisibleActiveCodes = trustedActive;
       $('codeDockCount').textContent = `${formatNumber(trustedActive)}/${formatNumber(rows.length || 0)}`;
-      $('activeCodeBadge').textContent = `${tr('activeCodes')}: ${formatNumber(trustedActive)}`;
+      $('activeCodeBadge').textContent = formatNumber(trustedActive);
       if (!rows.length) {
         $('codeDockList').innerHTML = `<div class="note">${escapeHtml(tr('noCodes'))}</div>`;
         return;
@@ -3100,8 +3657,8 @@
       const successTotal = Number(data.successJobs || 0);
       $('userDockCount').textContent = `${formatNumber(data.registeredPlayers || recentPlayers.length || 0)}`;
       setTextById('successDockCount', `${formatNumber(successTotal || recentSuccess.length || 0)}`);
-      $('registeredBadge').textContent = `${tr('registeredPlayers')}: ${formatNumber(data.registeredPlayers || 0)}`;
-      $('activeCodeBadge').textContent = `${tr('activeCodes')}: ${latestVisibleActiveCodes === null ? '-' : formatNumber(latestVisibleActiveCodes)}`;
+      $('registeredBadge').textContent = formatNumber(data.registeredPlayers || 0);
+      $('activeCodeBadge').textContent = latestVisibleActiveCodes === null ? '-' : formatNumber(latestVisibleActiveCodes);
       renderQueueStatus(data.queue);
       if (data.automation !== undefined || data.daemon !== undefined) renderAutomationStatus(data.automation || data.daemon);
       if (data.priority !== undefined) renderPriority(data.priority);
