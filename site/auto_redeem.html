@@ -2350,6 +2350,11 @@
       overflow-x: auto;
       padding: 4px 2px 12px;
       scrollbar-width: thin;
+      touch-action: pan-x;
+      cursor: grab;
+      user-select: none;
+      overscroll-behavior-x: contain;
+      scroll-snap-type: x proximity;
     }
     .vip-chip {
       flex: 0 0 auto;
@@ -2363,6 +2368,39 @@
       color: rgba(248, 250, 252, 0.9);
       font-size: 12px;
       font-weight: 900;
+      scroll-snap-align: start;
+    }
+    .vip-chip.vip-player {
+      min-width: min(260px, 72vw);
+      max-width: min(320px, 82vw);
+      justify-content: flex-start;
+      padding: 7px 12px 7px 8px;
+      border-color: rgba(250, 204, 21, 0.28);
+      background: linear-gradient(135deg, rgba(250, 204, 21, 0.12), rgba(15, 23, 42, 0.76));
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    }
+    .vip-chip.vip-player .mini-avatar {
+      width: 34px;
+      height: 34px;
+      flex: 0 0 34px;
+      border-color: rgba(250, 204, 21, 0.35);
+    }
+    .vip-chip-body {
+      min-width: 0;
+      display: grid;
+      gap: 2px;
+    }
+    .vip-chip-body strong,
+    .vip-chip-body small {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .vip-chip-body small {
+      color: rgba(226, 232, 240, 0.68);
+      font-size: 11px;
+      font-weight: 800;
     }
     .vip-gold {
       color: #1f1302;
@@ -2384,10 +2422,29 @@
       display: flex;
       align-items: center;
       gap: 10px;
+      width: 100%;
+      max-width: 100%;
       min-height: 70px;
       padding: 10px;
       overflow-x: auto;
       scrollbar-width: thin;
+      touch-action: pan-x;
+      cursor: grab;
+      user-select: none;
+      overscroll-behavior-x: contain;
+      scroll-snap-type: x proximity;
+    }
+    .vip-strip.dragging,
+    .priority-track.dragging {
+      cursor: grabbing;
+      scroll-behavior: auto;
+    }
+    .vip-strip.dragging *,
+    .priority-track.dragging * {
+      pointer-events: none;
+    }
+    .priority-track .priority-chip {
+      flex: 0 0 auto;
     }
     .priority-actions,
     .input-command,
@@ -2642,7 +2699,7 @@
             <div class="priority-badge" id="priorityBadge" data-i18n="priorityChecking">Checking priority...</div>
           </div>
           <p class="card-note" data-i18n="priorityHelp">Visit once a day, pass a quick check, and move your waiting redeem jobs higher in the queue until the next reset.</p>
-          <div class="vip-strip" aria-label="VIP priority players">
+          <div class="vip-strip" id="vipStrip" aria-label="VIP priority players">
             <span class="vip-chip vip-gold"><strong data-i18n="vipAlways">VIP lane</strong><em>885</em></span>
             <span class="vip-chip">132400657</span>
             <span class="vip-chip">130500207</span>
@@ -3392,6 +3449,90 @@
     };
     const tr = (key) => (I18N[currentLang] && I18N[currentLang][key]) || I18N.en[key] || key;
     const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (ch) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+    const VIP_PLAYER_IDS = ['132400657', '130500207', '132498752', '131598020', '133662121', '132891924'];
+    const knownRedeemPlayers = new Map();
+    function canonicalPlayerId(player) {
+      return String((player && (player.id || player.player_id || player.playerId)) || '').trim();
+    }
+    function playerSnapshot(player) {
+      const snapshot = player && (player.player_snapshot || player.snapshot || player.profile_json);
+      return snapshot && typeof snapshot === 'object' ? snapshot : {};
+    }
+    function rememberPlayer(player) {
+      const id = canonicalPlayerId(player);
+      if (!id) return null;
+      const existing = knownRedeemPlayers.get(id) || {};
+      const snapshot = playerSnapshot(player);
+      const merged = { ...existing, ...snapshot, ...player, id, player_id: id };
+      knownRedeemPlayers.set(id, merged);
+      return merged;
+    }
+    function rememberPlayers(players) {
+      (Array.isArray(players) ? players : []).forEach(rememberPlayer);
+    }
+    function hasProfileDetails(player) {
+      return Boolean(player && (player.nickname || player.username || player.avatar_url || player.avatar_image || player.state || player.kid || player.town_hall_level || player.stove_lv));
+    }
+    function renderVipStrip() {
+      const strip = $('vipStrip');
+      if (!strip) return;
+      const lane = `<span class="vip-chip vip-gold"><strong>${escapeHtml(tr('vipAlways'))}</strong><em>885</em></span>`;
+      const chips = VIP_PLAYER_IDS.map((id) => {
+        const player = knownRedeemPlayers.get(id) || { id, player_id: id };
+        const loaded = hasProfileDetails(player);
+        const name = loaded ? playerName(player) : `ID ${id}`;
+        const meta = loaded ? `${playerMeta(player)} / ID ${maskId(id)}` : `${tr('loadingActivity')} / ${maskId(id)}`;
+        const avatar = loaded ? avatarNode(player) : '<div class="mini-avatar avatar-letter">VIP</div>';
+        return `
+          <span class="vip-chip vip-player${loaded ? ' loaded' : ' loading'}">
+            ${avatar}
+            <span class="vip-chip-body">
+              <strong>${escapeHtml(name)}</strong>
+              <small>${escapeHtml(meta)}</small>
+            </span>
+          </span>`;
+      }).join('');
+      strip.innerHTML = lane + chips;
+      enableHorizontalDrag(strip);
+    }
+    function enableHorizontalDrag(el) {
+      if (!el || el.dataset.dragReady === '1') return;
+      el.dataset.dragReady = '1';
+      let isDown = false;
+      let moved = false;
+      let startX = 0;
+      let startLeft = 0;
+      const stop = (event) => {
+        if (!isDown) return;
+        isDown = false;
+        el.classList.remove('dragging');
+        try { el.releasePointerCapture(event.pointerId); } catch {}
+      };
+      el.addEventListener('pointerdown', (event) => {
+        if (event.button !== undefined && event.button !== 0) return;
+        isDown = true;
+        moved = false;
+        startX = event.clientX;
+        startLeft = el.scrollLeft;
+        el.classList.add('dragging');
+        try { el.setPointerCapture(event.pointerId); } catch {}
+      });
+      el.addEventListener('pointermove', (event) => {
+        if (!isDown) return;
+        const delta = event.clientX - startX;
+        if (Math.abs(delta) > 3) moved = true;
+        el.scrollLeft = startLeft - delta;
+      });
+      el.addEventListener('pointerup', stop);
+      el.addEventListener('pointercancel', stop);
+      el.addEventListener('mouseleave', stop);
+      el.addEventListener('click', (event) => {
+        if (!moved) return;
+        event.preventDefault();
+        event.stopPropagation();
+        moved = false;
+      }, true);
+    }
     function formatNumber(value) {
       const n = Number(value);
       if (!Number.isFinite(n)) return '0';
@@ -3466,6 +3607,8 @@
       $('registeredBadge').textContent = '-';
       $('activeCodeBadge').textContent = latestVisibleActiveCodes === null ? '-' : formatNumber(latestVisibleActiveCodes);
       updateBulkPreview();
+      renderVipStrip();
+      enableHorizontalDrag($('priorityTrack'));
     }
 
     function setStatus(id, text) { $(id).textContent = text; }
@@ -3654,6 +3797,9 @@
     function renderActivity(data) {
       const recentPlayers = Array.isArray(data.recentPlayers) ? data.recentPlayers : [];
       const recentSuccess = Array.isArray(data.recentSuccess) ? data.recentSuccess : [];
+      rememberPlayers(recentPlayers);
+      rememberPlayers(recentSuccess);
+      renderVipStrip();
       const successTotal = Number(data.successJobs || 0);
       $('userDockCount').textContent = `${formatNumber(data.registeredPlayers || recentPlayers.length || 0)}`;
       setTextById('successDockCount', `${formatNumber(successTotal || recentSuccess.length || 0)}`);
@@ -3707,6 +3853,8 @@
     function renderPriority(data) {
       const priority = data && data.priority ? data.priority : data;
       const leaderboard = Array.isArray(priority && priority.leaderboard) ? priority.leaderboard : [];
+      rememberPlayers(leaderboard);
+      renderVipStrip();
       const mine = priority && priority.mine;
       const resetAt = Number((mine && mine.expires_at_ms) || (priority && priority.resetAtMs) || 0);
       const badge = $('priorityBadge');
@@ -3720,6 +3868,7 @@
       if (!leaderboard.length) {
         track.style.animation = 'none';
         track.innerHTML = `<div class="note">${escapeHtml(tr('priorityEmpty'))}</div>`;
+        enableHorizontalDrag(track);
         return;
       }
       const rows = leaderboard.slice(0, 30);
@@ -3736,6 +3885,7 @@
         </div>`;
       }).join('');
       track.innerHTML = chips;
+      enableHorizontalDrag(track);
     }
 
     async function loadPriority() {
@@ -3894,8 +4044,11 @@
       if (!grid) return;
       if (!kingdoms.length) {
         grid.innerHTML = `<div class="note">${escapeHtml(tr('noKingdomRegistry'))}</div>`;
+        renderVipStrip();
         return;
       }
+      kingdoms.forEach((kingdom) => rememberPlayers(Array.isArray(kingdom.players) ? kingdom.players : []));
+      renderVipStrip();
       grid.innerHTML = kingdoms.map((kingdom, index) => {
         const players = Array.isArray(kingdom.players) ? kingdom.players : [];
         const openAttr = index === 0 ? ' open' : '';
