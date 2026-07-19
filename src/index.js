@@ -27,9 +27,6 @@ const PUBLIC_GIFT_CODE_PROBE_LIMIT = 3;
 const PUBLIC_GIFT_CODE_PROBE_PLAYER_LIMIT = 3;
 const PUBLIC_GIFT_CODE_SOURCES = [
   { source: "kingshot.net", url: "https://kingshot.net/gift-codes" },
-  { source: "kingshot.net/redeem", url: "https://kingshot.net/gift-codes/redeem" },
-  { source: "ks-rewards", url: "https://ks-rewards.com/" },
-  { source: "ksredeem", url: "https://ksredeem.com/" },
 ];
 const GIFT_CODE_DENYLIST = new Set([
   "ABOUT", "ACTIVE", "AUTOMATIC", "BROWSE", "BUTTON", "CLAIM", "CODES", "CODE", "COMMUNITY",
@@ -1438,10 +1435,7 @@ function redeemResultProvesCodeInactive(status) {
 
 function redeemCodeSourceTrustedForJobs(source) {
   const value = String(source || "").toLowerCase();
-  return value === "trusted-public:kingshot.net"
-    || value === "manual"
-    || value === "official-redeem-browser"
-    || value === "official-redeem-api";
+  return value === "trusted-public:kingshot.net";
 }
 
 async function expireRedeemCodeEverywhere(env, giftCode, reason = "Gift code expired.", atMs = Date.now()) {
@@ -1737,12 +1731,7 @@ async function updateRedeemCodeFromAttempt(env, giftCode, classified, atMs = Dat
 }
 
 function redeemCodeReadyForAutoRedeem(row) {
-  const status = cleanText((row && row.status) || "", 40).toLowerCase();
-  if (status !== "active") return false;
-  if (row && row.is_active === false) return false;
-  if (!redeemCodeAllowedForPublicUseStrict(row)) return false;
-  return redeemCodeSourceTrustedForJobs(row && row.source)
-    || redeemResultProvesCodeActive(row && row.last_redeem_status);
+  return redeemCodeTrustedActiveForDisplay(row);
 }
 
 async function listActiveRedeemPlayerIds(env, maxPlayers = 10000) {
@@ -1994,16 +1983,22 @@ function redeemCodeAllowedForPublicUseStrict(row) {
   if (!isLikelyGiftCodeValue(code)) return false;
   const status = cleanText((row && row.status) || "", 40).toLowerCase();
   if (status === "invalid_code" || status === "invalid" || status === "bad_candidate") return false;
-  const source = String((row && row.source) || "");
-  if ((source.startsWith("public:") || source.startsWith("trusted-public:")) && !/\d/.test(code)) return false;
+  const source = String((row && row.source) || "").toLowerCase();
+  const kingshotNetTrusted = source === "trusted-public:kingshot.net";
+  if ((source.startsWith("public:") || source.startsWith("trusted-public:")) && !/\d/.test(code) && !kingshotNetTrusted) return false;
   return true;
 }
 
-function redeemCodeLooksActiveForDisplay(row) {
+function redeemCodeTrustedActiveForDisplay(row) {
   const status = cleanText((row && row.status) || "", 40).toLowerCase();
   if (status !== "active") return false;
   if (row && row.is_active === false) return false;
+  if (String((row && row.source) || "").toLowerCase() !== "trusted-public:kingshot.net") return false;
   return redeemCodeAllowedForPublicUseStrict(row);
+}
+
+function redeemCodeLooksActiveForDisplay(row) {
+  return redeemCodeTrustedActiveForDisplay(row);
 }
 
 async function countVisibleActiveRedeemCodes(env, scanLimit = 300) {
@@ -2011,8 +2006,7 @@ async function countVisibleActiveRedeemCodes(env, scanLimit = 300) {
     env,
     `/redeem_codes?status=eq.active&select=code,source,status,is_active,last_redeem_status,updated_at_ms&order=updated_at_ms.desc&limit=${scanLimit}`
   ).catch(() => []);
-  const strictCount = (rows || []).filter(redeemCodeReadyForAutoRedeem).length;
-  return strictCount || (rows || []).filter(redeemCodeLooksActiveForDisplay).length;
+  return (rows || []).filter(redeemCodeTrustedActiveForDisplay).length;
 }
 
 function collectKingshotNetGiftCodes(text, source, url) {
@@ -2353,12 +2347,12 @@ async function listRedeemCodes(request, env) {
   ]);
   const visibleBase = (codes || []).filter(redeemCodeAllowedForPublicUseStrict);
   const trustedActive = new Set(visibleBase
-    .filter((row) => redeemCodeReadyForAutoRedeem(row) && String(row.source || "") === "trusted-public:kingshot.net")
+    .filter(redeemCodeTrustedActiveForDisplay)
     .map((row) => normalizeGiftCode(row.code))
     .filter(Boolean));
   const visible = visibleBase.filter((row) => {
     const isActive = redeemCodeReadyForAutoRedeem(row) || redeemCodeLooksActiveForDisplay(row);
-    if (!trustedActive.size || !isActive) return true;
+    if (!isActive) return true;
     return trustedActive.has(normalizeGiftCode(row.code));
   }).sort((a, b) => {
     const aActive = (redeemCodeReadyForAutoRedeem(a) || redeemCodeLooksActiveForDisplay(a)) ? 1 : 0;

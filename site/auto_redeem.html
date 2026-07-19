@@ -3573,15 +3573,10 @@
       const status = String((row && row.status) || '').toLowerCase();
       if (status !== 'active' || row.is_active === false) return false;
       const source = String((row && row.source) || '').toLowerCase();
-      return source === 'trusted-public:kingshot.net'
-        || source === 'manual'
-        || source === 'official-redeem-browser'
-        || source === 'official-redeem-api'
-        || redeemResultProvesDisplayActive(row && row.last_redeem_status);
+      return source === 'trusted-public:kingshot.net';
     }
     function displayCodeLooksActive(row) {
-      const status = String((row && row.status) || '').toLowerCase();
-      return status === 'active' && row && row.is_active !== false && isDisplayableGiftCode(row);
+      return displayCodeReadyForAutoRedeem(row) && isDisplayableGiftCode(row);
     }
     function parseBulkIds(text, max = 250) {
       const matches = String(text || '').match(/\d{3,12}/g) || [];
@@ -3752,7 +3747,7 @@
       const rows = (Array.isArray(codes) ? codes : []).filter(isDisplayableGiftCode);
       const active = rows.filter((row) => statusClass(row) === 'active').length;
       const overrideCount = Number(activeOverride);
-      const trustedActive = Number.isFinite(overrideCount) && overrideCount > 0 ? overrideCount : active;
+      const trustedActive = Number.isFinite(overrideCount) ? overrideCount : active;
       latestVisibleActiveCodes = trustedActive;
       $('codeDockCount').textContent = `${formatNumber(trustedActive)}/${formatNumber(rows.length || 0)}`;
       $('activeCodeBadge').textContent = formatNumber(trustedActive);
