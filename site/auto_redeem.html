@@ -1336,6 +1336,14 @@
       gap: 10px;
       align-items: center;
     }
+    .input-command.with-kingdom {
+      grid-template-columns: minmax(160px, 1fr) minmax(96px, 128px) auto;
+    }
+    .field-stack {
+      display: grid;
+      gap: 7px;
+      min-width: 0;
+    }
     .input-command button {
       min-width: 126px;
     }
@@ -1811,6 +1819,7 @@
       .kingdom-head,
       .split-actions,
       .input-command,
+      .input-command.with-kingdom,
       .priority-head,
       .priority-actions {
         grid-template-columns: 1fr;
@@ -2565,6 +2574,7 @@
       }
       .priority-actions,
       .input-command,
+      .input-command.with-kingdom,
       .split-actions {
         grid-template-columns: 1fr;
       }
@@ -2670,9 +2680,15 @@
           <p class="card-note" data-i18n="registerHint">Use one ID or paste many IDs. Duplicate IDs are ignored safely.</p>
           <div class="id-entry-grid">
             <div class="single-entry">
-              <label for="playerId" data-i18n="playerId">Kingshot Player ID</label>
-              <div class="input-command">
-                <input id="playerId" inputmode="numeric" maxlength="12" data-placeholder="playerPlaceholder" placeholder="Example: 123185474">
+              <div class="input-command with-kingdom">
+                <div class="field-stack">
+                  <label for="playerId" data-i18n="playerId">Kingshot Player ID</label>
+                  <input id="playerId" inputmode="numeric" maxlength="12" data-placeholder="playerPlaceholder" placeholder="Example: 123185474">
+                </div>
+                <div class="field-stack">
+                  <label for="kingdomId" data-i18n="kingdomId">Kingdom</label>
+                  <input id="kingdomId" inputmode="numeric" maxlength="5" data-placeholder="kingdomPlaceholder" placeholder="885">
+                </div>
                 <button class="primary" id="registerBtn" data-i18n="register">Register</button>
               </div>
               <label class="check consent-check">
@@ -2686,7 +2702,7 @@
             </div>
             <div class="bulk-entry">
               <div class="bulk-head"><label for="bulkIds" data-i18n="bulkLabel">Bulk Player IDs</label><span id="bulkPreview">0 ID</span></div>
-              <textarea id="bulkIds" data-placeholder="bulkPlaceholder" placeholder="Paste IDs separated by spaces, commas, or new lines."></textarea>
+              <textarea id="bulkIds" data-placeholder="bulkPlaceholder" placeholder="One per line: PlayerID Kingdom, e.g. 132498752 885. If the kingdom box is filled, ID-only lines use that kingdom."></textarea>
               <button class="ghost bulk-action" id="bulkBtn" data-i18n="bulkRegister">Register bulk IDs</button>
             </div>
           </div>
@@ -2790,14 +2806,15 @@
       brandSub: 'Kingshot Auto Redeem', back: 'Back to hub', heroA: 'Auto Redeem', heroB: 'Gift Code Center',
       subtitle: 'Register your Kingshot player ID once. When a new gift code is found, this hub queues a safe redeem job for registered IDs.',
       registerTitle: 'Register Player ID', playerId: 'Kingshot Player ID', playerPlaceholder: 'Example: 123185474',
+      kingdomId: 'Kingdom', kingdomPlaceholder: 'Example: 885',
       consent: 'I agree to save this player ID for automatic gift-code redemption. Only my player ID and public profile summary will be stored.',
-      bulkLabel: 'Bulk Player IDs', bulkPlaceholder: 'Paste IDs separated by spaces, commas, or new lines.', bulkRegister: 'Register bulk IDs',
+      bulkLabel: 'Bulk Player IDs', bulkPlaceholder: 'One per line: PlayerID Kingdom, e.g. 132498752 885. If the kingdom box is filled, ID-only lines use that kingdom.', bulkRegister: 'Register bulk IDs',
       register: 'Register', loadToken: 'Load saved ID', ready: 'Ready.', manageTitle: 'Removal Request',
       manageHelp: 'Direct removal is disabled for safety. Send a request here, and the admin will review it. Invalid player IDs are removed automatically when the official redeem page confirms the ID is wrong.',
       manageToken: 'Request note', tokenPlaceholder: 'Optional note for admin', remove: 'Request removal',
       refreshCodes: 'Refresh status', noAction: 'No action yet.', codesTitle: 'Latest Gift Codes',
       codesHelp: 'Active and expired states are synced from trusted sources and recent redeem results.', loadingCodes: 'Loading codes...',
-      noCodes: 'No codes saved yet.', enterId: 'Enter your player ID first.', needConsent: 'Consent is required before saving an ID.',
+      noCodes: 'No codes saved yet.', enterId: 'Enter your player ID first.', enterKingdom: 'Enter your kingdom number first.', needConsent: 'Consent is required before saving an ID.',
       checking: 'Checking official profile...', registered: 'Registered.', savedToken: 'Saved ID loaded.', noToken: 'No saved ID in this browser.',
       needToken: 'Player ID is required.', removing: 'Sending removal request...', removed: 'Removal request sent. Admin will review it.',
       active: 'Active', expired: 'Expired', observed: 'Observed', unknown: 'Unknown', discovered: 'Discovered', recent: 'Recent use',
@@ -3436,6 +3453,63 @@
       }
     };
     Object.entries(PREMIUM_I18N).forEach(([lang, dict]) => Object.assign(I18N[lang] || (I18N[lang] = {}), dict));
+    const KINGDOM_I18N = {
+      en: {
+        kingdomId: 'Kingdom',
+        kingdomPlaceholder: 'Example: 885',
+        enterKingdom: 'Enter your kingdom number first.',
+        bulkPlaceholder: 'One per line: PlayerID Kingdom, e.g. 132498752 885. If the kingdom box is filled, ID-only lines use that kingdom.'
+      },
+      ko: {
+        kingdomId: '왕국 번호',
+        kingdomPlaceholder: '예: 885',
+        enterKingdom: '왕국 번호를 먼저 입력해주세요.',
+        bulkPlaceholder: '한 줄에 하나씩 입력: 플레이어ID 왕국번호, 예: 132498752 885. 왕국 번호 칸을 채우면 ID만 붙여넣어도 같은 왕국으로 등록됩니다.'
+      },
+      ja: {
+        kingdomId: '王国番号',
+        kingdomPlaceholder: '例: 885',
+        enterKingdom: '王国番号を先に入力してください。',
+        bulkPlaceholder: '1行に1件: プレイヤーID 王国番号, 例: 132498752 885。王国欄を入力すると、IDだけの行にも同じ王国を使います。'
+      },
+      fr: {
+        kingdomId: 'Royaume',
+        kingdomPlaceholder: 'Exemple : 885',
+        enterKingdom: 'Saisissez d’abord le numéro de royaume.',
+        bulkPlaceholder: 'Une ligne par entrée : ID joueur Royaume, ex. 132498752 885. Si le champ Royaume est rempli, les lignes avec ID seul utilisent ce royaume.'
+      },
+      de: {
+        kingdomId: 'Königreich',
+        kingdomPlaceholder: 'Beispiel: 885',
+        enterKingdom: 'Bitte zuerst die Königreich-Nummer eingeben.',
+        bulkPlaceholder: 'Eine Zeile pro Eintrag: Spieler-ID Königreich, z. B. 132498752 885. Wenn das Königreich-Feld gefüllt ist, nutzen ID-only Zeilen dieses Königreich.'
+      },
+      'zh-CN': {
+        kingdomId: '王国编号',
+        kingdomPlaceholder: '示例：885',
+        enterKingdom: '请先输入王国编号。',
+        bulkPlaceholder: '每行一组：玩家ID 王国编号，例如 132498752 885。填写王国栏后，仅输入ID的行会使用该王国。'
+      },
+      'zh-TW': {
+        kingdomId: '王國編號',
+        kingdomPlaceholder: '範例：885',
+        enterKingdom: '請先輸入王國編號。',
+        bulkPlaceholder: '每行一組：玩家ID 王國編號，例如 132498752 885。填寫王國欄後，只有ID的行會使用該王國。'
+      },
+      th: {
+        kingdomId: 'หมายเลขอาณาจักร',
+        kingdomPlaceholder: 'ตัวอย่าง: 885',
+        enterKingdom: 'กรุณาใส่หมายเลขอาณาจักรก่อน',
+        bulkPlaceholder: 'หนึ่งรายการต่อหนึ่งบรรทัด: PlayerID Kingdom เช่น 132498752 885 หากกรอกช่อง Kingdom แล้ว แถวที่มีแค่ ID จะใช้ Kingdom นี้'
+      },
+      id: {
+        kingdomId: 'Kingdom',
+        kingdomPlaceholder: 'Contoh: 885',
+        enterKingdom: 'Masukkan nomor kingdom terlebih dahulu.',
+        bulkPlaceholder: 'Satu per baris: PlayerID Kingdom, contoh 132498752 885. Jika kolom kingdom diisi, baris yang hanya berisi ID memakai kingdom itu.'
+      }
+    };
+    Object.entries(KINGDOM_I18N).forEach(([lang, dict]) => Object.assign(I18N[lang] || (I18N[lang] = { ...BASE_I18N_EN }), dict));
     let currentLang = new URL(location.href).searchParams.get('lang') || localStorage.getItem('siteLang') || localStorage.getItem('lang') || 'ko';
     if (!I18N[currentLang]) currentLang = 'ko';
     const saved = JSON.parse(localStorage.getItem('autoRedeemRegistration') || '{}');
@@ -3582,11 +3656,46 @@
       const matches = String(text || '').match(/\d{3,12}/g) || [];
       return [...new Set(matches)].slice(0, max);
     }
+    function cleanKingdom(value) {
+      const text = String(value || '').replace(/\D/g, '').slice(0, 5);
+      const n = Number(text);
+      return Number.isInteger(n) && n > 0 ? text : '';
+    }
+    function parseBulkEntries(text, defaultKingdom = '', max = 250) {
+      const fallbackKingdom = cleanKingdom(defaultKingdom);
+      const rows = String(text || '').split(/[\n\r]+/).map((line) => line.trim()).filter(Boolean);
+      const seen = new Set();
+      const entries = [];
+      const pushEntry = (playerId, kingdom) => {
+        const id = String(playerId || '').replace(/\D/g, '');
+        const kid = cleanKingdom(kingdom);
+        if (!/^\d{3,12}$/.test(id) || !kid || seen.has(id)) return;
+        seen.add(id);
+        entries.push({ playerId: id, kingdom: kid });
+      };
+      rows.forEach((line) => {
+        if (entries.length >= max) return;
+        const numbers = line.match(/\d{1,12}/g) || [];
+        if (fallbackKingdom) {
+          numbers
+            .filter((num) => /^\d{6,12}$/.test(num) && Number(num) > 99999)
+            .forEach((id) => pushEntry(id, fallbackKingdom));
+        } else if (numbers.length >= 2) {
+          const id = [...numbers].sort((a, b) => b.length - a.length)[0];
+          const kingdom = numbers.find((num) => num !== id && cleanKingdom(num)) || fallbackKingdom;
+          pushEntry(id, kingdom);
+        } else if (numbers.length === 1 && fallbackKingdom) {
+          pushEntry(numbers[0], fallbackKingdom);
+        }
+      });
+      return entries.slice(0, max);
+    }
     function updateBulkPreview() {
       const preview = $('bulkPreview');
       const input = $('bulkIds');
       if (!preview || !input) return;
-      preview.textContent = `${formatNumber(parseBulkIds(input.value).length)} ID`;
+      const kingdom = $('kingdomId') ? $('kingdomId').value : '';
+      preview.textContent = `${formatNumber(parseBulkEntries(input.value, kingdom).length)} ID`;
     }
 
     function applyI18n() {
@@ -4116,19 +4225,24 @@
       $('playerId').value = saved.playerId;
       $('priorityPlayerId').value = saved.playerId;
     }
+    if (saved.kingdom) {
+      $('kingdomId').value = saved.kingdom;
+    }
 
     $('registerBtn').addEventListener('click', async () => {
       const playerId = $('playerId').value.replace(/\D/g, '');
+      const kingdom = cleanKingdom($('kingdomId').value);
       if (!playerId) return setStatus('registerStatus', tr('enterId'));
+      if (!kingdom) return setStatus('registerStatus', tr('enterKingdom'));
       if (!$('consent').checked) return setStatus('registerStatus', tr('needConsent'));
       setStatus('registerStatus', tr('checking'));
       try {
         const data = await api('/api/redeem/register', {
           method: 'POST',
-          body: JSON.stringify({ playerId, lang: currentLang, consent: true }),
+          body: JSON.stringify({ playerId, kingdom, lang: currentLang, consent: true }),
         });
         showProfile(data.player);
-        localStorage.setItem('autoRedeemRegistration', JSON.stringify({ playerId }));
+        localStorage.setItem('autoRedeemRegistration', JSON.stringify({ playerId, kingdom }));
         $('priorityPlayerId').value = playerId;
         $('manageToken').value = '';
         if (data.status === 'duplicate') {
@@ -4146,18 +4260,19 @@
     });
 
     $('bulkBtn').addEventListener('click', async () => {
-      const ids = parseBulkIds($('bulkIds').value, 250);
-      if (!ids.length) return setStatus('registerStatus', tr('enterId'));
+      const kingdom = cleanKingdom($('kingdomId').value);
+      const entries = parseBulkEntries($('bulkIds').value, kingdom, 250);
+      if (!entries.length) return setStatus('registerStatus', kingdom ? tr('enterId') : tr('enterKingdom'));
       if (!$('consent').checked) return setStatus('registerStatus', tr('needConsent'));
-      const result = { submitted: ids.length, created: 0, reactivated: 0, duplicate: 0, invalid: 0, jobsCreated: 0 };
+      const result = { submitted: entries.length, created: 0, reactivated: 0, duplicate: 0, invalid: 0, jobsCreated: 0 };
       const chunkSize = 8;
       try {
-        for (let i = 0; i < ids.length; i += chunkSize) {
-          const chunk = ids.slice(i, i + chunkSize);
-          setStatus('registerStatus', `${tr('checking')} ${Math.min(i + chunk.length, ids.length)}/${ids.length}`);
+        for (let i = 0; i < entries.length; i += chunkSize) {
+          const chunk = entries.slice(i, i + chunkSize);
+          setStatus('registerStatus', `${tr('checking')} ${Math.min(i + chunk.length, entries.length)}/${entries.length}`);
           const data = await api('/api/redeem/register-bulk', {
             method: 'POST',
-            body: JSON.stringify({ text: chunk.join('\n'), lang: currentLang, consent: true }),
+            body: JSON.stringify({ players: chunk, kingdom, lang: currentLang, consent: true }),
           });
           result.created += Number(data.created || 0);
           result.reactivated += Number(data.reactivated || 0);
@@ -4181,8 +4296,9 @@
     $('loadBtn').addEventListener('click', () => {
       const current = JSON.parse(localStorage.getItem('autoRedeemRegistration') || '{}');
       $('playerId').value = current.playerId || $('playerId').value;
+      $('kingdomId').value = current.kingdom || $('kingdomId').value;
       $('priorityPlayerId').value = current.playerId || $('priorityPlayerId').value;
-      setStatus('registerStatus', current.playerId ? `${tr('savedToken')}\n${current.playerId}` : tr('noToken'));
+      setStatus('registerStatus', current.playerId ? `${tr('savedToken')}\n${current.playerId}${current.kingdom ? ` / K${current.kingdom}` : ''}` : tr('noToken'));
     });
 
     $('removeBtn').addEventListener('click', async () => {
@@ -4242,6 +4358,7 @@
       if (event.key === 'Enter') submitPriorityBoost();
     });
     $('bulkIds').addEventListener('input', updateBulkPreview);
+    $('kingdomId').addEventListener('input', updateBulkPreview);
     applyI18n();
     loadCodes(true).finally(loadStatus);
     loadActivity();

@@ -117,10 +117,25 @@ def official_gift_sign(data: dict) -> str:
     return hashlib.md5(f"{payload}{OFFICIAL_GIFT_SIGN_SALT}".encode("utf-8")).hexdigest()
 
 
+def normalize_kingdom(value) -> str:
+    text = "".join(ch for ch in str(value or "") if ch.isdigit())
+    if not text:
+        return ""
+    try:
+        number = int(text)
+    except Exception:
+        return ""
+    return text if 0 < number <= 99999 else ""
+
+
+def job_kingdom(job: dict) -> str:
+    return normalize_kingdom(job.get("kingdom") or job.get("kid") or job.get("state"))
+
+
 def official_post_json(url: str, data: dict, opener=None) -> dict:
-    time_ms = int(time.time() * 1000)
-    signed_data = {**data, "time": time_ms}
-    body_data = {"sign": official_gift_sign(signed_data), **data, "time": time_ms}
+    time_seconds = int(time.time())
+    signed_data = {**data, "time": time_seconds}
+    body_data = {"sign": official_gift_sign(signed_data), **data, "time": time_seconds}
     body = urllib.parse.urlencode(body_data).encode("utf-8")
     request = urllib.request.Request(
         url,
@@ -141,9 +156,9 @@ def official_post_json(url: str, data: dict, opener=None) -> dict:
 
 
 async def official_post_json_browser(request_context, url: str, data: dict) -> dict:
-    time_ms = int(time.time() * 1000)
-    signed_data = {**data, "time": time_ms}
-    body_data = {"sign": official_gift_sign(signed_data), **data, "time": time_ms}
+    time_seconds = int(time.time())
+    signed_data = {**data, "time": time_seconds}
+    body_data = {"sign": official_gift_sign(signed_data), **data, "time": time_seconds}
     response = await request_context.post(
         url,
         form=body_data,
@@ -198,7 +213,14 @@ def classify_official_payload(payload: dict) -> tuple[str, bool, str]:
         return "server_busy", False, message or "server busy"
     if "double check player" in lower:
         return "not_logged_in", False, message or "player check required"
-    if "player not found" in lower or "invalid player" in lower:
+    if (
+        "player not found" in lower
+        or "invalid player" in lower
+        or "character info is incorrect" in lower
+        or "character information is incorrect" in lower
+        or ("kingdom" in lower and ("wrong" in lower or "incorrect" in lower or "invalid" in lower))
+        or ("kid" in lower and ("wrong" in lower or "incorrect" in lower or "invalid" in lower))
+    ):
         return "player_not_found", False, message or "player not found"
     if payload.get("code") == 0 or err_code == 0 or "redeemed, please claim" in lower or "claim the rewards in your mail" in lower:
         return "success", True, message or "success"
@@ -232,7 +254,14 @@ def classify_message(message: str) -> tuple[str, bool]:
         return "captcha_required", False
     if "double check player" in lower:
         return "not_logged_in", False
-    if "player not found" in lower or "invalid player" in lower:
+    if (
+        "player not found" in lower
+        or "invalid player" in lower
+        or "character info is incorrect" in lower
+        or "character information is incorrect" in lower
+        or ("kingdom" in lower and ("wrong" in lower or "incorrect" in lower or "invalid" in lower))
+        or ("kid" in lower and ("wrong" in lower or "incorrect" in lower or "invalid" in lower))
+    ):
         return "player_not_found", False
     return "failed", False
 
@@ -241,6 +270,7 @@ def redeem_one_api_sync(job: dict) -> dict:
     job_key = str(job.get("jobKey") or "")
     player_id = str(job.get("playerId") or "")
     gift_code = str(job.get("giftCode") or "")
+    kingdom = job_kingdom(job)
     attempts = int(job.get("attempts") or 0)
 
     result = {
@@ -257,26 +287,19 @@ def redeem_one_api_sync(job: dict) -> dict:
     if not player_id or not gift_code:
         result.update(status="failed", message="Missing player ID or gift code.")
         return result
+    if not kingdom:
+        result.update(status="missing_kingdom", message="Kingdom number is missing. Re-register this player ID with kingdom number.")
+        result["response"] = {"source": "putty-api-daemon", "kingdom_missing": True}
+        return result
 
     try:
         cookie_jar = http.cookiejar.CookieJar()
         opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cookie_jar))
 
         config_payload = official_post_json(OFFICIAL_GIFT_CONFIG_API, {}, opener=opener)
-        player_payload = official_post_json(OFFICIAL_GIFT_PLAYER_API, {"fid": player_id}, opener=opener)
-        if not official_player_payload_ok(player_payload):
-            status, _ok, message = classify_official_payload(player_payload)
-            result.update(
-                status=status if status != "failed" else "not_logged_in",
-                ok=False,
-                message=message or "Player login did not complete.",
-                response={"source": "putty-api-daemon", "config_payload": config_payload, "player_payload": player_payload},
-            )
-            return result
-
         payload = official_post_json(
             OFFICIAL_GIFT_REDEEM_API,
-            {"fid": player_id, "cdk": gift_code, "captcha_code": ""},
+            {"fid": player_id, "cdk": gift_code, "kid": kingdom},
             opener=opener,
         )
         status, ok, message = classify_official_payload(payload)
@@ -286,8 +309,8 @@ def redeem_one_api_sync(job: dict) -> dict:
             message=message,
             response={
                 "source": "putty-api-daemon",
+                "kingdom": kingdom,
                 "config_payload": config_payload,
-                "player_payload": player_payload,
                 "payload": payload,
             },
         )
@@ -308,7 +331,7 @@ def redeem_one_api_sync(job: dict) -> dict:
             status=status,
             ok=ok,
             message=message or f"HTTP {error.code}",
-            response={"source": "putty-api-daemon", "httpStatus": error.code, "payload": payload},
+            response={"source": "putty-api-daemon", "kingdom": job_kingdom(job), "httpStatus": error.code, "payload": payload},
         )
         return result
     except TimeoutError as error:
@@ -419,6 +442,7 @@ async def redeem_one_hybrid(context, job: dict) -> dict:
     job_key = str(job.get("jobKey") or "")
     player_id = str(job.get("playerId") or "")
     gift_code = str(job.get("giftCode") or "")
+    kingdom = job_kingdom(job)
     attempts = int(job.get("attempts") or 0)
 
     result = {
@@ -435,28 +459,17 @@ async def redeem_one_hybrid(context, job: dict) -> dict:
     if not player_id or not gift_code:
         result.update(status="failed", message="Missing player ID or gift code.")
         return result
+    if not kingdom:
+        result.update(status="missing_kingdom", message="Kingdom number is missing. Re-register this player ID with kingdom number.")
+        result["response"] = {"source": "putty-hybrid-daemon", "kingdom_missing": True}
+        return result
 
     try:
         config_payload = await official_post_json_browser(context.request, OFFICIAL_GIFT_CONFIG_API, {})
-        player_payload = await official_post_json_browser(context.request, OFFICIAL_GIFT_PLAYER_API, {"fid": player_id})
-        if not official_player_payload_ok(player_payload):
-            status, _ok, message = classify_official_payload(player_payload)
-            result.update(
-                status=status if status != "failed" else "not_logged_in",
-                ok=False,
-                message=message or "Player login did not complete.",
-                response={
-                    "source": "putty-hybrid-daemon",
-                    "config_payload": config_payload,
-                    "player_payload": player_payload,
-                },
-            )
-            return result
-
         payload = await official_post_json_browser(
             context.request,
             OFFICIAL_GIFT_REDEEM_API,
-            {"fid": player_id, "cdk": gift_code, "captcha_code": ""},
+            {"fid": player_id, "cdk": gift_code, "kid": kingdom},
         )
         status, ok, message = classify_official_payload(payload)
         result.update(
@@ -465,8 +478,8 @@ async def redeem_one_hybrid(context, job: dict) -> dict:
             message=message,
             response={
                 "source": "putty-hybrid-daemon",
+                "kingdom": kingdom,
                 "config_payload": config_payload,
-                "player_payload": player_payload,
                 "payload": payload,
             },
         )
@@ -593,6 +606,30 @@ async def close_modal(page) -> None:
             pass
 
 
+async def fill_first_visible(page, selectors: tuple[str, ...], value: str) -> bool:
+    for selector in selectors:
+        try:
+            locator = page.locator(selector).first
+            if await locator.is_visible(timeout=700):
+                await locator.fill(value, timeout=TIMEOUT_MS * 4)
+                return True
+        except Exception:
+            pass
+    return False
+
+
+async def click_first_visible(page, selectors: tuple[str, ...]) -> bool:
+    for selector in selectors:
+        try:
+            locator = page.locator(selector).first
+            if await locator.is_visible(timeout=700):
+                await locator.click(timeout=TIMEOUT_MS * 4)
+                return True
+        except Exception:
+            pass
+    return False
+
+
 async def exit_player_panel(page) -> None:
     try:
         locator = page.locator("div.exit_con").first
@@ -616,6 +653,7 @@ def official_trace_url(url: str) -> bool:
     return (
         "kingshot-giftcode.centurygame.com/api/player" in url
         or "kingshot-giftcode.centurygame.com/api/gift_code" in url
+        or "kingshot-giftcode.centurygame.com/api/gift_code_config" in url
     )
 
 
@@ -645,6 +683,7 @@ async def redeem_one(page, job: dict) -> dict:
     job_key = str(job.get("jobKey") or "")
     player_id = str(job.get("playerId") or "")
     gift_code = str(job.get("giftCode") or "")
+    kingdom = job_kingdom(job)
     attempts = int(job.get("attempts") or 0)
 
     result = {
@@ -697,37 +736,52 @@ async def redeem_one(page, job: dict) -> dict:
         page.on("response", on_response)
 
     try:
+        if not player_id or not gift_code:
+            result.update(status="failed", message="Missing player ID or gift code.")
+            return result
+        if not kingdom:
+            result.update(status="missing_kingdom", message="Kingdom number is missing. Re-register this player ID with kingdom number.")
+            result["response"] = {"source": daemon_source(), "kingdom_missing": True}
+            return result
+
         await page.goto(OFFICIAL_REDEEM_URL, wait_until="domcontentloaded", timeout=TIMEOUT_MS * 8)
         blocked = await detect_blocked_or_unready(page)
         if blocked:
             result.update(status=blocked, message="Official page requires verification.")
             return result
 
-        await page.fill("input[placeholder='Player ID']", player_id, timeout=TIMEOUT_MS * 4)
-        await page.click("div.btn.login_btn", timeout=TIMEOUT_MS * 4)
-        await page.wait_for_timeout(900)
-
-        login_message = await read_modal_message(page)
-        if login_message:
-            await close_modal(page)
-            status, ok = classify_message(login_message)
-            if status == "failed":
-                status = "server_busy" if "server busy" in login_message.lower() else "not_logged_in"
-            result.update(status=status, ok=ok, message=login_message)
+        player_filled = await fill_first_visible(page, (
+            "input[placeholder='Player ID']",
+            "input[placeholder*='Player']",
+            "input[placeholder*='ID']",
+        ), player_id)
+        kingdom_filled = await fill_first_visible(page, (
+            "input[placeholder='Kingdom']",
+            "input[placeholder*='Kingdom']",
+            "input[placeholder*='kingdom']",
+            "input[placeholder*='KID']",
+        ), kingdom)
+        code_filled = await fill_first_visible(page, (
+            "input[placeholder='Enter Gift Code']",
+            "input[placeholder*='Gift Code']",
+            "input[placeholder*='gift code']",
+            "input[placeholder*='Code']",
+            "input[placeholder*='CDK']",
+        ), gift_code)
+        if not player_filled or not kingdom_filled or not code_filled:
+            result.update(status="timeout", message="Official redeem form did not expose Player ID, Kingdom, and Gift Code fields.")
             return result
 
-        try:
-            player_nick = (await page.inner_text("p.name", timeout=TIMEOUT_MS * 5)).strip()
-        except Exception:
-            blocked = await detect_blocked_or_unready(page)
-            result.update(
-                status=blocked or "timeout",
-                message="Player login did not complete before timeout.",
-            )
+        clicked = await click_first_visible(page, (
+            "div.btn.exchange_btn",
+            "button:has-text('Exchange')",
+            "button:has-text('Redeem')",
+            "div:has-text('Exchange')",
+            "div:has-text('Redeem')",
+        ))
+        if not clicked:
+            result.update(status="timeout", message="Official redeem button was not found.")
             return result
-
-        await page.fill("input[placeholder='Enter Gift Code']", gift_code, timeout=TIMEOUT_MS * 4)
-        await page.click("div.btn.exchange_btn", timeout=TIMEOUT_MS * 4)
         await page.wait_for_timeout(900)
 
         modal_text = await read_modal_message(page)
@@ -743,10 +797,10 @@ async def redeem_one(page, job: dict) -> dict:
             status=status,
             ok=ok,
             message=modal_text,
-            playerNick=player_nick,
+            kingdom=kingdom,
             response={
                 "source": daemon_source(),
-                "player_nick": player_nick,
+                "kingdom": kingdom,
                 "message": modal_text,
             },
         )

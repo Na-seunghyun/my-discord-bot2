@@ -687,53 +687,131 @@ function officialGiftSign(params) {
   return md5Hex(`${payload}${OFFICIAL_GIFT_SIGN_SALT}`);
 }
 
+function officialGiftTimeSeconds() {
+  return Math.floor(Date.now() / 1000);
+}
+
+function normalizeKingdomNumber(value) {
+  const text = meaningfulText(value, 20).replace(/[^\d]/g, "");
+  if (!/^\d{1,5}$/.test(text)) return null;
+  const number = Number(text);
+  return Number.isInteger(number) && number > 0 && number <= 99999 ? number : null;
+}
+
 function normalizeOfficialGiftProfile(payload) {
-  const profile = payload && payload.code === 0 && isPlainObject(payload.data) ? payload.data : null;
-  if (!profile || !profile.fid) return null;
-  const id = String(profile.fid);
+  const data = payload && payload.code === 0 && isPlainObject(payload.data) ? payload.data : null;
+  const profile = isPlainObject(data && data.player) ? data.player
+    : isPlainObject(data && data.profile) ? data.profile
+      : isPlainObject(data && data.player_info) ? data.player_info
+        : isPlainObject(data && data.info) ? data.info
+          : data;
+  if (!profile) return null;
+  const id = meaningfulText(profile.fid || profile.id || profile.player_id || profile.playerId || profile.uid, 40);
+  if (!/^\d{3,12}$/.test(id)) return null;
+  const nickname = firstText(profile, ["nickname", "username", "name"], 160) || `Player ${id}`;
   return normalizePlayerSummary({
     id,
     fid: id,
-    username: profile.nickname,
-    nickname: profile.nickname,
-    state: numberOrNull(profile.kid),
-    kid: numberOrNull(profile.kid),
-    town_hall_level: numberOrNull(profile.stove_lv),
-    stove_lv: numberOrNull(profile.stove_lv),
+    username: nickname,
+    nickname,
+    state: firstNumber(profile, ["kid", "state", "kingdom"]),
+    kid: firstNumber(profile, ["kid", "state", "kingdom"]),
+    town_hall_level: firstNumber(profile, ["stove_lv", "town_hall_level", "townhall", "tc"]),
+    stove_lv: firstNumber(profile, ["stove_lv", "town_hall_level", "townhall", "tc"]),
     stove_lv_content: profile.stove_lv_content,
-    avatar_url: profile.avatar_image,
-    avatar_image: profile.avatar_image,
+    avatar_url: firstText(profile, ["avatar_image", "avatar_url", "avatar"], 500),
+    avatar_image: firstText(profile, ["avatar_image", "avatar_url", "avatar"], 500),
     source: "official-giftcode",
     last_refreshed_at: new Date().toISOString(),
   });
 }
 
-async function fetchOfficialGiftProfile(playerId) {
+function officialGiftProfileFailure(payload, fallback = "Official profile unavailable.") {
+  if (!payload) return fallback;
+  const data = isPlainObject(payload.data) ? payload.data : {};
+  const message = meaningfulText(
+    payload.msg || payload.message || payload.error || payload.reason || data.msg || data.message || data.error || data.reason,
+    240
+  );
+  if (message) return message;
+  const code = payload.code ?? payload.errcode ?? payload.status;
+  return code === undefined ? fallback : `Official profile API returned ${code}.`;
+}
+
+function isDefinitiveInvalidOfficialProfile(message) {
+  const text = String(message || "").toLowerCase();
+  return /player\s*not\s*found|not\s*found|invalid\s*(player|fid|id)|fid\s*(error|invalid)|does\s*not\s*exist|no\s+such\s+player/.test(text);
+}
+
+function fallbackUnverifiedRedeemProfile(playerId, reason = "Official profile verification is temporarily unavailable.", kingdom = null) {
   const fid = meaningfulText(playerId, 40);
   if (!/^\d{3,12}$/.test(fid)) return null;
-  const data = { fid, time: Date.now() };
-  data.sign = officialGiftSign(data);
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), OFFICIAL_GIFT_TIMEOUT_MS);
-  try {
-    const response = await fetch(OFFICIAL_GIFT_PLAYER_API, {
-      method: "POST",
-      headers: {
-        "content-type": "application/x-www-form-urlencoded",
-        accept: "application/json, text/plain, */*",
-        origin: OFFICIAL_GIFT_ORIGIN,
-        referer: `${OFFICIAL_GIFT_ORIGIN}/`,
-      },
-      body: new URLSearchParams(data).toString(),
-      signal: controller.signal,
-      cf: { cacheTtl: 0 },
-    });
-    if (!response.ok) return null;
-    const payload = await response.json().catch(() => null);
-    return normalizeOfficialGiftProfile(payload);
-  } finally {
-    clearTimeout(timer);
+  const kid = normalizeKingdomNumber(kingdom);
+  return normalizePlayerSummary({
+    id: fid,
+    fid,
+    username: `Player ${fid}`,
+    nickname: `Player ${fid}`,
+    state: kid,
+    kid,
+    source: "pending-official-verification",
+    verification_status: "pending",
+    verification_error: cleanText(reason, 240),
+    unverified_registration: true,
+    last_refreshed_at: new Date().toISOString(),
+  });
+}
+
+async function fetchOfficialGiftProfileResult(playerId) {
+  const fid = meaningfulText(playerId, 40);
+  if (!/^\d{3,12}$/.test(fid)) {
+    return { ok: false, definitive: true, status: "invalid_format", message: "Player ID format is invalid." };
   }
+  let lastMessage = "Official profile unavailable.";
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const data = { fid, time: officialGiftTimeSeconds() };
+    data.sign = officialGiftSign(data);
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), OFFICIAL_GIFT_TIMEOUT_MS);
+    try {
+      const response = await fetch(OFFICIAL_GIFT_PLAYER_API, {
+        method: "POST",
+        headers: {
+          "content-type": "application/x-www-form-urlencoded",
+          accept: "application/json, text/plain, */*",
+          "accept-language": "en-US,en;q=0.9",
+          origin: OFFICIAL_GIFT_ORIGIN,
+          referer: `${OFFICIAL_GIFT_ORIGIN}/`,
+          "user-agent": "Mozilla/5.0 KingshotHub/1.0",
+        },
+        body: new URLSearchParams(data).toString(),
+        signal: controller.signal,
+        cf: { cacheTtl: 0 },
+      });
+      if (!response.ok) {
+        lastMessage = `Official profile API HTTP ${response.status}.`;
+      } else {
+        const payload = await response.json().catch(() => null);
+        const profile = normalizeOfficialGiftProfile(payload);
+        if (profile) return { ok: true, profile, message: "" };
+        lastMessage = officialGiftProfileFailure(payload);
+        if (isDefinitiveInvalidOfficialProfile(lastMessage)) {
+          return { ok: false, definitive: true, status: "player_not_found", message: lastMessage };
+        }
+      }
+    } catch (error) {
+      lastMessage = error && error.name === "AbortError" ? "Official profile API timed out." : cleanText(error && error.message, 240) || lastMessage;
+    } finally {
+      clearTimeout(timer);
+    }
+    if (attempt === 0) await delay(250);
+  }
+  return { ok: false, definitive: false, status: "verification_unavailable", message: lastMessage };
+}
+
+async function fetchOfficialGiftProfile(playerId) {
+  const result = await fetchOfficialGiftProfileResult(playerId);
+  return result && result.ok ? result.profile : null;
 }
 
 async function saveOfficialProfile(env, profile) {
@@ -850,6 +928,8 @@ function autoRedeemConfig(env) {
     runningStaleMs: envNumber(env.AUTO_REDEEM_RUNNING_STALE_MINUTES, 12, 5, 90) * 60 * 1000,
     workerRedeemEnabled: envBool(env.AUTO_REDEEM_WORKER_REDEEM_ENABLED, false),
     verifyPlayerBeforeRedeem: envBool(env.AUTO_REDEEM_VERIFY_PLAYER, false),
+    allowUnverifiedRegister: envBool(env.AUTO_REDEEM_ALLOW_UNVERIFIED_REGISTER, true),
+    profileLookupEnabled: envBool(env.AUTO_REDEEM_PROFILE_LOOKUP_ENABLED, false),
     daemonDiscover: envBool(env.AUTO_REDEEM_DAEMON_DISCOVER, false),
     upstreamCodesEnabled: envBool(env.AUTO_REDEEM_UPSTREAM_CODES_ENABLED, false),
   };
@@ -1249,6 +1329,45 @@ function extractPlayerIds(value, max = 250) {
   return [...new Set(ids.map(String))].slice(0, max);
 }
 
+function extractRedeemPlayerEntries(value, defaultKingdom = null, max = 250) {
+  const fallbackKid = normalizeKingdomNumber(defaultKingdom);
+  const rawRows = Array.isArray(value)
+    ? value
+    : String(value || "").split(/[\n\r]+/).map((line) => line.trim()).filter(Boolean);
+  const seen = new Set();
+  const entries = [];
+  const pushEntry = (playerId, kingdom) => {
+    const id = meaningfulText(playerId, 40).replace(/\D/g, "");
+    const kid = normalizeKingdomNumber(kingdom);
+    if (!/^\d{3,12}$/.test(id) || !kid || seen.has(id)) return;
+    seen.add(id);
+    entries.push({ playerId: id, kingdom: kid });
+  };
+  for (const item of rawRows) {
+    if (entries.length >= max) break;
+    if (isPlainObject(item)) {
+      pushEntry(item.playerId || item.player_id || item.fid || item.id, item.kingdom || item.kid || item.state || fallbackKid);
+      continue;
+    }
+    const line = String(item || "");
+    const numbers = line.match(/\d{1,12}/g) || [];
+    if (fallbackKid) {
+      const playerIds = numbers.filter((num) => /^\d{6,12}$/.test(num) && Number(num) > 99999);
+      playerIds.forEach((id) => pushEntry(id, fallbackKid));
+      continue;
+    }
+    if (numbers.length >= 2) {
+      const sorted = [...numbers].sort((a, b) => b.length - a.length);
+      const id = sorted[0];
+      const kid = numbers.find((num) => num !== id && normalizeKingdomNumber(num)) || fallbackKid;
+      pushEntry(id, kid);
+    } else if (numbers.length === 1 && fallbackKid) {
+      pushEntry(numbers[0], fallbackKid);
+    }
+  }
+  return entries.slice(0, max);
+}
+
 async function countRedeemPlayers(env) {
   if (!supabaseConfig(env).enabled) return 0;
   const response = await supabaseFetch(env, "/redeem_players?enabled=eq.true&consent=eq.true&select=id&limit=1", {
@@ -1261,28 +1380,82 @@ async function countRedeemPlayers(env) {
 }
 
 async function upsertRedeemPlayer(env, playerId, options = {}) {
-  const profile = await fetchOfficialGiftProfile(playerId).catch(() => null);
-  if (!profile) return { ok: false, status: "invalid", playerId };
+  const config = autoRedeemConfig(env);
+  const kingdom = normalizeKingdomNumber(options.kingdom || options.kid || options.state);
+  if (!kingdom) {
+    return {
+      ok: false,
+      status: "missing_kingdom",
+      playerId,
+      verification: "Kingdom number is required because the official redeem site now requires Player ID and Kingdom.",
+    };
+  }
+  const verification = config.profileLookupEnabled
+    ? await fetchOfficialGiftProfileResult(playerId).catch((error) => ({
+      ok: false,
+      definitive: false,
+      status: "verification_error",
+      message: cleanText(error && error.message, 240) || "Official profile verification failed.",
+    }))
+    : {
+      ok: false,
+      definitive: false,
+      status: "profile_lookup_disabled",
+      message: "Official profile lookup is unavailable; registration uses the provided kingdom number.",
+    };
+  let profile = verification && verification.ok ? verification.profile : null;
+  if (!profile) {
+    if ((verification && verification.definitive) || !config.allowUnverifiedRegister) {
+      return {
+        ok: false,
+        status: "invalid",
+        playerId,
+        verification: verification && verification.message ? verification.message : "Player ID could not be verified.",
+      };
+    }
+    profile = fallbackUnverifiedRedeemProfile(playerId, verification && verification.message, kingdom);
+  }
+  if (!profile) return { ok: false, status: "invalid", playerId, verification: "Player ID format is invalid." };
+  profile.state = kingdom;
+  profile.kid = kingdom;
+  const verified = !profile.unverified_registration;
 
   const now = Date.now();
-  const existingRows = await supabaseJson(env, `/redeem_players?id=eq.${encodeURIComponent(profile.id)}&select=id,enabled,consent,manage_token_hash,created_at_ms&limit=1`).catch(() => []);
+  const existingRows = await supabaseJson(env, `/redeem_players?id=eq.${encodeURIComponent(profile.id)}&select=id,nickname,state,town_hall_level,avatar_url,profile_json,enabled,consent,manage_token_hash,created_at_ms&limit=1`).catch(() => []);
   const existing = existingRows && existingRows[0];
-  await saveOfficialProfile(env, profile);
+  if (!verified && existing) {
+    const existingProfile = isPlainObject(existing.profile_json) ? existing.profile_json : {};
+    profile = normalizePlayerSummary(mergeMeaningful(profile, existingProfile)) || profile;
+    profile.username = meaningfulText(existing.nickname, 160) || profile.username;
+    profile.state = kingdom || numberOrNull(existing.state);
+    profile.kid = profile.state;
+    profile.town_hall_level = numberOrNull(existing.town_hall_level);
+    profile.avatar_url = meaningfulText(existing.avatar_url, 500) || profile.avatar_url;
+    profile.unverified_registration = true;
+    profile.verification_status = "pending";
+  }
+  if (verified) await saveOfficialProfile(env, profile);
 
   if (existing && existing.enabled && existing.consent) {
-    await supabaseJson(env, `/redeem_players?id=eq.${encodeURIComponent(profile.id)}`, {
-      method: "PATCH",
-      body: JSON.stringify({
+    const patch = {
+      lang: cleanText(options.lang, 16),
+      state: kingdom,
+      updated_at_ms: now,
+    };
+    if (verified) {
+      Object.assign(patch, {
         nickname: profile.username,
         state: profile.state,
         town_hall_level: profile.town_hall_level,
         avatar_url: profile.avatar_url,
-        lang: cleanText(options.lang, 16),
-        updated_at_ms: now,
         profile_json: profile,
-      }),
+      });
+    }
+    await supabaseJson(env, `/redeem_players?id=eq.${encodeURIComponent(profile.id)}`, {
+      method: "PATCH",
+      body: JSON.stringify(patch),
     }).catch(() => {});
-    return { ok: true, status: "duplicate", player: profile };
+    return { ok: true, status: "duplicate", player: profile, verified };
   }
 
   await supabaseJson(env, "/redeem_players?on_conflict=id", {
@@ -1303,7 +1476,7 @@ async function upsertRedeemPlayer(env, playerId, options = {}) {
       profile_json: profile,
     }]),
   });
-  return { ok: true, status: existing ? "reactivated" : "created", player: profile };
+  return { ok: true, status: existing ? "reactivated" : "created", player: profile, verified };
 }
 
 async function refreshRedeemPlayerProfile(env, profile) {
@@ -1330,8 +1503,10 @@ async function registerRedeemPlayer(request, env) {
   const body = parsed.body;
   if (!body.consent) return json({ ok: false, error: "Consent is required before saving a player ID." }, 400);
   const playerId = meaningfulText(body.playerId || body.fid || body.id, 40);
-  const result = await upsertRedeemPlayer(env, playerId, { lang: body.lang });
-  if (!result.ok) return json({ ok: false, error: "Player ID could not be verified." }, 404);
+  const kingdom = normalizeKingdomNumber(body.kingdom || body.kid || body.state);
+  if (!kingdom) return json({ ok: false, error: "Kingdom number is required." }, 400);
+  const result = await upsertRedeemPlayer(env, playerId, { lang: body.lang, kingdom });
+  if (!result.ok) return json({ ok: false, error: result.status === "missing_kingdom" ? "Kingdom number is required." : "Player ID could not be verified.", detail: result.verification || null }, 404);
   const jobsCreated = await createRedeemJobsForPlayer(env, result.player && result.player.id).catch(() => 0);
   return json({ ok: true, ...result, jobsCreated, registeredPlayers: await countRedeemPlayers(env) });
 }
@@ -1343,12 +1518,15 @@ async function registerRedeemPlayersBulk(request, env) {
   if (!parsed.ok) return parsed.response;
   const body = parsed.body;
   if (!body.consent) return json({ ok: false, error: "Consent is required before saving player IDs." }, 400);
-  const ids = extractPlayerIds(body.ids || body.text || body.playerIds, 250);
-  if (!ids.length) return json({ ok: false, error: "No valid player IDs were found." }, 400);
+  const defaultKingdom = normalizeKingdomNumber(body.kingdom || body.kid || body.state);
+  const entries = Array.isArray(body.players)
+    ? extractRedeemPlayerEntries(body.players, defaultKingdom, 250)
+    : extractRedeemPlayerEntries(body.ids || body.text || body.playerIds, defaultKingdom, 250);
+  if (!entries.length) return json({ ok: false, error: "No valid player ID and kingdom pairs were found." }, 400);
 
-  const result = { ok: true, submitted: ids.length, created: 0, reactivated: 0, duplicate: 0, invalid: 0, jobsCreated: 0, players: [] };
-  for (const id of ids) {
-    const saved = await upsertRedeemPlayer(env, id, { lang: body.lang }).catch(() => ({ ok: false, status: "invalid", playerId: id }));
+  const result = { ok: true, submitted: entries.length, created: 0, reactivated: 0, duplicate: 0, invalid: 0, jobsCreated: 0, players: [] };
+  for (const entry of entries) {
+    const saved = await upsertRedeemPlayer(env, entry.playerId, { lang: body.lang, kingdom: entry.kingdom }).catch(() => ({ ok: false, status: "invalid", playerId: entry.playerId }));
     if (!saved.ok) {
       result.invalid += 1;
       continue;
@@ -1756,12 +1934,19 @@ async function listActiveRedeemPlayerIds(env, maxPlayers = 10000) {
   return out;
 }
 
-async function listActiveRedeemCodes(env, maxCodes = 200) {
-  const rows = await supabaseJson(
+async function listActiveRedeemCodes(env, maxCodes = 200, options = {}) {
+  const load = () => supabaseJson(
     env,
     `/redeem_codes?status=eq.active&select=code,source,status,is_active,last_redeem_status,discovered_at_ms&order=discovered_at_ms.desc&limit=${maxCodes}`
   ).catch(() => []);
-  return (rows || []).filter(redeemCodeReadyForAutoRedeem);
+  let rows = await load();
+  let active = (rows || []).filter(redeemCodeReadyForAutoRedeem);
+  if (!active.length && options.refreshIfEmpty) {
+    await refreshPublicRedeemCodesIfAllowed(env, 60 * 1000).catch(() => null);
+    rows = await load();
+    active = (rows || []).filter(redeemCodeReadyForAutoRedeem);
+  }
+  return active;
 }
 
 async function insertRedeemJobRows(env, rows) {
@@ -1802,7 +1987,7 @@ async function createRedeemJobsForCode(env, code) {
 async function createRedeemJobsForPlayer(env, playerId) {
   const id = meaningfulText(playerId, 40);
   if (!/^\d{3,12}$/.test(id) || !supabaseConfig(env).enabled) return 0;
-  const codes = await listActiveRedeemCodes(env);
+  const codes = await listActiveRedeemCodes(env, 200, { refreshIfEmpty: true });
   if (!codes.length) return 0;
   const now = Date.now();
   const rows = codes
@@ -1820,6 +2005,31 @@ async function createRedeemJobsForPlayer(env, playerId) {
   if (!rows.length) return 0;
   await insertRedeemJobRows(env, rows);
   return rows.length;
+}
+
+async function readRedeemPlayerStateMap(env, playerIds) {
+  if (!supabaseConfig(env).enabled) return new Map();
+  const ids = [...new Set((playerIds || []).map((id) => meaningfulText(id, 40)).filter((id) => /^\d{3,12}$/.test(id)))].slice(0, 120);
+  if (!ids.length) return new Map();
+  const rows = await supabaseJson(
+    env,
+    `/redeem_players?id=in.(${ids.map(encodeURIComponent).join(",")})&select=id,state&limit=${ids.length}`,
+  ).catch(() => []);
+  return new Map((rows || []).map((row) => [String(row.id || ""), normalizeKingdomNumber(row.state)]));
+}
+
+function publicClaimedRedeemJob(job, stateMap = new Map()) {
+  const playerId = String(job && (job.player_id || job.playerId) || "");
+  const kingdom = normalizeKingdomNumber(job && (job.kingdom || job.kid || job.state)) || normalizeKingdomNumber(stateMap.get(playerId));
+  return {
+    jobKey: String(job && (job.job_key || job.jobKey) || ""),
+    playerId,
+    giftCode: String(job && (job.gift_code || job.giftCode) || ""),
+    attempts: numberValue(job && job.attempts),
+    kingdom,
+    kid: kingdom,
+    state: kingdom,
+  };
 }
 
 async function listRedeemProbePlayerIds(env, maxPlayers = PUBLIC_GIFT_CODE_PROBE_PLAYER_LIMIT) {
@@ -2916,6 +3126,7 @@ async function runRedeemJobs(env, reason = "manual") {
   result.recovered = recovered.recovered || 0;
   result.staleFailed = recovered.failed || 0;
   const jobs = await supabaseJson(env, `/redeem_jobs?status=eq.pending&select=job_key,player_id,gift_code,attempts&order=priority_score.desc,priority_boosted_at_ms.asc,created_at_ms.asc&limit=${batchLimit}`).catch(() => []);
+  const stateMap = await readRedeemPlayerStateMap(env, (jobs || []).map((job) => job.player_id)).catch(() => new Map());
   result.pending = (jobs || []).length;
   for (const job of jobs || []) {
     await delay(cfg.delayMs);
@@ -2926,7 +3137,7 @@ async function runRedeemJobs(env, reason = "manual") {
       body: JSON.stringify({ status: "running", attempts: attemptNumber, updated_at_ms: now }),
     }).catch(() => {});
     try {
-      const redeem = await redeemOfficialGiftCode(job.player_id, job.gift_code, { verifyPlayer: cfg.verifyPlayerBeforeRedeem });
+      const redeem = await redeemOfficialGiftCode(job.player_id, job.gift_code, { verifyPlayer: cfg.verifyPlayerBeforeRedeem, kingdom: stateMap.get(String(job.player_id || "")) });
       const doneAt = Date.now();
       const retrying = !redeem.ok && isRetryableRedeemStatus(redeem.status) && attemptNumber < cfg.maxAttempts;
       const finalStatus = retrying ? "pending" : redeem.ok ? "success" : redeem.status;
@@ -3019,12 +3230,25 @@ async function claimRedeemJobs(request, env) {
     }),
   }).catch(() => null);
   if (Array.isArray(rpcClaimed)) {
-    const claimed = rpcClaimed.map((job) => ({
-      jobKey: String(job.job_key || ""),
-      playerId: String(job.player_id || ""),
-      giftCode: String(job.gift_code || ""),
-      attempts: numberValue(job.attempts),
-    })).filter((job) => job.jobKey && job.playerId && job.giftCode);
+    const stateMap = await readRedeemPlayerStateMap(env, rpcClaimed.map((job) => job.player_id)).catch(() => new Map());
+    const claimed = rpcClaimed
+      .map((job) => publicClaimedRedeemJob(job, stateMap))
+      .filter((job) => job.jobKey && job.playerId && job.giftCode && job.kingdom);
+    if (claimed.length !== rpcClaimed.length) {
+      const now = Date.now();
+      for (const job of rpcClaimed) {
+        const publicJob = publicClaimedRedeemJob(job, stateMap);
+        if (publicJob.kingdom) continue;
+        await supabaseJson(env, `/redeem_jobs?job_key=eq.${encodeURIComponent(publicJob.jobKey)}`, {
+          method: "PATCH",
+          body: JSON.stringify({
+            status: "failed",
+            last_error: "Kingdom number is missing. Re-register this player ID with kingdom number.",
+            updated_at_ms: now,
+          }),
+        }).catch(() => {});
+      }
+    }
     return json({ ok: true, claimed: claimed.length, jobs: claimed, recovered, claimMode: "rpc" });
   }
 
@@ -3064,7 +3288,26 @@ async function claimRedeemJobs(request, env) {
     }
   }
 
-  return json({ ok: true, claimed: claimed.length, jobs: claimed, recovered, claimMode: reviewOnly ? "browser-review" : "legacy" });
+  const stateMap = await readRedeemPlayerStateMap(env, claimed.map((job) => job.playerId)).catch(() => new Map());
+  const publicClaimed = claimed
+    .map((job) => publicClaimedRedeemJob(job, stateMap))
+    .filter((job) => job.jobKey && job.playerId && job.giftCode && job.kingdom);
+  if (publicClaimed.length !== claimed.length) {
+    const missingIds = claimed
+      .map((job) => job.playerId)
+      .filter((id) => !normalizeKingdomNumber(stateMap.get(String(id || ""))));
+    for (const id of missingIds) {
+      await supabaseJson(env, `/redeem_jobs?player_id=eq.${encodeURIComponent(id)}&status=eq.running`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          status: "failed",
+          last_error: "Kingdom number is missing. Re-register this player ID with kingdom number.",
+          updated_at_ms: Date.now(),
+        }),
+      }).catch(() => {});
+    }
+  }
+  return json({ ok: true, claimed: publicClaimed.length, jobs: publicClaimed, recovered, claimMode: reviewOnly ? "browser-review" : "legacy" });
 }
 
 function classifyDaemonRedeemResult(row) {
@@ -3103,7 +3346,7 @@ function classifyDaemonRedeemResult(row) {
   if (statusHint === "not_logged_in" || /not\s+login|not\s+logged\s+in|problem\s+with\s+logging\s+in|double\s+check\s+player/i.test(message)) {
     return { status: "not_logged_in", ok: false, message: message || "not logged in" };
   }
-  if (statusHint === "player_not_found" || /player\s+not\s+found|invalid\s+player/i.test(message)) {
+  if (statusHint === "player_not_found" || /player\s+not\s+found|invalid\s+player|character\s+info\s+is\s+incorrect|character\s+information\s+is\s+incorrect|kingdom.*(wrong|incorrect|invalid)|kid.*(wrong|incorrect|invalid)/i.test(message)) {
     return { status: "player_not_found", ok: false, message: message || "player not found" };
   }
   if (ok || statusHint === "success" || /redeemed,?\s*please\s*claim|claim\s+the\s+rewards\s+in\s+your\s+mail/i.test(message)) {
@@ -3122,6 +3365,7 @@ async function saveDaemonObservedPlayer(env, row) {
     (row && (row.playerNick || row.player_nick)) || response.player_nick || response.playerNick,
     160,
   );
+  const state = normalizeKingdomNumber((row && (row.kingdom || row.kid || row.state)) || response.kingdom || response.kid || response.state);
   if (!/^\d{3,12}$/.test(id) || !nick) return false;
 
   const profile = normalizePlayerSummary({
@@ -3129,6 +3373,8 @@ async function saveDaemonObservedPlayer(env, row) {
     fid: id,
     username: nick,
     nickname: nick,
+    state,
+    kid: state,
     source: "official-redeem-browser",
     last_refreshed_at: new Date().toISOString(),
   });
@@ -3140,6 +3386,7 @@ async function saveDaemonObservedPlayer(env, row) {
       method: "PATCH",
       body: JSON.stringify({
         nickname: nick,
+        ...(state ? { state } : {}),
         updated_at_ms: Date.now(),
       }),
     }).catch(() => {});
@@ -3390,7 +3637,7 @@ function classifyRedeemPayloadV2(payload) {
   if (/not\s+login|not\s+logged\s+in|double\s+check\s+player|problem\s+with\s+logging\s+in/i.test(message)) {
     return { status: "not_logged_in", ok: false, message: message || "not logged in" };
   }
-  if (/player\s+not\s+found|invalid\s+player/i.test(message)) {
+  if (/player\s+not\s+found|invalid\s+player|character\s+info\s+is\s+incorrect|character\s+information\s+is\s+incorrect|kingdom.*(wrong|incorrect|invalid)|kid.*(wrong|incorrect|invalid)/i.test(message)) {
     return { status: "player_not_found", ok: false, message: message || "player not found" };
   }
   if ((payload && payload.code === 0) || errCode === 0 || /redeemed,?\s*please\s*claim|claim\s+the\s+rewards\s+in\s+your\s+mail/i.test(message)) {
@@ -3402,15 +3649,19 @@ function classifyRedeemPayloadV2(payload) {
 async function redeemOfficialGiftCode(playerId, giftCode, options = {}) {
   const fid = meaningfulText(playerId, 40);
   const cdk = normalizeGiftCode(giftCode);
+  const kid = normalizeKingdomNumber(options.kingdom || options.kid || options.state);
   if (!/^\d{3,12}$/.test(fid) || !/^[A-Za-z0-9_-]{3,64}$/.test(cdk)) {
     return { ok: false, status: "invalid_input", message: "Invalid player ID or gift code." };
+  }
+  if (!kid) {
+    return { ok: false, status: "missing_kingdom", message: "Kingdom number is required for official redeem." };
   }
 
   const verifyPlayer = options.verifyPlayer !== false;
   const profile = verifyPlayer ? await fetchOfficialGiftProfile(fid) : null;
   if (verifyPlayer && !profile) return { ok: false, status: "player_not_found", message: "Player ID could not be verified." };
 
-  const data = { fid, cdk, captcha_code: "", time: Date.now() };
+  const data = { fid, cdk, kid: String(kid), time: officialGiftTimeSeconds() };
   data.sign = officialGiftSign(data);
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), OFFICIAL_GIFT_TIMEOUT_MS);
