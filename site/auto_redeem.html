@@ -1394,6 +1394,9 @@
       width: 100%;
       margin-top: 12px;
     }
+    .bulk-kingdom-field {
+      margin: 4px 0 10px;
+    }
     .ops-stack {
       display: grid;
       gap: 18px;
@@ -2702,6 +2705,10 @@
             </div>
             <div class="bulk-entry">
               <div class="bulk-head"><label for="bulkIds" data-i18n="bulkLabel">Bulk Player IDs</label><span id="bulkPreview">0 ID</span></div>
+              <div class="field-stack bulk-kingdom-field">
+                <label for="bulkKingdomId" data-i18n="bulkKingdomId">Bulk kingdom</label>
+                <input id="bulkKingdomId" inputmode="numeric" maxlength="5" data-placeholder="bulkKingdomPlaceholder" placeholder="Example: 885">
+              </div>
               <textarea id="bulkIds" data-placeholder="bulkPlaceholder" placeholder="One per line: PlayerID Kingdom, e.g. 132498752 885. If the kingdom box is filled, ID-only lines use that kingdom."></textarea>
               <button class="ghost bulk-action" id="bulkBtn" data-i18n="bulkRegister">Register bulk IDs</button>
             </div>
@@ -3457,54 +3464,72 @@
       en: {
         kingdomId: 'Kingdom',
         kingdomPlaceholder: 'Example: 885',
+        bulkKingdomId: 'Bulk kingdom',
+        bulkKingdomPlaceholder: 'Same kingdom for pasted IDs',
         enterKingdom: 'Enter your kingdom number first.',
         bulkPlaceholder: 'One per line: PlayerID Kingdom, e.g. 132498752 885. If the kingdom box is filled, ID-only lines use that kingdom.'
       },
       ko: {
         kingdomId: '왕국 번호',
         kingdomPlaceholder: '예: 885',
+        bulkKingdomId: '대량 등록 왕국 번호',
+        bulkKingdomPlaceholder: '붙여넣은 ID에 적용할 같은 왕국',
         enterKingdom: '왕국 번호를 먼저 입력해주세요.',
         bulkPlaceholder: '한 줄에 하나씩 입력: 플레이어ID 왕국번호, 예: 132498752 885. 왕국 번호 칸을 채우면 ID만 붙여넣어도 같은 왕국으로 등록됩니다.'
       },
       ja: {
         kingdomId: '王国番号',
         kingdomPlaceholder: '例: 885',
+        bulkKingdomId: '一括登録の王国番号',
+        bulkKingdomPlaceholder: '貼り付けたIDに使う同じ王国',
         enterKingdom: '王国番号を先に入力してください。',
         bulkPlaceholder: '1行に1件: プレイヤーID 王国番号, 例: 132498752 885。王国欄を入力すると、IDだけの行にも同じ王国を使います。'
       },
       fr: {
         kingdomId: 'Royaume',
         kingdomPlaceholder: 'Exemple : 885',
+        bulkKingdomId: 'Royaume en lot',
+        bulkKingdomPlaceholder: 'Même royaume pour les IDs collés',
         enterKingdom: 'Saisissez d’abord le numéro de royaume.',
         bulkPlaceholder: 'Une ligne par entrée : ID joueur Royaume, ex. 132498752 885. Si le champ Royaume est rempli, les lignes avec ID seul utilisent ce royaume.'
       },
       de: {
         kingdomId: 'Königreich',
         kingdomPlaceholder: 'Beispiel: 885',
+        bulkKingdomId: 'Massen-Königreich',
+        bulkKingdomPlaceholder: 'Gleiches Königreich für eingefügte IDs',
         enterKingdom: 'Bitte zuerst die Königreich-Nummer eingeben.',
         bulkPlaceholder: 'Eine Zeile pro Eintrag: Spieler-ID Königreich, z. B. 132498752 885. Wenn das Königreich-Feld gefüllt ist, nutzen ID-only Zeilen dieses Königreich.'
       },
       'zh-CN': {
         kingdomId: '王国编号',
         kingdomPlaceholder: '示例：885',
+        bulkKingdomId: '批量王国编号',
+        bulkKingdomPlaceholder: '应用到粘贴ID的同一王国',
         enterKingdom: '请先输入王国编号。',
         bulkPlaceholder: '每行一组：玩家ID 王国编号，例如 132498752 885。填写王国栏后，仅输入ID的行会使用该王国。'
       },
       'zh-TW': {
         kingdomId: '王國編號',
         kingdomPlaceholder: '範例：885',
+        bulkKingdomId: '批量王國編號',
+        bulkKingdomPlaceholder: '套用到貼上ID的同一王國',
         enterKingdom: '請先輸入王國編號。',
         bulkPlaceholder: '每行一組：玩家ID 王國編號，例如 132498752 885。填寫王國欄後，只有ID的行會使用該王國。'
       },
       th: {
         kingdomId: 'หมายเลขอาณาจักร',
         kingdomPlaceholder: 'ตัวอย่าง: 885',
+        bulkKingdomId: 'อาณาจักรสำหรับลงทะเบียนหลาย ID',
+        bulkKingdomPlaceholder: 'อาณาจักรเดียวกันสำหรับ ID ที่วาง',
         enterKingdom: 'กรุณาใส่หมายเลขอาณาจักรก่อน',
         bulkPlaceholder: 'หนึ่งรายการต่อหนึ่งบรรทัด: PlayerID Kingdom เช่น 132498752 885 หากกรอกช่อง Kingdom แล้ว แถวที่มีแค่ ID จะใช้ Kingdom นี้'
       },
       id: {
         kingdomId: 'Kingdom',
         kingdomPlaceholder: 'Contoh: 885',
+        bulkKingdomId: 'Kingdom massal',
+        bulkKingdomPlaceholder: 'Kingdom yang sama untuk ID yang ditempel',
         enterKingdom: 'Masukkan nomor kingdom terlebih dahulu.',
         bulkPlaceholder: 'Satu per baris: PlayerID Kingdom, contoh 132498752 885. Jika kolom kingdom diisi, baris yang hanya berisi ID memakai kingdom itu.'
       }
@@ -3694,7 +3719,7 @@
       const preview = $('bulkPreview');
       const input = $('bulkIds');
       if (!preview || !input) return;
-      const kingdom = $('kingdomId') ? $('kingdomId').value : '';
+      const kingdom = $('bulkKingdomId') && $('bulkKingdomId').value ? $('bulkKingdomId').value : ($('kingdomId') ? $('kingdomId').value : '');
       preview.textContent = `${formatNumber(parseBulkEntries(input.value, kingdom).length)} ID`;
     }
 
@@ -4260,7 +4285,7 @@
     });
 
     $('bulkBtn').addEventListener('click', async () => {
-      const kingdom = cleanKingdom($('kingdomId').value);
+      const kingdom = cleanKingdom(($('bulkKingdomId') && $('bulkKingdomId').value) || $('kingdomId').value);
       const entries = parseBulkEntries($('bulkIds').value, kingdom, 250);
       if (!entries.length) return setStatus('registerStatus', kingdom ? tr('enterId') : tr('enterKingdom'));
       if (!$('consent').checked) return setStatus('registerStatus', tr('needConsent'));
@@ -4359,6 +4384,7 @@
     });
     $('bulkIds').addEventListener('input', updateBulkPreview);
     $('kingdomId').addEventListener('input', updateBulkPreview);
+    $('bulkKingdomId').addEventListener('input', updateBulkPreview);
     applyI18n();
     loadCodes(true).finally(loadStatus);
     loadActivity();
