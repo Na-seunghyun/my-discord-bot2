@@ -702,6 +702,64 @@
     id: { ...en, ...id },
   };
 
+  const hubSwordlandCard = {
+    en: {
+      toolHint: "Planner, Swordland, intel, calculators, feedback.",
+      swordlandTitle: "Swordland Event Planner",
+      swordlandBody: "Build Swordland assignments, rally notes, timing plans, and Discord-ready briefings from one board.",
+      swordlandButton: "Open Swordland planner",
+    },
+    ko: {
+      toolHint: "플래너, 소드랜드, 인텔, 계산기, 피드백.",
+      swordlandTitle: "소드랜드 이벤트 플래너",
+      swordlandBody: "소드랜드 전투 배치, 집결 메모, 시간 계획, 디스코드용 브리핑을 한 보드에서 정리합니다.",
+      swordlandButton: "소드랜드 플래너 열기",
+    },
+    ja: {
+      toolHint: "プランナー、ソードランド、インテル、計算機、フィードバック。",
+      swordlandTitle: "ソードランドイベントプランナー",
+      swordlandBody: "ソードランドの配置、集結メモ、時間計画、Discord用ブリーフィングを1つのボードで整理します。",
+      swordlandButton: "ソードランドプランナーを開く",
+    },
+    fr: {
+      toolHint: "Planificateur, Swordland, intel, calculateurs, retours.",
+      swordlandTitle: "Planificateur Swordland",
+      swordlandBody: "Préparez les assignations Swordland, les notes de rallye, le timing et un briefing prêt pour Discord.",
+      swordlandButton: "Ouvrir le planificateur Swordland",
+    },
+    de: {
+      toolHint: "Planer, Swordland, Intel, Rechner, Feedback.",
+      swordlandTitle: "Swordland Event-Planer",
+      swordlandBody: "Plane Swordland-Zuweisungen, Rallye-Notizen, Timing und Discord-fertige Briefings auf einem Board.",
+      swordlandButton: "Swordland-Planer öffnen",
+    },
+    "zh-CN": {
+      toolHint: "规划器、剑域、情报、计算器、反馈。",
+      swordlandTitle: "剑域活动规划器",
+      swordlandBody: "在一个面板中整理剑域分配、集结备注、时间计划和 Discord 简报。",
+      swordlandButton: "打开剑域规划器",
+    },
+    "zh-TW": {
+      toolHint: "規劃器、劍域、情報、計算器、回饋。",
+      swordlandTitle: "劍域活動規劃器",
+      swordlandBody: "在一個面板中整理劍域分配、集結備註、時間計畫和 Discord 簡報。",
+      swordlandButton: "開啟劍域規劃器",
+    },
+    th: {
+      toolHint: "ตัววางแผน, Swordland, ข้อมูลผู้เล่น, เครื่องคำนวณ, ฟีดแบ็ก.",
+      swordlandTitle: "ตัววางแผนกิจกรรม Swordland",
+      swordlandBody: "จัดทีม Swordland โน้ตรวมพล แผนเวลา และสรุปสำหรับ Discord ได้ในบอร์ดเดียว",
+      swordlandButton: "เปิดตัววางแผน Swordland",
+    },
+    id: {
+      toolHint: "Planner, Swordland, intel, kalkulator, feedback.",
+      swordlandTitle: "Perencana Event Swordland",
+      swordlandBody: "Susun tugas Swordland, catatan rally, timing, dan briefing Discord dalam satu papan.",
+      swordlandButton: "Buka perencana Swordland",
+    },
+  };
+  Object.entries(hubSwordlandCard).forEach(([code, values]) => Object.assign(dictionaries[code], values));
+
   Object.assign(dictionaries.fr, {
     copyCode: "Copier",
     copiedCode: "Copié",
@@ -1187,6 +1245,117 @@
     codesHelp: "Status aktif/kedaluwarsa disinkronkan dari sumber tepercaya dan hasil redeem terbaru.", kingdomRegistryHelp: "Lihat ID auto-redeem tersimpan berdasarkan kerajaan.",
   };
   Object.entries(sharedAdditions).forEach(([code, values]) => Object.assign(dictionaries[code], values));
+  const summaryFixes = {
+    en: {
+      subtitle: "A premium Kingshot hub for auto redeem, calculators, map planning, player intel, and alliance operations.",
+      coreCalcBody: "Open calculators for buildings, training, War Academy research, gear, VIP, packs, and resources.",
+      coreRedeemBody: "Register player IDs, monitor gift codes, and queue safe auto redeem jobs when new codes appear.",
+      fortBody: "Create fair Fort and Sanctuary rotation plans for alliance scheduling.",
+      mapBody: "Place cities, traps, castles, turrets, labels, and march-time lines on a shareable war map.",
+      buildingBody: "Plan building upgrade resources, power gain, and construction time with buffs and discounts.",
+      warAcademyBody: "Calculate War Academy research costs, Truegold Dust, time, power, and troop bonuses.",
+      intelBody: "Search saved player, kingdom, hero, and gear intel from your local data center.",
+      feedbackBody: "Report bugs, translation issues, calculator errors, or mobile UI problems.",
+      "app.subtitle": "Plan alliance placements, objects, labels, and march-time measurements on a shared war map."
+    },
+    ko: {
+      subtitle: "오토리딤, 계산기, 맵플래너, 인텔 검색, 연맹 운영을 한곳에서 쓰는 Kingshot 프리미엄 허브입니다.",
+      coreCalcBody: "건설, 훈련, 워아카데미 연구, 장비, VIP, 패키지, 자원 계산기를 한곳에서 엽니다.",
+      coreRedeemBody: "플레이어 ID를 등록하고 기프트 코드를 확인하며, 새 코드가 나오면 안전하게 자동 지급 대기열에 올립니다.",
+      fortBody: "연맹별 Fort와 Sanctuary 목표를 공정한 로테이션으로 배분합니다.",
+      mapBody: "도시, 함정, 캐슬, 터렛, 라벨, 행군 시간 선을 배치하고 공유용 전쟁 지도를 만듭니다.",
+      buildingBody: "건설 버프와 자원 할인을 반영해 건물 업그레이드 자원, 전투력, 시간을 계산합니다.",
+      warAcademyBody: "워아카데미 연구의 Truegold Dust, 자원, 시간, 전투력, 병종 보너스를 계산합니다.",
+      intelBody: "내 데이터센터에 저장된 유저, 왕국, 영웅, 장비 인텔을 검색합니다.",
+      feedbackBody: "버그, 번역 문제, 계산 오류, 모바일 화면 문제를 전달합니다.",
+      "app.subtitle": "연맹 배치, 오브젝트, 라벨, 행군 시간 측정을 공유 가능한 전쟁 지도에서 계획합니다."
+    },
+    ja: {
+      subtitle: "オートリディーム、計算機、マップ計画、プレイヤー情報、同盟運営をまとめたKingshotプレミアムハブです。",
+      coreCalcBody: "建設、訓練、War Academy研究、装備、VIP、パック、資源計算をまとめて開けます。",
+      coreRedeemBody: "プレイヤーIDを登録し、ギフトコードを確認して、新コードを安全な自動交換キューに追加します。",
+      fortBody: "同盟ごとのFortとSanctuary目標を公平なローテーションで配分します。",
+      mapBody: "都市、罠、城、タレット、ラベル、行軍時間ラインを配置して共有用マップを作成します。",
+      buildingBody: "建設バフと資源割引を反映して、建物の資源、戦力、時間を計算します。",
+      warAcademyBody: "War Academy研究のTruegold Dust、資源、時間、戦力、兵種ボーナスを計算します。",
+      intelBody: "保存済みのプレイヤー、王国、英雄、装備情報を検索します。",
+      feedbackBody: "バグ、翻訳、計算、モバイル表示の問題を送信します。",
+      "app.subtitle": "同盟配置、オブジェクト、ラベル、行軍時間を共有マップ上で計画します。"
+    },
+    fr: {
+      subtitle: "Un hub premium Kingshot pour auto redeem, calculateurs, carte, intel joueur et gestion d'alliance.",
+      coreCalcBody: "Ouvrez les calculateurs de bâtiments, entraînement, War Academy, équipement, VIP, packs et ressources.",
+      coreRedeemBody: "Enregistrez les IDs, suivez les codes cadeau et placez les nouveaux codes dans une file sûre.",
+      fortBody: "Créez des rotations équitables pour les Forts et Sanctuaires de l'alliance.",
+      mapBody: "Placez villes, pièges, châteaux, tourelles, labels et temps de marche sur une carte partageable.",
+      buildingBody: "Calculez ressources, puissance et temps de construction avec buffs et réductions.",
+      warAcademyBody: "Calculez Truegold Dust, ressources, temps, puissance et bonus de troupes War Academy.",
+      intelBody: "Recherchez joueurs, royaumes, héros et équipements enregistrés dans votre centre de données.",
+      feedbackBody: "Signalez bugs, traductions, erreurs de calcul ou problèmes mobiles.",
+      "app.subtitle": "Planifiez placements d'alliance, objets, labels et temps de marche sur une carte partagée."
+    },
+    de: {
+      subtitle: "Ein Premium-Kingshot-Hub für Auto Redeem, Rechner, Kartenplanung, Spieler-Intel und Allianzplanung.",
+      coreCalcBody: "Öffne Rechner für Gebäude, Training, War Academy, Ausrüstung, VIP, Pakete und Ressourcen.",
+      coreRedeemBody: "Registriere Spieler-IDs, prüfe Geschenkcodes und reihe neue Codes sicher zur Auto-Einlösung ein.",
+      fortBody: "Erstelle faire Fort- und Sanctuary-Rotationen für deine Allianz.",
+      mapBody: "Platziere Städte, Fallen, Burgen, Türme, Labels und Marschzeiten auf einer teilbaren Karte.",
+      buildingBody: "Berechne Gebäuderessourcen, Macht und Bauzeit mit Buffs und Rabatten.",
+      warAcademyBody: "Berechne War-Academy-Forschung: Truegold Dust, Ressourcen, Zeit, Macht und Truppenboni.",
+      intelBody: "Suche gespeicherte Spieler-, Königreich-, Helden- und Ausrüstungsdaten.",
+      feedbackBody: "Melde Bugs, Übersetzungen, Rechenfehler oder mobile UI-Probleme.",
+      "app.subtitle": "Plane Allianzplatzierungen, Objekte, Labels und Marschzeiten auf einer geteilten Karte."
+    },
+    "zh-CN": {
+      subtitle: "一个整合自动兑换、计算器、地图规划、玩家情报和联盟运营的 Kingshot 高级中心。",
+      coreCalcBody: "打开建筑、训练、战争学院、装备、VIP、礼包和资源计算器。",
+      coreRedeemBody: "注册玩家 ID，查看礼包码，并在发现新代码时安全加入自动兑换队列。",
+      fortBody: "为联盟 Fort 和 Sanctuary 目标生成公平轮换计划。",
+      mapBody: "在可分享地图上放置城市、陷阱、城堡、炮塔、标签和行军时间线。",
+      buildingBody: "结合建造增益和资源折扣，计算建筑升级资源、战力和时间。",
+      warAcademyBody: "计算战争学院研究的 Truegold Dust、资源、时间、战力和兵种加成。",
+      intelBody: "搜索本地数据中心保存的玩家、王国、英雄和装备情报。",
+      feedbackBody: "提交错误、翻译问题、计算问题或移动端显示反馈。",
+      "app.subtitle": "在共享战争地图上规划联盟布局、对象、标签和行军时间。"
+    },
+    "zh-TW": {
+      subtitle: "整合自動兌換、計算器、地圖規劃、玩家情報與聯盟營運的 Kingshot 高級中心。",
+      coreCalcBody: "開啟建築、訓練、戰爭學院、裝備、VIP、禮包與資源計算器。",
+      coreRedeemBody: "註冊玩家 ID、查看禮包碼，並在新代碼出現時安全加入自動兌換佇列。",
+      fortBody: "為聯盟 Fort 與 Sanctuary 目標建立公平輪換計畫。",
+      mapBody: "在可分享地圖上放置城市、陷阱、城堡、砲塔、標籤與行軍時間線。",
+      buildingBody: "結合建造增益與資源折扣，計算建築升級資源、戰力與時間。",
+      warAcademyBody: "計算戰爭學院研究的 Truegold Dust、資源、時間、戰力與兵種加成。",
+      intelBody: "搜尋本地資料中心保存的玩家、王國、英雄與裝備情報。",
+      feedbackBody: "提交錯誤、翻譯問題、計算問題或行動版顯示回饋。",
+      "app.subtitle": "在共享戰爭地圖上規劃聯盟配置、物件、標籤與行軍時間。"
+    },
+    th: {
+      subtitle: "ศูนย์ Kingshot สำหรับ Auto Redeem เครื่องคำนวณ แผนที่ ข้อมูลผู้เล่น และงานพันธมิตร",
+      coreCalcBody: "เปิดเครื่องคำนวณอาคาร ฝึกทหาร War Academy อุปกรณ์ VIP แพ็ก และทรัพยากร",
+      coreRedeemBody: "ลงทะเบียน Player ID ตรวจโค้ดของขวัญ และจัดคิวแลกอัตโนมัติเมื่อมีโค้ดใหม่",
+      fortBody: "สร้างแผนหมุนเวียน Fort และ Sanctuary อย่างยุติธรรมสำหรับพันธมิตร",
+      mapBody: "วางเมือง กับดัก ปราสาท ป้อม ป้ายชื่อ และเส้นเวลาเดินทัพบนแผนที่ที่แชร์ได้",
+      buildingBody: "คำนวณทรัพยากร พลัง และเวลาอัปเกรดอาคารพร้อมบัฟและส่วนลด",
+      warAcademyBody: "คำนวณ Truegold Dust ทรัพยากร เวลา พลัง และโบนัสทหารของ War Academy",
+      intelBody: "ค้นหาข้อมูลผู้เล่น อาณาจักร ฮีโร่ และอุปกรณ์ที่บันทึกไว้",
+      feedbackBody: "แจ้งบั๊ก ปัญหาแปลภาษา การคำนวณ หรือหน้าจอมือถือ",
+      "app.subtitle": "วางแผนตำแหน่งพันธมิตร วัตถุ ป้ายชื่อ และเวลาเดินทัพบนแผนที่ร่วมกัน"
+    },
+    id: {
+      subtitle: "Hub premium Kingshot untuk auto redeem, kalkulator, peta, intel pemain, dan operasi aliansi.",
+      coreCalcBody: "Buka kalkulator bangunan, training, War Academy, gear, VIP, paket, dan resource.",
+      coreRedeemBody: "Daftarkan Player ID, pantau gift code, dan antrekan redeem otomatis saat kode baru muncul.",
+      fortBody: "Buat rotasi Fort dan Sanctuary yang adil untuk aliansi.",
+      mapBody: "Tempatkan kota, trap, castle, turret, label, dan waktu march di peta yang bisa dibagikan.",
+      buildingBody: "Hitung resource, power, dan waktu upgrade bangunan dengan buff dan diskon.",
+      warAcademyBody: "Hitung Truegold Dust, resource, waktu, power, dan bonus pasukan War Academy.",
+      intelBody: "Cari intel pemain, kingdom, hero, dan gear yang tersimpan di data center lokal.",
+      feedbackBody: "Kirim bug, masalah terjemahan, kesalahan kalkulator, atau masalah tampilan mobile.",
+      "app.subtitle": "Rencanakan posisi aliansi, objek, label, dan waktu march di peta bersama."
+    }
+  };
+  Object.entries(summaryFixes).forEach(([code, values]) => Object.assign(dictionaries[code] || (dictionaries[code] = {}), values));
 
   function normalizeLang(value) {
     const raw = String(value || "").trim();
@@ -1214,7 +1383,22 @@
     try {
       if (typeof I18N !== "undefined" && I18N) {
         for (const { code } of LANGUAGES) {
-          I18N[code] = { ...(I18N.en || {}), ...(I18N[code] || {}), ...(dictionaries[code] || {}) };
+          const globalEn = dictionaries.en || {};
+          const globalLang = dictionaries[code] || {};
+          const pageEn = I18N.en || {};
+          const pageLang = I18N[code] || {};
+          const merged = { ...globalEn, ...globalLang, ...pageEn, ...pageLang };
+          for (const [key, value] of Object.entries(globalLang)) {
+            if (
+              Object.prototype.hasOwnProperty.call(pageLang, key) &&
+              Object.prototype.hasOwnProperty.call(pageEn, key) &&
+              pageLang[key] === pageEn[key] &&
+              value !== globalEn[key]
+            ) {
+              merged[key] = value;
+            }
+          }
+          I18N[code] = merged;
         }
         I18N.zh = I18N["zh-CN"];
       }

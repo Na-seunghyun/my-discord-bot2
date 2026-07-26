@@ -13,8 +13,8 @@
   --gold:#c9a227;--gold-dim:#7d661a;--verdigris:#4e9c86;--rust:#c05540;
   --a1:#7a6fd0;--a2:#3e9aa8;--a3:#c4574a;--a4:#8aa83d;--a5:#a8628f;--a6:#5d7fa8;
   --mono:"Consolas","SF Mono",Menlo,"DejaVu Sans Mono",monospace;
-  --sans:system-ui,"Segoe UI",Roboto,sans-serif;
-  --serif:Georgia,"Times New Roman",serif;
+  --sans:Inter,Pretendard,"Noto Sans KR",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --serif:Inter,Pretendard,"Noto Sans KR",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
 }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
@@ -538,6 +538,58 @@ const FORT_TRANSLATIONS = {
   th: { exact: {'Hub':'ฮับ','Swordland':'Swordland','Auto Redeem':'รับโค้ดอัตโนมัติ','Fort / Sanc':'ป้อม / แซงค์','Points each':'คะแนนต่อพันธมิตร','Buff rounds':'รอบบัฟ','Fairness':'ความยุติธรรม','Season structure':'โครงสร้างซีซัน','Alliances':'จำนวนพันธมิตร','Rounds':'รอบ','Sanctuaries':'แซงค์','Fortresses':'ป้อม','Points / sanctuary':'คะแนน / แซงค์','Points / fortress':'คะแนน / ป้อม','Buff schedule':'ตารางบัฟ','Play season':'เล่นซีซัน','Stop':'หยุด','Claim order — one sanctuary per round':'ลำดับยึด — รอบละ 1 แซงค์','Rounds holding each buff':'รอบที่ถือบัฟ','Round by round':'แผนรายรอบ','Paste into alliance chat':'วางในแชทพันธมิตร','Copy plan':'คัดลอกแผน','Copied':'คัดลอกแล้ว','Health Buff':'บัฟเลือด','Damage Buff':'บัฟดาเมจ','Deployment Boost':'บัฟส่งทัพ','Alliance':'พันธมิตร','Total':'รวม','all level':'เท่ากันทั้งหมด','as even as possible':'สมดุลที่สุด','uneven':'ไม่สมดุล','no buff':'ไม่มีบัฟ','no buff this round':'รอบนี้ไม่มีบัฟ','no buffs':'ไม่มีบัฟ'}, phrases: [['Round','รอบ'],['San ','แซงค์ '],['Fort ','ป้อม '],[' buffs live',' บัฟทำงาน'],[' buffs',' บัฟ'],['spread ','ต่าง '],[' caught',' ครอบคลุม'],['Alliance ','พันธมิตร ']] },
   id: { exact: {'Hub':'Hub','Swordland':'Swordland','Auto Redeem':'Auto Redeem','Fort / Sanc':'Fort / Sanc','Points each':'Poin tiap aliansi','Buff rounds':'Ronde buff','Fairness':'Keadilan','Season structure':'Struktur musim','Alliances':'Aliansi','Rounds':'Ronde','Sanctuaries':'Sanctuary','Fortresses':'Fortress','Points / sanctuary':'Poin / sanctuary','Points / fortress':'Poin / fortress','Buff schedule':'Jadwal buff','Play season':'Putar musim','Stop':'Stop','Claim order — one sanctuary per round':'Urutan klaim — satu sanctuary per ronde','Rounds holding each buff':'Ronde yang memegang buff','Round by round':'Ronde demi ronde','Paste into alliance chat':'Tempel ke chat aliansi','Copy plan':'Salin rencana','Copied':'Tersalin','Health Buff':'Buff Health','Damage Buff':'Buff Damage','Deployment Boost':'Boost Deployment','Alliance':'Aliansi','Total':'Total','all level':'semua sama','as even as possible':'seimbang mungkin','uneven':'tidak seimbang','no buff':'tanpa buff','no buff this round':'ronde ini tanpa buff','no buffs':'tanpa buff'}, phrases: [['Round','Ronde'],['San ','San '],['Fort ','Fort '],[' buffs live',' buff aktif'],[' buffs',' buff'],['spread ','selisih '],[' caught',' tertangkap'],['Alliance ','Aliansi ']] }
 };
+
+const FORT_COMMON_EXTRAS = {
+  ko: {
+    'Rotating buffs — ownership stays put while phase rewards move each round':'순환 버프 — 점령권은 유지되고 라운드마다 보상 위치만 이동합니다',
+    'Which sanctuary carries each buff, round by round. Leave a cell blank if that buff is absent. Taken from your reward table.':'라운드별로 어떤 성소에 버프가 붙는지 입력합니다. 해당 버프가 없으면 빈칸으로 두세요. 보상표 기준입니다.',
+    'Sanctuary ring showing ownership and current buff positions':'점령권과 현재 버프 위치를 보여주는 성소 링',
+    'Round':'라운드'
+  },
+  ja: {
+    'Rotating buffs — ownership stays put while phase rewards move each round':'循環バフ — 所有は維持され、報酬位置だけが各ラウンドで移動します',
+    'Which sanctuary carries each buff, round by round. Leave a cell blank if that buff is absent. Taken from your reward table.':'各ラウンドでどの聖域にバフが付くかを入力します。ない場合は空欄にしてください。報酬表を基準にします。',
+    'Sanctuary ring showing ownership and current buff positions':'所有状況と現在のバフ位置を表示する聖域リング',
+    'Round':'ラウンド'
+  },
+  fr: {
+    'Rotating buffs — ownership stays put while phase rewards move each round':'Buffs tournants — la propriété reste en place tandis que les récompenses changent à chaque tour',
+    'Which sanctuary carries each buff, round by round. Leave a cell blank if that buff is absent. Taken from your reward table.':'Indiquez quel sanctuaire porte chaque buff à chaque tour. Laissez vide si le buff est absent. Basé sur votre tableau de récompenses.',
+    'Sanctuary ring showing ownership and current buff positions':'Anneau des sanctuaires montrant les propriétaires et les buffs actifs',
+    'Round':'Tour'
+  },
+  de: {
+    'Rotating buffs — ownership stays put while phase rewards move each round':'Rotierende Buffs — Besitz bleibt bestehen, während die Belohnungen jede Runde wandern',
+    'Which sanctuary carries each buff, round by round. Leave a cell blank if that buff is absent. Taken from your reward table.':'Trage ein, welches Sanktum pro Runde welchen Buff trägt. Leer lassen, wenn der Buff fehlt. Nach deiner Belohnungstabelle.',
+    'Sanctuary ring showing ownership and current buff positions':'Sanktum-Ring mit Besitz und aktuellen Buff-Positionen',
+    'Round':'Runde'
+  },
+  'zh-CN': {
+    'Rotating buffs — ownership stays put while phase rewards move each round':'轮换增益 — 占领权保持不变，奖励位置每轮移动',
+    'Which sanctuary carries each buff, round by round. Leave a cell blank if that buff is absent. Taken from your reward table.':'填写每轮哪个圣所携带对应增益。没有该增益时留空。基于你的奖励表。',
+    'Sanctuary ring showing ownership and current buff positions':'显示占领归属和当前增益位置的圣所环',
+    'Round':'轮次'
+  },
+  'zh-TW': {
+    'Rotating buffs — ownership stays put while phase rewards move each round':'輪換增益 — 佔領權保持不變，獎勵位置每輪移動',
+    'Which sanctuary carries each buff, round by round. Leave a cell blank if that buff is absent. Taken from your reward table.':'填寫每輪哪個聖所攜帶對應增益。沒有該增益時留空。基於你的獎勵表。',
+    'Sanctuary ring showing ownership and current buff positions':'顯示佔領歸屬和目前增益位置的聖所環',
+    'Round':'輪次'
+  },
+  th: {
+    'Rotating buffs — ownership stays put while phase rewards move each round':'บัฟหมุนเวียน — สิทธิ์ครองยังคงเดิม แต่รางวัลจะย้ายตำแหน่งในแต่ละรอบ',
+    'Which sanctuary carries each buff, round by round. Leave a cell blank if that buff is absent. Taken from your reward table.':'ใส่ว่าแต่ละรอบแซงค์ใดมีบัฟอะไร หากรอบนั้นไม่มีบัฟให้เว้นว่าง อ้างอิงจากตารางรางวัลของคุณ',
+    'Sanctuary ring showing ownership and current buff positions':'วงแหวนแซงค์ที่แสดงเจ้าของและตำแหน่งบัฟปัจจุบัน',
+    'Round':'รอบ'
+  },
+  id: {
+    'Rotating buffs — ownership stays put while phase rewards move each round':'Buff berputar — kepemilikan tetap, posisi hadiah berpindah tiap ronde',
+    'Which sanctuary carries each buff, round by round. Leave a cell blank if that buff is absent. Taken from your reward table.':'Isi sanctuary mana yang membawa tiap buff di setiap ronde. Kosongkan jika buff tidak ada. Berdasarkan tabel hadiahmu.',
+    'Sanctuary ring showing ownership and current buff positions':'Lingkar sanctuary yang menampilkan kepemilikan dan posisi buff aktif',
+    'Round':'Ronde'
+  }
+};
+Object.keys(FORT_COMMON_EXTRAS).forEach((code) => Object.assign(FORT_TRANSLATIONS[code].exact, FORT_COMMON_EXTRAS[code]));
 
 function activeLang(){
   const pick = document.getElementById("pageLang");

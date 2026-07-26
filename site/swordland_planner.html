@@ -20,8 +20,8 @@
     --gules:#c04450;
     --amber:#e5952f;
     --moss:#6f9a76;
-    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
-    --sans:ui-sans-serif,system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --serif:Inter,Pretendard,"Noto Sans KR",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --sans:Inter,Pretendard,"Noto Sans KR",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
   }
   *{box-sizing:border-box}
@@ -360,7 +360,7 @@
       <div class="panel">
         <h2>How the numbers work</h2>
         <div class="body">
-          <p class="note" style="margin:0">
+          <p class="note" id="numbersNote" style="margin:0">
             Everything is read at the minute on the timeline. A building banks its first-control
             bonus the moment you take it, then its per-minute rate for every minute after that, so
             drag the timeline to any point to see the total you would be sitting on. The full map
@@ -730,6 +730,41 @@ const SW_TRANSLATIONS = {
   id: { exact: {'Hub':'Hub','Fort/Sanc':'Fort/Sanc','Auto Redeem':'Auto Redeem','Swordland War Table':'Perencana Swordland','Reset board':'Reset papan','Load plan':'Muat rencana','Save plan':'Simpan rencana','Copy briefing':'Salin briefing','Our spawn':'Spawn kita','Enemy spawn':'Spawn musuh','Unassigned':'Belum ditetapkan','Take & hold':'Ambil & tahan','Contest':'Kontes','Enemy holds':'Musuh pegang','Structure orders':'Perintah bangunan','Legion roster':'Daftar pasukan','Running total':'Total berjalan','How the numbers work':'Cara hitung poin','Governor name':'Nama pemain','Tank':'Tank','Attacker':'Penyerang','Support':'Dukungan','Add':'Tambah','Us · alliance':'Kita · aliansi','Them · alliance':'Musuh · aliansi','Nothing banked yet':'Belum ada poin','Order':'Perintah','Held from minute':'Dipegang dari menit','Assigned squad':'Skuad ditetapkan','Add a governor…':'Tambah pemain…','Nobody assigned yet.':'Belum ada yang ditetapkan.','Notes for the briefing':'Catatan briefing','Lead':'Pemimpin','Plan saved':'Rencana tersimpan','Plan loaded':'Rencana dimuat','Briefing copied':'Briefing disalin'}, phrases: [['First control','Kontrol pertama'],['personal','pribadi'],['Occupation','Pendudukan'],['Opens at','Buka pada'],['still locked','masih terkunci'],['Ahead by','Unggul'],['Behind by','Tertinggal'],['You','Kita'],['them','musuh'],['unclaimed','belum diklaim'],['registered','terdaftar'],['unassigned','belum ditetapkan'],['Remove','Hapus'],['Swordshrine','Kuil Pedang'],['Sanctum','Sanctum'],['Abbey','Abbey'],['Bell Tower','Menara Lonceng'],['Stables','Kandang'],['Reformation','Reformasi'],['Mercenary','Tentara bayaran']] }
 };
 
+const SW_COMMON_EXTRAS = {
+  ko: {
+    'Kingshot · Alliance PvP':'Kingshot · 연맹 PvP','Battle minute':'전투 시간','15 centre opens':'15분 중앙 개방','20 second wave':'20분 2차 전개','YouTube':'유튜브',
+    'Phase 1 — opening scramble':'1단계 — 초반 전개','Phase 2 — centre opens':'2단계 — 중앙 개방','Phase 3 — cellars and comeback window':'3단계 — 저장고와 역전 구간',
+    'Add your combatants to assign them to structures.':'건물에 배치할 전투원을 추가하세요.','Clear every order, note and roster entry?':'모든 명령, 메모, 명단을 초기화할까요?',
+    'Cheap first-control bonuses. Fill spare march slots here.':'저렴한 최초 점령 보너스입니다. 남는 행군 슬롯을 여기에 채우세요.',
+    'Capture time halved for the whole alliance. Highest-value buff in Phase 1.':'연맹 전체 점령 시간이 절반으로 줄어듭니다. 1단계에서 가장 가치 높은 버프입니다.',
+    'Free teleport cooldown halved, 12 minutes down to 6. Take it first.':'무료 텔레포트 대기시간이 12분에서 6분으로 줄어듭니다. 우선 점령하세요.',
+    '+15% squad damage and −15% damage taken. Grab it the second it opens.':'부대 피해 +15%, 받는 피해 -15%. 열리는 즉시 확보하세요.',
+    'Sends a mercenary strike at an enemy building. Use it to soften a target right before your rally.':'적 건물에 용병 타격을 보냅니다. 집결 직전에 목표를 약화할 때 사용하세요.',
+    'Highest output on the map, locked until 15:00. Not mandatory to win — do not tunnel on it while surrendering Sanctums.':'지도에서 산출량이 가장 높지만 15:00까지 잠겨 있습니다. 승리에 필수는 아니므로 성소를 내주면서까지 집착하지 마세요.',
+    'Your point engine. Open on at least one, ideally both.':'핵심 점수 엔진입니다. 최소 1개, 가능하면 둘 다 열어두세요.'
+  },
+  ja: {'Kingshot · Alliance PvP':'Kingshot · 同盟PvP','Battle minute':'戦闘時間','15 centre opens':'15分 中央開放','20 second wave':'20分 第2波','YouTube':'YouTube','Phase 1 — opening scramble':'フェーズ1 — 序盤展開','Phase 2 — centre opens':'フェーズ2 — 中央開放','Phase 3 — cellars and comeback window':'フェーズ3 — 地下倉庫と逆転区間','Add your combatants to assign them to structures.':'建物に配置するメンバーを追加してください。','Clear every order, note and roster entry?':'すべての指示、メモ、名簿をリセットしますか？'},
+  fr: {'Kingshot · Alliance PvP':'Kingshot · PvP alliance','Battle minute':'Minute de bataille','15 centre opens':'15 centre ouvert','20 second wave':'20 seconde vague','YouTube':'YouTube','Phase 1 — opening scramble':'Phase 1 — ouverture rapide','Phase 2 — centre opens':'Phase 2 — centre ouvert','Phase 3 — cellars and comeback window':'Phase 3 — caves et retour','Add your combatants to assign them to structures.':'Ajoutez vos combattants pour les assigner aux bâtiments.','Clear every order, note and roster entry?':'Réinitialiser tous les ordres, notes et joueurs ?'},
+  de: {'Kingshot · Alliance PvP':'Kingshot · Allianz-PvP','Battle minute':'Kampfminute','15 centre opens':'15 Zentrum öffnet','20 second wave':'20 zweite Welle','YouTube':'YouTube','Phase 1 — opening scramble':'Phase 1 — Startphase','Phase 2 — centre opens':'Phase 2 — Zentrum öffnet','Phase 3 — cellars and comeback window':'Phase 3 — Keller und Comeback-Fenster','Add your combatants to assign them to structures.':'Füge Kämpfer hinzu, um sie Gebäuden zuzuweisen.','Clear every order, note and roster entry?':'Alle Aufträge, Notizen und Einträge zurücksetzen?'},
+  'zh-CN': {'Kingshot · Alliance PvP':'Kingshot · 联盟 PvP','Battle minute':'战斗分钟','15 centre opens':'15 中央开启','20 second wave':'20 第二波','YouTube':'YouTube','Phase 1 — opening scramble':'阶段1 — 开局争夺','Phase 2 — centre opens':'阶段2 — 中央开启','Phase 3 — cellars and comeback window':'阶段3 — 地窖与反击窗口','Add your combatants to assign them to structures.':'添加参战成员并分配到建筑。','Clear every order, note and roster entry?':'清空所有指令、备注和名单吗？'},
+  'zh-TW': {'Kingshot · Alliance PvP':'Kingshot · 聯盟 PvP','Battle minute':'戰鬥分鐘','15 centre opens':'15 中央開啟','20 second wave':'20 第二波','YouTube':'YouTube','Phase 1 — opening scramble':'階段1 — 開局爭奪','Phase 2 — centre opens':'階段2 — 中央開啟','Phase 3 — cellars and comeback window':'階段3 — 地窖與反擊窗口','Add your combatants to assign them to structures.':'新增參戰成員並分配到建築。','Clear every order, note and roster entry?':'清空所有指令、備註和名單嗎？'},
+  th: {'Kingshot · Alliance PvP':'Kingshot · PvP พันธมิตร','Battle minute':'นาทีรบ','15 centre opens':'15 เปิดกลาง','20 second wave':'20 ระลอกสอง','YouTube':'YouTube','Phase 1 — opening scramble':'เฟส 1 — เปิดเกมแย่งพื้นที่','Phase 2 — centre opens':'เฟส 2 — เปิดกลาง','Phase 3 — cellars and comeback window':'เฟส 3 — ห้องใต้ดินและช่วงพลิกเกม','Add your combatants to assign them to structures.':'เพิ่มผู้เล่นเพื่อจัดลงอาคาร','Clear every order, note and roster entry?':'ล้างคำสั่ง โน้ต และรายชื่อทั้งหมดหรือไม่?'},
+  id: {'Kingshot · Alliance PvP':'Kingshot · PvP aliansi','Battle minute':'Menit pertempuran','15 centre opens':'15 pusat terbuka','20 second wave':'20 gelombang kedua','YouTube':'YouTube','Phase 1 — opening scramble':'Fase 1 — perebutan awal','Phase 2 — centre opens':'Fase 2 — pusat terbuka','Phase 3 — cellars and comeback window':'Fase 3 — cellar dan peluang comeback','Add your combatants to assign them to structures.':'Tambahkan pemain untuk ditugaskan ke bangunan.','Clear every order, note and roster entry?':'Hapus semua perintah, catatan, dan daftar pemain?'}
+};
+Object.keys(SW_COMMON_EXTRAS).forEach((code) => Object.assign(SW_TRANSLATIONS[code].exact, SW_COMMON_EXTRAS[code]));
+
+const SW_NUMBER_NOTES = {
+  en: 'Everything is read at the minute on the timeline. A building banks its first-control bonus the moment you take it, then its per-minute rate for every minute after that, so drag the timeline to any point to see the total you would be sitting on. The full map runs at 7,560 alliance points per minute, but only 5,280 of that exists before 15:00. Mark a building <b>Enemy holds</b> and it banks for them on the same maths, so the two totals read against each other. All of it assumes nothing changes hands after the minute you set, so treat both sides as ceilings — and kills, Baggage Trains and Undercellars are income on top.',
+  ko: '타임라인에서 선택한 분 기준으로 모든 점수를 계산합니다. 건물은 점령 순간 최초 점령 보너스를 얻고, 이후 매분 점수를 누적합니다. 그래서 타임라인을 움직이면 해당 시점의 예상 누적 점수를 바로 볼 수 있습니다. 전체 지도는 분당 7,560 연맹 점수를 만들지만 15:00 전에는 5,280점만 열려 있습니다. 건물을 <b>상대 점령</b>으로 표시하면 같은 계산식으로 상대 점수에 누적되므로 양쪽 총점을 비교할 수 있습니다. 설정한 분 이후에는 점령 변동이 없다고 가정하므로 양쪽 모두 최대 예상치로 보세요. 처치, 보급 열차, 지하 저장고 점수는 여기에 추가 수입입니다.',
+  ja: 'タイムラインで選んだ分を基準にすべての点数を計算します。建物は占領した瞬間に初回占領ボーナスを獲得し、その後は毎分ポイントを加算します。タイムラインを動かすと、その時点の想定累計を確認できます。全体マップは毎分7,560同盟ポイントですが、15:00前に存在するのは5,280ポイントだけです。建物を<b>敵が保持</b>にすると同じ計算で敵側に加算されます。設定した分以降は所有が変わらない前提なので、両側とも上限値として見てください。撃破、補給列車、地下倉庫は追加収入です。',
+  fr: 'Tous les calculs se lisent à la minute choisie sur la timeline. Un bâtiment donne son bonus de première prise au moment de la capture, puis ajoute ses points par minute. Déplacez la timeline pour voir le total estimé à chaque instant. Toute la carte produit 7 560 points d’alliance par minute, mais seulement 5 280 existent avant 15:00. Marquez un bâtiment en <b>Ennemi tient</b> pour cumuler ses points côté adverse avec la même formule. Les deux totaux sont donc des plafonds si rien ne change ensuite. Les kills, trains de bagages et caves s’ajoutent par-dessus.',
+  de: 'Alle Werte werden zur gewählten Minute auf der Zeitleiste berechnet. Ein Gebäude gibt beim Einnehmen den Ersteinnahme-Bonus und danach jede Minute weitere Punkte. Ziehe die Zeitleiste, um den erwarteten Stand zu sehen. Die ganze Karte erzeugt 7.560 Allianzpunkte pro Minute, vor 15:00 sind aber nur 5.280 verfügbar. Markiere ein Gebäude als <b>Gegner hält</b>, damit es mit derselben Formel für den Gegner zählt. Beide Seiten sind daher Obergrenzen, wenn danach nichts wechselt. Kills, Gepäckzüge und Keller kommen zusätzlich dazu.',
+  'zh-CN': '所有分数都按时间轴所选分钟计算。建筑在占领瞬间获得首次占领奖励，之后每分钟继续累积分数。拖动时间轴即可查看该时点的预计总分。整张地图每分钟可产生 7,560 联盟分，但 15:00 前只有 5,280 分开放。将建筑标记为<b>敌方占领</b>时，会按同一公式计入敌方分数，方便比较双方总分。此计算假设所选分钟后不再换手，因此双方都应视为上限值。击杀、补给车和地窖收益会额外加入。',
+  'zh-TW': '所有分數都按時間軸所選分鐘計算。建築在佔領瞬間獲得首次佔領獎勵，之後每分鐘繼續累積分數。拖動時間軸即可查看該時點的預計總分。整張地圖每分鐘可產生 7,560 聯盟分，但 15:00 前只有 5,280 分開放。將建築標記為<b>敵方佔領</b>時，會按同一公式計入敵方分數，方便比較雙方總分。此計算假設所選分鐘後不再換手，因此雙方都應視為上限值。擊殺、補給車和地窖收益會額外加入。',
+  th: 'คะแนนทั้งหมดคำนวณตามนาทีที่เลือกบนไทม์ไลน์ อาคารจะได้โบนัสยึดครั้งแรกทันทีที่ยึดได้ แล้วสะสมคะแนนต่อนาทีหลังจากนั้น ลากไทม์ไลน์เพื่อดูคะแนนรวมที่คาดไว้ในแต่ละช่วง แผนที่ทั้งหมดให้ 7,560 คะแนนพันธมิตรต่อนาที แต่ก่อน 15:00 จะมีเพียง 5,280 คะแนนเท่านั้น หากตั้งอาคารเป็น <b>ศัตรูครอง</b> คะแนนจะถูกคิดให้ฝั่งศัตรูด้วยสูตรเดียวกัน ดังนั้นทั้งสองฝั่งเป็นค่าสูงสุดโดยสมมติว่าไม่มีการเปลี่ยนมือหลังเวลาที่ตั้งไว้ คะแนนจากการสังหาร รถเสบียง และห้องใต้ดินเป็นรายได้เพิ่มเติม',
+  id: 'Semua angka dihitung pada menit yang dipilih di timeline. Bangunan memberi bonus kontrol pertama saat direbut, lalu menambah poin per menit setelahnya. Geser timeline untuk melihat total perkiraan pada waktu tertentu. Seluruh peta menghasilkan 7.560 poin aliansi per menit, tetapi sebelum 15:00 hanya 5.280 yang tersedia. Jika bangunan ditandai <b>Musuh pegang</b>, poinnya dihitung ke pihak musuh dengan rumus yang sama. Anggap kedua sisi sebagai batas atas jika tidak ada bangunan berpindah setelah menit yang dipilih. Kill, Baggage Train, dan Undercellar adalah pemasukan tambahan.'
+};
+
 function activeLang(){
   const pick = document.getElementById('pageLang');
   return pick && SW_TRANSLATIONS[pick.value] ? pick.value : 'en';
@@ -747,11 +782,13 @@ function translateText(value){
 function translatePage(){
   const lang = activeLang();
   document.documentElement.lang = lang;
+  const note = document.getElementById('numbersNote');
+  if (note) note.innerHTML = SW_NUMBER_NOTES[lang] || SW_NUMBER_NOTES.en;
   if (lang === 'en') return;
   const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
     acceptNode(node){
       const tag = node.parentElement && node.parentElement.tagName;
-      if (!tag || ['SCRIPT','STYLE','TEXTAREA','OPTION'].includes(tag)) return NodeFilter.FILTER_REJECT;
+      if (!tag || ['SCRIPT','STYLE','TEXTAREA'].includes(tag)) return NodeFilter.FILTER_REJECT;
       return node.nodeValue.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
     }
   });
@@ -787,7 +824,7 @@ document.getElementById('mAdd').onclick = () => {
 };
 document.getElementById('mName').onkeydown = e => { if (e.key === 'Enter') document.getElementById('mAdd').click(); };
 document.getElementById('btnReset').onclick = () => {
-  if (!confirm('Clear every order, note and roster entry?')) return;
+  if (!confirm(translateText('Clear every order, note and roster entry?'))) return;
   S = fresh(); uid = 1; selected = 'shr';
   document.getElementById('scrub').value = 0;
   document.getElementById('scrub').dispatchEvent(new Event('input'));

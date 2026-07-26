@@ -911,6 +911,54 @@
       }
     };
     ['ko','ja','fr','de','zh-CN','zh-TW','th','id'].forEach((code) => { I18N[code] = { ...I18N.en }; });
+    Object.assign(I18N.ko, {
+      toolHint: '플래너, 소드랜드, 인텔, 계산기, 피드백.',
+      swordlandTitle: '소드랜드 이벤트 플래너',
+      swordlandBody: '소드랜드 전투 배치, 집결 메모, 시간 계획, 디스코드용 브리핑을 한 보드에서 정리합니다.',
+      swordlandButton: '소드랜드 플래너 열기'
+    });
+    Object.assign(I18N.ja, {
+      toolHint: 'プランナー、ソードランド、インテル、計算機、フィードバック。',
+      swordlandTitle: 'ソードランドイベントプランナー',
+      swordlandBody: 'ソードランドの配置、集結メモ、時間計画、Discord用ブリーフィングを1つのボードで整理します。',
+      swordlandButton: 'ソードランドプランナーを開く'
+    });
+    Object.assign(I18N.fr, {
+      toolHint: 'Planificateur, Swordland, intel, calculateurs, retours.',
+      swordlandTitle: 'Planificateur Swordland',
+      swordlandBody: 'Préparez les assignations Swordland, les notes de rallye, le timing et un briefing prêt pour Discord.',
+      swordlandButton: 'Ouvrir le planificateur Swordland'
+    });
+    Object.assign(I18N.de, {
+      toolHint: 'Planer, Swordland, Intel, Rechner, Feedback.',
+      swordlandTitle: 'Swordland Event-Planer',
+      swordlandBody: 'Plane Swordland-Zuweisungen, Rallye-Notizen, Timing und Discord-fertige Briefings auf einem Board.',
+      swordlandButton: 'Swordland-Planer öffnen'
+    });
+    Object.assign(I18N['zh-CN'], {
+      toolHint: '规划器、剑域、情报、计算器、反馈。',
+      swordlandTitle: '剑域活动规划器',
+      swordlandBody: '在一个面板中整理剑域战斗分配、集结备注、时间规划和 Discord 简报。',
+      swordlandButton: '打开剑域规划器'
+    });
+    Object.assign(I18N['zh-TW'], {
+      toolHint: '規劃器、劍域、情報、計算器、回饋。',
+      swordlandTitle: '劍域活動規劃器',
+      swordlandBody: '在一個面板中整理劍域戰鬥分配、集結備註、時間規劃和 Discord 簡報。',
+      swordlandButton: '開啟劍域規劃器'
+    });
+    Object.assign(I18N.th, {
+      toolHint: 'ตัววางแผน, Swordland, ข้อมูลผู้เล่น, เครื่องคำนวณ, ฟีดแบ็ก.',
+      swordlandTitle: 'ตัววางแผนกิจกรรม Swordland',
+      swordlandBody: 'จัดแผนมอบหมายการรบ โน้ตรวมพล เวลา และสรุปสำหรับ Discord ได้ในกระดานเดียว.',
+      swordlandButton: 'เปิดตัววางแผน Swordland'
+    });
+    Object.assign(I18N.id, {
+      toolHint: 'Planner, Swordland, intel, kalkulator, feedback.',
+      swordlandTitle: 'Perencana Event Swordland',
+      swordlandBody: 'Susun penugasan Swordland, catatan rally, timing, dan briefing siap Discord dari satu papan.',
+      swordlandButton: 'Buka planner Swordland'
+    });
     function lang() {
       const q = new URL(location.href).searchParams.get('lang');
       const saved = localStorage.getItem('lang') || localStorage.getItem('siteLang');
