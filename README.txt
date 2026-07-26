@@ -8,13 +8,11 @@ site/sitemap.txt
 src/index.js
 
 What changed:
-- Added Swordland Event Planner as a new hub page.
-- Replaced Fort / Sanc Distributor with the updated rotating-buff planner.
-- Added hub navigation and language selector to both event pages.
-- Added the Swordland page to the hub card list and sitemap.
+- Swordland page translation system remains included.
+- Fort / Sanc page translation system remains included.
+- Removed visible GeryKS branding from the Swordland page.
+- Kept only one YouTube shortcut button on the Swordland page.
 
 Validation:
 - swordland_planner.html inline script syntax OK.
 - fort_sanc.html inline script syntax OK.
-- src/index.js syntax OK.
-- sitemap.xml parses as XML.

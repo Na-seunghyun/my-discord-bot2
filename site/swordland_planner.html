@@ -280,7 +280,7 @@
         <svg viewBox="0 0 24 17" aria-hidden="true">
           <rect width="24" height="17" rx="5" fill="#c8262d"/>
           <path d="M9.6 4.6l6.2 3.9-6.2 3.9z" fill="#fff"/>
-        </svg><b>@GeryKS</b>
+        </svg><b>YouTube</b>
       </a>
       <input type="file" id="fileIn" accept="application/json" hidden>
     </div>
@@ -305,12 +305,6 @@
         <div class="zone red"></div>
         <div class="zone-lbl" style="left:5%;top:66%;color:#9cc8f6">Our spawn</div>
         <div class="zone-lbl" style="left:90%;top:66%;color:#f4a3a3">Enemy spawn</div>
-        <div class="wm">
-          <svg viewBox="0 0 24 17" aria-hidden="true">
-            <rect width="24" height="17" rx="5" fill="rgba(255,235,210,.45)"/>
-            <path d="M9.6 4.6l6.2 3.9-6.2 3.9z" fill="rgba(30,16,6,.85)"/>
-          </svg>GeryKS
-        </div>
       </div>
       <div class="legend">
         <span><i style="border-color:var(--amber)"></i>Unassigned</span>
@@ -381,10 +375,6 @@
     </div>
   </div>
 
-  <footer class="credit">
-    <span>Swordland War Table · built by GeryKS</span>
-    <a href="https://www.youtube.com/@GeryKS" target="_blank" rel="noopener">More Kingshot strategy at youtube.com/@GeryKS</a>
-  </footer>
 </div>
 <div class="toast" id="toast"></div>
 
@@ -707,17 +697,80 @@ function briefing(){
     out += '\n';
   }
   out += '_At 60:00 on this plan: ' + fmt(CEIL.a) + ' alliance for us, ' + fmt(CEIL.e) +
-         ' for them, ' + fmt(CEIL.p) + ' personal._\n\n' +
-         '_Planned with the Swordland War Table by GeryKS \u2014 youtube.com/@GeryKS_\n';
+         ' for them, ' + fmt(CEIL.p) + ' personal._\n';
   return out;
+}
+
+const SW_TRANSLATIONS = {
+  ko: {
+    exact: {
+      'Hub':'허브','Fort/Sanc':'포트/성소','Auto Redeem':'오토 리딤','Kingshot · Alliance PvP':'Kingshot · 연맹 PvP','Swordland War Table':'소드랜드 이벤트 플래너',
+      'Reset board':'보드 초기화','Load plan':'계획 불러오기','Save plan':'계획 저장','Copy briefing':'브리핑 복사','Phase 1 — opening scramble':'1단계 — 초반 전개',
+      'Our spawn':'아군 시작 지점','Enemy spawn':'상대 시작 지점','Unassigned':'미지정','Take & hold':'점령 유지','Contest':'견제','Enemy holds':'상대 점령','Undercellars':'지하 저장고',
+      'Banner = lead':'깃발 = 지휘','hover a building for its full roster':'건물에 올리면 전체 배치가 보입니다','Structure orders':'건물 명령','Legion roster':'부대 명단',
+      'Running total':'진행 점수','How the numbers work':'점수 계산 방식','Governor name':'영주 이름','Tank':'탱커','Attacker':'공격','Support':'지원','Add':'추가',
+      'Us · alliance':'아군 · 연맹','Them · alliance':'상대 · 연맹','Nothing banked yet':'아직 누적 점수 없음',
+      'Order':'명령','Held from minute':'점령 시작 분','Assigned squad':'배치 부대',
+      'Add a governor…':'영주 추가…','Nobody assigned yet.':'아직 배치 없음.','No lead named for this building.':'이 건물의 지휘가 지정되지 않았습니다.','Notes for the briefing':'브리핑 메모',
+      'Rally lead, fallback, who reinforces…':'집결 지휘, 대체안, 지원 인원…','Lead':'지휘','Every structure on the map is open.':'지도상의 모든 건물이 열렸습니다.',
+      'Mark structures for either side to see a total.':'양쪽 건물을 표시하면 총점을 볼 수 있습니다.','Plan saved':'계획 저장됨','Plan loaded':'계획 불러옴',
+      'That file is not a saved plan':'저장된 계획 파일이 아닙니다','Briefing copied — paste it in Discord':'브리핑 복사됨 — 디스코드에 붙여넣으세요','Briefing copied':'브리핑 복사됨'
+    },
+    phrases: [['centre opens','중앙 개방'],['second wave','2차 전개'],['First control','최초 점령'],['personal','개인'],['Occupation','점령'],['Opens at','개방'],['still locked','아직 잠김'],['from','시작'],['as of','기준'],['Ahead by','앞섬'],['Behind by','뒤처짐'],['Level on','동점'],['You','아군'],['them','상대'],['unclaimed','미점령'],['Your personal pool','개인 점수'],['banked','누적'],['Claimed but not yet live','점령했지만 아직 비활성'],['Carried through to','끝까지 유지 시'],['Your personal at','개인 점수'],['alliance for us','아군 연맹 점수'],['for them','상대 점수'],['for us','아군'],['registered','등록'],['unassigned','미배치'],['held building','점령 건물'],['without a lead','지휘 없음'],['assigned','배치'],['more','명 더'],['Switch between lead and support','지휘/지원 전환'],['Remove','제거'],['Swordshrine','소드 성소'],['Sanctum','성소'],['Abbey','수도원'],['Bell Tower','종탑'],['Stables','마구간'],['Reformation','개혁관'],['Mercenary','용병소']]
+  },
+  ja: {
+    exact: {'Hub':'ハブ','Fort/Sanc':'砦/聖域','Auto Redeem':'自動交換','Swordland War Table':'ソードランドイベントプランナー','Reset board':'盤面リセット','Load plan':'計画を読み込む','Save plan':'計画を保存','Copy briefing':'ブリーフィングをコピー','Phase 1 — opening scramble':'フェーズ1 — 序盤展開','Our spawn':'味方開始地点','Enemy spawn':'敵開始地点','Unassigned':'未指定','Take & hold':'占領維持','Contest':'争奪','Enemy holds':'敵が保持','Undercellars':'地下倉庫','Banner = lead':'旗 = 指揮','hover a building for its full roster':'建物に重ねると全配置を表示','Structure orders':'建物指示','Legion roster':'部隊名簿','Running total':'進行スコア','How the numbers work':'スコア計算','Governor name':'領主名','Tank':'タンク','Attacker':'攻撃','Support':'支援','Add':'追加','Us · alliance':'味方 · 同盟','Them · alliance':'敵 · 同盟','Nothing banked yet':'まだ蓄積なし','Order':'指示','Held from minute':'保持開始分','Assigned squad':'配置部隊','Add a governor…':'領主を追加…','Nobody assigned yet.':'まだ配置なし。','No lead named for this building.':'この建物の指揮が未指定です。','Notes for the briefing':'ブリーフィングメモ','Rally lead, fallback, who reinforces…':'集結指揮、代替、支援者…','Lead':'指揮','Every structure on the map is open.':'すべての建物が開放済みです。','Mark structures for either side to see a total.':'建物を指定すると合計を表示します。','Plan saved':'計画を保存しました','Plan loaded':'計画を読み込みました','That file is not a saved plan':'保存された計画ファイルではありません','Briefing copied — paste it in Discord':'コピーしました — Discordに貼り付けてください','Briefing copied':'コピーしました'},
+    phrases: [['centre opens','中央開放'],['second wave','第2波'],['First control','初回占領'],['personal','個人'],['Occupation','占領'],['Opens at','開放'],['still locked','未開放'],['from','開始'],['as of','時点'],['Ahead by','リード'],['Behind by','遅れ'],['You','味方'],['them','敵'],['unclaimed','未占領'],['registered','登録'],['unassigned','未配置'],['without a lead','指揮なし'],['assigned','配置'],['Remove','削除'],['Swordshrine','剣の聖所'],['Sanctum','聖域'],['Abbey','修道院'],['Bell Tower','鐘楼'],['Stables','厩舎'],['Reformation','改革館'],['Mercenary','傭兵所']]
+  },
+  fr: { exact: {'Hub':'Accueil','Fort/Sanc':'Fort/Sanctuaire','Auto Redeem':'Auto Redeem','Swordland War Table':'Planificateur Swordland','Reset board':'Réinitialiser','Load plan':'Charger','Save plan':'Sauver','Copy briefing':'Copier briefing','Our spawn':'Départ allié','Enemy spawn':'Départ ennemi','Unassigned':'Non assigné','Take & hold':'Prendre et tenir','Contest':'Contester','Enemy holds':'Ennemi tient','Structure orders':'Ordres des bâtiments','Legion roster':'Liste des joueurs','Running total':'Total en cours','How the numbers work':'Calcul des points','Governor name':'Nom du joueur','Tank':'Tank','Attacker':'Attaquant','Support':'Support','Add':'Ajouter','Us · alliance':'Nous · alliance','Them · alliance':'Eux · alliance','Nothing banked yet':'Aucun point cumulé','Order':'Ordre','Held from minute':'Tenu depuis la minute','Assigned squad':'Équipe assignée','Add a governor…':'Ajouter un joueur…','Nobody assigned yet.':'Personne assigné.','Notes for the briefing':'Notes du briefing','Lead':'Chef','Plan saved':'Plan sauvegardé','Plan loaded':'Plan chargé','Briefing copied':'Briefing copié'}, phrases: [['First control','Première prise'],['personal','personnel'],['Occupation','Occupation'],['Opens at','Ouvre à'],['still locked','encore verrouillé'],['Ahead by','Avance de'],['Behind by','Retard de'],['You','Nous'],['them','eux'],['unclaimed','non pris'],['registered','inscrits'],['unassigned','non assignés'],['Remove','Retirer'],['Swordshrine','Sanctuaire épée'],['Sanctum','Sanctuaire'],['Abbey','Abbaye'],['Bell Tower','Clocher'],['Stables','Écuries'],['Reformation','Réforme'],['Mercenary','Mercenaire']] },
+  de: { exact: {'Hub':'Hub','Fort/Sanc':'Fort/Sanktum','Auto Redeem':'Auto Redeem','Swordland War Table':'Swordland Planer','Reset board':'Zurücksetzen','Load plan':'Plan laden','Save plan':'Plan speichern','Copy briefing':'Briefing kopieren','Our spawn':'Unser Start','Enemy spawn':'Gegnerstart','Unassigned':'Nicht zugeteilt','Take & hold':'Einnehmen und halten','Contest':'Umkämpfen','Enemy holds':'Gegner hält','Structure orders':'Gebäudeaufträge','Legion roster':'Truppenliste','Running total':'Laufende Punkte','How the numbers work':'Punkteberechnung','Governor name':'Spielername','Tank':'Tank','Attacker':'Angriff','Support':'Support','Add':'Hinzufügen','Us · alliance':'Wir · Allianz','Them · alliance':'Gegner · Allianz','Nothing banked yet':'Noch keine Punkte','Order':'Auftrag','Held from minute':'Gehalten ab Minute','Assigned squad':'Zugewiesener Trupp','Add a governor…':'Spieler hinzufügen…','Nobody assigned yet.':'Noch niemand zugewiesen.','Notes for the briefing':'Briefing-Notizen','Lead':'Leitung','Plan saved':'Plan gespeichert','Plan loaded':'Plan geladen','Briefing copied':'Briefing kopiert'}, phrases: [['First control','Ersteinnahme'],['personal','persönlich'],['Occupation','Besetzung'],['Opens at','Öffnet um'],['still locked','noch gesperrt'],['Ahead by','Vorsprung'],['Behind by','Rückstand'],['You','Wir'],['them','Gegner'],['unclaimed','frei'],['registered','registriert'],['unassigned','nicht zugeteilt'],['Remove','Entfernen'],['Swordshrine','Schwertschrein'],['Sanctum','Sanktum'],['Abbey','Abtei'],['Bell Tower','Glockenturm'],['Stables','Ställe'],['Reformation','Reformation'],['Mercenary','Söldner']] },
+  'zh-CN': { exact: {'Hub':'主页','Fort/Sanc':'堡垒/圣所','Auto Redeem':'自动兑换','Swordland War Table':'剑域活动规划器','Reset board':'重置面板','Load plan':'载入计划','Save plan':'保存计划','Copy briefing':'复制简报','Our spawn':'我方出生点','Enemy spawn':'敌方出生点','Unassigned':'未分配','Take & hold':'占领并保持','Contest':'争夺','Enemy holds':'敌方占领','Structure orders':'建筑指令','Legion roster':'军团名单','Running total':'当前总分','How the numbers work':'分数计算方式','Governor name':'领主名称','Tank':'坦克','Attacker':'攻击','Support':'支援','Add':'添加','Us · alliance':'我方 · 联盟','Them · alliance':'敌方 · 联盟','Nothing banked yet':'暂无累计分','Order':'指令','Held from minute':'开始占领分钟','Assigned squad':'分配队伍','Add a governor…':'添加领主…','Nobody assigned yet.':'尚未分配。','Notes for the briefing':'简报备注','Lead':'指挥','Plan saved':'计划已保存','Plan loaded':'计划已载入','Briefing copied':'简报已复制'}, phrases: [['First control','首次占领'],['personal','个人'],['Occupation','占领'],['Opens at','开启于'],['still locked','仍锁定'],['Ahead by','领先'],['Behind by','落后'],['You','我方'],['them','敌方'],['unclaimed','未占领'],['registered','已登记'],['unassigned','未分配'],['Remove','移除'],['Swordshrine','剑圣所'],['Sanctum','圣所'],['Abbey','修道院'],['Bell Tower','钟楼'],['Stables','马厩'],['Reformation','改革厅'],['Mercenary','佣兵所']] },
+  'zh-TW': { exact: {'Hub':'首頁','Fort/Sanc':'堡壘/聖所','Auto Redeem':'自動兌換','Swordland War Table':'劍域活動規劃器','Reset board':'重置面板','Load plan':'載入計畫','Save plan':'儲存計畫','Copy briefing':'複製簡報','Our spawn':'我方出生點','Enemy spawn':'敵方出生點','Unassigned':'未分配','Take & hold':'佔領並保持','Contest':'爭奪','Enemy holds':'敵方佔領','Structure orders':'建築指令','Legion roster':'軍團名單','Running total':'目前總分','How the numbers work':'分數計算方式','Governor name':'領主名稱','Tank':'坦克','Attacker':'攻擊','Support':'支援','Add':'新增','Us · alliance':'我方 · 聯盟','Them · alliance':'敵方 · 聯盟','Nothing banked yet':'尚無累計分','Order':'指令','Held from minute':'開始佔領分鐘','Assigned squad':'分配隊伍','Add a governor…':'新增領主…','Nobody assigned yet.':'尚未分配。','Notes for the briefing':'簡報備註','Lead':'指揮','Plan saved':'計畫已儲存','Plan loaded':'計畫已載入','Briefing copied':'簡報已複製'}, phrases: [['First control','首次佔領'],['personal','個人'],['Occupation','佔領'],['Opens at','開啟於'],['still locked','仍鎖定'],['Ahead by','領先'],['Behind by','落後'],['You','我方'],['them','敵方'],['unclaimed','未佔領'],['registered','已登記'],['unassigned','未分配'],['Remove','移除'],['Swordshrine','劍聖所'],['Sanctum','聖所'],['Abbey','修道院'],['Bell Tower','鐘樓'],['Stables','馬廄'],['Reformation','改革廳'],['Mercenary','傭兵所']] },
+  th: { exact: {'Hub':'ฮับ','Fort/Sanc':'ป้อม/แซงค์','Auto Redeem':'รับโค้ดอัตโนมัติ','Swordland War Table':'ตัววางแผน Swordland','Reset board':'รีเซ็ตกระดาน','Load plan':'โหลดแผน','Save plan':'บันทึกแผน','Copy briefing':'คัดลอกสรุป','Our spawn':'จุดเกิดฝ่ายเรา','Enemy spawn':'จุดเกิดศัตรู','Unassigned':'ยังไม่กำหนด','Take & hold':'ยึดและรักษา','Contest':'แย่งชิง','Enemy holds':'ศัตรูครอง','Structure orders':'คำสั่งอาคาร','Legion roster':'รายชื่อกองทัพ','Running total':'คะแนนรวม','How the numbers work':'วิธีคำนวณคะแนน','Governor name':'ชื่อผู้เล่น','Tank':'แทงก์','Attacker':'โจมตี','Support':'สนับสนุน','Add':'เพิ่ม','Us · alliance':'เรา · พันธมิตร','Them · alliance':'ศัตรู · พันธมิตร','Nothing banked yet':'ยังไม่มีคะแนนสะสม','Order':'คำสั่ง','Held from minute':'เริ่มครองนาที','Assigned squad':'ทีมที่กำหนด','Add a governor…':'เพิ่มผู้เล่น…','Nobody assigned yet.':'ยังไม่มีคนถูกกำหนด','Notes for the briefing':'โน้ตสำหรับสรุป','Lead':'ผู้นำ','Plan saved':'บันทึกแผนแล้ว','Plan loaded':'โหลดแผนแล้ว','Briefing copied':'คัดลอกแล้ว'}, phrases: [['First control','ยึดครั้งแรก'],['personal','ส่วนตัว'],['Occupation','การครอง'],['Opens at','เปิดที่'],['still locked','ยังล็อก'],['Ahead by','นำอยู่'],['Behind by','ตามอยู่'],['You','เรา'],['them','ศัตรู'],['unclaimed','ยังไม่ถูกยึด'],['registered','ลงทะเบียน'],['unassigned','ยังไม่กำหนด'],['Remove','ลบ'],['Swordshrine','ศาลาดาบ'],['Sanctum','แซงค์'],['Abbey','วิหาร'],['Bell Tower','หอระฆัง'],['Stables','คอกม้า'],['Reformation','โถงปฏิรูป'],['Mercenary','ทหารรับจ้าง']] },
+  id: { exact: {'Hub':'Hub','Fort/Sanc':'Fort/Sanc','Auto Redeem':'Auto Redeem','Swordland War Table':'Perencana Swordland','Reset board':'Reset papan','Load plan':'Muat rencana','Save plan':'Simpan rencana','Copy briefing':'Salin briefing','Our spawn':'Spawn kita','Enemy spawn':'Spawn musuh','Unassigned':'Belum ditetapkan','Take & hold':'Ambil & tahan','Contest':'Kontes','Enemy holds':'Musuh pegang','Structure orders':'Perintah bangunan','Legion roster':'Daftar pasukan','Running total':'Total berjalan','How the numbers work':'Cara hitung poin','Governor name':'Nama pemain','Tank':'Tank','Attacker':'Penyerang','Support':'Dukungan','Add':'Tambah','Us · alliance':'Kita · aliansi','Them · alliance':'Musuh · aliansi','Nothing banked yet':'Belum ada poin','Order':'Perintah','Held from minute':'Dipegang dari menit','Assigned squad':'Skuad ditetapkan','Add a governor…':'Tambah pemain…','Nobody assigned yet.':'Belum ada yang ditetapkan.','Notes for the briefing':'Catatan briefing','Lead':'Pemimpin','Plan saved':'Rencana tersimpan','Plan loaded':'Rencana dimuat','Briefing copied':'Briefing disalin'}, phrases: [['First control','Kontrol pertama'],['personal','pribadi'],['Occupation','Pendudukan'],['Opens at','Buka pada'],['still locked','masih terkunci'],['Ahead by','Unggul'],['Behind by','Tertinggal'],['You','Kita'],['them','musuh'],['unclaimed','belum diklaim'],['registered','terdaftar'],['unassigned','belum ditetapkan'],['Remove','Hapus'],['Swordshrine','Kuil Pedang'],['Sanctum','Sanctum'],['Abbey','Abbey'],['Bell Tower','Menara Lonceng'],['Stables','Kandang'],['Reformation','Reformasi'],['Mercenary','Tentara bayaran']] }
+};
+
+function activeLang(){
+  const pick = document.getElementById('pageLang');
+  return pick && SW_TRANSLATIONS[pick.value] ? pick.value : 'en';
+}
+function translateText(value){
+  const lang = activeLang();
+  if (lang === 'en' || !value || !SW_TRANSLATIONS[lang]) return value;
+  const dict = SW_TRANSLATIONS[lang];
+  let out = dict.exact[value] || value;
+  (dict.phrases || []).forEach(([from, to]) => {
+    out = out.split(from).join(to);
+  });
+  return out;
+}
+function translatePage(){
+  const lang = activeLang();
+  document.documentElement.lang = lang;
+  if (lang === 'en') return;
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
+    acceptNode(node){
+      const tag = node.parentElement && node.parentElement.tagName;
+      if (!tag || ['SCRIPT','STYLE','TEXTAREA','OPTION'].includes(tag)) return NodeFilter.FILTER_REJECT;
+      return node.nodeValue.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+    }
+  });
+  const nodes = [];
+  while (walker.nextNode()) nodes.push(walker.currentNode);
+  nodes.forEach(node => { node.nodeValue = translateText(node.nodeValue); });
+  document.querySelectorAll('[placeholder],[aria-label],[title]').forEach(node => {
+    ['placeholder','aria-label','title'].forEach(attr => {
+      if (node.hasAttribute(attr)) node.setAttribute(attr, translateText(node.getAttribute(attr)));
+    });
+  });
 }
 
 function toast(msg){
   const el = document.getElementById('toast');
-  el.textContent = msg; el.classList.add('show');
+  el.textContent = translateText(msg); el.classList.add('show');
   setTimeout(() => el.classList.remove('show'), 1900);
 }
-function render(){ drawBoard(); drawDetail(); drawRoster(); score(); }
+function render(){ drawBoard(); drawDetail(); drawRoster(); score(); translatePage(); }
 
 document.getElementById('scrub').oninput = e => {
   t = +e.target.value; S.minute = t;
@@ -784,8 +837,6 @@ document.getElementById('btnBrief').onclick = async () => {
   }
 };
 
-S = fresh();
-document.getElementById('scrub').dispatchEvent(new Event('input'));
 const pageLang = document.getElementById('pageLang');
 const params = new URL(location.href).searchParams;
 const currentLang = params.get('lang') || localStorage.getItem('lang') || localStorage.getItem('siteLang') || 'ko';
@@ -796,6 +847,8 @@ document.querySelectorAll('#hubHome,#hubFort,#hubRedeem').forEach(link => {
   u.searchParams.set('lang', pageLang.value);
   link.href = u.pathname.split('/').pop() ? `./${u.pathname.split('/').pop()}?lang=${encodeURIComponent(pageLang.value)}` : `./index.html?lang=${encodeURIComponent(pageLang.value)}`;
 });
+S = fresh();
+document.getElementById('scrub').dispatchEvent(new Event('input'));
 pageLang.addEventListener('change', () => {
   localStorage.setItem('lang', pageLang.value);
   localStorage.setItem('siteLang', pageLang.value);
@@ -803,6 +856,7 @@ pageLang.addEventListener('change', () => {
   url.searchParams.set('lang', pageLang.value);
   location.href = url.toString();
 });
+translatePage();
 </script>
 </body>
 </html>

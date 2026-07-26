@@ -522,6 +522,56 @@ function drawNotices(plan,cfg){
   $("notices").innerHTML=n.join("");
 }
 
+const FORT_TRANSLATIONS = {
+  ko: {
+    exact: {'Hub':'허브','Swordland':'소드랜드','Auto Redeem':'오토 리딤','Fort / Sanc':'포트 / 성소','Rotating buffs — ownership stays put while phase rewards move each round':'순환 버프 — 점령권은 유지되고 라운드마다 보상 위치만 이동합니다','Points each':'각 연맹 점수','Buff rounds':'버프 라운드','Fairness':'공정성','Season structure':'시즌 구조','Alliances':'연맹 수','Rounds':'라운드','Sanctuaries':'성소','Fortresses':'포트리스','Points / sanctuary':'성소 점수','Points / fortress':'포트리스 점수','Buff schedule':'버프 일정','Which sanctuary carries each buff, round by round. Leave a cell blank if that buff is absent. Taken from your reward table.':'라운드별로 어떤 성소에 버프가 붙는지 입력합니다. 해당 버프가 없으면 빈칸으로 두세요. 입력값은 보상표 기준입니다.','Play season':'시즌 재생','Stop':'정지','Round 1':'1라운드','Claim order — one sanctuary per round':'점령 순서 — 라운드마다 성소 1개','Rounds holding each buff':'버프 보유 라운드','Round by round':'라운드별 계획','Paste into alliance chat':'연맹 채팅에 붙여넣기','Copy plan':'계획 복사','Copied':'복사됨','Health Buff':'체력 버프','Damage Buff':'피해 버프','Deployment Boost':'출정 버프','Alliance':'연맹','Total':'합계','all level':'모두 동일','as even as possible':'최대한 균등','uneven':'불균형','no buff':'버프 없음','no buff this round':'이번 라운드 버프 없음','no buffs':'버프 없음'},
+    phrases: [['Round','라운드'],['San ','성소 '],['Fort ','포트 '],[' buffs live','개 버프 활성'],[' buffs','개 버프'],['dead','비활성'],['spread ','차이 '],[' caught','개 반영'],[' of ',' / '],['Alliance ','연맹 '],['Season points finish level at','시즌 점수는 동일하게'],['each — ownership never changes hands, so nobody loses a round to a handover.','점씩 끝납니다 — 점령권을 넘기지 않으므로 인계 때문에 라운드를 잃지 않습니다.'],['Season points differ by','시즌 점수 차이'],['buff appearances land on tiles nobody owns yet.','개의 버프가 아직 아무도 점령하지 않은 타일에 배치됩니다.'],['Buff time splits','버프 시간 분배'],["an exact split isn't possible — give the short alliance the spare fortress to settle it.",'정확한 균등 분배가 어렵습니다 — 부족한 연맹에 여분 포트리스를 주면 맞출 수 있습니다.']]
+  },
+  ja: {
+    exact: {'Hub':'ハブ','Swordland':'ソードランド','Auto Redeem':'自動交換','Fort / Sanc':'砦 / 聖域','Rotating buffs — ownership stays put while phase rewards move each round':'循環バフ — 所有は維持され、報酬位置だけが各ラウンドで移動します','Points each':'各同盟ポイント','Buff rounds':'バフラウンド','Fairness':'公平性','Season structure':'シーズン構成','Alliances':'同盟数','Rounds':'ラウンド','Sanctuaries':'聖域','Fortresses':'砦','Points / sanctuary':'聖域ポイント','Points / fortress':'砦ポイント','Buff schedule':'バフ日程','Which sanctuary carries each buff, round by round. Leave a cell blank if that buff is absent. Taken from your reward table.':'各ラウンドでどの聖域にバフが付くかを入力します。ない場合は空欄にしてください。報酬表を基準にします。','Play season':'再生','Stop':'停止','Round 1':'ラウンド1','Claim order — one sanctuary per round':'占領順 — ラウンドごとに聖域1つ','Rounds holding each buff':'各バフを保持するラウンド','Round by round':'ラウンド別','Paste into alliance chat':'同盟チャット用','Copy plan':'計画をコピー','Copied':'コピー済み','Health Buff':'体力バフ','Damage Buff':'ダメージバフ','Deployment Boost':'出征バフ','Alliance':'同盟','Total':'合計','all level':'全員同点','as even as possible':'可能な限り均等','uneven':'不均等','no buff':'バフなし','no buff this round':'このラウンドはバフなし','no buffs':'バフなし'},
+    phrases: [['Round','ラウンド'],['San ','聖域'],['Fort ','砦'],[' buffs live','個のバフ有効'],[' buffs','個のバフ'],['dead','無効'],['spread ','差 '],[' caught','個反映'],['Alliance ','同盟']]
+  },
+  fr: { exact: {'Hub':'Accueil','Swordland':'Swordland','Auto Redeem':'Auto Redeem','Fort / Sanc':'Fort / Sanctuaire','Points each':'Points chacun','Buff rounds':'Tours de buff','Fairness':'Équité','Season structure':'Structure de saison','Alliances':'Alliances','Rounds':'Tours','Sanctuaries':'Sanctuaires','Fortresses':'Forteresses','Points / sanctuary':'Points / sanctuaire','Points / fortress':'Points / forteresse','Buff schedule':'Calendrier des buffs','Play season':'Lancer','Stop':'Stop','Claim order — one sanctuary per round':'Ordre de prise — un sanctuaire par tour','Rounds holding each buff':'Tours avec chaque buff','Round by round':'Tour par tour','Paste into alliance chat':'À coller dans le chat alliance','Copy plan':'Copier le plan','Copied':'Copié','Health Buff':'Buff santé','Damage Buff':'Buff dégâts','Deployment Boost':'Boost déploiement','Alliance':'Alliance','Total':'Total','all level':'égalité','as even as possible':'aussi équilibré que possible','uneven':'déséquilibré','no buff':'aucun buff','no buff this round':'aucun buff ce tour','no buffs':'aucun buff'}, phrases: [['Round','Tour'],['San ','San '],['Fort ','Fort '],[' buffs live',' buffs actifs'],[' buffs',' buffs'],['spread ','écart '],[' caught',' captés'],['Alliance ','Alliance ']] },
+  de: { exact: {'Hub':'Hub','Swordland':'Swordland','Auto Redeem':'Auto Redeem','Fort / Sanc':'Fort / Sanktum','Points each':'Punkte je Allianz','Buff rounds':'Buff-Runden','Fairness':'Fairness','Season structure':'Saisonaufbau','Alliances':'Allianzen','Rounds':'Runden','Sanctuaries':'Sanktümer','Fortresses':'Festungen','Points / sanctuary':'Punkte / Sanktum','Points / fortress':'Punkte / Festung','Buff schedule':'Buff-Plan','Play season':'Abspielen','Stop':'Stopp','Claim order — one sanctuary per round':'Eroberungsfolge — ein Sanktum pro Runde','Rounds holding each buff':'Runden pro Buff','Round by round':'Runde für Runde','Paste into alliance chat':'Für Allianzchat','Copy plan':'Plan kopieren','Copied':'Kopiert','Health Buff':'Gesundheitsbuff','Damage Buff':'Schadensbuff','Deployment Boost':'Marsch-Buff','Alliance':'Allianz','Total':'Gesamt','all level':'alle gleich','as even as possible':'so gleich wie möglich','uneven':'ungleich','no buff':'kein Buff','no buff this round':'kein Buff diese Runde','no buffs':'keine Buffs'}, phrases: [['Round','Runde'],['San ','Sanktum '],['Fort ','Fort '],[' buffs live',' Buffs aktiv'],[' buffs',' Buffs'],['spread ','Differenz '],[' caught',' erfasst'],['Alliance ','Allianz ']] },
+  'zh-CN': { exact: {'Hub':'主页','Swordland':'剑域','Auto Redeem':'自动兑换','Fort / Sanc':'堡垒 / 圣所','Points each':'各联盟分数','Buff rounds':'增益轮次','Fairness':'公平度','Season structure':'赛季结构','Alliances':'联盟数','Rounds':'轮次','Sanctuaries':'圣所','Fortresses':'堡垒','Points / sanctuary':'圣所分数','Points / fortress':'堡垒分数','Buff schedule':'增益日程','Play season':'播放赛季','Stop':'停止','Claim order — one sanctuary per round':'占领顺序 — 每轮一个圣所','Rounds holding each buff':'各增益持有轮次','Round by round':'逐轮计划','Paste into alliance chat':'复制到联盟聊天','Copy plan':'复制计划','Copied':'已复制','Health Buff':'生命增益','Damage Buff':'伤害增益','Deployment Boost':'出征增益','Alliance':'联盟','Total':'总计','all level':'全部相同','as even as possible':'尽量均衡','uneven':'不均衡','no buff':'无增益','no buff this round':'本轮无增益','no buffs':'无增益'}, phrases: [['Round','轮次'],['San ','圣所'],['Fort ','堡垒'],[' buffs live','个增益生效'],[' buffs','个增益'],['spread ','差距'],[' caught','个已覆盖'],['Alliance ','联盟']] },
+  'zh-TW': { exact: {'Hub':'首頁','Swordland':'劍域','Auto Redeem':'自動兌換','Fort / Sanc':'堡壘 / 聖所','Points each':'各聯盟分數','Buff rounds':'增益輪次','Fairness':'公平度','Season structure':'賽季結構','Alliances':'聯盟數','Rounds':'輪次','Sanctuaries':'聖所','Fortresses':'堡壘','Points / sanctuary':'聖所分數','Points / fortress':'堡壘分數','Buff schedule':'增益日程','Play season':'播放賽季','Stop':'停止','Claim order — one sanctuary per round':'佔領順序 — 每輪一個聖所','Rounds holding each buff':'各增益持有輪次','Round by round':'逐輪計畫','Paste into alliance chat':'複製到聯盟聊天','Copy plan':'複製計畫','Copied':'已複製','Health Buff':'生命增益','Damage Buff':'傷害增益','Deployment Boost':'出征增益','Alliance':'聯盟','Total':'總計','all level':'全部相同','as even as possible':'盡量均衡','uneven':'不均衡','no buff':'無增益','no buff this round':'本輪無增益','no buffs':'無增益'}, phrases: [['Round','輪次'],['San ','聖所'],['Fort ','堡壘'],[' buffs live','個增益生效'],[' buffs','個增益'],['spread ','差距'],[' caught','個已覆蓋'],['Alliance ','聯盟']] },
+  th: { exact: {'Hub':'ฮับ','Swordland':'Swordland','Auto Redeem':'รับโค้ดอัตโนมัติ','Fort / Sanc':'ป้อม / แซงค์','Points each':'คะแนนต่อพันธมิตร','Buff rounds':'รอบบัฟ','Fairness':'ความยุติธรรม','Season structure':'โครงสร้างซีซัน','Alliances':'จำนวนพันธมิตร','Rounds':'รอบ','Sanctuaries':'แซงค์','Fortresses':'ป้อม','Points / sanctuary':'คะแนน / แซงค์','Points / fortress':'คะแนน / ป้อม','Buff schedule':'ตารางบัฟ','Play season':'เล่นซีซัน','Stop':'หยุด','Claim order — one sanctuary per round':'ลำดับยึด — รอบละ 1 แซงค์','Rounds holding each buff':'รอบที่ถือบัฟ','Round by round':'แผนรายรอบ','Paste into alliance chat':'วางในแชทพันธมิตร','Copy plan':'คัดลอกแผน','Copied':'คัดลอกแล้ว','Health Buff':'บัฟเลือด','Damage Buff':'บัฟดาเมจ','Deployment Boost':'บัฟส่งทัพ','Alliance':'พันธมิตร','Total':'รวม','all level':'เท่ากันทั้งหมด','as even as possible':'สมดุลที่สุด','uneven':'ไม่สมดุล','no buff':'ไม่มีบัฟ','no buff this round':'รอบนี้ไม่มีบัฟ','no buffs':'ไม่มีบัฟ'}, phrases: [['Round','รอบ'],['San ','แซงค์ '],['Fort ','ป้อม '],[' buffs live',' บัฟทำงาน'],[' buffs',' บัฟ'],['spread ','ต่าง '],[' caught',' ครอบคลุม'],['Alliance ','พันธมิตร ']] },
+  id: { exact: {'Hub':'Hub','Swordland':'Swordland','Auto Redeem':'Auto Redeem','Fort / Sanc':'Fort / Sanc','Points each':'Poin tiap aliansi','Buff rounds':'Ronde buff','Fairness':'Keadilan','Season structure':'Struktur musim','Alliances':'Aliansi','Rounds':'Ronde','Sanctuaries':'Sanctuary','Fortresses':'Fortress','Points / sanctuary':'Poin / sanctuary','Points / fortress':'Poin / fortress','Buff schedule':'Jadwal buff','Play season':'Putar musim','Stop':'Stop','Claim order — one sanctuary per round':'Urutan klaim — satu sanctuary per ronde','Rounds holding each buff':'Ronde yang memegang buff','Round by round':'Ronde demi ronde','Paste into alliance chat':'Tempel ke chat aliansi','Copy plan':'Salin rencana','Copied':'Tersalin','Health Buff':'Buff Health','Damage Buff':'Buff Damage','Deployment Boost':'Boost Deployment','Alliance':'Aliansi','Total':'Total','all level':'semua sama','as even as possible':'seimbang mungkin','uneven':'tidak seimbang','no buff':'tanpa buff','no buff this round':'ronde ini tanpa buff','no buffs':'tanpa buff'}, phrases: [['Round','Ronde'],['San ','San '],['Fort ','Fort '],[' buffs live',' buff aktif'],[' buffs',' buff'],['spread ','selisih '],[' caught',' tertangkap'],['Alliance ','Aliansi ']] }
+};
+
+function activeLang(){
+  const pick = document.getElementById("pageLang");
+  return pick && FORT_TRANSLATIONS[pick.value] ? pick.value : "en";
+}
+function translateFortText(value){
+  const lang = activeLang();
+  if (lang === "en" || !value || !FORT_TRANSLATIONS[lang]) return value;
+  const dict = FORT_TRANSLATIONS[lang];
+  let out = dict.exact[value] || value;
+  (dict.phrases || []).forEach(([from, to]) => { out = out.split(from).join(to); });
+  return out;
+}
+function translateFortPage(){
+  const lang = activeLang();
+  document.documentElement.lang = lang;
+  if (lang === "en") return;
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
+    acceptNode(node){
+      const tag = node.parentElement && node.parentElement.tagName;
+      if (!tag || ["SCRIPT","STYLE","TEXTAREA","OPTION"].includes(tag)) return NodeFilter.FILTER_REJECT;
+      return node.nodeValue.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+    }
+  });
+  const nodes = [];
+  while (walker.nextNode()) nodes.push(walker.currentNode);
+  nodes.forEach(node => { node.nodeValue = translateFortText(node.nodeValue); });
+  document.querySelectorAll("[placeholder],[aria-label],[title]").forEach(node => {
+    ["placeholder","aria-label","title"].forEach(attr => {
+      if (node.hasAttribute(attr)) node.setAttribute(attr, translateFortText(node.getAttribute(attr)));
+    });
+  });
+}
+
 function refresh(keepRail){
   const cfg=readCfg();
   if(!keepRail) drawRail(cfg);
@@ -543,16 +593,17 @@ function refresh(keepRail){
   drawRing(plan,cfg); drawLadder(plan,cfg); drawCoverage(plan,cfg);
   drawRounds(plan,cfg); drawNotices(plan,cfg);
   $("out").textContent=renderText(plan,cfg);
+  translateFortPage();
 }
 
 ["iA","iR","iS","iF","iPS","iPF"].forEach(id=>
   $(id).addEventListener("input",()=>refresh(false)));
 $("scrub").addEventListener("input",e=>{viewRound=+e.target.value;stopPlay();refresh(true);});
 
-function stopPlay(){if(timer){clearInterval(timer);timer=null;$("play").textContent="Play season";}}
+function stopPlay(){if(timer){clearInterval(timer);timer=null;$("play").textContent=translateFortText("Play season");}}
 $("play").addEventListener("click",()=>{
   if(timer) return stopPlay();
-  const cfg=readCfg(); $("play").textContent="Stop";
+  const cfg=readCfg(); $("play").textContent=translateFortText("Stop");
   viewRound=1; refresh(true);
   timer=setInterval(()=>{
     viewRound=viewRound>=cfg.R?1:viewRound+1; refresh(true);
@@ -562,8 +613,8 @@ $("play").addEventListener("click",()=>{
 
 $("copy").addEventListener("click",()=>{
   const txt=$("out").textContent,btn=$("copy");
-  const done=()=>{btn.textContent="Copied";btn.classList.add("done");
-    setTimeout(()=>{btn.textContent="Copy plan";btn.classList.remove("done");},1600);};
+  const done=()=>{btn.textContent=translateFortText("Copied");btn.classList.add("done");
+    setTimeout(()=>{btn.textContent=translateFortText("Copy plan");btn.classList.remove("done");},1600);};
   const fb=()=>{const ta=document.createElement("textarea");ta.value=txt;
     document.body.appendChild(ta);ta.select();
     try{document.execCommand("copy");done();}catch(e){}document.body.removeChild(ta);};
@@ -572,10 +623,6 @@ $("copy").addEventListener("click",()=>{
   else fb();
 });
 
-if(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches)
-  document.body.classList.add("reduced");
-
-refresh();
 const pageLang = document.getElementById("pageLang");
 const params = new URL(location.href).searchParams;
 const currentLang = params.get("lang") || localStorage.getItem("lang") || localStorage.getItem("siteLang") || "ko";
@@ -585,6 +632,12 @@ document.querySelectorAll("#hubHome,#hubSword,#hubRedeem").forEach(link => {
   const file = link.getAttribute("href").replace("./", "");
   link.href = "./" + file + "?lang=" + encodeURIComponent(pageLang.value);
 });
+if(pageLang.value !== "en" && types.join("|") === "Health Buff|Damage Buff|Deployment Boost"){
+  types = types.map(type => translateFortText(type));
+}
+if(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches)
+  document.body.classList.add("reduced");
+refresh();
 pageLang.addEventListener("change", () => {
   localStorage.setItem("lang", pageLang.value);
   localStorage.setItem("siteLang", pageLang.value);
