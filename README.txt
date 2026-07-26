@@ -1,16 +1,20 @@
-﻿Kingshot official redeem changed to require Kingdom.
+﻿Upload these files to the same paths in the GitHub repository:
 
-Changed files:
-- src/index.js
-- site/auto_redeem.html
-- auto_redeem_daemon.py
+site/index.html
+site/fort_sanc.html
+site/swordland_planner.html
+site/sitemap.xml
+site/sitemap.txt
+src/index.js
 
-Extra UI update:
-- Bulk registration now has its own Kingdom field.
-- If Bulk kingdom is filled, pasted ID-only lines are registered to that kingdom.
-- If Bulk kingdom is empty, it falls back to the single registration Kingdom field.
+What changed:
+- Added Swordland Event Planner as a new hub page.
+- Replaced Fort / Sanc Distributor with the updated rotating-buff planner.
+- Added hub navigation and language selector to both event pages.
+- Added the Swordland page to the hub card list and sitemap.
 
-Deploy steps:
-1. Copy these files into the same paths in your GitHub repo.
-2. Commit and deploy Cloudflare Worker.
-3. On PuTTY server: git pull origin main, then restart auto-redeem tmux.
+Validation:
+- swordland_planner.html inline script syntax OK.
+- fort_sanc.html inline script syntax OK.
+- src/index.js syntax OK.
+- sitemap.xml parses as XML.

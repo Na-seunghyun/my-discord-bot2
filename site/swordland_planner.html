@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Swordland Event Planner | 885 LEGEND NASHSH</title>
+<meta name="description" content="Unofficial Kingshot Swordland event planner for building rally assignments, battle timing, squad notes, and Discord-ready briefings.">
+<link rel="canonical" href="https://my-discord-bot2.looloo90.workers.dev/swordland_planner.html">
+<style>
+  :root{
+    --ink:#0d1320;
+    --board:#182133;
+    --board-2:#1f2b40;
+    --line:#31405c;
+    --parchment:#e9e1cc;
+    --parchment-dim:#a29a86;
+    --gold:#c9a227;
+    --gold-soft:#8a7327;
+    --azure:#4a86dd;
+    --gules:#c04450;
+    --amber:#e5952f;
+    --moss:#6f9a76;
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    --sans:ui-sans-serif,system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--ink);color:var(--parchment);font-family:var(--sans);font-size:14px;line-height:1.5;padding:18px}
+  .wrap{max-width:1340px;margin:0 auto}
+  .hubbar{
+    max-width:1340px;margin:0 auto 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+    border:1px solid var(--line);background:rgba(24,33,51,.86);border-radius:4px;padding:10px 12px;
+    box-shadow:0 16px 42px rgba(0,0,0,.26)
+  }
+  .hubbrand{display:flex;align-items:center;gap:9px;color:var(--gold);text-decoration:none;font-weight:800}
+  .hubbrand .mark{display:grid;place-items:center;width:34px;height:34px;border:1px solid var(--gold-soft);border-radius:4px;background:rgba(201,162,39,.12);font-family:var(--mono);font-size:12px}
+  .hubnav{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+  .hubnav a,.hubnav select{border:1px solid var(--line);border-radius:4px;background:var(--board-2);color:var(--parchment);padding:7px 10px;text-decoration:none;font-weight:700;font-size:12px}
+  .hubnav a:hover,.hubnav select:hover{border-color:var(--gold-soft)}
+  header.top{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:14px;margin-bottom:16px}
+  h1{font-family:var(--serif);font-weight:600;font-size:30px;line-height:1;margin:0}
+  h1 small{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);margin-bottom:7px;font-weight:400}
+  .top-actions{display:flex;gap:8px;flex-wrap:wrap}
+  button,select,input,textarea{font-family:inherit;font-size:13px;color:inherit}
+  .btn{background:var(--board-2);border:1px solid var(--line);color:var(--parchment);padding:7px 13px;border-radius:3px;cursor:pointer;transition:background .12s,border-color .12s}
+  .btn:hover{background:#27354e;border-color:var(--gold-soft)}
+  .btn.gold{border-color:var(--gold-soft);color:var(--gold)}
+  .btn.on{background:var(--gold);border-color:var(--gold);color:#1a1405;font-weight:600}
+  .btn:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible,.node:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+  .grid{display:grid;grid-template-columns:minmax(0,1fr) 348px;gap:16px;align-items:start}
+  @media (max-width:1020px){.grid{grid-template-columns:1fr}}
+  .panel{background:var(--board);border:1px solid var(--line);border-radius:4px}
+  .panel h2{font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin:0;padding:11px 14px;border-bottom:1px solid var(--line);font-weight:500}
+  .panel .body{padding:14px}
+
+  .rail{background:var(--board);border:1px solid var(--line);border-radius:4px;padding:13px 16px 9px;margin-bottom:14px}
+  .rail-head{display:flex;align-items:baseline;justify-content:space-between;gap:14px;margin-bottom:9px}
+  .clock{font-family:var(--mono);font-size:23px;color:var(--gold)}
+  .clock span{font-size:11px;color:var(--parchment-dim);letter-spacing:.16em}
+  .phase-tag{font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--parchment-dim)}
+  input[type=range]{width:100%;accent-color:var(--gold);cursor:pointer;margin:0}
+  .ticks{display:flex;justify-content:space-between;font-family:var(--mono);font-size:9.5px;color:var(--parchment-dim);margin-top:4px}
+  .ticks b{color:var(--gold);font-weight:400}
+
+  /* arena */
+  .board-frame{position:relative;padding:14px}
+  .board{
+    position:relative;width:100%;aspect-ratio:1.1/1;border-radius:20px;overflow:hidden;
+    background:radial-gradient(ellipse at 48% 50%, #bd7f45 0%, #a76a34 44%, #8a5629 76%, #6f4520 100%);
+    border:13px solid #6f6659;
+    box-shadow:inset 0 0 0 2px #4c4236, inset 0 0 52px rgba(52,30,12,.6);
+  }
+  .board::after{
+    content:"";position:absolute;inset:0;pointer-events:none;
+    background-image:linear-gradient(rgba(60,32,12,.45) 1px,transparent 1px),linear-gradient(90deg,rgba(60,32,12,.45) 1px,transparent 1px);
+    background-size:10% 10%;opacity:.18;
+  }
+  .zone{position:absolute;width:44px;height:44px;transform:translate(-50%,-50%) rotate(45deg);border:3px solid;border-radius:5px;pointer-events:none}
+  .zone.blue{left:5%;top:55%;border-color:#5aa7ef;background:rgba(60,140,235,.22);box-shadow:0 0 18px rgba(70,150,240,.5)}
+  .zone.red{left:90%;top:55%;border-color:#ef6a6a;background:rgba(220,70,70,.22);box-shadow:0 0 18px rgba(230,80,80,.5)}
+  .zone-lbl{position:absolute;transform:translate(-50%,-50%);pointer-events:none;font-family:var(--mono);font-size:9px;letter-spacing:.13em;text-transform:uppercase;text-shadow:0 1px 4px rgba(30,14,4,.95)}
+
+  .node{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer;background:none;border:0;padding:0;transition:opacity .18s}
+  .pipwrap{position:relative;display:block;width:30px;height:30px}
+  .node .pip{
+    position:absolute;inset:0;border-radius:4px;transform:rotate(45deg);
+    border:2.5px solid var(--amber);background:rgba(52,28,10,.5);
+    display:flex;align-items:center;justify-content:center;transition:transform .12s,border-color .12s,background .12s;
+  }
+  /* compact summary, always on the map */
+  .gmini{
+    display:flex;align-items:center;gap:4px;max-width:118px;
+    background:rgba(40,22,8,.92);border:1px solid rgba(240,180,41,.6);border-radius:9px;
+    padding:0 6px 0 4px;font-size:9.5px;line-height:1.7;color:#ffe0a0;font-weight:700;
+    box-shadow:0 2px 6px rgba(10,5,0,.5);
+  }
+  .gmini.nolead{border-color:rgba(147,169,194,.55);color:#d3e0ee;font-weight:500}
+  .gmini svg{width:12px;height:12px;flex:none}
+  .gmini .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .gmini .ct{font-family:var(--mono);font-size:9px;font-weight:500;color:#a9c0d8}
+
+  /* full roster, only for the building you are on */
+  .garrison{
+    display:none;position:absolute;top:50%;left:100%;transform:translateY(-50%);
+    margin-left:10px;flex-direction:column;gap:1px;align-items:flex-start;
+    background:rgba(12,17,26,.9);border:1px solid rgba(240,180,41,.4);border-radius:10px;
+    padding:6px 9px;box-shadow:0 8px 22px rgba(6,3,0,.6);
+  }
+  .garrison.flip{left:auto;right:100%;margin-left:0;margin-right:10px;align-items:flex-end}
+  .node:hover .garrison,.node.sel .garrison{display:flex}
+  .node:hover .gmini,.node.sel .gmini{visibility:hidden}
+  .node:hover,.node.sel{z-index:20}
+  .gdiv{align-self:stretch;height:1px;background:rgba(233,186,120,.22);margin:4px 0}
+  .town{display:flex;align-items:center;gap:5px;white-space:nowrap;animation:muster .16s ease-out both}
+  .garrison.flip .town{flex-direction:row-reverse;animation-name:musterFlip}
+  .town svg{display:block;flex:none;filter:drop-shadow(0 1px 2px rgba(4,2,0,.8))}
+  .town .body{stroke:rgba(10,14,20,.75);stroke-width:.9;paint-order:stroke}
+  .town .who{font-family:var(--sans);font-size:10px;line-height:1.65;display:flex;align-items:center;gap:5px;max-width:110px}
+  .town .who b{font-weight:inherit;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .town .rd{width:5px;height:5px;border-radius:50%;flex:none}
+  .town.lead svg{width:15px;height:15px}
+  .town.lead .who{color:#ffd873;font-weight:700}
+  .town.supp svg{width:12px;height:12px;opacity:.95}
+  .town.supp .who{color:#cbdae9;font-weight:500}
+  .town.more .who{color:#9aa8b8;font-style:italic}
+  @keyframes muster{from{opacity:0;transform:translateX(-5px)}to{opacity:1;transform:none}}
+  @keyframes musterFlip{from{opacity:0;transform:translateX(5px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){.town{animation:none}}
+  .node .pip em{transform:rotate(-45deg);font-style:normal;font-family:var(--mono);font-size:10.5px;font-weight:600;color:#fff;text-shadow:0 1px 3px rgba(30,14,4,.95)}
+  .node:hover .pip{transform:rotate(45deg) scale(1.15)}
+  .node.sel .pip{box-shadow:0 0 0 3px rgba(255,255,255,.4)}
+  .node .tag{
+    font-family:var(--sans);font-size:10px;font-weight:600;white-space:nowrap;
+    background:rgba(46,26,12,.86);border:1px solid rgba(233,186,120,.45);
+    color:#f6e7cd;padding:1px 7px;border-radius:9px;
+  }
+  .node.locked{opacity:.32}
+  .node.locked .pip{border-style:dashed}
+  .node[data-claim="ours"] .pip{border-color:#5aa7ef;background:rgba(28,88,178,.65)}
+  .node[data-claim="ours"] .tag{border-color:rgba(120,180,245,.7);color:#d5e8ff}
+  .node[data-claim="contest"] .pip{border-color:var(--gold);background:rgba(150,110,20,.65)}
+  .node[data-claim="contest"] .tag{border-color:rgba(210,175,70,.7);color:#f8e9b8}
+  .node[data-claim="enemy"] .pip{border-color:#ef6a6a;background:rgba(168,40,50,.65)}
+  .node[data-claim="enemy"] .tag{border-color:rgba(240,130,130,.7);color:#ffd9d9}
+  .node.shrine .pipwrap{width:40px;height:40px}
+  .node.shrine .pip em{font-size:12px}
+
+  .cellar{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:5px;pointer-events:none}
+  .cellar .dia{width:16px;height:16px;transform:rotate(45deg);border:2px solid #f0b3c4;background:rgba(120,40,60,.45);border-radius:3px}
+  .cellar .lb{font-size:9px;font-weight:600;background:rgba(46,26,12,.86);border:1px solid rgba(240,150,175,.5);color:#f7cdd9;padding:0 6px;border-radius:9px}
+  .legend{display:flex;gap:15px;flex-wrap:wrap;padding:12px 2px 0;font-family:var(--mono);font-size:10px;color:var(--parchment-dim)}
+  .legend i{display:inline-block;width:9px;height:9px;border:2px solid;transform:rotate(45deg);margin-right:7px;vertical-align:middle}
+
+  .side{display:flex;flex-direction:column;gap:14px}
+  .field{margin-bottom:11px}
+  .field label{display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--parchment-dim);margin-bottom:5px}
+  select,input[type=text],input[type=number],textarea{width:100%;background:var(--ink);border:1px solid var(--line);border-radius:3px;padding:7px 9px;color:var(--parchment)}
+  textarea{resize:vertical;min-height:58px}
+  .seg{display:flex}
+  .seg button{flex:1;background:var(--ink);border:1px solid var(--line);color:var(--parchment-dim);padding:7px 4px;cursor:pointer;font-size:12px}
+  .seg button:first-child{border-radius:3px 0 0 3px}
+  .seg button:last-child{border-radius:0 3px 3px 0}
+  .seg button+button{border-left:0}
+  .seg button.on{color:#0d1320;font-weight:600}
+  .seg button.on[data-v=ours]{background:var(--azure);border-color:var(--azure)}
+  .seg button.on[data-v=contest]{background:var(--gold);border-color:var(--gold)}
+  .seg button.on[data-v=enemy]{background:var(--gules);border-color:var(--gules);color:#fff}
+  .sel-title{font-family:var(--serif);font-size:20px;margin:0 0 2px}
+  .sel-meta{font-family:var(--mono);font-size:11px;color:var(--parchment-dim);margin-bottom:12px}
+  .sel-meta b{color:var(--gold);font-weight:400}
+  .buffline{border-left:2px solid var(--gold-soft);padding:5px 0 5px 9px;margin:0 0 12px;font-size:12.5px;color:#d8cfb6}
+  .empty{color:var(--parchment-dim);font-size:12.5px;font-style:italic}
+  .chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
+  .chip{background:var(--ink);border:1px solid var(--line);border-radius:11px;padding:2px 5px 2px 9px;font-size:11.5px;display:flex;align-items:center;gap:5px}
+  .chip .dot{width:6px;height:6px;border-radius:50%}
+  .chip button{background:none;border:0;color:var(--parchment-dim);cursor:pointer;font-size:14px;line-height:1;padding:0 3px}
+  .chip button:hover{color:var(--gules)}
+  .chip.lead{border-color:#f0b429;background:rgba(64,42,6,.5)}
+  .chip .lvl{
+    font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;
+    border:1px solid var(--line);border-radius:7px;padding:1px 5px;line-height:1.4;color:var(--parchment-dim);
+  }
+  .chip .lvl:hover{color:var(--gold);border-color:var(--gold-soft)}
+  .chip.lead .lvl{color:#ffd873;border-color:#a37b17;background:rgba(240,180,41,.15)}
+  .warnline{font-size:11.5px;color:#f0b429;margin:8px 0 0}
+  .cnt .ld{color:#f0b429}
+  .r-tank{background:#4a86dd}.r-attacker{background:#c04450}.r-support{background:#5b7d63}
+  table.roster{width:100%;border-collapse:collapse;font-size:12.5px}
+  table.roster td{padding:5px 3px;border-bottom:1px solid #26324a}
+  table.roster tr:last-child td{border-bottom:0}
+  .role-lbl{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--parchment-dim)}
+  .cnt{font-family:var(--mono);font-size:10px;color:var(--parchment-dim);text-align:right}
+  .score{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+  .score div{background:var(--ink);border:1px solid var(--line);border-radius:3px;padding:9px 11px}
+  .score .n{font-family:var(--mono);font-size:21px;color:var(--gold);line-height:1.15}
+  .score .l{font-family:var(--mono);font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--parchment-dim)}
+  .bar{height:6px;background:var(--ink);border:1px solid var(--line);border-radius:4px;overflow:hidden;margin:2px 0 10px;display:flex}
+  .bar i{display:block;height:100%;transition:width .16s}
+  .bar .us{background:linear-gradient(90deg,#2f6fc4,#5aa7ef)}
+  .bar .them{background:linear-gradient(90deg,#8d2b36,#e2707a);margin-left:auto}
+  .diff{font-family:var(--mono);font-size:12.5px;margin:0 0 7px}
+  .diff.up{color:#7fc0ff}.diff.down{color:#f08a8a}.diff.even{color:var(--parchment-dim)}
+  ul.breakdown li.foe{color:#e7bcbc}
+  ul.breakdown li.foe span:last-child{color:#ef8a8a}
+  ul.breakdown{list-style:none;margin:0;padding:0;font-family:var(--mono);font-size:11.5px}
+  ul.breakdown li{display:flex;justify-content:space-between;gap:10px;padding:3px 0;border-bottom:1px solid #222c42}
+  ul.breakdown li:last-child{border-bottom:0}
+  ul.breakdown span{color:var(--gold)}
+  ul.breakdown li.dim{opacity:.42}
+  .rateline{font-family:var(--mono);font-size:11px;color:var(--parchment-dim);margin:0 0 7px;line-height:1.55}
+  .rateline b{color:var(--parchment);font-weight:400}
+  .rateline .up{color:var(--gold)}
+  .rateline.total{margin:10px 0 0;padding-top:9px;border-top:1px solid var(--line)}
+  .asof{font-family:var(--mono);font-size:10px;letter-spacing:.17em;text-transform:uppercase;color:var(--gold);margin:0 0 9px}
+  ul.breakdown em{font-style:normal;color:var(--parchment-dim);font-size:10.5px;margin-left:6px}
+  .note{font-size:11.5px;color:var(--parchment-dim);line-height:1.55}
+  .brand{
+    display:flex;align-items:center;gap:7px;text-decoration:none;
+    background:rgba(140,32,36,.18);border:1px solid #a33a3f;border-radius:3px;
+    padding:6px 12px;color:#f3b7ba;font-size:13px;transition:background .12s,color .12s;
+  }
+  .brand:hover{background:rgba(180,42,48,.3);color:#ffd9db}
+  .brand svg{width:17px;height:12px;flex:none}
+  .brand b{font-weight:600;color:#fff}
+
+  .wm{
+    position:absolute;right:16px;bottom:12px;z-index:2;pointer-events:none;
+    display:flex;align-items:center;gap:7px;
+    font-family:var(--serif);font-size:16px;
+    color:rgba(255,240,218,.5);text-shadow:0 1px 5px rgba(28,13,4,.85);
+  }
+  .wm svg{width:20px;height:14px;opacity:.6}
+
+  .credit{
+    display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+    border-top:1px solid var(--line);margin-top:18px;padding-top:13px;
+    font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--parchment-dim);
+  }
+  .credit a{color:var(--gold);text-decoration:none}
+  .credit a:hover{text-decoration:underline}
+
+  .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:var(--gold);color:#1a1405;font-weight:600;font-size:13px;padding:9px 18px;border-radius:3px;opacity:0;pointer-events:none;transition:opacity .2s}
+  .toast.show{opacity:1}
+  @media (max-width:720px){body{padding:10px}.hubbar{align-items:flex-start}.hubnav{width:100%}.hubnav a,.hubnav select{flex:1;min-width:120px;text-align:center}.top-actions{width:100%}.top-actions .btn,.top-actions .brand{flex:1;justify-content:center}}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<nav class="hubbar" aria-label="Hub navigation">
+  <a class="hubbrand" href="./index.html"><span class="mark">885</span><span>885 LEGEND NASHSH</span></a>
+  <div class="hubnav">
+    <a id="hubHome" href="./index.html">Hub</a>
+    <a id="hubFort" href="./fort_sanc.html">Fort/Sanc</a>
+    <a id="hubRedeem" href="./auto_redeem.html">Auto Redeem</a>
+    <select id="pageLang" aria-label="Language">
+      <option value="ko">🇰🇷 한국어</option>
+      <option value="ja">🇯🇵 日本語</option>
+      <option value="en">🇺🇸 English</option>
+      <option value="fr">🇫🇷 Français</option>
+      <option value="de">🇩🇪 Deutsch</option>
+      <option value="zh-CN">🇨🇳 简体中文</option>
+      <option value="zh-TW">🇹🇼 繁體中文</option>
+      <option value="th">🇹🇭 ไทย</option>
+      <option value="id">🇮🇩 Indonesia</option>
+    </select>
+  </div>
+</nav>
+<div class="wrap">
+
+  <header class="top">
+    <h1><small>Kingshot · Alliance PvP</small>Swordland War Table</h1>
+    <div class="top-actions">
+      <button class="btn" id="btnReset">Reset board</button>
+      <button class="btn" id="btnImport">Load plan</button>
+      <button class="btn" id="btnSave">Save plan</button>
+      <button class="btn gold" id="btnBrief">Copy briefing</button>
+      <a class="brand" href="https://www.youtube.com/@GeryKS" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 17" aria-hidden="true">
+          <rect width="24" height="17" rx="5" fill="#c8262d"/>
+          <path d="M9.6 4.6l6.2 3.9-6.2 3.9z" fill="#fff"/>
+        </svg><b>@GeryKS</b>
+      </a>
+      <input type="file" id="fileIn" accept="application/json" hidden>
+    </div>
+  </header>
+
+  <div class="rail">
+    <div class="rail-head">
+      <div class="clock" id="clock">00:00 <span>/ 60:00</span></div>
+      <div class="phase-tag" id="phaseTag">Phase 1 — opening scramble</div>
+    </div>
+    <input type="range" id="scrub" min="0" max="60" step="1" value="0" aria-label="Battle minute">
+    <div class="ticks">
+      <span>0</span><span>5</span><span>10</span><span><b>15 centre opens</b></span>
+      <span><b>20 second wave</b></span><span>30</span><span>40</span><span>50</span><span>60</span>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="panel board-frame">
+      <div class="board" id="board">
+        <div class="zone blue"></div>
+        <div class="zone red"></div>
+        <div class="zone-lbl" style="left:5%;top:66%;color:#9cc8f6">Our spawn</div>
+        <div class="zone-lbl" style="left:90%;top:66%;color:#f4a3a3">Enemy spawn</div>
+        <div class="wm">
+          <svg viewBox="0 0 24 17" aria-hidden="true">
+            <rect width="24" height="17" rx="5" fill="rgba(255,235,210,.45)"/>
+            <path d="M9.6 4.6l6.2 3.9-6.2 3.9z" fill="rgba(30,16,6,.85)"/>
+          </svg>GeryKS
+        </div>
+      </div>
+      <div class="legend">
+        <span><i style="border-color:var(--amber)"></i>Unassigned</span>
+        <span><i style="border-color:#5aa7ef"></i>Take &amp; hold</span>
+        <span><i style="border-color:var(--gold)"></i>Contest</span>
+        <span><i style="border-color:#ef6a6a"></i>Enemy holds</span>
+        <span><i style="border-color:#f0b3c4"></i>Undercellars</span>
+        <span><svg viewBox="0 0 16 16" style="width:11px;height:11px;vertical-align:-1px;margin-right:6px"><path fill="#c9a227" d="M1.4 14.6V8.1h1.9V6.2h2.2v1.9h1.5V4.4h1.8v3.7h1.5V6.2h2.2v1.9h1.9v6.5z"/></svg><span style="color:#f0b429">Banner = lead</span> · hover a building for its full roster</span>
+      </div>
+    </div>
+
+    <div class="side">
+      <div class="panel">
+        <h2>Structure orders</h2>
+        <div class="body" id="detail"></div>
+      </div>
+
+      <div class="panel">
+        <h2>Legion roster</h2>
+        <div class="body">
+          <div style="display:flex;gap:6px;margin-bottom:10px">
+            <input type="text" id="mName" placeholder="Governor name" style="flex:2">
+            <select id="mRole" style="flex:1">
+              <option value="tank">Tank</option>
+              <option value="attacker">Attacker</option>
+              <option value="support">Support</option>
+            </select>
+            <button class="btn" id="mAdd">Add</button>
+          </div>
+          <table class="roster"><tbody id="rosterBody"></tbody></table>
+          <p class="note" id="rosterNote" style="margin:10px 0 0"></p>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Running total</h2>
+        <div class="body">
+          <p class="asof" id="asOf">as of 00:00</p>
+          <div class="score">
+            <div><div class="n" id="bankA" style="color:#7fc0ff">0</div><div class="l">Us · alliance</div></div>
+            <div><div class="n" id="bankE" style="color:#f08a8a">0</div><div class="l">Them · alliance</div></div>
+          </div>
+          <p class="diff even" id="diffNote">Nothing banked yet</p>
+          <div class="bar"><i class="us" id="barUs" style="width:0%"></i><i class="them" id="barThem" style="width:0%"></i></div>
+          <p class="rateline" id="rateNote"></p>
+          <p class="rateline" id="shareNote"></p>
+          <p class="rateline" id="lockNote"></p>
+          <ul class="breakdown" id="breakdown"></ul>
+          <p class="rateline total" id="ceilNote"></p>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>How the numbers work</h2>
+        <div class="body">
+          <p class="note" style="margin:0">
+            Everything is read at the minute on the timeline. A building banks its first-control
+            bonus the moment you take it, then its per-minute rate for every minute after that, so
+            drag the timeline to any point to see the total you would be sitting on. The full map
+            runs at 7,560 alliance points per minute, but only 5,280 of that exists before 15:00.
+            Mark a building <b>Enemy holds</b> and it banks for them on the same maths, so the two
+            totals read against each other. All of it assumes nothing changes hands after the minute
+            you set, so treat both sides as ceilings — and kills, Baggage Trains and Undercellars
+            are income on top.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="credit">
+    <span>Swordland War Table · built by GeryKS</span>
+    <a href="https://www.youtube.com/@GeryKS" target="_blank" rel="noopener">More Kingshot strategy at youtube.com/@GeryKS</a>
+  </footer>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* values transcribed from the in-game Swordland Map panel */
+const TYPES = {
+  shrine:  {n:'Swordshrine',         s:'SH', fa:9000, fp:4500, a:1800, p:900, u:15,
+            b:'Highest output on the map, locked until 15:00. Not mandatory to win — do not tunnel on it while surrendering Sanctums.'},
+  sanctum: {n:'Sanctum',             s:'SA', fa:6000, fp:3000, a:1200, p:600, u:0,
+            b:'Your point engine. Open on at least one, ideally both.'},
+  abbey:   {n:'Abbey',               s:'AB', fa:3000, fp:1500, a:600,  p:300, u:0,
+            b:'Cheap first-control bonuses. Fill spare march slots here.'},
+  bell:    {n:'Bell Tower',          s:'BT', fa:1200, fp:600,  a:240,  p:120, u:0,
+            b:'Capture time halved for the whole alliance. Highest-value buff in Phase 1.'},
+  stables: {n:'Stables',             s:'RS', fa:1200, fp:600,  a:240,  p:120, u:0,
+            b:'Free teleport cooldown halved, 12 minutes down to 6. Take it first.'},
+  hall:    {n:'Reformation',         s:'HR', fa:1200, fp:600,  a:240,  p:120, u:15,
+            b:'+15% squad damage and −15% damage taken. Grab it the second it opens.'},
+  merc:    {n:'Mercenary',           s:'MC', fa:1200, fp:600,  a:240,  p:120, u:15,
+            b:'Sends a mercenary strike at an enemy building. Use it to soften a target right before your rally.'}
+};
+/* positions traced from the in-game map */
+const LAYOUT = [
+  {id:'bell', type:'bell',    x:35, y:14},
+  {id:'ab1',  type:'abbey',   x:56, y:14},
+  {id:'merc', type:'merc',    x:47, y:25},
+  {id:'sa1',  type:'sanctum', x:18, y:44},
+  {id:'ab2',  type:'abbey',   x:74, y:44},
+  {id:'shr',  type:'shrine',  x:47, y:51},
+  {id:'ab3',  type:'abbey',   x:16, y:58},
+  {id:'sa2',  type:'sanctum', x:70, y:61},
+  {id:'hall', type:'hall',    x:47, y:75},
+  {id:'ab4',  type:'abbey',   x:33, y:87},
+  {id:'stab', type:'stables', x:60, y:87}
+];
+const CELLARS = [{x:28,y:31},{x:68,y:33},{x:29,y:74},{x:64,y:74}];
+const ROMAN = ['','I','II','III','IV','V','VI'];
+const ROLE_NAME = {tank:'Tank', attacker:'Attacker', support:'Support'};
+const CLAIM_NAME = {ours:'Take & hold', contest:'Contest', enemy:'Enemy holds'};
+
+let S = null, selected = 'shr', t = 0, uid = 1;
+
+function fresh(){
+  return { minute:0, roster:[],
+    slots: LAYOUT.map(l => ({ ...l, claim:'none', from:TYPES[l.type].u, squad:[], note:'' })) };
+}
+const slot = id => S.slots.find(s => s.id === id);
+const fmt = n => n.toLocaleString('en-US');
+function nameOf(sl){
+  const same = S.slots.filter(x => x.type === sl.type);
+  return same.length < 2 ? TYPES[sl.type].n : TYPES[sl.type].n + ' ' + ROMAN[same.indexOf(sl) + 1];
+}
+function shortOf(sl){
+  const same = S.slots.filter(x => x.type === sl.type);
+  return TYPES[sl.type].s + (same.length < 2 ? '' : (same.indexOf(sl) + 1));
+}
+
+const ROLE_COLOR = {tank:'#6aa8f0', attacker:'#e8737d', support:'#8fc79a'};
+const LEAD_COLOR = '#f0b429', SUPP_COLOR = '#9fb6cf';
+const TOWN_SVG = lead =>
+  '<svg viewBox="0 0 16 16" aria-hidden="true">' +
+    (lead ? '<path class="body" fill="' + LEAD_COLOR + '" d="M7.5 5.2V.7h1v4.5z"/>' +
+            '<path class="body" fill="' + LEAD_COLOR + '" d="M8.6 1.1l3.5 1.1-3.5 1.1z"/>' : '') +
+    '<path class="body" fill="' + (lead ? LEAD_COLOR : SUPP_COLOR) +
+      '" d="M1.4 14.6V8.1h1.9V6.2h2.2v1.9h1.5V4.4h1.8v3.7h1.5V6.2h2.2v1.9h1.9v6.5z"/>' +
+    '<rect x="6.9" y="11.3" width="2.2" height="3.3" fill="rgba(20,8,2,.55)"/>' +
+  '</svg>';
+const gov = id => S.roster.find(m => m.id === id);
+const inSquad = (sl, id) => sl.squad.some(x => x.id === id);
+const ordered = sl => [...sl.squad].sort((a, b) => (b.lead ? 1 : 0) - (a.lead ? 1 : 0));
+/* a governor leads in one place only: naming them lead here demotes them elsewhere */
+function toggleLead(sl, gid){
+  const here = sl.squad.find(x => x.id === gid); if (!here) return;
+  if (here.lead){ here.lead = false; return; }
+  S.slots.forEach(o => o.squad.forEach(x => { if (x.id === gid) x.lead = false; }));
+  here.lead = true;
+}
+const esc = s => String(s).replace(/[&<>"']/g, c =>
+  ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* compact pill on the map: who leads, how many back them up */
+function garrisonMini(sl){
+  const men = ordered(sl).map(e => ({ e, m: gov(e.id) })).filter(x => x.m);
+  if (!men.length) return '';
+  const lead = men.find(x => x.e.lead), n = men.length - (lead ? 1 : 0);
+  return '<span class="gmini' + (lead ? '' : ' nolead') + '">' +
+    TOWN_SVG(!!lead) +
+    (lead ? '<span class="nm">' + esc(lead.m.name) + '</span>' +
+            (n ? '<span class="ct">+' + n + '</span>' : '')
+         : '<span class="ct">' + n + ' assigned</span>') +
+    '</span>';
+}
+
+/* full named roster, revealed on hover or when the building is selected */
+function garrisonFull(sl){
+  const men = ordered(sl).map(e => ({ e, m: gov(e.id) })).filter(x => x.m);
+  if (!men.length) return '';
+  const flip = sl.x > 55;
+  const shown = men.slice(0, 9), extra = men.length - shown.length;
+  let out = '<span class="garrison' + (flip ? ' flip' : '') + '">', broke = false;
+  shown.forEach(({ e, m }, i) => {
+    if (!e.lead && !broke && i > 0){ out += '<span class="gdiv"></span>'; broke = true; }
+    out += '<span class="town ' + (e.lead ? 'lead' : 'supp') + '" style="animation-delay:' + (i * 22) +
+           'ms" title="' + esc(m.name + ' \u2014 ' + (e.lead ? 'lead' : 'support') + ' \u2014 ' + ROLE_NAME[m.role]) + '">' +
+           TOWN_SVG(e.lead) +
+           '<span class="who"><i class="rd r-' + m.role + '"></i><b>' + esc(m.name) + '</b></span></span>';
+  });
+  if (extra > 0)
+    out += '<span class="town more"><span class="who"><b>+' + extra + ' more</b></span></span>';
+  return out + '</span>';
+}
+
+function drawBoard(){
+  const board = document.getElementById('board');
+  board.querySelectorAll('.node,.cellar').forEach(e => e.remove());
+
+  if (t >= 15) CELLARS.forEach(c => {
+    const d = document.createElement('div');
+    d.className = 'cellar';
+    d.style.left = c.x + '%'; d.style.top = c.y + '%';
+    d.innerHTML = '<span class="dia"></span><span class="lb">Undercellars</span>';
+    board.appendChild(d);
+  });
+
+  S.slots.forEach(sl => {
+    const T = TYPES[sl.type];
+    const el = document.createElement('button');
+    el.className = 'node ' + (sl.type === 'shrine' ? 'shrine ' : '')
+                 + (t < T.u ? 'locked ' : '') + (selected === sl.id ? 'sel' : '');
+    el.dataset.claim = sl.claim;
+    el.style.left = sl.x + '%'; el.style.top = sl.y + '%';
+    el.setAttribute('aria-label', nameOf(sl));
+    el.innerHTML = '<span class="pipwrap"><span class="pip"><em>' + shortOf(sl) + '</em></span>' +
+                   garrisonFull(sl) + '</span>' +
+                   '<span class="tag">' + nameOf(sl) + '</span>' +
+                   garrisonMini(sl);
+    el.addEventListener('click', () => { selected = sl.id; render(); });
+    board.appendChild(el);
+  });
+}
+function drawDetail(){
+  const sl = slot(selected), T = TYPES[sl.type], box = document.getElementById('detail');
+  box.innerHTML =
+    '<h3 class="sel-title">' + nameOf(sl) + '</h3>' +
+    '<div class="sel-meta">First control <b>' + fmt(T.fa) + '</b> / ' + fmt(T.fp) + ' personal<br>' +
+      'Occupation <b>+' + fmt(T.a) + '</b>/min · +' + fmt(T.p) + ' personal/min' +
+      (T.u ? '<br>Opens at ' + T.u + ':00' + (t < T.u ? ' — still locked' : '') : '') + '</div>' +
+    '<p class="buffline">' + T.b + '</p>' +
+    '<div class="field"><label>Order</label><div class="seg" id="segClaim">' +
+      ['ours','contest','enemy'].map(v =>
+        '<button data-v="' + v + '" class="' + (sl.claim === v ? 'on' : '') + '">' + CLAIM_NAME[v] + '</button>').join('') +
+    '</div></div>' +
+    '<div class="field"><label>Held from minute</label>' +
+      '<input type="number" id="fFrom" min="' + T.u + '" max="60" value="' + sl.from + '"></div>' +
+    '<div class="field"><label>Assigned squad</label>' +
+      '<select id="fAdd"><option value="">Add a governor…</option>' +
+        S.roster.filter(m => !inSquad(sl, m.id))
+          .map(m => '<option value="' + m.id + '">' + esc(m.name) + ' — ' + ROLE_NAME[m.role] + '</option>').join('') +
+      '</select><div class="chips">' + (sl.squad.length
+        ? ordered(sl).map(e => {
+            const m = gov(e.id); if (!m) return '';
+            return '<span class="chip' + (e.lead ? ' lead' : '') + '"><i class="dot r-' + m.role + '"></i>' + esc(m.name) +
+                   '<button class="lvl" data-lead="' + e.id + '" title="Switch between lead and support">' +
+                     (e.lead ? 'Lead' : 'Support') + '</button>' +
+                   '<button data-drop="' + e.id + '" aria-label="Remove">×</button></span>';
+          }).join('')
+        : '<span class="empty">Nobody assigned yet.</span>') + '</div>' +
+      (sl.squad.length && !sl.squad.some(x => x.lead)
+        ? '<p class="warnline">No lead named for this building.</p>' : '') + '</div>' +
+    '<div class="field"><label>Notes for the briefing</label>' +
+      '<textarea id="fNote" placeholder="Rally lead, fallback, who reinforces…">' + sl.note + '</textarea></div>';
+
+  box.querySelectorAll('#segClaim button').forEach(btn => btn.onclick = () => {
+    sl.claim = sl.claim === btn.dataset.v ? 'none' : btn.dataset.v; render();
+  });
+  box.querySelector('#fFrom').onchange = e => {
+    sl.from = Math.min(60, Math.max(T.u, +e.target.value || T.u)); render();
+  };
+  box.querySelector('#fAdd').onchange = e => {
+    if (e.target.value) sl.squad.push({ id: e.target.value, lead: !sl.squad.some(x => x.lead) });
+    render();
+  };
+  box.querySelectorAll('[data-lead]').forEach(x => x.onclick = () => { toggleLead(sl, x.dataset.lead); render(); });
+  box.querySelectorAll('[data-drop]').forEach(x => x.onclick = () => {
+    sl.squad = sl.squad.filter(e => e.id !== x.dataset.drop); render();
+  });
+  box.querySelector('#fNote').oninput = e => { sl.note = e.target.value; };
+}
+
+function drawRoster(){
+  const body = document.getElementById('rosterBody');
+  if (!S.roster.length){
+    body.innerHTML = '<tr><td class="empty">Add your combatants to assign them to structures.</td></tr>';
+  } else {
+    body.innerHTML = S.roster.map(m => {
+      const lead = S.slots.filter(sl => sl.squad.some(x => x.id === m.id && x.lead)).map(shortOf);
+      const supp = S.slots.filter(sl => sl.squad.some(x => x.id === m.id && !x.lead)).map(shortOf);
+      const on = lead.map(c => '<span class="ld">' + c + '</span>').concat(supp);
+      return '<tr><td><i class="dot r-' + m.role + '" style="display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:7px"></i>' +
+             esc(m.name) + '</td><td class="role-lbl">' + ROLE_NAME[m.role] + '</td>' +
+             '<td class="cnt">' + (on.length ? on.join(' ') : '—') + '</td>' +
+             '<td style="width:20px"><button class="btn" style="padding:1px 6px" data-del="' + m.id + '">×</button></td></tr>';
+    }).join('');
+    body.querySelectorAll('[data-del]').forEach(x => x.onclick = () => {
+      S.roster = S.roster.filter(m => m.id !== x.dataset.del);
+      S.slots.forEach(sl => sl.squad = sl.squad.filter(e => e.id !== x.dataset.del));
+      render();
+    });
+  }
+  const idle = S.roster.filter(m => !S.slots.some(sl => inSquad(sl, m.id))).length;
+  const noLead = S.slots.filter(sl => sl.claim === 'ours' && !sl.squad.some(x => x.lead)).length;
+  document.getElementById('rosterNote').textContent =
+    S.roster.length
+      ? S.roster.length + ' registered · ' + idle + ' unassigned' +
+        (noLead ? ' · ' + noLead + ' held building' + (noLead > 1 ? 's' : '') + ' without a lead' : '')
+      : '';
+}
+
+let CEIL = {a:0, p:0, e:0};
+
+function score(){
+  let ourRate = 0, ourPersonal = 0, foeRate = 0, openRate = 0, liveRate = 0;
+  let lockRate = 0, lockOurs = 0, nextOpen = null;
+  let bankA = 0, bankP = 0, bankE = 0;
+  const lockNames = [], mine = [], theirs = [];
+  CEIL = {a:0, p:0, e:0};
+
+  S.slots.forEach(sl => {
+    const T = TYPES[sl.type], live = t >= T.u;
+    const ours = sl.claim === 'ours', foe = sl.claim === 'enemy';
+    if (live) liveRate += T.a;
+    else {
+      lockRate += T.a; lockNames.push(nameOf(sl));
+      nextOpen = nextOpen === null ? T.u : Math.min(nextOpen, T.u);
+      if (ours) lockOurs += T.a;
+    }
+    if (!ours && !foe){ if (live) openRate += T.a; return; }
+
+    const from = Math.max(sl.from, T.u), held = t >= from;
+    const banked = held ? T.fa + T.a * (t - from) : 0;
+    const mins = Math.max(0, 60 - from);
+    const row = '<li class="' + (held ? '' : 'dim ') + (foe ? 'foe' : '') + '">' +
+      '<span>' + nameOf(sl) + '<em>' + (held ? '+' + fmt(T.a) + '/min' : 'from ' + from + ':00') + '</em></span>' +
+      '<span>' + fmt(banked) + '</span></li>';
+
+    if (ours){
+      if (live){ ourRate += T.a; ourPersonal += T.p; }
+      bankA += banked;
+      bankP += held ? T.fp + T.p * (t - from) : 0;
+      CEIL.a += T.fa + T.a * mins;
+      CEIL.p += T.fp + T.p * mins;
+      mine.push(row);
+    } else {
+      if (live) foeRate += T.a;
+      bankE += banked;
+      CEIL.e += T.fa + T.a * mins;
+      theirs.push(row);
+    }
+  });
+
+  document.getElementById('asOf').textContent = 'as of ' + String(t).padStart(2, '0') + ':00';
+  document.getElementById('bankA').textContent = fmt(bankA);
+  document.getElementById('bankE').textContent = fmt(bankE);
+
+  const gap = bankA - bankE, dn = document.getElementById('diffNote');
+  dn.className = 'diff ' + (gap > 0 ? 'up' : gap < 0 ? 'down' : 'even');
+  dn.textContent = gap === 0
+    ? (bankA ? 'Level on ' + fmt(bankA) : 'Nothing banked yet')
+    : (gap > 0 ? 'Ahead by ' : 'Behind by ') + fmt(Math.abs(gap));
+
+  document.getElementById('barUs').style.width = (liveRate ? ourRate / liveRate * 100 : 0) + '%';
+  document.getElementById('barThem').style.width = (liveRate ? foeRate / liveRate * 100 : 0) + '%';
+
+  document.getElementById('rateNote').innerHTML =
+    'You <b>+' + fmt(ourRate) + '</b>/min · them <b>+' + fmt(foeRate) + '</b>/min · unclaimed <b>' +
+      fmt(openRate) + '</b>/min' +
+    '<br>Your personal pool: <b>+' + fmt(ourPersonal) + '</b>/min · <b>' + fmt(bankP) + '</b> banked';
+
+  document.getElementById('lockNote').innerHTML = lockRate
+    ? 'Opens at ' + nextOpen + ':00: <span class="up">+' + fmt(lockRate) + '</span>/min — ' + lockNames.join(', ') +
+      (lockOurs ? '<br>Claimed but not yet live: <b>+' + fmt(lockOurs) + '</b>/min' : '')
+    : 'Every structure on the map is open.';
+
+  document.getElementById('breakdown').innerHTML =
+    (mine.length || theirs.length)
+      ? mine.join('') + theirs.join('')
+      : '<li class="empty" style="border:0">Mark structures for either side to see a total.</li>';
+
+  document.getElementById('ceilNote').innerHTML =
+    'Carried through to 60:00: <b>' + fmt(CEIL.a) + '</b> us · <b>' + fmt(CEIL.e) + '</b> them' +
+    '<br>Your personal at 60:00: <b>' + fmt(CEIL.p) + '</b>';
+}
+
+function briefing(){
+  const grp = c => S.slots.filter(sl => sl.claim === c);
+  const line = sl => {
+    const T = TYPES[sl.type];
+    const nm = e => (gov(e.id) || {}).name;
+    const lead = sl.squad.filter(e => e.lead).map(nm).filter(Boolean);
+    const supp = sl.squad.filter(e => !e.lead).map(nm).filter(Boolean);
+    return '- **' + nameOf(sl) + '**' + (T.u ? ' _(opens ' + T.u + ':00)_' : '') +
+      ' — first control ' + fmt(T.fa) + ', +' + fmt(T.a) + '/min' +
+      (lead.length ? ' — lead: ' + lead.join(', ') : '') +
+      (supp.length ? ' — support: ' + supp.join(', ') : '') +
+      (sl.note ? '\n  - ' + sl.note.replace(/\n/g, ' ') : '');
+  };
+  let out = '# Swordland Showdown — battle plan\n\n';
+  ['ours','contest','enemy'].forEach(c => {
+    const g = grp(c); if (!g.length) return;
+    out += '## ' + CLAIM_NAME[c] + '\n' + g.map(line).join('\n') + '\n\n';
+  });
+  const open = grp('ours').filter(sl => !TYPES[sl.type].u);
+  if (open.length) out += '## Opening order (0:00)\n' + open.map((sl,i) => (i+1) + '. ' + nameOf(sl)).join('\n') + '\n\n';
+  if (S.roster.length){
+    out += '## Roster\n';
+    ['tank','attacker','support'].forEach(r => {
+      const g = S.roster.filter(m => m.role === r); if (!g.length) return;
+      out += '- **' + ROLE_NAME[r] + 's:** ' + g.map(m => m.name).join(', ') + '\n';
+    });
+    out += '\n';
+  }
+  out += '_At 60:00 on this plan: ' + fmt(CEIL.a) + ' alliance for us, ' + fmt(CEIL.e) +
+         ' for them, ' + fmt(CEIL.p) + ' personal._\n\n' +
+         '_Planned with the Swordland War Table by GeryKS \u2014 youtube.com/@GeryKS_\n';
+  return out;
+}
+
+function toast(msg){
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 1900);
+}
+function render(){ drawBoard(); drawDetail(); drawRoster(); score(); }
+
+document.getElementById('scrub').oninput = e => {
+  t = +e.target.value; S.minute = t;
+  document.getElementById('clock').innerHTML = String(t).padStart(2,'0') + ':00 <span>/ 60:00</span>';
+  document.getElementById('phaseTag').textContent =
+    t < 15 ? 'Phase 1 — opening scramble' : t < 20 ? 'Phase 2 — centre opens' : 'Phase 3 — cellars and comeback window';
+  render();
+};
+document.getElementById('mAdd').onclick = () => {
+  const i = document.getElementById('mName');
+  const name = i.value.trim(); if (!name) { i.focus(); return; }
+  S.roster.push({ id:'m' + (uid++), name, role: document.getElementById('mRole').value });
+  i.value = ''; i.focus(); render();
+};
+document.getElementById('mName').onkeydown = e => { if (e.key === 'Enter') document.getElementById('mAdd').click(); };
+document.getElementById('btnReset').onclick = () => {
+  if (!confirm('Clear every order, note and roster entry?')) return;
+  S = fresh(); uid = 1; selected = 'shr';
+  document.getElementById('scrub').value = 0;
+  document.getElementById('scrub').dispatchEvent(new Event('input'));
+};
+document.getElementById('btnSave').onclick = () => {
+  const blob = new Blob([JSON.stringify({ v:5, uid, state:S }, null, 2)], { type:'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = 'swordland-plan.json'; a.click();
+  URL.revokeObjectURL(a.href); toast('Plan saved');
+};
+document.getElementById('btnImport').onclick = () => document.getElementById('fileIn').click();
+document.getElementById('fileIn').onchange = e => {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try {
+      const d = JSON.parse(r.result);
+      if (!d.state || !d.state.slots) throw 0;
+      const saved = d.state;
+      S = fresh();                                  // board layout is fixed
+      S.minute = saved.minute || 0;
+      S.roster = Array.isArray(saved.roster) ? saved.roster : [];
+      S.slots.forEach(sl => {                       // restore orders onto it
+        const old = (saved.slots || []).find(o => o.id === sl.id);
+        if (!old) return;
+        sl.claim = old.claim === 'concede' ? 'enemy' : (old.claim || 'none');
+        sl.from  = Math.max(TYPES[sl.type].u, Number(old.from) || TYPES[sl.type].u);
+        sl.squad = (Array.isArray(old.squad) ? old.squad : []).map((e, i) =>
+          typeof e === 'string' ? { id: e, lead: i === 0 } : { id: e.id, lead: !!e.lead });
+        sl.note  = old.note || '';
+      });
+      uid = d.uid || 1; selected = 'shr';
+      document.getElementById('scrub').value = S.minute || 0;
+      document.getElementById('scrub').dispatchEvent(new Event('input'));
+      toast('Plan loaded');
+    } catch { toast('That file is not a saved plan'); }
+  };
+  r.readAsText(f); e.target.value = '';
+};
+document.getElementById('btnBrief').onclick = async () => {
+  const text = briefing();
+  try { await navigator.clipboard.writeText(text); toast('Briefing copied — paste it in Discord'); }
+  catch {
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); ta.remove(); toast('Briefing copied');
+  }
+};
+
+S = fresh();
+document.getElementById('scrub').dispatchEvent(new Event('input'));
+const pageLang = document.getElementById('pageLang');
+const params = new URL(location.href).searchParams;
+const currentLang = params.get('lang') || localStorage.getItem('lang') || localStorage.getItem('siteLang') || 'ko';
+pageLang.value = pageLang.querySelector(`option[value="${currentLang}"]`) ? currentLang : 'ko';
+document.documentElement.lang = pageLang.value;
+document.querySelectorAll('#hubHome,#hubFort,#hubRedeem').forEach(link => {
+  const u = new URL(link.getAttribute('href'), location.href);
+  u.searchParams.set('lang', pageLang.value);
+  link.href = u.pathname.split('/').pop() ? `./${u.pathname.split('/').pop()}?lang=${encodeURIComponent(pageLang.value)}` : `./index.html?lang=${encodeURIComponent(pageLang.value)}`;
+});
+pageLang.addEventListener('change', () => {
+  localStorage.setItem('lang', pageLang.value);
+  localStorage.setItem('siteLang', pageLang.value);
+  const url = new URL(location.href);
+  url.searchParams.set('lang', pageLang.value);
+  location.href = url.toString();
+});
+</script>
+</body>
+</html>

@@ -1,985 +1,597 @@
-﻿<!doctype html>
-<html lang="ko">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Fort / Sanc Distributor</title>
-  <meta name="description" content="Unofficial Kingshot Fort and Sanctuary distributor for organizing assignments and community coordination with a simple planning interface.">
-  <link rel="canonical" href="https://my-discord-bot2.looloo90.workers.dev/fort_sanc.html">
-  <meta property="og:title" content="Fort / Sanc Distributor">
-  <meta property="og:description" content="Plan Kingshot Fort and Sanctuary assignments with an unofficial community distributor.">
-  <meta property="og:url" content="https://my-discord-bot2.looloo90.workers.dev/fort_sanc.html">
-  <meta property="og:type" content="website">
-  <style>
-    :root {
-      color-scheme: dark;
-      --bg: #070a12;
-      --panel: rgba(16,22,38,.82);
-      --line: rgba(154,183,255,.22);
-      --text: #f7fbff;
-      --muted: #aab8d5;
-      --dim: #73819f;
-      --cyan: #43f6d7;
-      --gold: #f6cf72;
-      --pink: #ff7fb6;
-      --bad: #ff726d;
-      font-family: Inter, Pretendard, "Noto Sans KR", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      min-height: 100vh;
-      color: var(--text);
-      background:
-        linear-gradient(115deg, rgba(67,246,215,.14), transparent 34%),
-        linear-gradient(245deg, rgba(246,207,114,.12), transparent 42%),
-        linear-gradient(180deg, rgba(255,127,182,.08), transparent 54%),
-        var(--bg);
-    }
-    body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      background-image:
-        linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
-      background-size: 52px 52px;
-      mask-image: linear-gradient(to bottom, rgba(0,0,0,.92), rgba(0,0,0,.18));
-    }
-    a { color: inherit; text-decoration: none; }
-    .wrap {
-      position: relative;
-      z-index: 1;
-      width: min(1180px, calc(100% - 32px));
-      margin: 0 auto;
-      padding: 24px 0 36px;
-    }
-    .nav {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 14px 16px;
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      background: rgba(7,10,18,.62);
-      backdrop-filter: blur(18px);
-      box-shadow: 0 24px 80px rgba(0,0,0,.42);
-    }
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 11px;
-      min-width: 0;
-      font-weight: 950;
-    }
-    .mark {
-      display: grid;
-      place-items: center;
-      width: 42px;
-      height: 42px;
-      border: 1px solid rgba(67,246,215,.48);
-      border-radius: 14px;
-      color: var(--gold);
-      background: rgba(67,246,215,.1);
-    }
-    .actions { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
-    .lang-shell {
-      position: relative;
-      display: grid;
-      min-width: 190px;
-    }
-    .lang-shell::before {
-      content: "🌐";
-      position: absolute;
-      left: 14px;
-      top: 50%;
-      transform: translateY(-50%);
-      z-index: 1;
-      pointer-events: none;
-      filter: drop-shadow(0 0 8px rgba(67,246,215,.28));
-    }
-    .lang-shell select {
-      width: 100%;
-      appearance: none;
-      padding-left: 42px;
-      padding-right: 34px;
-      border-color: rgba(67,246,215,.30);
-      background:
-        linear-gradient(135deg, rgba(67,246,215,.13), rgba(246,207,114,.08)),
-        rgba(255,255,255,.07);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 0 20px rgba(67,246,215,.06);
-    }
-    .lang-shell::after {
-      content: "⌄";
-      position: absolute;
-      right: 14px;
-      top: 50%;
-      transform: translateY(-55%);
-      color: var(--gold);
-      font-weight: 950;
-      pointer-events: none;
-    }
-    select, button, input, textarea {
-      border: 1px solid var(--line);
-      border-radius: 13px;
-      background: rgba(255,255,255,.07);
-      color: var(--text);
-      font: inherit;
-    }
-    select, button, .back {
-      min-height: 42px;
-      padding: 0 13px;
-      font-size: 13px;
-      font-weight: 900;
-    }
-    select option { background: #12192b; color: var(--text); }
-    button { cursor: pointer; }
-    .back { display: inline-flex; align-items: center; justify-content: center; }
-    .support {
-      border-color: rgba(246,207,114,.48);
-      background: rgba(246,207,114,.13);
-      color: #ffe8a6;
-    }
-    .hero {
-      margin: 22px 0 16px;
-      padding: clamp(22px, 4vw, 38px);
-      border: 1px solid var(--line);
-      border-radius: 24px;
-      background: linear-gradient(135deg, rgba(67,246,215,.11), transparent 42%), rgba(16,22,38,.78);
-      box-shadow: 0 24px 80px rgba(0,0,0,.42);
-    }
-    .eyebrow {
-      display: inline-flex;
-      padding: 8px 11px;
-      border: 1px solid rgba(67,246,215,.36);
-      border-radius: 999px;
-      color: var(--cyan);
-      background: rgba(67,246,215,.09);
-      font-size: 12px;
-      font-weight: 950;
-    }
-    h1 {
-      margin: 16px 0 10px;
-      font-size: clamp(34px, 6vw, 70px);
-      line-height: .98;
-      letter-spacing: 0;
-    }
-    .gradient {
-      background: linear-gradient(100deg, var(--cyan), var(--gold), var(--pink));
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-    }
-    .hero p {
-      max-width: 780px;
-      margin: 0;
-      color: var(--muted);
-      line-height: 1.7;
-    }
-    .layout {
-      display: grid;
-      grid-template-columns: minmax(320px, 420px) minmax(0, 1fr);
-      gap: 16px;
-      align-items: start;
-    }
-    .panel {
-      border: 1px solid var(--line);
-      border-radius: 22px;
-      background: rgba(16,22,38,.78);
-      box-shadow: 0 24px 80px rgba(0,0,0,.36);
-      overflow: hidden;
-    }
-    .panel-head {
-      padding: 18px 20px;
-      border-bottom: 1px solid var(--line);
-      background: rgba(255,255,255,.04);
-    }
-    .panel-head strong { display: block; font-size: 17px; }
-    .panel-head span { display: block; margin-top: 5px; color: var(--muted); font-size: 13px; }
-    .form {
-      display: grid;
-      gap: 13px;
-      padding: 18px;
-    }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
-    }
-    .field {
-      display: grid;
-      gap: 7px;
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 850;
-    }
-    label { display: grid; gap: 7px; color: var(--muted); font-size: 12px; font-weight: 850; }
-    input, textarea {
-      width: 100%;
-      min-height: 44px;
-      padding: 11px 12px;
-      outline: none;
-    }
-    textarea { min-height: 96px; resize: vertical; line-height: 1.5; }
-    .twocol { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px; }
-    .calc-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      padding: 0 18px 18px;
-    }
-    .calc-actions button {
-      flex: 1 1 160px;
-      min-height: 46px;
-    }
-    .note {
-      margin: 0 18px 18px;
-      color: var(--muted);
-      line-height: 1.55;
-      font-size: 13px;
-    }
-    .primary {
-      border-color: transparent;
-      background: linear-gradient(135deg, var(--cyan), var(--gold));
-      color: #09101c;
-    }
-    .ghost { background: rgba(255,255,255,.06); }
-    .error {
-      display: none;
-      margin: 0 18px 18px;
-      padding: 12px;
-      border: 1px solid rgba(255,114,109,.36);
-      border-radius: 14px;
-      color: #ffd3d1;
-      background: rgba(255,114,109,.1);
-      font-size: 13px;
-    }
-    .result {
-      display: grid;
-      gap: 12px;
-      padding: 18px;
-    }
-    .round {
-      border: 1px solid rgba(154,183,255,.18);
-      border-radius: 18px;
-      background: rgba(255,255,255,.045);
-      overflow: hidden;
-    }
-    .round-title {
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      padding: 13px 15px;
-      border-bottom: 1px solid rgba(154,183,255,.16);
-      font-weight: 950;
-    }
-    .items {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 1px;
-      background: rgba(154,183,255,.12);
-    }
-    .item {
-      padding: 12px;
-      background: rgba(7,10,18,.38);
-    }
-    .item b { display: block; color: var(--gold); font-size: 12px; }
-    .item span { display: block; margin-top: 4px; color: var(--text); font-weight: 900; }
-    .summary {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 10px;
-      padding: 18px;
-      border-bottom: 1px solid var(--line);
-    }
-    .stat {
-      padding: 14px;
-      border: 1px solid rgba(154,183,255,.18);
-      border-radius: 16px;
-      background: rgba(255,255,255,.045);
-    }
-    .stat strong { display: block; font-size: 22px; font-variant-numeric: tabular-nums; }
-    .stat span { display: block; margin-top: 5px; color: var(--muted); font-size: 12px; font-weight: 850; }
-    .empty {
-      padding: 38px 20px;
-      color: var(--muted);
-      text-align: center;
-      line-height: 1.6;
-    }
-    .metric-grid {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 10px;
-      margin-bottom: 14px;
-    }
-    .metric {
-      padding: 14px;
-      border: 1px solid rgba(154,183,255,.18);
-      border-radius: 16px;
-      background: rgba(255,255,255,.045);
-    }
-    .metric .label,
-    .section-label {
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 950;
-      text-transform: uppercase;
-    }
-    .metric .value {
-      margin-top: 6px;
-      color: var(--text);
-      font-size: 26px;
-      font-weight: 950;
-      font-variant-numeric: tabular-nums;
-    }
-    .section-label {
-      margin: 18px 0 8px;
-    }
-    .result-table {
-      width: 100%;
-      border-collapse: collapse;
-      overflow: hidden;
-      border-radius: 14px;
-      font-size: 13px;
-    }
-    .result-table th,
-    .result-table td {
-      padding: 10px 11px;
-      border: 1px solid rgba(154,183,255,.16);
-      text-align: left;
-    }
-    .result-table th {
-      color: #ffe8a6;
-      background: rgba(246,207,114,.1);
-      font-weight: 950;
-    }
-    #frDiscordText {
-      min-height: 220px;
-      font-family: Consolas, "SFMono-Regular", monospace;
-      white-space: pre;
-    }
-    @media (max-width: 860px) {
-      .nav { align-items: stretch; flex-direction: column; }
-      .actions { display: grid; grid-template-columns: 1fr; }
-      select, .back, .support, .lang-shell { width: 100%; }
-      .layout { grid-template-columns: 1fr; }
-      .summary, .items, .metric-grid { grid-template-columns: 1fr 1fr; }
-    }
-    @media (max-width: 520px) {
-      .wrap { width: min(100% - 22px, 1180px); padding-top: 12px; }
-      .twocol, .btns, .summary, .items, .grid, .metric-grid { grid-template-columns: 1fr; }
-      .hero, .panel { border-radius: 18px; }
-    }
-    .site-trustbar > span:not(.site-trust-links):not(.trust-copy) { display: none; }
-    .trust-copy { display: block; }
-  </style>
-  <link rel="stylesheet" href="./static/legend-ui.css?v=20260620-ui6">
-</head>
-<body data-legend-page="fort">
-  <div class="wrap">
-    <nav class="nav">
-      <a class="brand" id="backHome" href="./index.html"><span class="mark">885</span><span>885 LEGEND NASHSH</span></a>
-      <div class="actions">
-        <a class="back" id="hubLink" href="./index.html" data-i18n="back">Back to hub</a>
-        <label class="lang-shell" aria-label="Language">
-          <select id="langSelect" aria-label="Language">
-            <option value="ko">🇰🇷 한국어</option>
-            <option value="en">🇺🇸 English</option>
-            <option value="ja">🇯🇵 日本語</option>
-            <option value="zh-CN">🇨🇳 简体中文</option>
-            <option value="zh-TW">🇹🇼 繁體中文</option>
-            <option value="fr">🇫🇷 Français</option>
-            <option value="de">🇩🇪 Deutsch</option>
-            <option value="th">🇹🇭 ไทย</option>
-            <option value="id">🇮🇩 Indonesia</option>
-          </select>
-        </label>
-        <a class="back support" href="https://buymeacoffee.com/nashsh" target="_blank" rel="noreferrer" data-i18n="support">Support page</a>
-      </div>
-    </nav>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fort / Sanc Distributor II | 885 LEGEND NASHSH</title>
+<meta name="description" content="Unofficial Kingshot Fort and Sanctuary distributor for fair alliance rotations, rotating battle buffs, point balance, and chat-ready plans.">
+<link rel="canonical" href="https://my-discord-bot2.looloo90.workers.dev/fort_sanc.html">
+<style>
+:root{
+  --ink:#12161f;--ink-2:#1a212d;--slate:#232d3c;--line:#33415a;
+  --parchment:#e9e3d4;--parchment-dim:#9aa3b2;
+  --gold:#c9a227;--gold-dim:#7d661a;--verdigris:#4e9c86;--rust:#c05540;
+  --a1:#7a6fd0;--a2:#3e9aa8;--a3:#c4574a;--a4:#8aa83d;--a5:#a8628f;--a6:#5d7fa8;
+  --mono:"Consolas","SF Mono",Menlo,"DejaVu Sans Mono",monospace;
+  --sans:system-ui,"Segoe UI",Roboto,sans-serif;
+  --serif:Georgia,"Times New Roman",serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--ink);color:var(--parchment);font-family:var(--sans);
+  font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+h1,h2,h3{margin:0;font-weight:800}
+.eyebrow{font-size:10px;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--parchment-dim);font-weight:700}
+.hubbar{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+  border-bottom:1px solid var(--line);background:#101722;padding:10px 28px;
+  box-shadow:0 14px 34px rgba(0,0,0,.22)
+}
+.hubbrand{display:flex;align-items:center;gap:9px;color:var(--gold);text-decoration:none;font-weight:800}
+.hubbrand .mark{display:grid;place-items:center;width:34px;height:34px;border:1px solid var(--gold-dim);border-radius:3px;background:rgba(201,162,39,.12);font-family:var(--mono);font-size:12px}
+.hubnav{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.hubnav a,.hubnav select{border:1px solid var(--line);border-radius:3px;background:var(--ink-2);color:var(--parchment);padding:7px 10px;text-decoration:none;font-weight:700;font-size:12px}
+.hubnav a:hover,.hubnav select:hover{border-color:var(--gold-dim)}
 
-    <div class="site-trustbar" role="note" aria-label="Site safety notice">
-      <span class="trust-copy" data-i18n="trustText"><strong>HTTPS protected · safe connection.</strong> This page runs locally in your browser and never asks for passwords, payment details, account login, or device access.</span>
-      <span><strong>HTTPS protected · 안전 연결.</strong> This page runs as a local planning tool in your browser. 비밀번호, 결제 정보, 계정 로그인을 요구하지 않습니다.</span>
-      <span class="site-trust-links">
-        <a href="./security.html" data-i18n="security">Security</a>
-        <a href="./privacy.html" data-i18n="privacy">Privacy</a>
-      </span>
+header{border-bottom:1px solid var(--line);padding:20px 28px;display:flex;
+  align-items:flex-end;gap:22px;flex-wrap:wrap;background:linear-gradient(180deg,#171d28,var(--ink))}
+.wordmark{font-family:var(--serif);font-size:30px;font-weight:700;line-height:1}
+.wordmark em{font-style:normal;color:var(--gold)}
+.tagline{color:var(--parchment-dim);font-size:12.5px;margin-top:4px}
+.meters{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap}
+.meter{border:1px solid var(--line);border-radius:2px;padding:9px 15px;background:var(--ink-2);min-width:104px}
+.meter .lbl{font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--parchment-dim)}
+.meter .num{font-family:var(--mono);font-size:23px;font-weight:700;line-height:1.15;color:var(--gold)}
+.meter .sub{font-size:10.5px;color:var(--parchment-dim);margin-top:2px}
+.meter.ok .num{color:var(--verdigris)}
+.meter.bad .num{color:var(--rust)}
+
+.shell{display:grid;grid-template-columns:320px 1fr;min-height:calc(100vh - 92px)}
+.rail{border-right:1px solid var(--line);padding:22px;background:var(--ink-2)}
+main{padding:22px 28px 60px;min-width:0}
+.group{margin-bottom:22px}
+.group>.eyebrow{margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.field{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:7px}
+.field label{font-size:12.5px;color:var(--parchment-dim)}
+input[type=number],input[type=text]{background:var(--ink);border:1px solid var(--line);
+  color:var(--parchment);font-family:var(--mono);font-size:13px;padding:5px 7px;
+  border-radius:2px;width:66px;text-align:center}
+input:focus,button:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
+.hint{font-size:11px;color:#6d7789;margin-top:8px;line-height:1.45}
+
+/* schedule editor */
+table.sched{width:100%;border-collapse:collapse;font-size:12px}
+table.sched th{padding:5px 3px;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--parchment-dim);border-bottom:1px solid var(--line)}
+table.sched th input{width:100%;font-size:10px;font-family:var(--sans);text-align:center;padding:3px}
+table.sched td{padding:3px 2px;border-bottom:1px solid #212a37}
+table.sched td.rl{font-family:var(--mono);color:var(--parchment-dim);width:30px;text-align:center}
+table.sched td input{width:100%;padding:4px 2px;font-size:12px}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:1px}
+
+.notice{border-left:3px solid;padding:9px 13px;margin-bottom:12px;font-size:12.5px;background:var(--ink-2)}
+.notice.warn{border-color:var(--rust);color:#e6a596}
+.notice.good{border-color:var(--verdigris);color:#9fd3c3}
+.notice.info{border-color:var(--gold);color:#e0c775}
+
+.stage{display:grid;grid-template-columns:minmax(0,430px) 1fr;gap:30px;align-items:start;margin-bottom:26px}
+.ringwrap{border:1px solid var(--line);background:var(--ink-2);padding:14px;border-radius:3px}
+svg.ring{width:100%;height:auto;display:block}
+.halo{animation:pulse 1.9s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.35}50%{opacity:1}}
+.reduced .halo{animation:none;opacity:.9}
+.node text{font-family:var(--mono);font-size:12px;font-weight:700;pointer-events:none}
+.scrub{display:flex;align-items:center;gap:12px;margin-top:12px}
+.scrub input[type=range]{flex:1;accent-color:var(--gold)}
+.playbtn{background:var(--ink);border:1px solid var(--line);color:var(--parchment);
+  padding:5px 13px;border-radius:2px;cursor:pointer;font-size:11px;letter-spacing:.12em;
+  text-transform:uppercase;font-weight:700}
+.playbtn:hover{border-color:var(--gold);color:var(--gold)}
+.roundtag{font-family:var(--mono);font-size:13px;color:var(--gold);min-width:74px}
+
+.tblwrap{border:1px solid var(--line);border-radius:3px;background:var(--ink-2);
+  overflow:hidden;margin-bottom:16px}
+.tblwrap h3{font-size:11px;letter-spacing:.16em;text-transform:uppercase;padding:11px 13px;
+  border-bottom:1px solid var(--line);color:var(--parchment-dim)}
+table.data{width:100%;border-collapse:collapse;font-size:12.5px}
+table.data th{text-align:left;font-size:10px;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--parchment-dim);font-weight:700;padding:7px 9px;border-bottom:1px solid var(--line)}
+table.data td{padding:7px 9px;border-bottom:1px solid #212a37}
+table.data td.n,table.data th.n{text-align:center;font-family:var(--mono)}
+tr:last-child td{border-bottom:none}
+
+section.block{margin-top:30px}
+section.block>h2{font-size:12px;letter-spacing:.2em;text-transform:uppercase;
+  padding-bottom:8px;border-bottom:1px solid var(--line);margin-bottom:14px;color:var(--parchment-dim)}
+.rounds{display:grid;grid-template-columns:repeat(auto-fill,minmax(285px,1fr));gap:12px}
+.rcard{border:1px solid var(--line);background:var(--ink-2);border-radius:3px;overflow:hidden}
+.rcard.dead{opacity:.62}
+.rhead{display:flex;justify-content:space-between;align-items:center;padding:9px 12px;
+  border-bottom:1px solid var(--line);background:#1e2634}
+.rhead .rn{font-family:var(--mono);font-size:13px;font-weight:700}
+.rhead .tag{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--parchment-dim)}
+.arow{display:grid;grid-template-columns:12px 1fr;gap:9px;padding:8px 12px;
+  border-bottom:1px solid #212a37;align-items:start}
+.arow:last-child{border-bottom:none}
+.abar{width:4px;height:100%;min-height:30px;border-radius:2px}
+.aname{font-weight:700;font-size:12.5px}
+.aholds{font-family:var(--mono);font-size:11.5px;color:var(--parchment-dim);margin-top:2px}
+.abuff{font-size:11px;color:var(--gold);margin-top:2px;font-weight:600}
+.abuff.none{color:#5d6675;font-weight:400}
+
+.outhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.copybtn{background:var(--gold);border:none;color:#1a1405;font-weight:700;font-size:11px;
+  letter-spacing:.14em;text-transform:uppercase;padding:8px 18px;border-radius:2px;cursor:pointer}
+.copybtn:hover{background:#dcb42f}
+.copybtn.done{background:var(--verdigris);color:#07201a}
+pre{font-family:var(--mono);font-size:12.5px;line-height:1.6;background:var(--ink-2);
+  border:1px solid var(--line);border-radius:3px;padding:16px;overflow:auto;margin:0;max-height:480px}
+
+@media (max-width:960px){.shell{grid-template-columns:1fr}
+  .rail{border-right:none;border-bottom:1px solid var(--line)}.stage{grid-template-columns:1fr}}
+@media (max-width:720px){.hubbar{padding:10px 12px;align-items:flex-start}.hubnav{width:100%}.hubnav a,.hubnav select{flex:1;min-width:120px;text-align:center}header{padding:16px 14px}.meters{margin-left:0}.meter{flex:1;min-width:96px}main{padding:16px 14px 48px}.rail{padding:16px 14px}.field{align-items:flex-start}.field label{line-height:1.35}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<nav class="hubbar" aria-label="Hub navigation">
+  <a class="hubbrand" href="./index.html"><span class="mark">885</span><span>885 LEGEND NASHSH</span></a>
+  <div class="hubnav">
+    <a id="hubHome" href="./index.html">Hub</a>
+    <a id="hubSword" href="./swordland_planner.html">Swordland</a>
+    <a id="hubRedeem" href="./auto_redeem.html">Auto Redeem</a>
+    <select id="pageLang" aria-label="Language">
+      <option value="ko">🇰🇷 한국어</option>
+      <option value="ja">🇯🇵 日本語</option>
+      <option value="en">🇺🇸 English</option>
+      <option value="fr">🇫🇷 Français</option>
+      <option value="de">🇩🇪 Deutsch</option>
+      <option value="zh-CN">🇨🇳 简体中文</option>
+      <option value="zh-TW">🇹🇼 繁體中文</option>
+      <option value="th">🇹🇭 ไทย</option>
+      <option value="id">🇮🇩 Indonesia</option>
+    </select>
+  </div>
+</nav>
+
+<header>
+  <div>
+    <div class="wordmark">Fort / Sanc<em> II</em></div>
+    <div class="tagline">Rotating buffs — ownership stays put while phase rewards move each round</div>
+  </div>
+  <div class="meters">
+    <div class="meter" id="mPts"><div class="lbl">Points each</div><div class="num">—</div><div class="sub"></div></div>
+    <div class="meter" id="mCov"><div class="lbl">Buff rounds</div><div class="num">—</div><div class="sub"></div></div>
+    <div class="meter" id="mSpread"><div class="lbl">Fairness</div><div class="num">—</div><div class="sub"></div></div>
+  </div>
+</header>
+
+<div class="shell">
+  <aside class="rail">
+    <div class="group">
+      <div class="eyebrow">Season structure</div>
+      <div class="field"><label for="iA">Alliances</label><input type="number" id="iA" min="2" max="5" value="3"></div>
+      <div class="field"><label for="iR">Rounds</label><input type="number" id="iR" min="2" max="12" value="8"></div>
+      <div class="field"><label for="iS">Sanctuaries</label><input type="number" id="iS" min="3" max="24" value="12"></div>
+      <div class="field"><label for="iF">Fortresses</label><input type="number" id="iF" min="1" max="12" value="4"></div>
+      <div class="field"><label for="iPS">Points / sanctuary</label><input type="number" id="iPS" min="0" value="1"></div>
+      <div class="field"><label for="iPF">Points / fortress</label><input type="number" id="iPF" min="0" value="2"></div>
     </div>
 
-    <section class="hero">
-      <span class="eyebrow" data-i18n="tagAlliance">ALLIANCE OPERATIONS</span>
-      <h1><span data-i18n="title">Fort / Sanc Distributor</span><br><span class="gradient">885 LEGEND NASHSH</span></h1>
-      <p data-i18n="subtitle">Create a clean rotation plan for Fort and Sanctuary targets. This page is separated from the calculator because it is mainly an alliance management tool.</p>
+    <div class="group">
+      <div class="eyebrow">Buff schedule</div>
+      <div id="schedWrap"></div>
+      <div class="hint">Which sanctuary carries each buff, round by round. Leave a cell blank if that buff is absent. Taken from your reward table.</div>
+    </div>
+
+    <div class="group">
+      <div class="eyebrow">Alliances</div>
+      <div id="nameList"></div>
+    </div>
+  </aside>
+
+  <main>
+    <div id="notices"></div>
+
+    <div class="stage">
+      <div class="ringwrap">
+        <svg class="ring" id="ring" viewBox="0 0 400 400" role="img" aria-label="Sanctuary ring showing ownership and current buff positions"></svg>
+        <div class="scrub">
+          <button class="playbtn" id="play">Play season</button>
+          <input type="range" id="scrub" min="1" max="8" value="1" aria-label="Round">
+          <div class="roundtag" id="roundTag">Round 1</div>
+        </div>
+      </div>
+      <div>
+        <div class="tblwrap"><h3>Claim order — one sanctuary per round</h3><div id="ladder"></div></div>
+        <div class="tblwrap"><h3>Rounds holding each buff</h3><div id="coverage"></div></div>
+      </div>
+    </div>
+
+    <section class="block">
+      <h2>Round by round</h2>
+      <div class="rounds" id="rounds"></div>
     </section>
 
-    <main class="layout">
-      <section class="panel">
-        <div class="panel-head"><strong data-i18n="setup">Setup</strong><span data-i18n="setupHint">Enter alliances and target counts, then generate a fair rotation.</span></div>
-        <div class="form">
-          <div class="grid">
-            <div class="field"><label for="frAlliances" data-i18n="alliances">Alliances</label><input id="frAlliances" type="text" value="GTR, TNW, HOG, DEA, RES" placeholder="GTR, TNW, HOG, DEA, RES"></div>
-            <div class="field"><label for="frTarget" data-i18n="targetPoints">Target points per alliance</label><input id="frTarget" type="number" min="0" value="10"></div>
-            <div class="field"><label for="frSeed" data-i18n="seed">Seed</label><input id="frSeed" type="number" min="0" value="7"></div>
-            <div class="field"><label for="frRounds" data-i18n="rounds">Rounds</label><input id="frRounds" type="number" min="1" value="8"></div>
-            <div class="field"><label for="frForts" data-i18n="fortCount">Fort count</label><input id="frForts" type="number" min="1" value="4"></div>
-            <div class="field"><label for="frRelics" data-i18n="sancCount">San count</label><input id="frRelics" type="number" min="1" value="12"></div>
-            <div class="field"><label for="frEmptyMin" data-i18n="emptyMin">San EMPTY min</label><input id="frEmptyMin" type="number" min="0" value="2"></div>
-            <div class="field"><label for="frEmptyMax" data-i18n="emptyMax">San EMPTY max</label><input id="frEmptyMax" type="number" min="0" value="3"></div>
-          </div>
-        </div>
-        <div class="calc-actions">
-          <button class="ghost" id="frMax" type="button" data-i18n="maxIgnoreEmpty">MAX ignore EMPTY</button>
-          <button class="primary" id="doCalc" type="button" data-i18n="generate">Generate</button>
-          <button class="ghost" id="frCopy" type="button" data-i18n="copyDiscord">Copy Discord</button>
-        </div>
-        <p class="note" id="frLimitNote"></p>
-      </section>
+    <section class="block">
+      <div class="outhead">
+        <h2 style="border:none;margin:0;padding:0">Paste into alliance chat</h2>
+        <button class="copybtn" id="copy">Copy plan</button>
+      </div>
+      <pre id="out"></pre>
+    </section>
+  </main>
+</div>
 
-      <section class="panel">
-        <div class="panel-head"><strong data-i18n="resultTitle">Distribution Plan</strong><span data-i18n="resultHint">Lowest total score receives priority in the next slot.</span></div>
-        <div class="result" id="resultPanel"><div class="empty" data-i18n="empty">Generate a plan to see the rotation here.</div></div>
-      </section>
-    </main>
-  </div>
+<script>
+// ---CORE-START---
+function mod(n,m){return ((n%m)+m)%m;}
 
-  <script>
-    const I18N = {
-      ko: {
-        back: '허브로 돌아가기', support: '후원 페이지', title: 'Fort / Sanc 분배기',
-        tagAlliance: '연맹 운영',
-        subtitle: 'Fort와 Sanctuary 목표를 깔끔하게 배분하는 연맹 운영 도구입니다. 계산기 성격보다 운영 성격이 강해서 독립 페이지로 분리했습니다.',
-        setup: '설정', setupHint: '연맹과 목표 수를 입력한 뒤 공정한 로테이션을 생성하세요.', alliances: '연맹 목록', rounds: '라운드', seed: '섞기 기준',
-        fortCount: '라운드당 Fort', sancCount: '라운드당 Sanc', fortPoints: 'Fort 점수', sancPoints: 'Sanc 점수',
-        generate: '생성', copy: '결과 복사', resultTitle: '분배 계획', resultHint: '누적 점수가 낮은 연맹부터 다음 슬롯에 우선 배정합니다.',
-        empty: '생성 버튼을 누르면 이곳에 로테이션이 표시됩니다.', round: '라운드', fort: 'Fort', sanc: 'Sanc', total: '총점', slots: '슬롯',
-        noAlliance: '연맹을 2개 이상 입력해주세요.', copied: '복사 완료'
-      },
-      en: {
-        back: 'Back to hub', support: 'Support page', title: 'Fort / Sanc Distributor',
-        tagAlliance: 'Alliance Operations',
-        subtitle: 'Create a clean rotation plan for Fort and Sanctuary targets. This page is separated from the calculator because it is mainly an alliance management tool.',
-        setup: 'Setup', setupHint: 'Enter alliances and target counts, then generate a fair rotation.', alliances: 'Alliances', rounds: 'Rounds', seed: 'Shuffle seed',
-        fortCount: 'Forts per round', sancCount: 'Sanc per round', fortPoints: 'Fort points', sancPoints: 'Sanc points',
-        generate: 'Generate', copy: 'Copy result', resultTitle: 'Distribution Plan', resultHint: 'Lowest total score receives priority in the next slot.',
-        empty: 'Generate a plan to see the rotation here.', round: 'Round', fort: 'Fort', sanc: 'Sanc', total: 'Total', slots: 'slots',
-        noAlliance: 'Please enter at least 2 alliances.', copied: 'Copied'
-      }
-    };
-    ['zh-CN','zh-TW','fr','de','th','id'].forEach((lang) => { I18N[lang] = { ...I18N.en }; });
-    Object.assign(I18N['zh-CN'], {
-      back:'返回主页', support:'支持页面', title:'Fort / Sanc 分配器', tagAlliance:'联盟运营',
-      subtitle:'为 Fort 和 Sanctuary 目标制作清晰的联盟轮换计划。它更像联盟运营工具，因此从计算器中独立出来。',
-      setup:'设置', setupHint:'输入联盟和目标数量，然后生成公平轮换。', alliances:'联盟列表', rounds:'轮次', seed:'随机种子',
-      fortCount:'每轮 Fort', sancCount:'每轮 Sanc', fortPoints:'Fort 分数', sancPoints:'Sanc 分数',
-      generate:'生成', copy:'复制结果', resultTitle:'分配计划', resultHint:'累计分数较低的联盟会优先获得下一个槽位。',
-      empty:'点击生成后，轮换计划会显示在这里。', round:'轮次', total:'总分', slots:'槽位', noAlliance:'请至少输入 2 个联盟。', copied:'已复制'
+/* schedule: array[round-1] = array[typeIndex] = sanctuary id or 0
+   types:    array of buff names                                     */
+function buildPlan(cfg){
+  const A=cfg.A, R=cfg.R, S=cfg.S, F=cfg.F;
+  const k=Math.floor(S/A), fortPer=Math.floor(F/A);
+
+  // earliest round each tile carries any buff
+  const firstBuff={};
+  for(let t=1;t<=S;t++) firstBuff[t]=Infinity;
+  for(let r=1;r<=R;r++)
+    (cfg.schedule[r-1]||[]).forEach(id=>{
+      if(id>=1&&id<=S) firstBuff[id]=Math.min(firstBuff[id],r);
     });
-    Object.assign(I18N['zh-TW'], {
-      back:'返回首頁', support:'支援頁面', title:'Fort / Sanc 分配器', tagAlliance:'聯盟營運',
-      subtitle:'為 Fort 和 Sanctuary 目標製作清晰的聯盟輪換計畫。它更像聯盟營運工具，因此從計算器中獨立出來。',
-      setup:'設定', setupHint:'輸入聯盟和目標數量，然後生成公平輪換。', alliances:'聯盟列表', rounds:'輪次', seed:'隨機種子',
-      fortCount:'每輪 Fort', sancCount:'每輪 Sanc', fortPoints:'Fort 分數', sancPoints:'Sanc 分數',
-      generate:'生成', copy:'複製結果', resultTitle:'分配計畫', resultHint:'累計分數較低的聯盟會優先獲得下一個槽位。',
-      empty:'點擊生成後，輪換計畫會顯示在這裡。', round:'輪次', total:'總分', slots:'槽位', noAlliance:'請至少輸入 2 個聯盟。', copied:'已複製'
+
+  const order=[];
+  for(let t=1;t<=S;t++) order.push(t);
+  order.sort((a,b)=>(firstBuff[a]-firstBuff[b])||(a-b));
+
+  // deal tiles round-robin in buff-urgency order
+  let sets=[];
+  for(let i=0;i<A;i++) sets.push([]);
+  let ai=0;
+  for(const t of order){
+    let tries=0;
+    while(sets[ai].length>=k&&tries<A){ai=(ai+1)%A;tries++;}
+    if(sets[ai].length>=k) break;
+    sets[ai].push(t); ai=(ai+1)%A;
+  }
+
+  const score=st=>{
+    const ev=evaluate(st,cfg,firstBuff,k);
+    const cnt=ev.counts;
+    const spread=Math.max.apply(null,cnt)-Math.min.apply(null,cnt);
+    let imb=0;
+    ev.byType.forEach(row=>{
+      const v=cfg.types.map(t=>row[t]||0);   // absent types count as zero
+      imb+=Math.max.apply(null,v)-Math.min.apply(null,v);
     });
-    Object.assign(I18N.fr, {
-      back:'Retour au hub', support:'Page de soutien', title:'Distributeur Fort / Sanc', tagAlliance:'Opérations alliance',
-      subtitle:'Créez un plan de rotation propre pour les Forts et Sanctuaires. Cette page est séparée des calculateurs car elle sert surtout à gérer l’alliance.',
-      setup:'Configuration', setupHint:'Saisissez les alliances et les cibles, puis générez une rotation équitable.', alliances:'Alliances', rounds:'Tours', seed:'Graine',
-      fortCount:'Forts par tour', sancCount:'Sanc par tour', fortPoints:'Points Fort', sancPoints:'Points Sanc',
-      generate:'Générer', copy:'Copier le résultat', resultTitle:'Plan de distribution', resultHint:'Le score total le plus bas reçoit la priorité au prochain slot.',
-      empty:'Générez un plan pour voir la rotation ici.', round:'Tour', total:'Total', slots:'slots', noAlliance:'Entrez au moins 2 alliances.', copied:'Copié'
-    });
-    Object.assign(I18N.de, {
-      back:'Zurück zum Hub', support:'Support-Seite', title:'Fort / Sanc Verteiler', tagAlliance:'Allianz-Betrieb',
-      subtitle:'Erstelle einen klaren Rotationsplan für Fort- und Sanctuary-Ziele. Diese Seite ist getrennt, weil sie vor allem Allianzverwaltung ist.',
-      setup:'Einstellungen', setupHint:'Allianzen und Zielzahlen eingeben, dann eine faire Rotation erzeugen.', alliances:'Allianzen', rounds:'Runden', seed:'Misch-Seed',
-      fortCount:'Forts pro Runde', sancCount:'Sanc pro Runde', fortPoints:'Fort-Punkte', sancPoints:'Sanc-Punkte',
-      generate:'Erzeugen', copy:'Ergebnis kopieren', resultTitle:'Verteilungsplan', resultHint:'Der niedrigste Gesamtwert erhält den nächsten Slot zuerst.',
-      empty:'Erzeuge einen Plan, um die Rotation hier zu sehen.', round:'Runde', total:'Gesamt', slots:'Slots', noAlliance:'Bitte mindestens 2 Allianzen eingeben.', copied:'Kopiert'
-    });
-    Object.assign(I18N.th, {
-      back:'กลับหน้าหลัก', support:'หน้าสนับสนุน', title:'ตัวแจก Fort / Sanc', tagAlliance:'ปฏิบัติการพันธมิตร',
-      subtitle:'สร้างแผนหมุนเวียน Fort และ Sanctuary ให้ชัดเจน หน้านี้แยกออกจากเครื่องคิดเลขเพราะเป็นเครื่องมือจัดการพันธมิตร',
-      setup:'ตั้งค่า', setupHint:'ใส่รายชื่อพันธมิตรและจำนวนเป้าหมาย แล้วสร้างรอบหมุนเวียนที่ยุติธรรม', alliances:'รายชื่อพันธมิตร', rounds:'รอบ', seed:'ค่า seed',
-      fortCount:'Fort ต่อรอบ', sancCount:'Sanc ต่อรอบ', fortPoints:'คะแนน Fort', sancPoints:'คะแนน Sanc',
-      generate:'สร้าง', copy:'คัดลอกผลลัพธ์', resultTitle:'แผนแบ่งสรร', resultHint:'พันธมิตรที่มีคะแนนรวมน้อยที่สุดจะได้สิทธิ์ก่อนในช่องถัดไป',
-      empty:'กดสร้างเพื่อดูแผนหมุนเวียนที่นี่', round:'รอบ', total:'รวม', slots:'ช่อง', noAlliance:'กรุณาใส่อย่างน้อย 2 พันธมิตร', copied:'คัดลอกแล้ว'
-    });
-    Object.assign(I18N.id, {
-      back:'Kembali ke hub', support:'Halaman dukungan', title:'Distributor Fort / Sanc', tagAlliance:'Operasi aliansi',
-      subtitle:'Buat rencana rotasi Fort dan Sanctuary yang rapi. Halaman ini dipisah karena lebih cocok sebagai alat manajemen aliansi.',
-      setup:'Pengaturan', setupHint:'Masukkan aliansi dan jumlah target, lalu buat rotasi yang adil.', alliances:'Aliansi', rounds:'Ronde', seed:'Seed acak',
-      fortCount:'Fort per ronde', sancCount:'Sanc per ronde', fortPoints:'Poin Fort', sancPoints:'Poin Sanc',
-      generate:'Buat', copy:'Salin hasil', resultTitle:'Rencana distribusi', resultHint:'Skor total terendah mendapat prioritas untuk slot berikutnya.',
-      empty:'Buat rencana untuk melihat rotasi di sini.', round:'Ronde', total:'Total', slots:'slot', noAlliance:'Masukkan minimal 2 aliansi.', copied:'Tersalin'
-    });
-    const $ = (id) => document.getElementById(id);
-    function getLang() {
-      const q = new URL(location.href).searchParams.get('lang');
-      const saved = localStorage.getItem('lang') || localStorage.getItem('siteLang');
-      return I18N[q] ? q : I18N[saved] ? saved : 'ko';
-    }
-    function setLang(lang) {
-      const dict = I18N[lang] || I18N.ko;
-      document.documentElement.lang = lang;
-      document.querySelectorAll('[data-i18n]').forEach((node) => {
-        if (dict[node.dataset.i18n]) node.textContent = dict[node.dataset.i18n];
+    return ev.captured*10000 - spread*600 - imb*120;
+  };
+
+  // hill climb by swapping tiles between alliances
+  let best=sets.map(s=>s.slice()), bestScore=score(best);
+  let seed=1;
+  const rnd=()=>{seed=(seed*1103515245+12345)&0x7fffffff;return seed/0x7fffffff;};
+  for(let iter=0;iter<12000;iter++){
+    const i=Math.floor(rnd()*A), j=Math.floor(rnd()*A);
+    if(i===j||!best[i].length||!best[j].length) continue;
+    const x=Math.floor(rnd()*best[i].length), y=Math.floor(rnd()*best[j].length);
+    const trial=best.map(s=>s.slice());
+    const tmp=trial[i][x]; trial[i][x]=trial[j][y]; trial[j][y]=tmp;
+    const sc=score(trial);
+    if(sc>bestScore){best=trial;bestScore=sc;}
+  }
+
+  const ev=evaluate(best,cfg,firstBuff,k);
+  const rounds=[];
+  for(let r=1;r<=R;r++){
+    const entries=[];
+    for(let i=0;i<A;i++){
+      const held=ev.ordered[i].filter(t=>ev.acq[t]<=r);
+      const gains=[];
+      (cfg.schedule[r-1]||[]).forEach((id,ti)=>{
+        if(id&&held.includes(id)) gains.push({tile:id,type:cfg.types[ti]||("Buff "+(ti+1))});
       });
-      document.querySelectorAll('[data-i18n-title]').forEach((node) => {
-        if (dict[node.dataset.i18nTitle]) node.title = dict[node.dataset.i18nTitle];
-      });
-      document.querySelectorAll('[data-i18n-aria]').forEach((node) => {
-        (node.dataset.i18nAria || '').split(',').forEach((pair) => {
-          const [attr, key] = pair.split(':').map((value) => value && value.trim());
-          if (attr && key && dict[key]) node.setAttribute(attr, dict[key]);
-        });
-      });
-      const hub = `./index.html?lang=${encodeURIComponent(lang)}`;
-      $('hubLink').href = hub;
-      $('backHome').href = hub;
-      $('langSelect').value = lang;
-      localStorage.setItem('lang', lang);
-      localStorage.setItem('siteLang', lang);
+      const sanct=held.length;
+      entries.push({alliance:i,name:cfg.names[i],held:held,buffs:gains,
+        sanctuaries:sanct,fortress:mod(i+r-1,F)+1,
+        points:sanct*cfg.ptsS+fortPer*cfg.ptsF});
     }
-    function fmt(value) {
-      return Math.round(Number(value) || 0).toLocaleString(document.documentElement.lang || 'ko');
-    }
-    function t(key) {
-      const lang = document.documentElement.lang || getLang();
-      const dict = I18N[lang] || I18N.ko || I18N.en;
-      return (dict && dict[key]) || (I18N.en && I18N.en[key]) || key;
-    }
-    function escapeHtml(value) {
-      return String(value ?? '').replace(/[&<>"']/g, (ch) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
-    }
-    function parseAlliances(text) {
-      const alliances = String(text || '').split(',').map((item) => item.trim()).filter(Boolean);
-      if (alliances.length < 2 || alliances.length > 8) throw new Error(`${t('allianceCountError')} ${fmt(alliances.length)}`);
-      if (new Set(alliances).size !== alliances.length) throw new Error(t('duplicateAllianceError'));
-      return alliances;
-    }
-    function seededRandom(seed) {
-      let value = (Number(seed) || 0) >>> 0;
-      return () => {
-        value += 0x6D2B79F5;
-        let t = value;
-        t = Math.imul(t ^ (t >>> 15), t | 1);
-        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-      };
-    }
-    function shuffle(items, rand) {
-      const arr = items.slice();
-      for (let i = arr.length - 1; i > 0; i--) {
-        const j = Math.floor(rand() * (i + 1));
-        [arr[i], arr[j]] = [arr[j], arr[i]];
-      }
-      return arr;
-    }
-    function sortBy(items, keyFn) {
-      return items.map((item) => ({ item, key: keyFn(item) })).sort((a, b) => {
-        for (let i = 0; i < a.key.length; i++) {
-          if (a.key[i] < b.key[i]) return -1;
-          if (a.key[i] > b.key[i]) return 1;
-        }
-        return 0;
-      }).map((entry) => entry.item);
-    }
-    function estimateCaps(alliances, rounds, forts, relics, emptyMin, emptyMax) {
-      const n = alliances.length;
-      const fortTotal = rounds * Math.min(forts, n) * 2;
-      const safeTotal = fortTotal + rounds * Math.max(0, relics - emptyMax);
-      const bestTotal = fortTotal + rounds * Math.max(0, relics - emptyMin);
-      return {
-        n,
-        safeCap: Math.max(0, Math.floor(safeTotal / n) - 2),
-        bestCap: Math.max(0, Math.floor(bestTotal / n)),
-      };
-    }
-    function readFortSancConfig(alliances, target, forceEmptyZero = false) {
-      return {
-        alliances,
-        target,
-        seed: Number($('frSeed').value) || 0,
-        rounds: Math.max(1, Number($('frRounds').value) || 8),
-        forts: Math.max(1, Number($('frForts').value) || 4),
-        relics: Math.max(1, Number($('frRelics').value) || 12),
-        emptyMin: forceEmptyZero ? 0 : Math.max(0, Number($('frEmptyMin').value) || 0),
-        emptyMax: forceEmptyZero ? 0 : Math.max(0, Number($('frEmptyMax').value) || 0),
-      };
-    }
-    function buildSchedule(cfg) {
-      const rand = seededRandom(cfg.seed);
-      const alliances = cfg.alliances;
-      const n = alliances.length;
-      const pts = Object.fromEntries(alliances.map((name) => [name, 0]));
-      const remaining = Object.fromEntries(alliances.map((name) => [name, cfg.target]));
-      const held = Object.fromEntries(alliances.map((name) => [name, new Set()]));
-      const fortSlots = Math.min(cfg.forts, n);
-      const fortCycle = shuffle(alliances, rand);
-      const sitOutByRound = {};
-      let sitPtr = 0;
-      for (let rd = 1; rd <= cfg.rounds; rd++) sitOutByRound[rd] = n > fortSlots ? fortCycle[sitPtr++ % n] : null;
+    const active=(cfg.schedule[r-1]||[]).filter(x=>x>=1&&x<=S).length;
+    rounds.push({round:r,entries:entries,activeBuffs:active});
+  }
 
-      const maxFutureRelicPoints = (heldNow, nextRd) => {
-        let heldCount = heldNow;
-        let total = 0;
-        for (let rd = nextRd; rd <= cfg.rounds; rd++) {
-          heldCount = Math.min(cfg.relics, heldCount + 1);
-          total += heldCount;
-        }
-        return total;
-      };
-      const maxFutureFortPoints = (alliance, nextRd) => {
-        let total = 0;
-        for (let rd = nextRd; rd <= cfg.rounds; rd++) {
-          if (sitOutByRound[rd] !== alliance) total += 2;
-        }
-        return total;
-      };
+  const totals=[];
+  for(let i=0;i<A;i++) totals.push(rounds.reduce((s,rd)=>s+rd.entries[i].points,0));
 
-      const schedule = [];
-      for (let rd = 1; rd <= cfg.rounds; rd++) {
-        const expectedCum = Math.round(cfg.target * rd / cfg.rounds);
-        const paceGap = Object.fromEntries(alliances.map((name) => [name, expectedCum - pts[name]]));
-        const fortOwner = Object.fromEntries(Array.from({ length: cfg.forts }, (_, i) => [i + 1, 'EMPTY']));
-        const sitOut = sitOutByRound[rd];
-        const candidates = alliances.filter((name) => name !== sitOut && remaining[name] >= 2);
-        const picks = sortBy(candidates, (name) => [-paceGap[name], rand()]).slice(0, fortSlots);
-        picks.forEach((name, index) => {
-          fortOwner[index + 1] = name;
-          pts[name] += 2;
-          remaining[name] -= 2;
-        });
+  const problems=[];
+  for(let r=1;r<=R;r++){
+    const row=(cfg.schedule[r-1]||[]).filter(x=>x>=1&&x<=S);
+    const dup=row.filter((v,i)=>row.indexOf(v)!==i);
+    if(dup.length) problems.push("Round "+r+": sanctuary "+dup[0]+" is listed for two buffs at once.");
+  }
+  if(S-A*k>0) problems.push((S-A*k)+" sanctuary tile(s) cannot be split evenly and stay unclaimed.");
 
-        const emptyTarget = Math.max(0, Math.min(cfg.relics, cfg.emptyMin + Math.floor(rand() * (cfg.emptyMax - cfg.emptyMin + 1))));
-        const fillLimit = cfg.relics - emptyTarget;
-        const cap = Object.fromEntries(alliances.map((name) => [name, rd === 1 ? 1 : Math.min(cfg.relics, held[name].size + 1)]));
-        const minNeeded = {};
-        alliances.forEach((name) => {
-          let best = null;
-          for (let k = 0; k <= cap[name]; k++) {
-            const futureRelic = rd < cfg.rounds ? maxFutureRelicPoints(k, rd + 1) : 0;
-            const futureFort = rd < cfg.rounds ? maxFutureFortPoints(name, rd + 1) : 0;
-            if (pts[name] + k + futureRelic + futureFort >= cfg.target) {
-              best = k;
-              break;
-            }
-          }
-          if (best === null) best = cap[name];
-          minNeeded[name] = Math.min(best, Math.max(0, remaining[name]));
-        });
+  const totalSlots=cfg.schedule.slice(0,R).reduce((s,row)=>
+    s+row.filter(x=>x>=1&&x<=S).length,0);
 
-        const desiredHeld = {};
-        alliances.forEach((name) => {
-          const needNow = Math.min(Math.max(0, expectedCum - pts[name]), Math.max(0, remaining[name]));
-          desiredHeld[name] = Math.max(minNeeded[name], Math.min(cap[name], needNow));
-        });
+  return{
+    sets:ev.ordered, acq:ev.acq, rounds:rounds, totals:totals,
+    counts:ev.counts, byType:ev.byType, captured:ev.captured,
+    totalSlots:totalSlots, k:k, fortPer:fortPer,
+    spread:Math.max.apply(null,totals)-Math.min.apply(null,totals),
+    buffSpread:Math.max.apply(null,ev.counts)-Math.min.apply(null,ev.counts),
+    problems:problems
+  };
+}
 
-        let overflow = Object.values(desiredHeld).reduce((sum, value) => sum + value, 0) - fillLimit;
-        if (overflow > 0) {
-          const cutOrder = sortBy(alliances, (name) => [paceGap[name], rand()]);
-          for (const name of cutOrder) {
-            if (overflow <= 0) break;
-            const canCut = Math.max(0, desiredHeld[name] - minNeeded[name]);
-            const cut = Math.min(canCut, overflow);
-            desiredHeld[name] -= cut;
-            overflow -= cut;
-          }
-        }
-        if (overflow > 0) throw new Error(`Impossible at round ${rd}. Not enough San slots. overflow=${overflow}`);
-
-        alliances.forEach((name) => {
-          while (held[name].size > desiredHeld[name]) held[name].delete(Math.max(...held[name]));
-        });
-        const occupied = new Set();
-        alliances.forEach((name) => held[name].forEach((id) => occupied.add(id)));
-        const available = Array.from({ length: cfg.relics }, (_, i) => i + 1).filter((id) => !occupied.has(id));
-        for (const name of sortBy(alliances, (alliance) => [-paceGap[alliance], rand()])) {
-          while (available.length && held[name].size < desiredHeld[name]) held[name].add(available.shift());
-        }
-
-        const relicOwner = Object.fromEntries(Array.from({ length: cfg.relics }, (_, i) => [i + 1, 'EMPTY']));
-        alliances.forEach((name) => {
-          const gained = held[name].size;
-          pts[name] += gained;
-          remaining[name] -= gained;
-          held[name].forEach((id) => { relicOwner[id] = name; });
-        });
-        const emptyCount = Object.values(relicOwner).filter((owner) => owner === 'EMPTY').length;
-        if (emptyCount < cfg.emptyMin) throw new Error(`EMPTY minimum ${cfg.emptyMin} violated at round ${rd}.`);
-        schedule.push({ round: rd, fortOwner, relicOwner, pointsAfter: { ...pts }, sitOut });
-      }
-
-      const notDone = Object.entries(remaining).filter(([, value]) => value !== 0);
-      if (notDone.length) throw new Error(`Target points not matched exactly: ${notDone.map(([name, value]) => `${name} ${value}`).join(', ')}`);
-      return schedule;
-    }
-    function findMaxIgnoringEmpty(alliances) {
-      const rounds = Math.max(1, Number($('frRounds').value) || 8);
-      const forts = Math.max(1, Number($('frForts').value) || 4);
-      const relics = Math.max(1, Number($('frRelics').value) || 12);
-      const theoretical = Math.floor((rounds * Math.min(forts, alliances.length) * 2 + rounds * relics) / alliances.length);
-      for (let target = theoretical; target >= 0; target--) {
-        const cfg = readFortSancConfig(alliances, target, true);
-        try {
-          buildSchedule(cfg);
-          return { target, theoretical };
-        } catch {}
-      }
-      return { target: 0, theoretical };
-    }
-    function formatDiscord(alliances, schedule, forts, relics) {
-      return schedule.map((rd) => {
-        const lines = [`=== ${t('round')} ${fmt(rd.round)} ===`];
-        alliances.forEach((name) => {
-          const fortIds = Array.from({ length: forts }, (_, i) => i + 1).filter((id) => rd.fortOwner[id] === name);
-          const sanIds = Array.from({ length: relics }, (_, i) => i + 1).filter((id) => rd.relicOwner[id] === name);
-          lines.push(`${name} - ${fortIds.length ? `Fort${fortIds.join(',')}` : t('noFort')} / ${sanIds.length ? `San${sanIds.join(',')}` : t('noSan')}`);
-        });
-        const emptyIds = Array.from({ length: relics }, (_, i) => i + 1).filter((id) => rd.relicOwner[id] === 'EMPTY');
-        lines.push(emptyIds.length ? `${t('emptyLabel')}: ${fmt(emptyIds.length)} (${t('idsLabel')}: ${emptyIds.join(', ')})` : `${t('emptyLabel')}: 0`);
-        return lines.join('\n');
-      }).join('\n\n');
-    }
-    function renderSchedule(alliances, schedule, cfg, discordText, caps) {
-      const rows = schedule.map((rd) => {
-        const allocationRows = alliances.map((name) => {
-          const fortIds = Array.from({ length: cfg.forts }, (_, i) => i + 1).filter((id) => rd.fortOwner[id] === name);
-          const sanIds = Array.from({ length: cfg.relics }, (_, i) => i + 1).filter((id) => rd.relicOwner[id] === name);
-          return `<tr><td>${escapeHtml(name)}</td><td>${fortIds.length ? `Fort ${fortIds.join(', ')}` : t('noFort')}</td><td>${sanIds.length ? `San ${sanIds.join(', ')}` : t('noSan')}</td><td>${fmt(rd.pointsAfter[name] || 0)}</td></tr>`;
-        }).join('');
-        const emptyIds = Array.from({ length: cfg.relics }, (_, i) => i + 1).filter((id) => rd.relicOwner[id] === 'EMPTY');
-        return `<div class="section-label">${escapeHtml(t('round'))} ${fmt(rd.round)}</div><table class="result-table"><thead><tr><th>${escapeHtml(t('alliance'))}</th><th>Fort</th><th>San</th><th>${escapeHtml(t('points'))}</th></tr></thead><tbody>${allocationRows}<tr><td>EMPTY</td><td>-</td><td>${emptyIds.length ? emptyIds.join(', ') : '0'}</td><td>-</td></tr></tbody></table>`;
-      }).join('');
-      $('resultPanel').innerHTML = `
-        <div class="metric-grid">
-          <div class="metric"><div class="label">${escapeHtml(t('safeCap'))}</div><div class="value">${fmt(caps.safeCap)}</div></div>
-          <div class="metric"><div class="label">${escapeHtml(t('bestCap'))}</div><div class="value">${fmt(caps.bestCap)}</div></div>
-          <div class="metric"><div class="label">${escapeHtml(t('alliances'))}</div><div class="value">${fmt(alliances.length)}</div></div>
-          <div class="metric"><div class="label">${escapeHtml(t('rounds'))}</div><div class="value">${fmt(cfg.rounds)}</div></div>
-        </div>
-        ${rows}
-        <div class="section-label">${escapeHtml(t('discordCopy'))}</div>
-        <textarea id="frDiscordText" readonly>${escapeHtml(discordText)}</textarea>
-      `;
-    }
-    function updateLimit() {
-      try {
-        const alliances = parseAlliances($('frAlliances').value);
-        const caps = estimateCaps(alliances, Number($('frRounds').value) || 8, Number($('frForts').value) || 4, Number($('frRelics').value) || 12, Number($('frEmptyMin').value) || 0, Number($('frEmptyMax').value) || 0);
-        $('frLimitNote').textContent = `${t('estimatedLimit')}: ${t('safeCap')} ${fmt(caps.safeCap)} / ${t('bestCap')} ${fmt(caps.bestCap)}`;
-      } catch {
-        $('frLimitNote').textContent = '';
-      }
-    }
-    function runFortSanc() {
-      try {
-        const alliances = parseAlliances($('frAlliances').value);
-        const cfg = readFortSancConfig(alliances, Number($('frTarget').value) || 0);
-        if (cfg.emptyMin > cfg.emptyMax) throw new Error(t('sanEmptyMinError'));
-        if (cfg.emptyMax > cfg.relics) throw new Error(t('sanEmptyMaxError'));
-        const caps = estimateCaps(alliances, cfg.rounds, cfg.forts, cfg.relics, cfg.emptyMin, cfg.emptyMax);
-        if (cfg.target > caps.safeCap) throw new Error(`${t('impossible')}: ${t('safeCap')} ${fmt(caps.safeCap)}, ${t('targetPoints')} ${fmt(cfg.target)}`);
-        const schedule = buildSchedule(cfg);
-        const discordText = formatDiscord(alliances, schedule, cfg.forts, cfg.relics);
-        renderSchedule(alliances, schedule, cfg, discordText, caps);
-      } catch (error) {
-        $('resultPanel').innerHTML = `<p class="note">${escapeHtml(t('failed'))}: ${escapeHtml(error.message)}</p>`;
-      }
-    }
-    document.querySelectorAll('#frAlliances,#frRounds,#frForts,#frRelics,#frEmptyMin,#frEmptyMax,#frTarget').forEach((input) => input.addEventListener('input', updateLimit));
-    $('frMax').addEventListener('click', () => {
-      try {
-        const alliances = parseAlliances($('frAlliances').value);
-        const result = findMaxIgnoringEmpty(alliances);
-        $('frEmptyMin').value = '0';
-        $('frEmptyMax').value = '0';
-        $('frTarget').value = String(result.target);
-        updateLimit();
-        $('frLimitNote').textContent = `${t('maxApplied')}: ${fmt(result.target)} ${t('points')} / ${t('emptyIgnored')} / ${t('theoreticalCap')}: ${fmt(result.theoretical)}.`;
-        runFortSanc();
-      } catch (error) {
-        $('resultPanel').innerHTML = `<p class="note">${escapeHtml(t('failed'))}: ${escapeHtml(error.message)}</p>`;
-      }
+function evaluate(sets,cfg,firstBuff,k){
+  const acq={}, ordered=[];
+  sets.forEach(set=>{
+    const o=set.slice().sort((a,b)=>(firstBuff[a]-firstBuff[b])||(a-b));
+    o.forEach((t,j)=>acq[t]=j+1);
+    ordered.push(o);
+  });
+  let captured=0;
+  const counts=new Array(sets.length).fill(0);
+  const byType=sets.map(()=>({}));
+  for(let r=1;r<=cfg.R;r++){
+    (cfg.schedule[r-1]||[]).forEach((id,ti)=>{
+      if(!id||id<1||id>cfg.S) return;
+      const owner=sets.findIndex(s=>s.indexOf(id)>=0);
+      if(owner<0||acq[id]>r) return;
+      captured++; counts[owner]++;
+      const nm=cfg.types[ti]||("Buff "+(ti+1));
+      byType[owner][nm]=(byType[owner][nm]||0)+1;
     });
-    $('frCopy').addEventListener('click', async () => {
-      const text = $('frDiscordText')?.value || '';
-      if (!text) return;
-      try { await navigator.clipboard.writeText(text); } catch {}
+  }
+  return{acq:acq,ordered:ordered,captured:captured,counts:counts,byType:byType};
+}
+
+function renderText(plan,cfg){
+  const L=[];
+  plan.rounds.forEach(rd=>{
+    L.push("=== Round "+rd.round+" ===");
+    rd.entries.forEach(e=>{
+      const b=e.buffs.length
+        ? e.buffs.map(x=>x.type+" @ San "+x.tile).join(" + ")
+        : "no buff";
+      L.push(e.name+" - Fort"+e.fortress+" / San "+e.held.join(",")+"   ["+b+"]");
     });
-    $('doCalc').addEventListener('click', runFortSanc);
-    Object.assign(I18N.en, {
-      trustText: 'HTTPS protected · safe connection. This page runs locally in your browser and never asks for passwords, payment details, account login, or device access.',
-      security: 'Security',
-      privacy: 'Privacy',
-      targetPoints: 'Target points per alliance',
-      emptyMin: 'San EMPTY min',
-      emptyMax: 'San EMPTY max',
-      maxIgnoreEmpty: 'MAX ignore EMPTY',
-      copyDiscord: 'Copy Discord',
-      safeCap: 'Safe cap',
-      bestCap: 'Best cap',
-      alliance: 'Alliance',
-      points: 'Points',
-      noFort: 'No Fort',
-      noSan: 'No San',
-      emptyLabel: 'San EMPTY',
-      idsLabel: 'IDs',
-      discordCopy: 'Discord Copy',
-      estimatedLimit: 'Estimated target limit',
-      maxApplied: 'MAX applied',
-      emptyIgnored: 'EMPTY ignored',
-      theoreticalCap: 'Theoretical cap',
-      failed: 'Failed',
-      impossible: 'Impossible',
-      allianceCountError: 'Alliances must be 2-8. Current:',
-      duplicateAllianceError: 'Alliance names are duplicated.',
-      sanEmptyMinError: 'San EMPTY min must be <= max.',
-      sanEmptyMaxError: 'San EMPTY max cannot exceed San count.',
-    });
-    Object.assign(I18N.ko, {
-      back: '\ud5c8\ube0c\ub85c \ub3cc\uc544\uac00\uae30',
-      support: '\ud6c4\uc6d0 \ud398\uc774\uc9c0',
-      title: 'Fort / Sanc \ubd84\ubc30\uae30',
-      subtitle: 'Fort\uc640 Sanctuary \ubaa9\ud45c\ub97c \uae54\ub054\ud558\uac8c \ubc30\ubd84\ud558\ub294 \uc5f0\ub9f9 \uc6b4\uc601 \ub3c4\uad6c\uc785\ub2c8\ub2e4. \uacc4\uc0b0\uae30 \uc131\uaca9\ubcf4\ub2e4 \uc6b4\uc601 \uc131\uaca9\uc774 \uac15\ud574\uc11c \ub3c5\ub9bd \ud398\uc774\uc9c0\ub85c \ubd84\ub9ac\ud588\uc2b5\ub2c8\ub2e4.',
-      setup: '\uc124\uc815',
-      setupHint: '\uc5f0\ub9f9\uacfc \ubaa9\ud45c \uc218\ub97c \uc785\ub825\ud55c \ub4a4 \uacf5\uc815\ud55c \ub85c\ud14c\uc774\uc158\uc744 \uc0dd\uc131\ud558\uc138\uc694.',
-      alliances: '\uc5f0\ub9f9 \ubaa9\ub85d',
-      rounds: '\ub77c\uc6b4\ub4dc',
-      seed: '\uc11e\uae30 \uae30\uc900',
-      fortCount: '\ub77c\uc6b4\ub4dc\ub2f9 Fort',
-      sancCount: '\ub77c\uc6b4\ub4dc\ub2f9 Sanc',
-      fortPoints: 'Fort \uc810\uc218',
-      sancPoints: 'Sanc \uc810\uc218',
-      generate: '\uc0dd\uc131',
-      copy: '\uacb0\uacfc \ubcf5\uc0ac',
-      resultTitle: '\ubd84\ubc30 \uacc4\ud68d',
-      resultHint: '\ub204\uc801 \uc810\uc218\uac00 \ub0ae\uc740 \uc5f0\ub9f9\ubd80\ud130 \ub2e4\uc74c \uc2ac\ub86f\uc5d0 \uc6b0\uc120 \ubc30\uc815\ud569\ub2c8\ub2e4.',
-      empty: '\uc0dd\uc131 \ubc84\ud2bc\uc744 \ub204\ub974\uba74 \uc774\uacf3\uc5d0 \ub85c\ud14c\uc774\uc158\uc774 \ud45c\uc2dc\ub429\ub2c8\ub2e4.',
-      round: '\ub77c\uc6b4\ub4dc',
-      fort: 'Fort',
-      sanc: 'Sanc',
-      total: '\ucd1d\uc810',
-      noAlliance: '\uc5f0\ub9f9\uc744 2\uac1c \uc774\uc0c1 \uc785\ub825\ud574\uc8fc\uc138\uc694.',
-      copied: '\ubcf5\uc0ac \uc644\ub8cc',
-      trustText: 'HTTPS 보호 연결 · 이 페이지는 브라우저 안에서 실행되는 계획 도구이며 비밀번호, 결제 정보, 계정 로그인, 기기 접근 권한을 요청하지 않습니다.',
-      security: '보안',
-      privacy: '개인정보',
-      targetPoints: '연맹별 목표 점수',
-      emptyMin: 'San EMPTY 최소',
-      emptyMax: 'San EMPTY 최대',
-      maxIgnoreEmpty: 'EMPTY 무시 MAX',
-      copyDiscord: '디스코드 복사',
-      safeCap: '안전 한도',
-      bestCap: '최대 한도',
-      alliance: '연맹',
-      points: '점수',
-      noFort: 'Fort 없음',
-      noSan: 'San 없음',
-      emptyLabel: 'San EMPTY',
-      idsLabel: 'ID',
-      discordCopy: '디스코드 복사',
-      estimatedLimit: '예상 목표 한도',
-      maxApplied: 'MAX 적용',
-      emptyIgnored: 'EMPTY 무시',
-      theoreticalCap: '이론 한도',
-      failed: '실패',
-      impossible: '불가능',
-      allianceCountError: '연맹은 2-8개여야 합니다. 현재:',
-      duplicateAllianceError: '연맹 이름이 중복되었습니다.',
-      sanEmptyMinError: 'San EMPTY 최소값은 최대값보다 작거나 같아야 합니다.',
-      sanEmptyMaxError: 'San EMPTY 최대값은 San 개수를 넘을 수 없습니다.'
-    });
-    I18N.ja = {
-      ...I18N.en,
-      back: 'ハブに戻る',
-      support: '支援ページ',
-      title: 'Fort / Sanc 分配ツール',
-      tagAlliance: '同盟運営',
-      subtitle: 'FortとSanctuaryの目標をきれいに配分する同盟運営ツールです。計算機というより運営用なので独立ページにしました。',
-      setup: '設定',
-      setupHint: '同盟と目標数を入力して、公平なローテーションを生成してください。',
-      alliances: '同盟リスト',
-      rounds: 'ラウンド',
-      seed: 'シャッフル基準',
-      fortCount: 'ラウンドごとのFort',
-      sancCount: 'ラウンドごとのSanc',
-      fortPoints: 'Fortポイント',
-      sancPoints: 'Sancポイント',
-      generate: '生成',
-      copy: '結果をコピー',
-      resultTitle: '分配計画',
-      resultHint: '累計ポイントが低い同盟から次の枠に優先配分します。',
-      empty: '生成ボタンを押すと、ここにローテーションが表示されます。',
-      round: 'ラウンド',
-      fort: 'Fort',
-      sanc: 'Sanc',
-      total: '合計',
-      slots: '枠',
-      noAlliance: '同盟を2つ以上入力してください。',
-      copied: 'コピーしました',
-      trustText: 'HTTPS保護接続 · このページはブラウザ内で動作する計画ツールで、パスワード、決済情報、アカウントログイン、端末アクセス権限を要求しません。',
-      security: 'セキュリティ',
-      privacy: 'プライバシー',
-      targetPoints: '同盟ごとの目標ポイント',
-      emptyMin: 'San EMPTY 最小',
-      emptyMax: 'San EMPTY 最大',
-      maxIgnoreEmpty: 'EMPTY無視 MAX',
-      copyDiscord: 'Discord用コピー',
-      safeCap: '安全上限',
-      bestCap: '最大上限',
-      alliance: '同盟',
-      points: 'ポイント',
-      noFort: 'Fortなし',
-      noSan: 'Sanなし',
-      emptyLabel: 'San EMPTY',
-      idsLabel: 'ID',
-      discordCopy: 'Discordコピー',
-      estimatedLimit: '推定目標上限',
-      maxApplied: 'MAX適用',
-      emptyIgnored: 'EMPTY無視',
-      theoreticalCap: '理論上限',
-      failed: '失敗',
-      impossible: '不可能',
-      allianceCountError: '同盟は2〜8個である必要があります。現在:',
-      duplicateAllianceError: '同盟名が重複しています。',
-      sanEmptyMinError: 'San EMPTYの最小値は最大値以下である必要があります。',
-      sanEmptyMaxError: 'San EMPTYの最大値はSan数を超えられません。',
-    };
-    ['zh-CN','zh-TW','fr','de','th','id','ja'].forEach((lang) => { I18N[lang] = { ...I18N.en, ...(I18N[lang] || {}) }; });
-    const LANGUAGE_LABELS = {
-      ko: '🇰🇷 한국어',
-      en: '🇺🇸 English',
-      ja: '🇯🇵 日本語',
-      'zh-CN': '🇨🇳 简体中文',
-      'zh-TW': '🇹🇼 繁體中文',
-      fr: '🇫🇷 Français',
-      de: '🇩🇪 Deutsch',
-      th: '🇹🇭 ไทย',
-      id: '🇮🇩 Indonesia'
-    };
-    function fixLanguageLabels() {
-      document.querySelectorAll('#langSelect option').forEach((option) => {
-        option.textContent = LANGUAGE_LABELS[option.value] || option.textContent;
-      });
+    if(rd.activeBuffs===0) L.push("(no buffs active this round)");
+    L.push("");
+  });
+  return L.join("\n").trim();
+}
+// ---CORE-END---
+
+/* ------------------------------------------------ state + interface */
+const PAL=["--a1","--a2","--a3","--a4","--a5","--a6"];
+let names=["TMP","HvH","KGB","","",""];
+let types=["Health Buff","Damage Buff","Deployment Boost"];
+let schedule=[
+  [4,8,12],[1,5,9],[2,6,10],[3,9,0],[0,0,0],[1,5,9],[2,6,10],[3,7,11],
+  [0,0,0],[0,0,0],[0,0,0],[0,0,0]
+];
+let viewRound=1,timer=null;
+
+const $=id=>document.getElementById(id);
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function readCfg(){
+  const A=Math.max(2,Math.min(5,+$("iA").value||3));
+  const R=Math.max(2,Math.min(12,+$("iR").value||8));
+  return{A:A,R:R,
+    S:Math.max(3,Math.min(24,+$("iS").value||12)),
+    F:Math.max(1,Math.min(12,+$("iF").value||4)),
+    ptsS:+$("iPS").value||0, ptsF:+$("iPF").value||0,
+    names:names.slice(0,A).map((n,i)=>n&&n.trim()?n.trim():"Alliance "+(i+1)),
+    types:types.slice(), schedule:schedule.map(r=>r.slice())};
+}
+
+function drawRail(cfg){
+  let h='<table class="sched"><thead><tr><th></th>';
+  types.forEach((t,i)=>h+='<th><input type="text" value="'+esc(t)+'" data-t="'+i+'"></th>');
+  h+="</tr></thead><tbody>";
+  for(let r=1;r<=cfg.R;r++){
+    h+='<tr><td class="rl">'+r+"</td>";
+    types.forEach((t,i)=>h+='<td><input type="number" min="0" max="'+cfg.S+'" value="'+
+      (schedule[r-1][i]||"")+'" data-r="'+(r-1)+'" data-c="'+i+'" aria-label="Round '+r+' '+esc(t)+'"></td>');
+    h+="</tr>";
+  }
+  h+="</tbody></table>";
+  $("schedWrap").innerHTML=h;
+  $("schedWrap").querySelectorAll("input[data-t]").forEach(inp=>
+    inp.addEventListener("input",e=>{types[+e.target.dataset.t]=e.target.value;refresh(true);}));
+  $("schedWrap").querySelectorAll("input[data-r]").forEach(inp=>
+    inp.addEventListener("input",e=>{
+      schedule[+e.target.dataset.r][+e.target.dataset.c]=+e.target.value||0;refresh(true);}));
+
+  let n="";
+  for(let i=0;i<cfg.A;i++)
+    n+='<div class="field"><span class="dot" style="background:'+css(PAL[i])+'"></span>'+
+       '<input type="text" style="width:100%" value="'+esc(names[i]||"")+
+       '" placeholder="Alliance '+(i+1)+'" data-i="'+i+'"></div>';
+  $("nameList").innerHTML=n;
+  $("nameList").querySelectorAll("input").forEach(inp=>
+    inp.addEventListener("input",e=>{names[+e.target.dataset.i]=e.target.value;refresh(true);}));
+}
+
+function drawRing(plan,cfg){
+  const S=cfg.S,cx=200,cy=200,rad=148;
+  const rd=plan.rounds[Math.min(viewRound,plan.rounds.length)-1];
+  const owner={},buffHere={};
+  rd.entries.forEach(e=>e.held.forEach(t=>owner[t]=e.alliance));
+  (cfg.schedule[rd.round-1]||[]).forEach((id,ti)=>{
+    if(id>=1&&id<=S) buffHere[id]=cfg.types[ti]||("Buff "+(ti+1));
+  });
+
+  let s='<circle cx="200" cy="200" r="148" fill="none" stroke="'+css("--line")+'" stroke-width="1"/>';
+  for(let id=1;id<=S;id++){
+    const ang=(-90+(id-1)*360/S)*Math.PI/180;
+    const x=cx+rad*Math.cos(ang), y=cy+rad*Math.sin(ang);
+    const own=owner[id], lit=buffHere[id];
+    const fill=own===undefined?css("--slate"):css(PAL[own]);
+    s+='<g class="node">';
+    if(lit){
+      s+='<circle class="halo" cx="'+x+'" cy="'+y+'" r="24" fill="none" stroke="'+
+         css("--gold")+'" stroke-width="2.5"/>';
+      s+='<circle cx="'+x+'" cy="'+y+'" r="19" fill="none" stroke="'+css("--gold")+'" stroke-width="1"/>';
     }
-    fixLanguageLabels();
-    const initialLang = getLang();
-    setLang(initialLang);
-    updateLimit();
-    $('langSelect').addEventListener('change', (event) => {
-      setLang(event.target.value);
-      updateLimit();
+    s+='<circle cx="'+x+'" cy="'+y+'" r="15" fill="'+fill+'" stroke="'+
+       (lit?css("--gold"):css("--line"))+'" stroke-width="'+(lit?2:1)+'"/>';
+    s+='<text x="'+x+'" y="'+y+'" text-anchor="middle" dominant-baseline="central" fill="'+
+       (own===undefined?css("--parchment-dim"):"#0f131b")+'">'+id+"</text></g>";
+  }
+  s+='<text x="200" y="188" text-anchor="middle" fill="'+css("--parchment-dim")+
+     '" style="font-size:10px;letter-spacing:.18em;text-transform:uppercase">Round</text>';
+  s+='<text x="200" y="217" text-anchor="middle" fill="'+css("--gold")+
+     '" style="font-size:30px;font-weight:700;font-family:'+css("--mono")+'">'+rd.round+"</text>";
+  s+='<text x="200" y="236" text-anchor="middle" fill="'+css("--parchment-dim")+
+     '" style="font-size:10.5px">'+(rd.activeBuffs?rd.activeBuffs+" buffs live":"no buffs")+"</text>";
+  $("ring").innerHTML=s;
+  $("roundTag").textContent="Round "+rd.round+(rd.activeBuffs?"":" · dead");
+}
+
+function drawLadder(plan,cfg){
+  let h='<table class="data"><thead><tr><th>Alliance</th>';
+  for(let j=1;j<=plan.k;j++) h+='<th class="n">R'+j+"</th>";
+  h+="</tr></thead><tbody>";
+  cfg.names.forEach((n,i)=>{
+    h+='<tr><td><span class="dot" style="background:'+css(PAL[i])+'"></span>'+esc(n)+"</td>";
+    for(let j=0;j<plan.k;j++) h+='<td class="n">'+(plan.sets[i][j]?"San "+plan.sets[i][j]:"—")+"</td>";
+    h+="</tr>";
+  });
+  $("ladder").innerHTML=h+"</tbody></table>";
+}
+
+function drawCoverage(plan,cfg){
+  let h='<table class="data"><thead><tr><th>Alliance</th>';
+  cfg.types.forEach(t=>h+='<th class="n">'+esc(t)+"</th>");
+  h+='<th class="n">Total</th></tr></thead><tbody>';
+  cfg.names.forEach((n,i)=>{
+    h+="<tr><td>"+esc(n)+"</td>";
+    cfg.types.forEach(t=>h+='<td class="n">'+(plan.byType[i][t]||0)+"</td>");
+    h+='<td class="n" style="color:'+css("--gold")+'">'+plan.counts[i]+"</td></tr>";
+  });
+  $("coverage").innerHTML=h+"</tbody></table>";
+}
+
+function drawRounds(plan,cfg){
+  $("rounds").innerHTML=plan.rounds.map(rd=>{
+    let h='<div class="rcard'+(rd.activeBuffs?"":" dead")+'">';
+    h+='<div class="rhead"><span class="rn">Round '+rd.round+'</span><span class="tag">'+
+       (rd.activeBuffs?rd.activeBuffs+" buffs":"no buffs")+"</span></div>";
+    rd.entries.forEach(e=>{
+      const b=e.buffs.length
+        ? e.buffs.map(x=>esc(x.type)+" @ San "+x.tile).join(" + ")
+        : "no buff this round";
+      h+='<div class="arow"><span class="abar" style="background:'+css(PAL[e.alliance])+
+         '"></span><div><div class="aname">'+esc(e.name)+"</div>"+
+         '<div class="aholds">Fort '+e.fortress+" · San "+e.held.join(", ")+"</div>"+
+         '<div class="abuff'+(e.buffs.length?"":" none")+'">'+b+"</div></div></div>";
     });
-  </script>
-  <script src="./static/legend-i18n.js?v=20260710-i18n-unified"></script>
+    return h+"</div>";
+  }).join("");
+}
+
+function drawNotices(plan,cfg){
+  const n=[];
+  plan.problems.forEach(p=>n.push('<div class="notice warn">'+esc(p)+"</div>"));
+  if(plan.spread===0)
+    n.push('<div class="notice good">Season points finish level at '+plan.totals[0]+
+      ' each — ownership never changes hands, so nobody loses a round to a handover.</div>');
+  else
+    n.push('<div class="notice warn">Season points differ by '+plan.spread+".</div>");
+
+  const dead=plan.rounds.filter(r=>r.activeBuffs===0).map(r=>r.round);
+  if(dead.length)
+    n.push('<div class="notice info">Round'+(dead.length>1?"s":"")+" "+dead.join(", ")+
+      " carr"+(dead.length>1?"y":"ies")+" no buff at all. Nothing to contest — plan reinforcement elsewhere.</div>");
+
+  if(plan.captured<plan.totalSlots)
+    n.push('<div class="notice warn">'+(plan.totalSlots-plan.captured)+" of "+plan.totalSlots+
+      " buff appearances land on tiles nobody owns yet.</div>");
+
+  if(plan.buffSpread>0)
+    n.push('<div class="notice info">Buff time splits '+plan.counts.join(" / ")+
+      ". With "+plan.totalSlots+" buff appearances across "+cfg.A+
+      " alliances an exact split isn't possible — give the short alliance the spare fortress to settle it.</div>");
+  $("notices").innerHTML=n.join("");
+}
+
+function refresh(keepRail){
+  const cfg=readCfg();
+  if(!keepRail) drawRail(cfg);
+  const plan=buildPlan(cfg);
+
+  const set=(id,num,sub,cls)=>{const m=$(id);
+    m.querySelector(".num").textContent=num;m.querySelector(".sub").textContent=sub;
+    m.className="meter"+(cls?" "+cls:"");};
+  set("mPts",plan.totals[0],plan.spread===0?"all level":"spread "+plan.spread,
+      plan.spread===0?"ok":"bad");
+  set("mCov",plan.counts.join("/"),plan.captured+" of "+plan.totalSlots+" caught","");
+  set("mSpread",plan.buffSpread,plan.buffSpread<=1?"as even as possible":"uneven",
+      plan.buffSpread<=1?"ok":"bad");
+
+  const sc=$("scrub"); sc.max=cfg.R;
+  if(viewRound>cfg.R) viewRound=cfg.R;
+  sc.value=viewRound;
+
+  drawRing(plan,cfg); drawLadder(plan,cfg); drawCoverage(plan,cfg);
+  drawRounds(plan,cfg); drawNotices(plan,cfg);
+  $("out").textContent=renderText(plan,cfg);
+}
+
+["iA","iR","iS","iF","iPS","iPF"].forEach(id=>
+  $(id).addEventListener("input",()=>refresh(false)));
+$("scrub").addEventListener("input",e=>{viewRound=+e.target.value;stopPlay();refresh(true);});
+
+function stopPlay(){if(timer){clearInterval(timer);timer=null;$("play").textContent="Play season";}}
+$("play").addEventListener("click",()=>{
+  if(timer) return stopPlay();
+  const cfg=readCfg(); $("play").textContent="Stop";
+  viewRound=1; refresh(true);
+  timer=setInterval(()=>{
+    viewRound=viewRound>=cfg.R?1:viewRound+1; refresh(true);
+    if(viewRound===cfg.R) setTimeout(stopPlay,950);
+  },950);
+});
+
+$("copy").addEventListener("click",()=>{
+  const txt=$("out").textContent,btn=$("copy");
+  const done=()=>{btn.textContent="Copied";btn.classList.add("done");
+    setTimeout(()=>{btn.textContent="Copy plan";btn.classList.remove("done");},1600);};
+  const fb=()=>{const ta=document.createElement("textarea");ta.value=txt;
+    document.body.appendChild(ta);ta.select();
+    try{document.execCommand("copy");done();}catch(e){}document.body.removeChild(ta);};
+  if(navigator.clipboard&&navigator.clipboard.writeText)
+    navigator.clipboard.writeText(txt).then(done,fb);
+  else fb();
+});
+
+if(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches)
+  document.body.classList.add("reduced");
+
+refresh();
+const pageLang = document.getElementById("pageLang");
+const params = new URL(location.href).searchParams;
+const currentLang = params.get("lang") || localStorage.getItem("lang") || localStorage.getItem("siteLang") || "ko";
+pageLang.value = pageLang.querySelector(`option[value="${currentLang}"]`) ? currentLang : "ko";
+document.documentElement.lang = pageLang.value;
+document.querySelectorAll("#hubHome,#hubSword,#hubRedeem").forEach(link => {
+  const file = link.getAttribute("href").replace("./", "");
+  link.href = "./" + file + "?lang=" + encodeURIComponent(pageLang.value);
+});
+pageLang.addEventListener("change", () => {
+  localStorage.setItem("lang", pageLang.value);
+  localStorage.setItem("siteLang", pageLang.value);
+  const url = new URL(location.href);
+  url.searchParams.set("lang", pageLang.value);
+  location.href = url.toString();
+});
+</script>
 </body>
 </html>
-
-
