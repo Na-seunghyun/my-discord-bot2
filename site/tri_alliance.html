@@ -300,6 +300,19 @@
       height: 100%;
       display: block;
     }
+    .map-image {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: none;
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+    .map.has-image #terrainCanvas { display: none; }
+    .map.has-image .map-image { display: block; }
     .map::after {
       content: "";
       position: absolute;
@@ -690,6 +703,7 @@
         <div class="map-frame">
           <div class="map" id="map">
             <canvas id="terrainCanvas" width="1900" height="1386" aria-hidden="true"></canvas>
+            <img id="battleMapImage" class="map-image" src="./static/tri-alliance-map.png" alt="" loading="eager" decoding="async">
             <span class="route"></span>
             <span class="route r2"></span>
           </div>
@@ -1174,6 +1188,22 @@
       ctx.fillRect(0, 0, 18, h);
       ctx.fillRect(w - 18, 0, 18, h);
     }
+    function setupBattleMapImage() {
+      const map = document.getElementById("map");
+      const image = document.getElementById("battleMapImage");
+      if (!map || !image) return;
+      const useImage = () => {
+        map.classList.add("has-image");
+        image.setAttribute("aria-hidden", "true");
+      };
+      const useFallback = () => {
+        map.classList.remove("has-image");
+        drawTerrain();
+      };
+      image.addEventListener("load", useImage, { once: true });
+      image.addEventListener("error", useFallback, { once: true });
+      if (image.complete && image.naturalWidth > 0) useImage();
+    }
     function translate() {
       document.documentElement.lang = state.lang;
       document.querySelectorAll("[data-i18n]").forEach((node) => { node.textContent = t(node.dataset.i18n); });
@@ -1416,6 +1446,7 @@
     }
     loadLocal();
     drawTerrain();
+    setupBattleMapImage();
     bindEvents();
     render();
   </script>

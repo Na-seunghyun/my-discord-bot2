@@ -1,0 +1,9 @@
+Place the authorized tri-alliance battlefield map image here:
+
+site/static/tri-alliance-map.png
+
+Recommended image size:
+1900 x 1386 px
+
+The planner page will use this image automatically when the file exists.
+If the file is missing, the page uses its built-in fallback battlefield.
