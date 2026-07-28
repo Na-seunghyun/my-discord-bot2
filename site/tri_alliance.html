@@ -1,0 +1,1181 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tri-Alliance Clash Planner | 885 LEGEND NASHSH</title>
+  <meta name="description" content="Unofficial Kingshot tri-alliance clash planner for three alliance assignments, minute timeline scoring, battle orders, and plan sharing.">
+  <link rel="canonical" href="https://my-discord-bot2.looloo90.workers.dev/tri_alliance.html">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #080b13;
+      --bg2: #101725;
+      --panel: rgba(17, 24, 38, .92);
+      --panel2: rgba(23, 33, 52, .86);
+      --line: rgba(151, 175, 220, .22);
+      --line2: rgba(241, 199, 95, .36);
+      --text: #f6f1e3;
+      --muted: #aab6cd;
+      --dim: #76839a;
+      --gold: #f1c75f;
+      --cyan: #4be3d0;
+      --rose: #ff7fa2;
+      --blue: #72a9ff;
+      --red: #ff6f75;
+      --green: #74dd97;
+      --shadow: 0 22px 62px rgba(0,0,0,.36);
+      font-family: Inter, Pretendard, "Noto Sans KR", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      color: var(--text);
+      background:
+        linear-gradient(130deg, rgba(75, 227, 208, .12), transparent 34%),
+        linear-gradient(250deg, rgba(241, 199, 95, .12), transparent 42%),
+        linear-gradient(180deg, #0b101b 0%, #080b13 64%, #05070c 100%);
+      -webkit-font-smoothing: antialiased;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255,255,255,.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.032) 1px, transparent 1px);
+      background-size: 54px 54px;
+      mask-image: linear-gradient(to bottom, rgba(0,0,0,.86), transparent);
+    }
+    a { color: inherit; text-decoration: none; }
+    button, input, select, textarea {
+      font: inherit;
+      color: inherit;
+    }
+    button { cursor: pointer; }
+    .wrap {
+      position: relative;
+      z-index: 1;
+      width: min(1380px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 20px 0 42px;
+    }
+    .hubbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(8, 11, 19, .74);
+      backdrop-filter: blur(18px);
+      box-shadow: var(--shadow);
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+      font-weight: 950;
+      color: var(--gold);
+    }
+    .mark {
+      display: grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      flex: 0 0 42px;
+      border: 1px solid rgba(241, 199, 95, .52);
+      border-radius: 14px;
+      background: linear-gradient(145deg, rgba(241,199,95,.18), rgba(75,227,208,.12));
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.05), 0 0 26px rgba(241,199,95,.14);
+    }
+    .brand small {
+      display: block;
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 750;
+    }
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .nav a, .nav select, .btn {
+      min-height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(255,255,255,.055);
+      padding: 0 12px;
+      font-size: 12px;
+      font-weight: 850;
+    }
+    .nav select { color: var(--text); }
+    .nav select option { background: #101725; color: var(--text); }
+    .nav a:hover, .btn:hover { border-color: var(--line2); color: var(--gold); }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+    }
+    .btn.primary {
+      border-color: rgba(241,199,95,.6);
+      background: linear-gradient(135deg, rgba(241,199,95,.22), rgba(75,227,208,.11));
+      color: #fff4c6;
+      box-shadow: 0 0 22px rgba(241,199,95,.14);
+    }
+    .btn.on {
+      border-color: var(--gold);
+      background: var(--gold);
+      color: #171106;
+    }
+    .btn.danger { border-color: rgba(255,111,117,.42); color: #ffbdc1; }
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(300px, .85fr);
+      gap: 16px;
+      margin-top: 16px;
+    }
+    .hero-card, .channel-card, .panel, .timeline {
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background:
+        linear-gradient(140deg, rgba(75,227,208,.09), transparent 42%),
+        linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.02)),
+        var(--panel);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+    }
+    .hero-card { padding: clamp(20px, 3vw, 32px); }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 10px;
+      border: 1px solid rgba(75,227,208,.32);
+      border-radius: 999px;
+      background: rgba(75,227,208,.08);
+      color: var(--cyan);
+      font-size: 11px;
+      font-weight: 950;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+    h1 {
+      margin: 14px 0 10px;
+      font-size: clamp(34px, 5.2vw, 68px);
+      line-height: .96;
+      letter-spacing: 0;
+    }
+    .gold {
+      color: var(--gold);
+      text-shadow: 0 0 18px rgba(241,199,95,.36);
+    }
+    .subtitle {
+      max-width: 780px;
+      margin: 0;
+      color: var(--muted);
+      font-size: clamp(14px, 1.5vw, 17px);
+      line-height: 1.7;
+    }
+    .channel-card {
+      display: grid;
+      align-content: space-between;
+      gap: 16px;
+      padding: 22px;
+      overflow: hidden;
+    }
+    .channel-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .play {
+      display: grid;
+      place-items: center;
+      width: 54px;
+      height: 54px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #ff4160, #ffb85c);
+      color: #170608;
+      font-size: 21px;
+      font-weight: 1000;
+      box-shadow: 0 0 28px rgba(255,90,110,.28);
+    }
+    .channel-card h2 {
+      margin: 0;
+      font-size: 22px;
+      color: #fff5cc;
+    }
+    .channel-card p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+      margin-top: 20px;
+    }
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 16px;
+    }
+    .metric {
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 16px;
+      background: rgba(255,255,255,.045);
+      padding: 14px;
+      min-width: 0;
+    }
+    .metric b {
+      display: block;
+      overflow-wrap: anywhere;
+      color: var(--gold);
+      font-size: clamp(20px, 2.8vw, 31px);
+      line-height: 1.05;
+    }
+    .metric span {
+      display: block;
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .timeline {
+      margin-top: 16px;
+      padding: 16px;
+    }
+    .time-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    .clock {
+      color: var(--gold);
+      font-size: 28px;
+      font-weight: 950;
+      line-height: 1;
+    }
+    .phase {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 850;
+      text-align: right;
+    }
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--gold);
+    }
+    .ticks {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 4px;
+      color: var(--dim);
+      font-size: 11px;
+      font-weight: 800;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 360px;
+      gap: 16px;
+      align-items: start;
+      margin-top: 16px;
+    }
+    .battle-wrap {
+      min-width: 0;
+    }
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+    }
+    .board-shell {
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background:
+        radial-gradient(circle at 50% 50%, rgba(241,199,95,.11), transparent 28%),
+        linear-gradient(135deg, rgba(75,227,208,.09), transparent 52%),
+        rgba(11,15,25,.72);
+      box-shadow: var(--shadow);
+    }
+    .board {
+      position: relative;
+      width: min(100%, 980px);
+      min-width: 720px;
+      aspect-ratio: 1.42 / 1;
+      margin: 0 auto;
+      transform-origin: top center;
+      background:
+        radial-gradient(circle at center, rgba(242,184,84,.22), transparent 16%),
+        linear-gradient(45deg, rgba(255,255,255,.035) 25%, transparent 25%),
+        linear-gradient(-45deg, rgba(255,255,255,.028) 25%, transparent 25%),
+        linear-gradient(135deg, #293249, #151d2d 48%, #241b25);
+      background-size: auto, 34px 34px, 34px 34px, auto;
+      border-radius: 22px;
+      overflow: hidden;
+    }
+    .board::before {
+      content: "";
+      position: absolute;
+      inset: 8%;
+      border: 1px dashed rgba(241,199,95,.28);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    .lane {
+      position: absolute;
+      left: 10%;
+      right: 10%;
+      top: 50%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(241,199,95,.36), transparent);
+      transform: rotate(-18deg);
+      pointer-events: none;
+    }
+    .lane.two { transform: rotate(18deg); }
+    .node {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      display: grid;
+      gap: 5px;
+      justify-items: center;
+      min-width: 72px;
+      border: 0;
+      background: transparent;
+      padding: 0;
+      touch-action: none;
+    }
+    .node.hide { display: none; }
+    .node.locked { opacity: .38; }
+    .diamond {
+      display: grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      border: 2px solid rgba(241,199,95,.58);
+      border-radius: 10px;
+      transform: rotate(45deg);
+      background: rgba(5, 8, 14, .78);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.05), 0 8px 22px rgba(0,0,0,.28);
+      transition: transform .14s, border-color .14s, box-shadow .14s;
+    }
+    .diamond span {
+      transform: rotate(-45deg);
+      color: var(--text);
+      font-size: 11px;
+      font-weight: 950;
+    }
+    .node:hover .diamond, .node.selected .diamond {
+      transform: rotate(45deg) scale(1.08);
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(241,199,95,.16), 0 0 26px rgba(241,199,95,.24);
+    }
+    .node[data-owner="blue"] .diamond { border-color: rgba(114,169,255,.8); background: rgba(39,91,166,.72); }
+    .node[data-owner="gold"] .diamond { border-color: rgba(241,199,95,.86); background: rgba(148,102,18,.74); }
+    .node[data-owner="red"] .diamond { border-color: rgba(255,111,117,.82); background: rgba(145,42,52,.72); }
+    .node[data-status="enemy"] .diamond { border-color: rgba(255,111,117,.86); background: rgba(84,19,26,.82); }
+    .node[data-status="unassigned"] .diamond { border-color: rgba(161,178,206,.36); background: rgba(5,8,14,.66); }
+    .node-label {
+      max-width: 118px;
+      padding: 3px 7px;
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 999px;
+      background: rgba(7,10,18,.78);
+      color: #e7edf8;
+      font-size: 10px;
+      font-weight: 850;
+      line-height: 1.25;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      box-shadow: 0 4px 14px rgba(0,0,0,.22);
+    }
+    .node small {
+      display: block;
+      color: var(--gold);
+      font-size: 9px;
+      font-weight: 850;
+    }
+    .side {
+      display: grid;
+      gap: 12px;
+    }
+    .panel {
+      padding: 16px;
+    }
+    .panel h2 {
+      margin: 0 0 12px;
+      color: #fff3c4;
+      font-size: 15px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+    .field {
+      margin: 0 0 11px;
+    }
+    .field label {
+      display: block;
+      margin-bottom: 5px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 850;
+    }
+    .field input, .field select, .field textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(5,8,14,.62);
+      padding: 10px 11px;
+      outline: none;
+    }
+    .field input:focus, .field select:focus, .field textarea:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(241,199,95,.12);
+    }
+    textarea {
+      min-height: 76px;
+      resize: vertical;
+    }
+    .inline {
+      display: flex;
+      gap: 8px;
+    }
+    .inline input { flex: 1; min-width: 0; }
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 10px;
+    }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      max-width: 100%;
+      border: 1px solid rgba(255,255,255,.11);
+      border-radius: 999px;
+      background: rgba(255,255,255,.055);
+      padding: 5px 8px 5px 10px;
+      color: #edf4ff;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .chip span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .chip button {
+      width: 20px;
+      height: 20px;
+      border: 0;
+      border-radius: 50%;
+      background: rgba(255,255,255,.08);
+      color: var(--muted);
+      padding: 0;
+    }
+    .seg {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 5px;
+    }
+    .seg button {
+      min-height: 34px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: rgba(255,255,255,.045);
+      font-size: 11px;
+      font-weight: 850;
+    }
+    .seg button.on { border-color: var(--gold); color: var(--gold); background: rgba(241,199,95,.1); }
+    .score-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .score {
+      border: 1px solid rgba(255,255,255,.09);
+      border-radius: 15px;
+      background: rgba(255,255,255,.045);
+      padding: 12px;
+      min-width: 0;
+    }
+    .score.blue { border-color: rgba(114,169,255,.34); }
+    .score.gold { border-color: rgba(241,199,95,.36); }
+    .score.red { border-color: rgba(255,111,117,.32); }
+    .score h3 {
+      margin: 0 0 8px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .score b {
+      display: block;
+      overflow-wrap: anywhere;
+      color: #fff4c6;
+      font-size: clamp(18px, 2vw, 27px);
+      line-height: 1.05;
+    }
+    .score small {
+      display: block;
+      margin-top: 4px;
+      color: var(--dim);
+      font-weight: 800;
+    }
+    .orders {
+      display: grid;
+      gap: 7px;
+      max-height: 340px;
+      overflow: auto;
+      padding-right: 2px;
+    }
+    .order {
+      border: 1px solid rgba(255,255,255,.09);
+      border-radius: 14px;
+      background: rgba(255,255,255,.045);
+      padding: 10px;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+    .order b { color: var(--gold); }
+    .order em {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-style: normal;
+    }
+    .empty {
+      color: var(--dim);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    .plan-area {
+      min-height: 96px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 11px;
+    }
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 20px;
+      color: var(--dim);
+      font-size: 12px;
+      font-weight: 750;
+    }
+    @media (max-width: 1080px) {
+      .hero, .layout { grid-template-columns: 1fr; }
+      .side { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .panel.wide { grid-column: 1 / -1; }
+    }
+    @media (max-width: 760px) {
+      .wrap { width: min(100% - 20px, 1380px); padding-top: 12px; }
+      .hubbar { align-items: stretch; flex-direction: column; border-radius: 16px; }
+      .nav { display: grid; grid-template-columns: 1fr 1fr; justify-content: stretch; }
+      .nav select { grid-column: 1 / -1; }
+      .hero-card, .channel-card, .panel, .timeline { border-radius: 18px; }
+      .hero-actions, .inline { display: grid; grid-template-columns: 1fr; }
+      .metrics, .score-grid, .side { grid-template-columns: 1fr; }
+      .toolbar { align-items: stretch; }
+      .filters { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
+      .filters .btn { width: 100%; }
+      .board { min-width: 680px; }
+      .seg { grid-template-columns: 1fr 1fr; }
+      .seg button:last-child { grid-column: 1 / -1; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      * { transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <nav class="hubbar" aria-label="Hub navigation">
+      <a class="brand" id="homeLink" href="./index.html">
+        <span class="mark">885</span>
+        <span>885 LEGEND NASHSH<small data-i18n="brandSub">Kingshot command tools</small></span>
+      </a>
+      <div class="nav">
+        <a id="navHub" href="./index.html" data-i18n="hub">Hub</a>
+        <a id="navSword" href="./swordland_planner.html" data-i18n="swordlandNav">Swordland</a>
+        <a id="navFort" href="./fort_sanc.html" data-i18n="fortNav">Fort / Sanc</a>
+        <a id="navRedeem" href="./auto_redeem.html" data-i18n="redeemNav">Auto Redeem</a>
+        <a href="https://www.youtube.com/@GeryKS" target="_blank" rel="noreferrer" data-i18n="geryYoutube">GeryKS YouTube</a>
+        <select id="pageLang" aria-label="Language"></select>
+      </div>
+    </nav>
+
+    <section class="hero">
+      <div class="hero-card">
+        <span class="eyebrow" data-i18n="pageKicker">Alliance battle board</span>
+        <h1><span data-i18n="pageTitleA">Tri-Alliance</span><br><span class="gold" data-i18n="pageTitleB">Clash Planner</span></h1>
+        <p class="subtitle" data-i18n="pageIntro">Assign three alliances to battlefield targets, move through a 60-minute timeline, and copy clean battle orders for chat.</p>
+        <div class="hero-actions">
+          <button class="btn primary" id="copyOrdersTop" type="button" data-i18n="copyOrders">Copy orders</button>
+          <button class="btn" id="exportTop" type="button" data-i18n="exportPlan">Export plan</button>
+          <a class="btn" href="https://www.youtube.com/@GeryKS" target="_blank" rel="noreferrer" data-i18n="openYoutube">Open YouTube channel</a>
+        </div>
+        <div class="metrics">
+          <div class="metric"><b id="metricHeld">0</b><span data-i18n="heldTargets">Held targets</span></div>
+          <div class="metric"><b id="metricPerMin">0</b><span data-i18n="scorePerMinute">Points per minute</span></div>
+          <div class="metric"><b id="metricMinute">00:00</b><span data-i18n="currentMinute">Current minute</span></div>
+        </div>
+      </div>
+      <aside class="channel-card">
+        <div class="channel-logo">
+          <span class="play">▶</span>
+          <div>
+            <h2>GeryKS</h2>
+            <p data-i18n="youtubeBody">Kingshot guides and tools on YouTube. The channel link is kept here for quick access while planning.</p>
+          </div>
+        </div>
+        <a class="btn primary" href="https://www.youtube.com/@GeryKS" target="_blank" rel="noreferrer" data-i18n="visitChannel">Visit @GeryKS</a>
+      </aside>
+    </section>
+
+    <section class="timeline" aria-label="Timeline">
+      <div class="time-head">
+        <div>
+          <div class="clock" id="clock">00:00</div>
+          <div class="phase" id="phaseLabel" data-i18n="phaseSetup">Opening setup</div>
+        </div>
+        <div class="phase" data-i18n="timelineHint">Scrub the 60-minute battle timeline.</div>
+      </div>
+      <input id="timeSlider" type="range" min="0" max="60" value="0">
+      <div class="ticks"><span>0</span><span>15</span><span>30</span><span>45</span><span>60</span></div>
+    </section>
+
+    <main class="layout">
+      <section class="battle-wrap">
+        <div class="toolbar">
+          <div class="filters">
+            <button class="btn on" type="button" data-filter="all" data-i18n="filterAll">All</button>
+            <button class="btn" type="button" data-filter="captured" data-i18n="filterCaptured">Captured</button>
+            <button class="btn" type="button" data-filter="hold" data-i18n="filterHold">Hold</button>
+            <button class="btn" type="button" data-filter="defend" data-i18n="filterDefend">Defend</button>
+            <button class="btn" type="button" data-filter="unassigned" data-i18n="filterUnassigned">Unassigned</button>
+          </div>
+          <div class="filters">
+            <button class="btn on" id="toggleLabels" type="button" data-i18n="showIds">Show IDs & points</button>
+            <button class="btn" id="toggleCaptured" type="button" data-i18n="onlyCaptured">Only captured</button>
+            <button class="btn" id="toggleMove" type="button" data-i18n="moveMarkers">Move markers</button>
+            <button class="btn" id="zoomOut" type="button" title="Zoom out">−</button>
+            <button class="btn" id="zoomIn" type="button" title="Zoom in">+</button>
+          </div>
+        </div>
+        <div class="board-shell">
+          <div class="board" id="board">
+            <span class="lane"></span>
+            <span class="lane two"></span>
+          </div>
+        </div>
+      </section>
+
+      <aside class="side">
+        <section class="panel">
+          <h2 data-i18n="scoresTitle">Scoreboard</h2>
+          <div class="score-grid" id="scoreGrid"></div>
+        </section>
+
+        <section class="panel">
+          <h2 data-i18n="rosterTitle">Roster</h2>
+          <div class="inline">
+            <input id="memberInput" type="text" data-i18n-placeholder="rosterPlaceholder" placeholder="Add a member...">
+            <button class="btn primary" id="addMember" type="button" data-i18n="addMember">Add</button>
+          </div>
+          <div class="chips" id="rosterList"></div>
+          <p class="empty" data-i18n="rosterHelp">Add members once, then assign them from the selected target panel.</p>
+        </section>
+
+        <section class="panel">
+          <h2 data-i18n="selectedTitle">Selected target</h2>
+          <div id="targetEditor"></div>
+        </section>
+
+        <section class="panel wide">
+          <h2 data-i18n="ordersTitle">Battle orders</h2>
+          <div class="inline" style="margin-bottom:10px">
+            <button class="btn primary" id="copyOrders" type="button" data-i18n="copyOrders">Copy orders</button>
+            <button class="btn danger" id="clearAll" type="button" data-i18n="clearAll">Clear all</button>
+          </div>
+          <div class="orders" id="ordersList"></div>
+        </section>
+
+        <section class="panel wide">
+          <h2 data-i18n="planTitle">Save / load plan</h2>
+          <p class="empty" data-i18n="planHint">Copy this plan code to share or save your battlefield state.</p>
+          <textarea id="planCode" class="plan-area" data-i18n-placeholder="planPlaceholder" placeholder="Plan code appears here..."></textarea>
+          <div class="inline" style="margin-top:9px">
+            <button class="btn primary" id="copyPlan" type="button" data-i18n="copyPlan">Copy plan code</button>
+            <button class="btn" id="loadPlan" type="button" data-i18n="loadPlan">Load pasted plan</button>
+          </div>
+        </section>
+      </aside>
+    </main>
+
+    <footer class="footer">
+      <span data-i18n="footerCredit">Created by #885 Legend nashsh</span>
+      <a href="https://www.youtube.com/@GeryKS" target="_blank" rel="noreferrer">@GeryKS</a>
+    </footer>
+  </div>
+
+  <script>
+    const LANGUAGES = [
+      ["ko", "🇰🇷 한국어"], ["ja", "🇯🇵 日本語"], ["en", "🇺🇸 English"], ["fr", "🇫🇷 Français"],
+      ["de", "🇩🇪 Deutsch"], ["zh-CN", "🇨🇳 简体中文"], ["zh-TW", "🇹🇼 繁體中文"],
+      ["th", "🇹🇭 ไทย"], ["id", "🇮🇩 Indonesia"]
+    ];
+    const en = {
+      brandSub: "Kingshot command tools", hub: "Hub", swordlandNav: "Swordland", fortNav: "Fort / Sanc", redeemNav: "Auto Redeem",
+      geryYoutube: "GeryKS YouTube", pageKicker: "Alliance battle board", pageTitleA: "Tri-Alliance", pageTitleB: "Clash Planner",
+      pageIntro: "Assign three alliances to battlefield targets, move through a 60-minute timeline, and copy clean battle orders for chat.",
+      copyOrders: "Copy orders", exportPlan: "Export plan", openYoutube: "Open YouTube channel", youtubeBody: "Kingshot guides and tools on YouTube. The channel link is kept here for quick access while planning.",
+      visitChannel: "Visit @GeryKS", heldTargets: "Held targets", scorePerMinute: "Points per minute", currentMinute: "Current minute",
+      timelineHint: "Scrub the 60-minute battle timeline.", phaseSetup: "Opening setup", phaseClash: "Outer fight", phaseCore: "Core clash", phaseFinal: "Final push",
+      filterAll: "All", filterCaptured: "Captured", filterHold: "Hold", filterDefend: "Defend", filterUnassigned: "Unassigned",
+      showIds: "Show IDs & points", onlyCaptured: "Only captured", moveMarkers: "Move markers", scoresTitle: "Scoreboard", rosterTitle: "Roster",
+      rosterPlaceholder: "Add a member...", addMember: "Add", rosterHelp: "Add members once, then assign them from the selected target panel.",
+      selectedTitle: "Selected target", noSelected: "Select a battlefield target.", statusLabel: "Status", statusUnassigned: "Unassigned", statusCaptured: "Captured", statusHold: "Hold", statusDefend: "Defend", statusEnemy: "Enemy",
+      allianceLabel: "Alliance", assigneeLabel: "Assignee", captureMinuteLabel: "Capture minute", noteLabel: "Order note", notePlaceholder: "Rally, reinforce, swap timing...",
+      setToTimeline: "Set to timeline", clearMarker: "Clear target", targetMeta: "Unlock {unlock}m · {points}/min · bonus {bonus}", ordersTitle: "Battle orders",
+      clearAll: "Clear all", noOrders: "No assigned targets yet.", planTitle: "Save / load plan", planHint: "Copy this plan code to share or save your battlefield state.",
+      planPlaceholder: "Plan code appears here...", copyPlan: "Copy plan code", loadPlan: "Load pasted plan", copied: "Copied", planLoaded: "Plan loaded",
+      footerCredit: "Created by #885 Legend nashsh", teamBlue: "Blue", teamGold: "Gold", teamRed: "Red", total: "total", perMin: "per min", held: "held",
+      typeHq: "Headquarters", typeCenter: "Center", typeTower: "Tower", typeSanctum: "Sanctum", typeRally: "Rally Post", typeOutpost: "Outpost", unassigned: "Unassigned"
+    };
+    const I18N = {
+      en,
+      ko: { ...en,
+        hub: "허브", swordlandNav: "소드랜드", fortNav: "포트 / 성소", redeemNav: "오토리딤", geryYoutube: "GeryKS 유튜브",
+        pageKicker: "연맹 전장 보드", pageTitleA: "3연맹", pageTitleB: "전투 플래너",
+        pageIntro: "세 연맹의 전장 목표를 배치하고, 60분 타임라인을 움직이며 점수와 전투 명령을 정리합니다.",
+        copyOrders: "명령 복사", exportPlan: "계획 내보내기", openYoutube: "유튜브 채널 열기",
+        youtubeBody: "Kingshot 가이드와 도구를 볼 수 있는 GeryKS 채널입니다. 계획 중 빠르게 열 수 있도록 허브에 연결했습니다.",
+        visitChannel: "@GeryKS 방문", heldTargets: "점령 목표", scorePerMinute: "분당 점수", currentMinute: "현재 시간",
+        timelineHint: "60분 전투 타임라인을 움직여보세요.", phaseSetup: "초반 준비", phaseClash: "외곽 교전", phaseCore: "중앙 충돌", phaseFinal: "마지막 압박",
+        filterAll: "전체", filterCaptured: "점령", filterHold: "유지", filterDefend: "방어", filterUnassigned: "미배정",
+        showIds: "ID와 점수 표시", onlyCaptured: "점령만 보기", moveMarkers: "마커 이동", scoresTitle: "점수판", rosterTitle: "명단",
+        rosterPlaceholder: "멤버 추가...", addMember: "추가", rosterHelp: "멤버를 먼저 추가한 뒤 선택한 목표에 배정하세요.",
+        selectedTitle: "선택한 목표", noSelected: "전장 목표를 선택하세요.", statusLabel: "상태", statusUnassigned: "미배정", statusCaptured: "점령", statusHold: "유지", statusDefend: "방어", statusEnemy: "적 점령",
+        allianceLabel: "연맹", assigneeLabel: "담당자", captureMinuteLabel: "점령 시간", noteLabel: "명령 메모", notePlaceholder: "집결, 증원, 교대 타이밍...",
+        setToTimeline: "현재 시간 적용", clearMarker: "목표 초기화", targetMeta: "{unlock}분 개방 · {points}/분 · 보너스 {bonus}", ordersTitle: "전투 명령",
+        clearAll: "전체 초기화", noOrders: "아직 배정된 목표가 없습니다.", planTitle: "계획 저장 / 불러오기", planHint: "계획 코드를 복사해 저장하거나 공유하세요.",
+        planPlaceholder: "계획 코드가 여기에 표시됩니다...", copyPlan: "계획 코드 복사", loadPlan: "붙여넣은 계획 불러오기", copied: "복사됨", planLoaded: "계획 불러옴",
+        footerCredit: "#885 Legend nashsh 제작", teamBlue: "블루", teamGold: "골드", teamRed: "레드", total: "총점", perMin: "분당", held: "점령",
+        typeHq: "본부", typeCenter: "중앙", typeTower: "타워", typeSanctum: "성소", typeRally: "집결지", typeOutpost: "전초지", unassigned: "미배정"
+      },
+      ja: { ...en,
+        hub: "ハブ", swordlandNav: "ソードランド", fortNav: "砦 / 聖所", redeemNav: "オートリディーム", geryYoutube: "GeryKS YouTube",
+        pageKicker: "同盟バトルボード", pageTitleA: "三同盟", pageTitleB: "クラッシュプランナー",
+        pageIntro: "3つの同盟を戦場目標に割り当て、60分タイムラインで得点と指示を整理します。",
+        copyOrders: "指示をコピー", exportPlan: "プランを書き出す", openYoutube: "YouTubeチャンネルを開く",
+        youtubeBody: "Kingshotのガイドとツールを扱うGeryKSチャンネルです。計画中にすぐ開けるように配置しました。",
+        visitChannel: "@GeryKSへ", heldTargets: "保持目標", scorePerMinute: "毎分ポイント", currentMinute: "現在時間",
+        timelineHint: "60分の戦闘タイムラインを操作します。", phaseSetup: "序盤準備", phaseClash: "外周戦", phaseCore: "中央戦", phaseFinal: "最終攻勢",
+        filterAll: "全て", filterCaptured: "占領", filterHold: "維持", filterDefend: "防衛", filterUnassigned: "未割当",
+        showIds: "IDとポイント表示", onlyCaptured: "占領のみ", moveMarkers: "マーカー移動", scoresTitle: "スコア", rosterTitle: "名簿",
+        rosterPlaceholder: "メンバー追加...", addMember: "追加", rosterHelp: "先にメンバーを追加し、選択した目標へ割り当てます。",
+        selectedTitle: "選択中の目標", noSelected: "戦場目標を選択してください。", statusLabel: "状態", statusUnassigned: "未割当", statusCaptured: "占領", statusHold: "維持", statusDefend: "防衛", statusEnemy: "敵",
+        allianceLabel: "同盟", assigneeLabel: "担当", captureMinuteLabel: "占領分", noteLabel: "指示メモ", notePlaceholder: "集結、増援、交代タイミング...",
+        setToTimeline: "現在時間を適用", clearMarker: "目標をクリア", ordersTitle: "戦闘指示", clearAll: "全てクリア",
+        noOrders: "割り当て済み目標はまだありません。", planTitle: "保存 / 読み込み", planHint: "プランコードをコピーして保存または共有できます。",
+        copyPlan: "プランコードをコピー", loadPlan: "貼り付けたプランを読み込む", copied: "コピー済み", planLoaded: "読み込み完了",
+        footerCredit: "#885 Legend nashsh 作成", teamBlue: "ブルー", teamGold: "ゴールド", teamRed: "レッド", total: "合計", perMin: "毎分", held: "保持",
+        typeHq: "本部", typeCenter: "中央", typeTower: "タワー", typeSanctum: "聖所", typeRally: "集結地", typeOutpost: "前哨"
+      },
+      fr: { ...en, hub: "Accueil", swordlandNav: "Swordland", fortNav: "Fort / Sanc", redeemNav: "Auto Redeem", geryYoutube: "YouTube GeryKS", pageKicker: "Tableau de bataille", pageTitleA: "Tri-alliance", pageTitleB: "Planificateur", pageIntro: "Assignez trois alliances, parcourez 60 minutes et copiez des ordres propres.", copyOrders: "Copier les ordres", exportPlan: "Exporter le plan", openYoutube: "Ouvrir YouTube", youtubeBody: "Guides et outils Kingshot sur la chaîne GeryKS, accessibles pendant la planification.", visitChannel: "Visiter @GeryKS", heldTargets: "Cibles tenues", scorePerMinute: "Points par minute", currentMinute: "Minute actuelle", filterAll: "Tout", filterCaptured: "Capturé", filterHold: "Tenir", filterDefend: "Défendre", filterUnassigned: "Non assigné", showIds: "Afficher IDs et points", onlyCaptured: "Capturés seuls", moveMarkers: "Déplacer marqueurs", scoresTitle: "Scores", rosterTitle: "Équipe", rosterPlaceholder: "Ajouter un membre...", addMember: "Ajouter", selectedTitle: "Cible choisie", statusLabel: "Statut", allianceLabel: "Alliance", assigneeLabel: "Responsable", captureMinuteLabel: "Minute de capture", noteLabel: "Note d’ordre", ordersTitle: "Ordres", clearAll: "Effacer", noOrders: "Aucune cible assignée.", planTitle: "Sauver / charger", copyPlan: "Copier le code", loadPlan: "Charger le plan", teamBlue: "Bleu", teamGold: "Or", teamRed: "Rouge" },
+      de: { ...en, hub: "Hub", swordlandNav: "Swordland", fortNav: "Fort / Sanc", redeemNav: "Auto Redeem", geryYoutube: "GeryKS YouTube", pageKicker: "Allianz-Kampfbrett", pageTitleA: "Drei-Allianz", pageTitleB: "Clash-Planer", pageIntro: "Weise drei Allianzen Zielen zu, prüfe 60 Minuten und kopiere klare Befehle.", copyOrders: "Befehle kopieren", exportPlan: "Plan exportieren", openYoutube: "YouTube öffnen", youtubeBody: "Kingshot-Guides und Tools auf dem GeryKS-Kanal, direkt beim Planen erreichbar.", visitChannel: "@GeryKS öffnen", heldTargets: "Gehaltene Ziele", scorePerMinute: "Punkte pro Minute", currentMinute: "Aktuelle Minute", filterAll: "Alle", filterCaptured: "Erobert", filterHold: "Halten", filterDefend: "Verteidigen", filterUnassigned: "Frei", showIds: "IDs und Punkte", onlyCaptured: "Nur eroberte", moveMarkers: "Marker bewegen", scoresTitle: "Punkte", rosterTitle: "Liste", rosterPlaceholder: "Mitglied hinzufügen...", addMember: "Hinzufügen", selectedTitle: "Gewähltes Ziel", statusLabel: "Status", allianceLabel: "Allianz", assigneeLabel: "Zuständig", captureMinuteLabel: "Eroberungsminute", noteLabel: "Befehl", ordersTitle: "Befehle", clearAll: "Alles löschen", noOrders: "Noch keine Ziele zugewiesen.", planTitle: "Speichern / laden", copyPlan: "Plancode kopieren", loadPlan: "Plan laden", teamBlue: "Blau", teamGold: "Gold", teamRed: "Rot" },
+      "zh-CN": { ...en, hub: "主页", swordlandNav: "剑域", fortNav: "堡垒 / 圣所", redeemNav: "自动兑换", geryYoutube: "GeryKS YouTube", pageKicker: "联盟战斗面板", pageTitleA: "三联盟", pageTitleB: "冲突规划器", pageIntro: "为三个联盟分配战场目标，查看60分钟时间线，并复制战斗指令。", copyOrders: "复制指令", exportPlan: "导出计划", openYoutube: "打开频道", youtubeBody: "GeryKS 频道提供 Kingshot 指南和工具，规划时可快速访问。", visitChannel: "访问 @GeryKS", heldTargets: "占领目标", scorePerMinute: "每分钟积分", currentMinute: "当前时间", filterAll: "全部", filterCaptured: "已占领", filterHold: "保持", filterDefend: "防守", filterUnassigned: "未分配", showIds: "显示ID和积分", onlyCaptured: "仅占领", moveMarkers: "移动标记", scoresTitle: "积分榜", rosterTitle: "名单", rosterPlaceholder: "添加成员...", addMember: "添加", selectedTitle: "选中目标", statusLabel: "状态", allianceLabel: "联盟", assigneeLabel: "负责人", captureMinuteLabel: "占领分钟", noteLabel: "指令备注", ordersTitle: "战斗指令", clearAll: "全部清除", noOrders: "尚未分配目标。", planTitle: "保存 / 读取", copyPlan: "复制计划码", loadPlan: "读取计划", teamBlue: "蓝", teamGold: "金", teamRed: "红" },
+      "zh-TW": { ...en, hub: "首頁", swordlandNav: "劍域", fortNav: "堡壘 / 聖所", redeemNav: "自動兌換", geryYoutube: "GeryKS YouTube", pageKicker: "聯盟戰鬥面板", pageTitleA: "三聯盟", pageTitleB: "衝突規劃器", pageIntro: "為三個聯盟分配戰場目標，查看60分鐘時間軸，並複製戰鬥指令。", copyOrders: "複製指令", exportPlan: "匯出計畫", openYoutube: "開啟頻道", youtubeBody: "GeryKS 頻道提供 Kingshot 指南和工具，規劃時可快速開啟。", visitChannel: "前往 @GeryKS", heldTargets: "佔領目標", scorePerMinute: "每分鐘積分", currentMinute: "目前時間", filterAll: "全部", filterCaptured: "已佔領", filterHold: "維持", filterDefend: "防守", filterUnassigned: "未分配", showIds: "顯示ID和積分", onlyCaptured: "只看佔領", moveMarkers: "移動標記", scoresTitle: "積分榜", rosterTitle: "名單", rosterPlaceholder: "新增成員...", addMember: "新增", selectedTitle: "選中目標", statusLabel: "狀態", allianceLabel: "聯盟", assigneeLabel: "負責人", captureMinuteLabel: "佔領分鐘", noteLabel: "指令備註", ordersTitle: "戰鬥指令", clearAll: "全部清除", noOrders: "尚未分配目標。", planTitle: "儲存 / 讀取", copyPlan: "複製計畫碼", loadPlan: "讀取計畫", teamBlue: "藍", teamGold: "金", teamRed: "紅" },
+      th: { ...en, hub: "ฮับ", swordlandNav: "Swordland", fortNav: "Fort / Sanc", redeemNav: "Auto Redeem", geryYoutube: "GeryKS YouTube", pageKicker: "กระดานรบพันธมิตร", pageTitleA: "สามพันธมิตร", pageTitleB: "ตัววางแผน Clash", pageIntro: "จัดเป้าหมายให้สามพันธมิตร ดูไทม์ไลน์ 60 นาที และคัดลอกคำสั่งรบได้ทันที", copyOrders: "คัดลอกคำสั่ง", exportPlan: "ส่งออกแผน", openYoutube: "เปิด YouTube", youtubeBody: "ช่อง GeryKS รวมคู่มือและเครื่องมือ Kingshot สำหรับเปิดดูระหว่างวางแผน", visitChannel: "ไปที่ @GeryKS", heldTargets: "เป้าหมายที่ยึด", scorePerMinute: "แต้มต่อนาที", currentMinute: "เวลาปัจจุบัน", filterAll: "ทั้งหมด", filterCaptured: "ยึดแล้ว", filterHold: "ถือไว้", filterDefend: "ป้องกัน", filterUnassigned: "ยังไม่จัด", showIds: "แสดง ID และแต้ม", onlyCaptured: "เฉพาะที่ยึด", moveMarkers: "ย้ายมาร์กเกอร์", scoresTitle: "คะแนน", rosterTitle: "รายชื่อ", rosterPlaceholder: "เพิ่มสมาชิก...", addMember: "เพิ่ม", selectedTitle: "เป้าหมายที่เลือก", statusLabel: "สถานะ", allianceLabel: "พันธมิตร", assigneeLabel: "ผู้รับผิดชอบ", captureMinuteLabel: "นาทีที่ยึด", noteLabel: "บันทึกคำสั่ง", ordersTitle: "คำสั่งรบ", clearAll: "ล้างทั้งหมด", noOrders: "ยังไม่มีเป้าหมายที่จัดไว้", planTitle: "บันทึก / โหลด", copyPlan: "คัดลอกรหัสแผน", loadPlan: "โหลดแผน", teamBlue: "น้ำเงิน", teamGold: "ทอง", teamRed: "แดง" },
+      id: { ...en, hub: "Hub", swordlandNav: "Swordland", fortNav: "Fort / Sanc", redeemNav: "Auto Redeem", geryYoutube: "YouTube GeryKS", pageKicker: "Papan perang aliansi", pageTitleA: "Tri-Alliance", pageTitleB: "Clash Planner", pageIntro: "Atur target untuk tiga aliansi, geser timeline 60 menit, lalu salin order perang.", copyOrders: "Salin order", exportPlan: "Ekspor plan", openYoutube: "Buka YouTube", youtubeBody: "Channel GeryKS berisi panduan dan alat Kingshot yang bisa dibuka cepat saat planning.", visitChannel: "Kunjungi @GeryKS", heldTargets: "Target dikuasai", scorePerMinute: "Poin per menit", currentMinute: "Menit saat ini", filterAll: "Semua", filterCaptured: "Direbut", filterHold: "Tahan", filterDefend: "Bertahan", filterUnassigned: "Kosong", showIds: "Tampilkan ID & poin", onlyCaptured: "Hanya direbut", moveMarkers: "Pindah marker", scoresTitle: "Skor", rosterTitle: "Roster", rosterPlaceholder: "Tambah member...", addMember: "Tambah", selectedTitle: "Target terpilih", statusLabel: "Status", allianceLabel: "Aliansi", assigneeLabel: "Penanggung jawab", captureMinuteLabel: "Menit rebut", noteLabel: "Catatan order", ordersTitle: "Order perang", clearAll: "Bersihkan", noOrders: "Belum ada target.", planTitle: "Simpan / muat", copyPlan: "Salin kode plan", loadPlan: "Muat plan", teamBlue: "Biru", teamGold: "Emas", teamRed: "Merah" }
+    };
+    const TEAMS = ["blue", "gold", "red"];
+    const MARKERS = [
+      { id: "A1", type: "hq", team: "blue", x: 12, y: 50, unlock: 0, per: 32, bonus: 1800 },
+      { id: "A2", type: "hq", team: "gold", x: 50, y: 13, unlock: 0, per: 32, bonus: 1800 },
+      { id: "A3", type: "hq", team: "red", x: 88, y: 50, unlock: 0, per: 32, bonus: 1800 },
+      { id: "C1", type: "center", x: 50, y: 50, unlock: 15, per: 88, bonus: 2400 },
+      { id: "T1", type: "tower", x: 31, y: 34, unlock: 8, per: 48, bonus: 1200 },
+      { id: "T2", type: "tower", x: 69, y: 34, unlock: 8, per: 48, bonus: 1200 },
+      { id: "T3", type: "tower", x: 50, y: 74, unlock: 8, per: 48, bonus: 1200 },
+      { id: "S1", type: "sanctum", x: 25, y: 63, unlock: 5, per: 34, bonus: 900 },
+      { id: "S2", type: "sanctum", x: 75, y: 63, unlock: 5, per: 34, bonus: 900 },
+      { id: "S3", type: "sanctum", x: 50, y: 27, unlock: 5, per: 34, bonus: 900 },
+      { id: "R1", type: "rally", x: 24, y: 25, unlock: 0, per: 20, bonus: 600 },
+      { id: "R2", type: "rally", x: 76, y: 25, unlock: 0, per: 20, bonus: 600 },
+      { id: "R3", type: "rally", x: 50, y: 88, unlock: 0, per: 20, bonus: 600 },
+      { id: "O1", type: "outpost", x: 18, y: 78, unlock: 0, per: 12, bonus: 300 },
+      { id: "O2", type: "outpost", x: 82, y: 78, unlock: 0, per: 12, bonus: 300 },
+      { id: "O3", type: "outpost", x: 50, y: 8, unlock: 0, per: 12, bonus: 300 }
+    ];
+    const STORE_KEY = "triAlliancePlanV1";
+    const state = {
+      lang: "ko",
+      minute: 0,
+      filter: "all",
+      showLabels: true,
+      onlyCaptured: false,
+      moveMode: false,
+      zoom: 1,
+      selected: "C1",
+      roster: [],
+      claims: {},
+      positions: {}
+    };
+    function t(key, vars) {
+      let value = (I18N[state.lang] || I18N.ko)[key] || en[key] || key;
+      if (vars) Object.entries(vars).forEach(([k, v]) => { value = value.replace(`{${k}}`, v); });
+      return value;
+    }
+    function fmt(n) { return Number(n || 0).toLocaleString(state.lang); }
+    function normalizeLang(value) {
+      const found = LANGUAGES.find(([code]) => code === value);
+      return found ? value : "ko";
+    }
+    function markerName(marker) {
+      const key = marker.type === "hq" ? "typeHq" : marker.type === "center" ? "typeCenter" : marker.type === "tower" ? "typeTower" : marker.type === "sanctum" ? "typeSanctum" : marker.type === "rally" ? "typeRally" : "typeOutpost";
+      return `${marker.id} ${t(key)}`;
+    }
+    function ensureClaims() {
+      MARKERS.forEach((marker) => {
+        if (!state.claims[marker.id]) {
+          state.claims[marker.id] = {
+            status: marker.type === "hq" ? "captured" : "unassigned",
+            alliance: marker.team || "blue",
+            assignee: "",
+            minute: marker.unlock,
+            note: ""
+          };
+        }
+      });
+    }
+    function activeClaim(marker) {
+      const claim = state.claims[marker.id];
+      const owned = ["captured", "hold", "defend"].includes(claim.status);
+      return owned && state.minute >= marker.unlock && state.minute >= Number(claim.minute || 0);
+    }
+    function teamLabel(team) {
+      return team === "blue" ? t("teamBlue") : team === "gold" ? t("teamGold") : t("teamRed");
+    }
+    function computeScores() {
+      const scores = Object.fromEntries(TEAMS.map((team) => [team, { total: 0, per: 0, held: 0 }]));
+      MARKERS.forEach((marker) => {
+        if (!activeClaim(marker)) return;
+        const claim = state.claims[marker.id];
+        const start = Math.max(marker.unlock, Number(claim.minute || 0));
+        const heldMinutes = Math.max(0, state.minute - start + 1);
+        const bucket = scores[claim.alliance] || scores.blue;
+        bucket.total += marker.bonus + marker.per * heldMinutes;
+        bucket.per += marker.per;
+        bucket.held += 1;
+      });
+      return scores;
+    }
+    function renderLangOptions() {
+      const select = document.getElementById("pageLang");
+      select.innerHTML = LANGUAGES.map(([code, label]) => `<option value="${code}">${label}</option>`).join("");
+      select.value = state.lang;
+    }
+    function translatePage() {
+      document.documentElement.lang = state.lang;
+      document.querySelectorAll("[data-i18n]").forEach((node) => { node.textContent = t(node.dataset.i18n); });
+      document.querySelectorAll("[data-i18n-placeholder]").forEach((node) => { node.placeholder = t(node.dataset.i18nPlaceholder); });
+      document.querySelectorAll("[id$='Link'], #navHub, #navSword, #navFort, #navRedeem").forEach((link) => {
+        if (!link.href || link.href.startsWith("https://")) return;
+        const url = new URL(link.getAttribute("href"), location.href);
+        url.searchParams.set("lang", state.lang);
+        link.href = url.pathname.split("/").pop() ? `${url.pathname.split("/").pop()}?lang=${encodeURIComponent(state.lang)}` : `./index.html?lang=${encodeURIComponent(state.lang)}`;
+      });
+    }
+    function renderBoard() {
+      const board = document.getElementById("board");
+      board.style.transform = `scale(${state.zoom})`;
+      board.style.marginBottom = state.zoom > 1 ? `${(state.zoom - 1) * 280}px` : "0";
+      board.querySelectorAll(".node").forEach((node) => node.remove());
+      MARKERS.forEach((marker) => {
+        const claim = state.claims[marker.id];
+        const pos = state.positions[marker.id] || { x: marker.x, y: marker.y };
+        const isActive = activeClaim(marker);
+        const locked = state.minute < marker.unlock;
+        const visibleStatus = isActive ? claim.status : "unassigned";
+        const owner = isActive ? claim.alliance : "";
+        let hide = false;
+        if (state.onlyCaptured && !isActive) hide = true;
+        if (state.filter !== "all") {
+          if (state.filter === "captured") hide = !isActive;
+          else hide = visibleStatus !== state.filter;
+        }
+        const node = document.createElement("button");
+        node.type = "button";
+        node.className = `node${marker.id === state.selected ? " selected" : ""}${locked ? " locked" : ""}${hide ? " hide" : ""}`;
+        node.style.left = `${pos.x}%`;
+        node.style.top = `${pos.y}%`;
+        node.dataset.id = marker.id;
+        node.dataset.status = visibleStatus;
+        node.dataset.owner = owner;
+        node.innerHTML = `<span class="diamond"><span>${marker.id}</span></span><span class="node-label">${state.showLabels ? `${markerName(marker)}<small>+${fmt(marker.per)}/m</small>` : markerName(marker)}</span>`;
+        node.addEventListener("click", () => {
+          if (!state.moveMode) {
+            state.selected = marker.id;
+            render();
+          }
+        });
+        node.addEventListener("pointerdown", (event) => startDrag(event, marker.id));
+        board.appendChild(node);
+      });
+    }
+    function startDrag(event, id) {
+      if (!state.moveMode) return;
+      const board = document.getElementById("board");
+      const rect = board.getBoundingClientRect();
+      const move = (nextEvent) => {
+        const x = Math.max(3, Math.min(97, ((nextEvent.clientX - rect.left) / rect.width) * 100));
+        const y = Math.max(3, Math.min(97, ((nextEvent.clientY - rect.top) / rect.height) * 100));
+        state.positions[id] = { x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10 };
+        renderBoard();
+      };
+      const done = () => {
+        window.removeEventListener("pointermove", move);
+        window.removeEventListener("pointerup", done);
+        saveLocal();
+      };
+      window.addEventListener("pointermove", move);
+      window.addEventListener("pointerup", done);
+      event.preventDefault();
+    }
+    function renderScores() {
+      const scores = computeScores();
+      const grid = document.getElementById("scoreGrid");
+      grid.innerHTML = TEAMS.map((team) => `
+        <div class="score ${team}">
+          <h3>${teamLabel(team)}</h3>
+          <b>${fmt(scores[team].total)}</b>
+          <small>${fmt(scores[team].per)} ${t("perMin")} · ${fmt(scores[team].held)} ${t("held")}</small>
+        </div>
+      `).join("");
+      const totalHeld = Object.values(scores).reduce((sum, item) => sum + item.held, 0);
+      const totalPer = Object.values(scores).reduce((sum, item) => sum + item.per, 0);
+      document.getElementById("metricHeld").textContent = fmt(totalHeld);
+      document.getElementById("metricPerMin").textContent = fmt(totalPer);
+      document.getElementById("metricMinute").textContent = `${String(state.minute).padStart(2, "0")}:00`;
+    }
+    function renderRoster() {
+      const list = document.getElementById("rosterList");
+      list.innerHTML = state.roster.length ? state.roster.map((name, index) => `
+        <span class="chip"><span>${escapeHtml(name)}</span><button type="button" data-remove="${index}" aria-label="Remove">×</button></span>
+      `).join("") : "";
+      list.querySelectorAll("[data-remove]").forEach((button) => {
+        button.addEventListener("click", () => {
+          state.roster.splice(Number(button.dataset.remove), 1);
+          saveLocal();
+          render();
+        });
+      });
+    }
+    function renderEditor() {
+      const marker = MARKERS.find((item) => item.id === state.selected);
+      const box = document.getElementById("targetEditor");
+      if (!marker) {
+        box.innerHTML = `<p class="empty">${t("noSelected")}</p>`;
+        return;
+      }
+      const claim = state.claims[marker.id];
+      box.innerHTML = `
+        <p class="empty" style="margin-top:0"><b>${markerName(marker)}</b><br>${t("targetMeta", { unlock: marker.unlock, points: fmt(marker.per), bonus: fmt(marker.bonus) })}</p>
+        <div class="field">
+          <label>${t("statusLabel")}</label>
+          <div class="seg" id="statusSeg">
+            ${["unassigned","captured","hold","defend","enemy"].map((value) => `<button type="button" class="${claim.status === value ? "on" : ""}" data-status="${value}">${t(`status${value[0].toUpperCase()}${value.slice(1)}`)}</button>`).join("")}
+          </div>
+        </div>
+        <div class="field">
+          <label>${t("allianceLabel")}</label>
+          <select id="claimAlliance">${TEAMS.map((team) => `<option value="${team}" ${claim.alliance === team ? "selected" : ""}>${teamLabel(team)}</option>`).join("")}</select>
+        </div>
+        <div class="field">
+          <label>${t("assigneeLabel")}</label>
+          <select id="claimAssignee"><option value="">${t("unassigned")}</option>${state.roster.map((name) => `<option value="${escapeAttr(name)}" ${claim.assignee === name ? "selected" : ""}>${escapeHtml(name)}</option>`).join("")}</select>
+        </div>
+        <div class="field">
+          <label>${t("captureMinuteLabel")}</label>
+          <div class="inline">
+            <input id="claimMinute" type="number" min="0" max="60" value="${Number(claim.minute || 0)}">
+            <button class="btn" id="setTimeline" type="button">${t("setToTimeline")}</button>
+          </div>
+        </div>
+        <div class="field">
+          <label>${t("noteLabel")}</label>
+          <textarea id="claimNote" placeholder="${escapeAttr(t("notePlaceholder"))}">${escapeHtml(claim.note || "")}</textarea>
+        </div>
+        <button class="btn danger" id="clearMarker" type="button">${t("clearMarker")}</button>
+      `;
+      box.querySelectorAll("[data-status]").forEach((button) => {
+        button.addEventListener("click", () => { claim.status = button.dataset.status; saveLocal(); render(); });
+      });
+      box.querySelector("#claimAlliance").addEventListener("change", (event) => { claim.alliance = event.target.value; saveLocal(); render(); });
+      box.querySelector("#claimAssignee").addEventListener("change", (event) => { claim.assignee = event.target.value; saveLocal(); render(); });
+      box.querySelector("#claimMinute").addEventListener("change", (event) => { claim.minute = Math.max(0, Math.min(60, Number(event.target.value || 0))); saveLocal(); render(); });
+      box.querySelector("#setTimeline").addEventListener("click", () => { claim.minute = state.minute; saveLocal(); render(); });
+      box.querySelector("#claimNote").addEventListener("input", (event) => { claim.note = event.target.value.slice(0, 180); saveLocal(); renderOrders(); });
+      box.querySelector("#clearMarker").addEventListener("click", () => {
+        state.claims[marker.id] = { status: marker.type === "hq" ? "captured" : "unassigned", alliance: marker.team || "blue", assignee: "", minute: marker.unlock, note: "" };
+        saveLocal();
+        render();
+      });
+    }
+    function assignedOrders() {
+      return MARKERS
+        .filter((marker) => {
+          const claim = state.claims[marker.id];
+          return ["captured", "hold", "defend"].includes(claim.status);
+        })
+        .map((marker) => ({ marker, claim: state.claims[marker.id] }))
+        .sort((a, b) => TEAMS.indexOf(a.claim.alliance) - TEAMS.indexOf(b.claim.alliance) || a.marker.id.localeCompare(b.marker.id));
+    }
+    function orderText() {
+      const lines = assignedOrders().map(({ marker, claim }) => {
+        const who = claim.assignee || t("unassigned");
+        const note = claim.note ? ` - ${claim.note}` : "";
+        return `[${teamLabel(claim.alliance)}] ${markerName(marker)} | ${claim.status} | ${claim.minute}m | ${who}${note}`;
+      });
+      return lines.join("\n");
+    }
+    function renderOrders() {
+      const list = document.getElementById("ordersList");
+      const rows = assignedOrders();
+      list.innerHTML = rows.length ? rows.map(({ marker, claim }) => `
+        <div class="order"><b>${teamLabel(claim.alliance)} · ${markerName(marker)}</b><em>${t("captureMinuteLabel")}: ${claim.minute}m · ${t("assigneeLabel")}: ${escapeHtml(claim.assignee || t("unassigned"))}</em>${claim.note ? `<em>${escapeHtml(claim.note)}</em>` : ""}</div>
+      `).join("") : `<p class="empty">${t("noOrders")}</p>`;
+    }
+    function renderTime() {
+      document.getElementById("clock").textContent = `${String(state.minute).padStart(2, "0")}:00`;
+      document.getElementById("timeSlider").value = state.minute;
+      const phaseKey = state.minute < 15 ? "phaseSetup" : state.minute < 30 ? "phaseClash" : state.minute < 50 ? "phaseCore" : "phaseFinal";
+      document.getElementById("phaseLabel").textContent = t(phaseKey);
+    }
+    function renderPlanCode() {
+      const payload = { v: 1, roster: state.roster, claims: state.claims, positions: state.positions };
+      document.getElementById("planCode").value = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+    }
+    function renderButtons() {
+      document.querySelectorAll("[data-filter]").forEach((button) => button.classList.toggle("on", button.dataset.filter === state.filter));
+      document.getElementById("toggleLabels").classList.toggle("on", state.showLabels);
+      document.getElementById("toggleCaptured").classList.toggle("on", state.onlyCaptured);
+      document.getElementById("toggleMove").classList.toggle("on", state.moveMode);
+    }
+    function render() {
+      ensureClaims();
+      translatePage();
+      renderButtons();
+      renderTime();
+      renderBoard();
+      renderScores();
+      renderRoster();
+      renderEditor();
+      renderOrders();
+      renderPlanCode();
+    }
+    function saveLocal() {
+      try { localStorage.setItem(STORE_KEY, JSON.stringify({ roster: state.roster, claims: state.claims, positions: state.positions })); } catch (_) {}
+    }
+    function loadLocal() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(STORE_KEY) || "{}");
+        if (Array.isArray(saved.roster)) state.roster = saved.roster.slice(0, 80);
+        if (saved.claims && typeof saved.claims === "object") state.claims = saved.claims;
+        if (saved.positions && typeof saved.positions === "object") state.positions = saved.positions;
+      } catch (_) {}
+    }
+    function escapeHtml(value) {
+      return String(value || "").replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+    }
+    function escapeAttr(value) { return escapeHtml(value).replace(/`/g, "&#96;"); }
+    async function copyText(text, button) {
+      try {
+        await navigator.clipboard.writeText(text);
+        const old = button.textContent;
+        button.textContent = t("copied");
+        setTimeout(() => { button.textContent = old; }, 1200);
+      } catch (_) {}
+    }
+    function init() {
+      const params = new URL(location.href).searchParams;
+      state.lang = normalizeLang(params.get("lang") || localStorage.getItem("lang") || localStorage.getItem("siteLang") || "ko");
+      renderLangOptions();
+      loadLocal();
+      ensureClaims();
+      document.getElementById("pageLang").addEventListener("change", (event) => {
+        state.lang = normalizeLang(event.target.value);
+        localStorage.setItem("lang", state.lang);
+        localStorage.setItem("siteLang", state.lang);
+        render();
+      });
+      document.getElementById("timeSlider").addEventListener("input", (event) => { state.minute = Number(event.target.value); render(); });
+      document.querySelectorAll("[data-filter]").forEach((button) => button.addEventListener("click", () => { state.filter = button.dataset.filter; render(); }));
+      document.getElementById("toggleLabels").addEventListener("click", () => { state.showLabels = !state.showLabels; render(); });
+      document.getElementById("toggleCaptured").addEventListener("click", () => { state.onlyCaptured = !state.onlyCaptured; render(); });
+      document.getElementById("toggleMove").addEventListener("click", () => { state.moveMode = !state.moveMode; render(); });
+      document.getElementById("zoomOut").addEventListener("click", () => { state.zoom = Math.max(.8, Math.round((state.zoom - .1) * 10) / 10); renderBoard(); });
+      document.getElementById("zoomIn").addEventListener("click", () => { state.zoom = Math.min(1.5, Math.round((state.zoom + .1) * 10) / 10); renderBoard(); });
+      document.getElementById("addMember").addEventListener("click", () => {
+        const input = document.getElementById("memberInput");
+        const name = input.value.trim().slice(0, 32);
+        if (name && !state.roster.includes(name)) state.roster.push(name);
+        input.value = "";
+        saveLocal();
+        render();
+      });
+      document.getElementById("memberInput").addEventListener("keydown", (event) => {
+        if (event.key === "Enter") document.getElementById("addMember").click();
+      });
+      [document.getElementById("copyOrders"), document.getElementById("copyOrdersTop")].forEach((button) => button.addEventListener("click", () => copyText(orderText(), button)));
+      document.getElementById("clearAll").addEventListener("click", () => {
+        state.claims = {};
+        ensureClaims();
+        saveLocal();
+        render();
+      });
+      document.getElementById("exportTop").addEventListener("click", () => { renderPlanCode(); document.getElementById("planCode").focus(); });
+      document.getElementById("copyPlan").addEventListener("click", (event) => copyText(document.getElementById("planCode").value, event.currentTarget));
+      document.getElementById("loadPlan").addEventListener("click", () => {
+        try {
+          const payload = JSON.parse(decodeURIComponent(escape(atob(document.getElementById("planCode").value.trim()))));
+          if (payload && payload.v === 1) {
+            state.roster = Array.isArray(payload.roster) ? payload.roster.slice(0, 80) : [];
+            state.claims = payload.claims && typeof payload.claims === "object" ? payload.claims : {};
+            state.positions = payload.positions && typeof payload.positions === "object" ? payload.positions : {};
+            ensureClaims();
+            saveLocal();
+            render();
+          }
+        } catch (_) {
+          document.getElementById("planCode").value = t("planLoaded");
+        }
+      });
+      render();
+    }
+    init();
+  </script>
+</body>
+</html>

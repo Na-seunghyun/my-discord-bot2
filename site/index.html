@@ -186,6 +186,15 @@
         0 0 42px rgba(255, 127, 182, .26),
         0 14px 38px rgba(0, 0, 0, .32);
     }
+    .youtube {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-color: rgba(255, 127, 134, .44);
+      background: linear-gradient(135deg, rgba(255, 85, 105, .18), rgba(246, 207, 114, .09));
+      color: #ffe1e5;
+      box-shadow: 0 0 18px rgba(255, 85, 105, .12);
+    }
     .hero {
       display: grid;
       grid-template-columns: minmax(0, 1fr);
@@ -775,6 +784,7 @@
           <option value="th">Thai</option>
           <option value="id">Indonesia</option>
         </select>
+        <a class="pill youtube" href="https://www.youtube.com/@GeryKS" target="_blank" rel="noreferrer" data-i18n="geryYoutube">GeryKS YouTube</a>
         <a class="pill support" href="https://buymeacoffee.com/nashsh" target="_blank" rel="noreferrer" data-i18n="support">Support page</a>
       </div>
     </header>
@@ -801,7 +811,7 @@
       <aside class="metrics" aria-label="Site status">
         <div class="metric"><strong id="visitTotal">-</strong><span data-i18n="visitsTotal">Total visits</span><small data-i18n="visitHint">Protected by a daily KV safety cap.</small></div>
         <div class="metric"><strong id="visitToday">-</strong><span data-i18n="visitsToday">Today</span><small data-i18n="todayHint">Counts once per browser each day.</small></div>
-        <div class="metric"><strong>8</strong><span data-i18n="toolCount">Tools</span><small data-i18n="toolHint">Planner, Swordland, intel, auto redeem, calculators, feedback.</small></div>
+        <div class="metric"><strong>9</strong><span data-i18n="toolCount">Tools</span><small data-i18n="toolHint">Planner, Swordland, tri-alliance, intel, auto redeem, calculators, feedback.</small></div>
         <div class="metric"><strong>885</strong><span>LEGEND</span><small>NASHSH command hub</small></div>
       </aside>
     </section>
@@ -852,6 +862,12 @@
         <p data-i18n="swordlandBody">Build Swordland battle assignments, rally notes, timing plans, and Discord-ready briefings from one board.</p>
         <span class="open" data-i18n="swordlandButton">Open Swordland planner</span>
       </a>
+      <a class="tool standard" data-link-base="./tri_alliance.html" href="./tri_alliance.html">
+        <span class="tag" data-i18n="tagAlliance">Alliance Operations</span>
+        <h2 data-i18n="triAllianceTitle">Tri-Alliance Clash Planner</h2>
+        <p data-i18n="triAllianceBody">Coordinate three alliances on a 60-minute battlefield timeline with target assignments, score tracking, and chat-ready orders.</p>
+        <span class="open" data-i18n="triAllianceButton">Open tri-alliance planner</span>
+      </a>
       <a class="tool standard" data-link-base="./traplace/" href="./traplace/">
         <span class="tag" data-i18n="tagMap">War Map</span>
         <h2 data-i18n="mapTitle">War Map Planner</h2>
@@ -895,12 +911,13 @@
   <script>
     const I18N = {
       en: {
-        brandSub: 'Kingshot command tools', support: 'Support page', footerCredit: 'Created by #885 Legend nashsh',
+        brandSub: 'Kingshot command tools', support: 'Support page', geryYoutube: 'GeryKS YouTube', footerCredit: 'Created by #885 Legend nashsh',
         heroBadge: 'Live command deck', tagAlliance: 'Alliance Operations', tagIntel: 'Player Intel', tagMap: 'War Map', tagCalc: 'Calculator Vault', tagFeedback: 'Feedback',
         heroA: 'Kingshot tools', subtitle: 'A premium command hub for map planning, player intel, calculators, and alliance coordination. Built for quick use on desktop and mobile.',
-        primary: 'Open Intel Lookup', secondary: 'Open War Map Planner', visitsTotal: 'Total visits', visitsToday: 'Today', visitHint: 'Protected by a daily safety cap.', todayHint: 'Counts once per browser each day.', toolCount: 'Tools', toolHint: 'Planner, Swordland, intel, calculators, feedback.',
+        primary: 'Open Intel Lookup', secondary: 'Open War Map Planner', visitsTotal: 'Total visits', visitsToday: 'Today', visitHint: 'Protected by a daily safety cap.', todayHint: 'Counts once per browser each day.', toolCount: 'Tools', toolHint: 'Planner, Swordland, tri-alliance, intel, calculators, feedback.',
         fortTitle: 'Fort / Sanc Distributor', fortBody: 'Build fair Fort and Sanctuary rotation plans quickly.', fortButton: 'Open distributor',
         swordlandTitle: 'Swordland Event Planner', swordlandBody: 'Build Swordland assignments, rally notes, timing plans, and Discord-ready briefings from one board.', swordlandButton: 'Open Swordland planner',
+        triAllianceTitle: 'Tri-Alliance Clash Planner', triAllianceBody: 'Coordinate three alliances on a 60-minute battlefield timeline with target assignments, score tracking, and chat-ready orders.', triAllianceButton: 'Open tri-alliance planner',
         intelTitle: 'Kingshot Intel Lookup', intelBody: 'Search players, kingdoms, hero gear, and saved local intel.', intelButton: 'Open intel',
         mapTitle: 'War Map Planner', mapBody: 'Plan cities, traps, castles, turrets, distance lines, and march timing.', mapButton: 'Open planner',
         calcTitle: 'Kingshot Calculators', calcBody: 'Training, building, War Academy, VIP, and resource planning calculators.', calcButton: 'Open calculators',
@@ -913,51 +930,83 @@
     ['ko','ja','fr','de','zh-CN','zh-TW','th','id'].forEach((code) => { I18N[code] = { ...I18N.en }; });
     Object.assign(I18N.ko, {
       toolHint: '플래너, 소드랜드, 인텔, 계산기, 피드백.',
+      geryYoutube: 'GeryKS 유튜브',
       swordlandTitle: '소드랜드 이벤트 플래너',
       swordlandBody: '소드랜드 전투 배치, 집결 메모, 시간 계획, 디스코드용 브리핑을 한 보드에서 정리합니다.',
-      swordlandButton: '소드랜드 플래너 열기'
+      swordlandButton: '소드랜드 플래너 열기',
+      triAllianceTitle: '3연맹 전투 플래너',
+      triAllianceBody: '세 연맹의 목표 배치, 60분 점수 흐름, 담당자, 채팅용 전투 명령을 한 화면에서 정리합니다.',
+      triAllianceButton: '3연맹 플래너 열기'
     });
     Object.assign(I18N.ja, {
-      toolHint: 'プランナー、ソードランド、インテル、計算機、フィードバック。',
+      toolHint: 'プランナー、ソードランド、三同盟、インテル、計算機、フィードバック。',
+      geryYoutube: 'GeryKS YouTube',
       swordlandTitle: 'ソードランドイベントプランナー',
       swordlandBody: 'ソードランドの配置、集結メモ、時間計画、Discord用ブリーフィングを1つのボードで整理します。',
-      swordlandButton: 'ソードランドプランナーを開く'
+      swordlandButton: 'ソードランドプランナーを開く',
+      triAllianceTitle: '三同盟クラッシュプランナー',
+      triAllianceBody: '三同盟の目標配置、60分の得点推移、担当者、チャット用指示を1画面で整理します。',
+      triAllianceButton: '三同盟プランナーを開く'
     });
     Object.assign(I18N.fr, {
-      toolHint: 'Planificateur, Swordland, intel, calculateurs, retours.',
+      toolHint: 'Planificateur, Swordland, tri-alliance, intel, calculateurs, retours.',
+      geryYoutube: 'YouTube GeryKS',
       swordlandTitle: 'Planificateur Swordland',
       swordlandBody: 'Préparez les assignations Swordland, les notes de rallye, le timing et un briefing prêt pour Discord.',
-      swordlandButton: 'Ouvrir le planificateur Swordland'
+      swordlandButton: 'Ouvrir le planificateur Swordland',
+      triAllianceTitle: 'Planificateur Tri-Alliance',
+      triAllianceBody: 'Coordonnez trois alliances avec objectifs, score sur 60 minutes et ordres prêts pour le chat.',
+      triAllianceButton: 'Ouvrir le planificateur tri-alliance'
     });
     Object.assign(I18N.de, {
-      toolHint: 'Planer, Swordland, Intel, Rechner, Feedback.',
+      toolHint: 'Planer, Swordland, Drei-Allianz, Intel, Rechner, Feedback.',
+      geryYoutube: 'GeryKS YouTube',
       swordlandTitle: 'Swordland Event-Planer',
       swordlandBody: 'Plane Swordland-Zuweisungen, Rallye-Notizen, Timing und Discord-fertige Briefings auf einem Board.',
-      swordlandButton: 'Swordland-Planer öffnen'
+      swordlandButton: 'Swordland-Planer öffnen',
+      triAllianceTitle: 'Drei-Allianz Clash-Planer',
+      triAllianceBody: 'Koordiniere drei Allianzen mit Zielen, 60-Minuten-Score und chatfertigen Befehlen.',
+      triAllianceButton: 'Drei-Allianz-Planer öffnen'
     });
     Object.assign(I18N['zh-CN'], {
-      toolHint: '规划器、剑域、情报、计算器、反馈。',
+      toolHint: '规划器、剑域、三联盟、情报、计算器、反馈。',
+      geryYoutube: 'GeryKS YouTube',
       swordlandTitle: '剑域活动规划器',
       swordlandBody: '在一个面板中整理剑域战斗分配、集结备注、时间规划和 Discord 简报。',
-      swordlandButton: '打开剑域规划器'
+      swordlandButton: '打开剑域规划器',
+      triAllianceTitle: '三联盟冲突规划器',
+      triAllianceBody: '在一个页面中协调三联盟目标、60分钟积分、负责人和聊天指令。',
+      triAllianceButton: '打开三联盟规划器'
     });
     Object.assign(I18N['zh-TW'], {
-      toolHint: '規劃器、劍域、情報、計算器、回饋。',
+      toolHint: '規劃器、劍域、三聯盟、情報、計算器、回饋。',
+      geryYoutube: 'GeryKS YouTube',
       swordlandTitle: '劍域活動規劃器',
       swordlandBody: '在一個面板中整理劍域戰鬥分配、集結備註、時間規劃和 Discord 簡報。',
-      swordlandButton: '開啟劍域規劃器'
+      swordlandButton: '開啟劍域規劃器',
+      triAllianceTitle: '三聯盟衝突規劃器',
+      triAllianceBody: '在一個頁面中協調三聯盟目標、60分鐘積分、負責人和聊天指令。',
+      triAllianceButton: '開啟三聯盟規劃器'
     });
     Object.assign(I18N.th, {
-      toolHint: 'ตัววางแผน, Swordland, ข้อมูลผู้เล่น, เครื่องคำนวณ, ฟีดแบ็ก.',
+      toolHint: 'ตัววางแผน, Swordland, สามพันธมิตร, ข้อมูลผู้เล่น, เครื่องคำนวณ, ฟีดแบ็ก.',
+      geryYoutube: 'GeryKS YouTube',
       swordlandTitle: 'ตัววางแผนกิจกรรม Swordland',
       swordlandBody: 'จัดแผนมอบหมายการรบ โน้ตรวมพล เวลา และสรุปสำหรับ Discord ได้ในกระดานเดียว.',
-      swordlandButton: 'เปิดตัววางแผน Swordland'
+      swordlandButton: 'เปิดตัววางแผน Swordland',
+      triAllianceTitle: 'ตัววางแผนสามพันธมิตร',
+      triAllianceBody: 'จัดเป้าหมายสามพันธมิตร คะแนน 60 นาที ผู้รับผิดชอบ และคำสั่งสำหรับแชตในหน้าเดียว.',
+      triAllianceButton: 'เปิดตัววางแผนสามพันธมิตร'
     });
     Object.assign(I18N.id, {
-      toolHint: 'Planner, Swordland, intel, kalkulator, feedback.',
+      toolHint: 'Planner, Swordland, tri-alliance, intel, kalkulator, feedback.',
+      geryYoutube: 'YouTube GeryKS',
       swordlandTitle: 'Perencana Event Swordland',
       swordlandBody: 'Susun penugasan Swordland, catatan rally, timing, dan briefing siap Discord dari satu papan.',
-      swordlandButton: 'Buka planner Swordland'
+      swordlandButton: 'Buka planner Swordland',
+      triAllianceTitle: 'Planner Tri-Alliance Clash',
+      triAllianceBody: 'Koordinasikan tiga aliansi dengan target, skor 60 menit, PIC, dan order siap chat.',
+      triAllianceButton: 'Buka planner tri-alliance'
     });
     function lang() {
       const q = new URL(location.href).searchParams.get('lang');

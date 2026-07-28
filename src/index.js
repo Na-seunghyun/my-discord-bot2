@@ -84,6 +84,7 @@ const PUBLIC_INDEX_URLS = [
   `${PUBLIC_BASE_URL}/traplace/`,
   `${PUBLIC_BASE_URL}/fort_sanc.html`,
   `${PUBLIC_BASE_URL}/swordland_planner.html`,
+  `${PUBLIC_BASE_URL}/tri_alliance.html`,
   `${PUBLIC_BASE_URL}/feedback.html`,
   `${PUBLIC_BASE_URL}/security.html`,
   `${PUBLIC_BASE_URL}/privacy.html`,
