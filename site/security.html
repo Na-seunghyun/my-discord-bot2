@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -54,7 +54,12 @@
     .badge-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
     .badge { display: inline-flex; min-height: 34px; align-items: center; border: 1px solid rgba(67,246,215,.28); border-radius: 999px; padding: 0 12px; color: var(--cyan); background: rgba(67,246,215,.08); font-weight: 950; }
     .ko { margin-top: 18px; padding-top: 18px; border-top: 1px solid rgba(154,183,255,.16); }
-  </style>
+    /* 885 text fit guard */
+  .hubbar,.hubbrand,.hubnav,.top-actions,.actions,.toolbar,.tabs,.seg,.panel,.card,.field,.row,.grid,.hero,.hero-actions,.stat,.metric,.result,.summary,.control,.controls{min-width:0}
+  button,select,input,textarea,.btn,.button,.primary,.secondary,.ghost,.pill,.chip,.badge,.tabs button,.seg button,.hubnav a,.hubnav select{max-width:100%;line-height:1.2}
+  button,.btn,.button,.primary,.secondary,.ghost,.pill,.chip,.badge,.tabs button,.seg button,.hubnav a{white-space:normal;overflow-wrap:anywhere}
+  h1,h2,h3,p,small,label,td,th,pre,.hint,.sub,.desc,.note,.status,.metric,.result,.card-note{overflow-wrap:anywhere}
+  @media(max-width:720px){.hubnav,.top-actions,.actions,.toolbar,.tabs,.seg{min-width:0}.hubnav a,.hubnav select,.actions button,.toolbar button,.tabs button,.seg button{min-width:0}}</style>
   <link rel="stylesheet" href="./static/legend-ui.css?v=20260710-i18n-unified">
 </head>
 <body>

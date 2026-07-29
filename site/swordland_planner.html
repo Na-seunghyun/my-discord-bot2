@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -245,7 +245,12 @@
   .toast.show{opacity:1}
   @media (max-width:720px){body{padding:10px}.hubbar{align-items:flex-start}.hubnav{width:100%}.hubnav a,.hubnav select{flex:1;min-width:120px;text-align:center}.top-actions{width:100%}.top-actions .btn,.top-actions .brand{flex:1;justify-content:center}}
   @media (prefers-reduced-motion:reduce){*{transition:none!important}}
-</style>
+  /* 885 text fit guard */
+  .hubbar,.hubbrand,.hubnav,.top-actions,.actions,.toolbar,.tabs,.seg,.panel,.card,.field,.row,.grid,.hero,.hero-actions,.stat,.metric,.result,.summary,.control,.controls{min-width:0}
+  button,select,input,textarea,.btn,.button,.primary,.secondary,.ghost,.pill,.chip,.badge,.tabs button,.seg button,.hubnav a,.hubnav select{max-width:100%;line-height:1.2}
+  button,.btn,.button,.primary,.secondary,.ghost,.pill,.chip,.badge,.tabs button,.seg button,.hubnav a{white-space:normal;overflow-wrap:anywhere}
+  h1,h2,h3,p,small,label,td,th,pre,.hint,.sub,.desc,.note,.status,.metric,.result,.card-note{overflow-wrap:anywhere}
+  @media(max-width:720px){.hubnav,.top-actions,.actions,.toolbar,.tabs,.seg{min-width:0}.hubnav a,.hubnav select,.actions button,.toolbar button,.tabs button,.seg button{min-width:0}}</style>
 </head>
 <body>
 <nav class="hubbar" aria-label="Hub navigation">

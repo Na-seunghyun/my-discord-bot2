@@ -327,7 +327,12 @@
       .tech-top { grid-template-columns: 54px minmax(0, 1fr); }
       .tech-icon { width: 54px; height: 54px; border-radius: 14px; }
     }
-  </style>
+    /* 885 text fit guard */
+  .hubbar,.hubbrand,.hubnav,.top-actions,.actions,.toolbar,.tabs,.seg,.panel,.card,.field,.row,.grid,.hero,.hero-actions,.stat,.metric,.result,.summary,.control,.controls{min-width:0}
+  button,select,input,textarea,.btn,.button,.primary,.secondary,.ghost,.pill,.chip,.badge,.tabs button,.seg button,.hubnav a,.hubnav select{max-width:100%;line-height:1.2}
+  button,.btn,.button,.primary,.secondary,.ghost,.pill,.chip,.badge,.tabs button,.seg button,.hubnav a{white-space:normal;overflow-wrap:anywhere}
+  h1,h2,h3,p,small,label,td,th,pre,.hint,.sub,.desc,.note,.status,.metric,.result,.card-note{overflow-wrap:anywhere}
+  @media(max-width:720px){.hubnav,.top-actions,.actions,.toolbar,.tabs,.seg{min-width:0}.hubnav a,.hubnav select,.actions button,.toolbar button,.tabs button,.seg button{min-width:0}}</style>
   <link rel="stylesheet" href="./static/legend-ui.css?v=20260710-i18n-unified">
 </head>
 <body>
@@ -450,6 +455,28 @@
       }
     };
     ['ko','ja','fr','de','zh-CN','zh-TW','th','id'].forEach((code) => { I18N[code] = { ...I18N.en, timeUnits: I18N.en.timeUnits }; });
+    Object.assign(I18N.ko, {
+      subtitle: '보병, 기병, 궁병 연구의 Truegold Dust, 자원, 연구 시간, 전투력, 최종 보너스를 계산합니다.',
+      inventoryHint: '보유 자원과 연구 속도를 입력하면 부족분과 남는 자원을 확인할 수 있습니다.',
+      techHint: '각 연구의 현재 레벨과 목표 레벨을 설정하세요. 현재보다 높은 단계만 합산됩니다.',
+      resultsHint: '레벨이나 보유 자원이 바뀌면 결과가 자동으로 갱신됩니다.',
+      scopeTitle: '모든 병종 연구가 함께 합산됩니다',
+      scopeHint: '아래 병종별 Set All을 사용하세요. 결과 패널은 선택된 보병, 기병, 궁병 연구를 모두 합산합니다.'
+    });
+    Object.assign(I18N.ja, {
+      subtitle: '歩兵、騎兵、弓兵研究のTruegold Dust、資源、研究時間、戦力、最終ボーナスを計算します。',
+      inventoryHint: '所持資源と研究速度を入力すると不足分と残りを確認できます。',
+      techHint: '各研究の現在レベルと目標レベルを設定してください。現在より高い段階のみ合計します。',
+      resultsHint: 'レベルや所持資源が変わると結果が自動更新されます。',
+      scopeTitle: 'すべての兵種研究をまとめて集計します',
+      scopeHint: '下の兵種別Set Allを使ってください。結果は選択済みの歩兵、騎兵、弓兵研究を合計します。'
+    });
+    Object.assign(I18N.fr, { subtitle: 'Calculez Truegold Dust, ressources, temps, puissance et bonus finaux pour infanterie, cavalerie et archers.', inventoryHint: 'Entrez vos ressources et vitesse de recherche pour voir les manques et restes.', techHint: 'Définissez le niveau actuel et cible. Seuls les niveaux supérieurs sont comptés.' });
+    Object.assign(I18N.de, { subtitle: 'Berechne Truegold Dust, Ressourcen, Forschungszeit, Macht und Endboni für Infanterie, Kavallerie und Bogenschützen.', inventoryHint: 'Gib Ressourcen und Forschungstempo ein, um Fehlmengen und Reste zu sehen.', techHint: 'Setze aktuelles und Ziellevel. Nur höhere Stufen werden gezählt.' });
+    Object.assign(I18N['zh-CN'], { subtitle: '计算步兵、骑兵、弓兵研究的 Truegold Dust、资源、时间、战力和最终加成。', inventoryHint: '输入已有资源和研究速度即可查看缺口和剩余。', techHint: '设置每项研究的当前等级和目标等级，只统计高于当前的等级。' });
+    Object.assign(I18N['zh-TW'], { subtitle: '計算步兵、騎兵、弓兵研究的 Truegold Dust、資源、時間、戰力與最終加成。', inventoryHint: '輸入已有資源與研究速度即可查看缺口與剩餘。', techHint: '設定每項研究的目前等級與目標等級，只統計高於目前的等級。' });
+    Object.assign(I18N.th, { subtitle: 'คำนวณ Truegold Dust ทรัพยากร เวลา พลัง และโบนัสสุดท้ายของ Infantry Cavalry และ Archer', inventoryHint: 'ใส่ทรัพยากรและความเร็ววิจัยเพื่อดูส่วนที่ขาดและคงเหลือ', techHint: 'ตั้งค่าเลเวลปัจจุบันและเป้าหมาย ระบบจะนับเฉพาะเลเวลที่สูงกว่า' });
+    Object.assign(I18N.id, { subtitle: 'Hitung Truegold Dust, resource, waktu riset, power, dan bonus akhir untuk Infantry, Cavalry, dan Archer.', inventoryHint: 'Masukkan resource dan speed riset untuk melihat kekurangan dan sisa.', techHint: 'Atur level saat ini dan target. Hanya upgrade di atas level saat ini yang dihitung.' });
     const RESOURCE_KEYS = ['truegold_dust', 'bread', 'wood', 'stone', 'iron', 'gold'];
     const DEFAULT_TYPES = ['infantry', 'cavalry', 'archer'];
     const ICONS = { infantry: 'INF', cavalry: 'CAV', archer: 'ARC', general: 'GEN' };

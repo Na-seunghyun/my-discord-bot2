@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="ko">
 <head>
   <meta charset="utf-8">
@@ -155,6 +155,14 @@
     }
 
     .status.pending { color: var(--muted); }
+    .calc-summary {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 650;
+      line-height: 1.35;
+    }
 
     .content-grid {
       display: grid;
@@ -600,7 +608,12 @@
     @media (max-width: 520px) {
       .nav { grid-template-columns: 1fr; }
     }
-  </style>
+    /* 885 text fit guard */
+  .hubbar,.hubbrand,.hubnav,.top-actions,.actions,.toolbar,.tabs,.seg,.panel,.card,.field,.row,.grid,.hero,.hero-actions,.stat,.metric,.result,.summary,.control,.controls{min-width:0}
+  button,select,input,textarea,.btn,.button,.primary,.secondary,.ghost,.pill,.chip,.badge,.tabs button,.seg button,.hubnav a,.hubnav select{max-width:100%;line-height:1.2}
+  button,.btn,.button,.primary,.secondary,.ghost,.pill,.chip,.badge,.tabs button,.seg button,.hubnav a{white-space:normal;overflow-wrap:anywhere}
+  h1,h2,h3,p,small,label,td,th,pre,.hint,.sub,.desc,.note,.status,.metric,.result,.card-note{overflow-wrap:anywhere}
+  @media(max-width:720px){.hubnav,.top-actions,.actions,.toolbar,.tabs,.seg{min-width:0}.hubnav a,.hubnav select,.actions button,.toolbar button,.tabs button,.seg button{min-width:0}}</style>
   <link rel="stylesheet" href="static/legend-ui.css?v=885-nashsh-unified-4">
 </head>
 <body data-legend-page="training">
@@ -608,29 +621,29 @@
     <div class="topbar">
       <div>
         <div class="ln-brand-chip">885 LEGEND NASHSH</div>
-        <h1 id="appTitle">Kingshot 怨꾩궛湲??덈툕</h1>
-        <p class="subtitle" id="appSubtitle">?붿뒪肄붾뱶 ?щ옒??紐낅졊?댁뿉???댁뼱 ?곕뒗 媛쒖씤???듯빀 UI</p>
+        <h1 id="appTitle">Kingshot Calculator Hub</h1>
+        <p class="subtitle" id="appSubtitle">Open the Kingshot calculators for buildings, troop training, War Academy, gear, VIP, packs, and transfer planning.</p>
       </div>
       <div class="lang">
         <a class="hub-link" id="hubLink" href="./index.html">Hub</a>
         <a class="coffee-link" id="supportLink" href="https://buymeacoffee.com/nashsh" target="_blank" rel="noreferrer">Support page</a>
-        <label for="languageSelect" id="languageLabel">?몄뼱</label>
+        <label for="languageSelect" id="languageLabel">?紐꾨선</label>
         <select id="languageSelect" class="lang-select" data-lang-select>
-          <option value="ko">🇰🇷 한국어</option>
-          <option value="ja">🇯🇵 日本語</option>
-          <option value="en">🇺🇸 English</option>
-          <option value="fr">🇫🇷 Français</option>
-          <option value="de">🇩🇪 Deutsch</option>
-          <option value="zh-CN">🇨🇳 简体中文</option>
-          <option value="zh-TW">🇹🇼 繁體中文</option>
-          <option value="th">🇹🇭 ไทย</option>
-          <option value="id">🇮🇩 Indonesia</option>
+          <option value="ko">?눖?눟 ?쒓뎅??/option>
+          <option value="ja">?눓?눝 ?ζ쑍沃?/option>
+          <option value="en">?눣?눡 English</option>
+          <option value="fr">?눏?눟 Fran챌ais</option>
+          <option value="de">?눍?눎 Deutsch</option>
+          <option value="zh-CN">?눊?눛 嶸鵝볞릎??/option>
+          <option value="zh-TW">?눢?눥 濚곲쳱訝?뻼</option>
+          <option value="th">?눢?눑 仙꾝툠錫?/option>
+          <option value="id">?눒?눍 Indonesia</option>
         </select>
       </div>
     </div>
 
     <div class="site-trustbar" role="note" aria-label="Calculator safety notice">
-      <span class="trust-copy" data-i18n="trustText"><strong>HTTPS protected · safe connection.</strong> Calculator pages run in your browser and never ask for passwords, payment details, account login, or device access.</span>
+      <span class="trust-copy" data-i18n="trustText"><strong>HTTPS protected 쨌 safe connection.</strong> Calculator pages run in your browser and never ask for passwords, payment details, account login, or device access.</span>
       <span class="site-trust-links">
         <a href="./security.html">Security</a>
         <a href="./privacy.html">Privacy</a>
@@ -640,7 +653,7 @@
     <div class="layout">
       <aside class="panel">
         <div class="panel-header">
-          <h2 class="panel-title" id="navTitle">怨꾩궛湲?/h2>
+          <h2 class="panel-title" id="navTitle">?④쑴沅쎿묾?/h2>
         </div>
         <nav class="nav" id="calculatorNav" aria-label="Calculators"></nav>
       </aside>
@@ -676,11 +689,64 @@
 
     const I18N = {
       en: {
-        appTitle: 'Kingshot Calculator Hub', appSubtitle: 'Personal calculator UI opened from Discord slash commands', hub: 'Hub', support: 'Support page', visitorsLoading: 'Visitors loading...', visitorsOffline: 'Visitor tracking offline', visitors: 'Visitors', today: 'Today', language: 'Language', navTitle: 'Calculators', dataReady: 'Data connected', dataPending: 'Detailed data pending', source: 'Open source', input: 'Input', result: 'Results', calculate: 'Calculate', reset: 'Reset', current: 'Current', target: 'Target', level: 'Level', quantity: 'Quantity', resources: 'Resources', time: 'Time', power: 'Power', summary: 'Discord summary', unsupported: 'This calculator is connected to its source page. More detailed formulas can be added later.', troopModeTraining: 'Training', troopModePromoting: 'Promoting', troopType: 'Troop type', trainingSpeed: 'Training Speed Bonus (%)', kingdomSkill: 'Kingdom Skill 30%', kvkBonus: 'KvK Bonus 25%', ministry: 'Ministry Bonus', speedups: 'Speedups owned', days: 'days', hours: 'hours', minutes: 'minutes', possible: 'Possible quantity', currentPasses: 'Current passes', targetPasses: 'Target passes', lastPackage: 'Last package', none: 'None',
+        appTitle: 'Kingshot Calculator Hub', appSubtitle: 'Open the Kingshot calculators for buildings, troop training, War Academy, gear, VIP, packs, and transfer planning.', hub: 'Hub', support: 'Support page', visitorsLoading: 'Visitors loading...', visitorsOffline: 'Visitor tracking offline', visitors: 'Visitors', today: 'Today', language: 'Language', navTitle: 'Calculators', dataReady: 'Ready', dataPending: 'Linked source', source: 'Open source', input: 'Input', result: 'Results', calculate: 'Calculate', reset: 'Reset', current: 'Current', target: 'Target', level: 'Level', quantity: 'Quantity', resources: 'Resources', time: 'Time', power: 'Power', summary: 'Discord summary', unsupported: 'This calculator links to the source page until the full local formula is added.', troopModeTraining: 'Training', troopModePromoting: 'Promoting', troopType: 'Troop type', trainingSpeed: 'Training Speed Bonus (%)', kingdomSkill: 'Kingdom Skill 30%', kvkBonus: 'KvK Bonus 25%', ministry: 'Ministry Bonus', speedups: 'Speedups owned', days: 'days', hours: 'hours', minutes: 'minutes', possible: 'Possible quantity', currentPasses: 'Current passes', targetPasses: 'Target passes', lastPackage: 'Last package', none: 'None',
         calculators: { building: ['Building Calculator','Building Calculator'], 'governor-gear': ['Governor Gear','Governor Gear'], 'governor-charm': ['Governor Charm','Governor Charm'], pet: ['Pet','Pet'], 'hero-shard': ['Hero Shard','Hero Shard'], 'hero-exclusive-gear': ['Hero Exclusive Gear','Hero Exclusive Gear'], forgehammer: ['Forgehammer','Forgehammer'], 'hero-gear-xp': ['Hero Gear XP','Hero Gear XP'], 'hero-gear': ['Hero Gear','Hero Gear'], 'forgehammer-set': ['Forgehammer Set','Forgehammer Set'], vip: ['VIP','VIP'], pack: ['Pack','Pack'], 'troop-training': ['Troop Training','Troop Training'], 'war-academy': ['War Academy','War Academy'], 'fort-sanc': ['Fort / Sanc','Fort / Sanc'], 'transfer-pass': ['Transfer Pass','Transfer Pass'] }
       }
     };
     ['ko','ja','de','fr','zh','zh-CN','zh-TW','th','id'].forEach((code) => { I18N[code] = { ...I18N.en, calculators: I18N.en.calculators }; });
+    const CALC_SUMMARIES = {
+      en: {
+        building: 'Building resources, timers, power, buffs, and Truegold levels.',
+        'governor-gear': 'Governor gear upgrade costs and power planning.',
+        'governor-charm': 'Governor charm upgrade materials and level planning.',
+        pet: 'Pet growth and resource planning.',
+        'hero-shard': 'Hero shard needs from current star level to target.',
+        'hero-exclusive-gear': 'Exclusive hero gear level costs.',
+        forgehammer: 'Forgehammer requirements by level.',
+        'hero-gear-xp': 'Hero gear XP and material totals.',
+        'hero-gear': 'Hero gear upgrade and mithril planning.',
+        'forgehammer-set': 'Forgehammer set totals for multiple items.',
+        vip: 'VIP level requirements and reward planning.',
+        pack: 'Package value comparison and planning.',
+        'troop-training': 'Training and promotion quantity with speedups.',
+        'war-academy': 'War Academy research resources, time, power, and bonuses.',
+        'fort-sanc': 'Fort and Sanctuary alliance rotation planning.',
+        'transfer-pass': 'Transfer pass needs by power and kingdom rules.'
+      },
+      ko: {
+        building: '건물 자원, 시간, 전투력, 버프, Truegold 단계를 계산합니다.',
+        'governor-gear': '영주 장비 업그레이드 비용과 전투력을 계획합니다.',
+        'governor-charm': '영주 보석 업그레이드 재료와 레벨을 계산합니다.',
+        pet: '펫 성장과 필요 자원을 계획합니다.',
+        'hero-shard': '현재 별 단계에서 목표까지 필요한 영웅 조각을 계산합니다.',
+        'hero-exclusive-gear': '영웅 전용 장비 레벨 비용을 계산합니다.',
+        forgehammer: '레벨별 Forgehammer 필요량을 계산합니다.',
+        'hero-gear-xp': '영웅 장비 XP와 재료 총량을 계산합니다.',
+        'hero-gear': '영웅 장비 강화와 미스릴 계획을 계산합니다.',
+        'forgehammer-set': '여러 장비의 Forgehammer 세트 총량을 계산합니다.',
+        vip: 'VIP 레벨 조건과 보상을 계획합니다.',
+        pack: '패키지 가치를 비교하고 구매 계획을 세웁니다.',
+        'troop-training': '훈련/승급 수량과 가속 사용량을 계산합니다.',
+        'war-academy': '워아카데미 연구 자원, 시간, 전투력, 보너스를 계산합니다.',
+        'fort-sanc': 'Fort와 Sanctuary 연맹 로테이션을 계획합니다.',
+        'transfer-pass': '전투력과 왕국 조건에 따른 이전권 필요량을 계산합니다.'
+      },
+      ja: { building: '建物の資源、時間、戦力、バフ、Truegold段階を計算します。', 'war-academy': 'War Academy研究の資源、時間、戦力、ボーナスを計算します。', 'troop-training': '訓練/昇格数と加速使用量を計算します。', 'fort-sanc': 'FortとSanctuaryの同盟ローテーションを計画します。' },
+      fr: { building: 'Ressources, temps, puissance, buffs et niveaux Truegold.', 'war-academy': 'Recherche War Academy: ressources, temps, puissance et bonus.', 'troop-training': 'Quantité d’entraînement/promotion avec accélérations.', 'fort-sanc': 'Rotation Fort et Sanctuaire pour alliance.' },
+      de: { building: 'Gebäuderessourcen, Zeit, Macht, Buffs und Truegold-Stufen.', 'war-academy': 'War-Academy-Forschung: Ressourcen, Zeit, Macht und Boni.', 'troop-training': 'Training/Beförderung mit Beschleunigungen.', 'fort-sanc': 'Fort- und Sanctuary-Rotation für Allianzen.' },
+      'zh-CN': { building: '建筑资源、时间、战力、增益和 Truegold 阶段。', 'war-academy': '战争学院研究资源、时间、战力和加成。', 'troop-training': '训练/晋升数量与加速消耗。', 'fort-sanc': '联盟 Fort 与 Sanctuary 轮换计划。' },
+      'zh-TW': { building: '建築資源、時間、戰力、增益與 Truegold 階段。', 'war-academy': '戰爭學院研究資源、時間、戰力與加成。', 'troop-training': '訓練/晉升數量與加速消耗。', 'fort-sanc': '聯盟 Fort 與 Sanctuary 輪換計畫。' },
+      th: { building: 'ทรัพยากร เวลา พลัง บัฟ และระดับ Truegold ของอาคาร', 'war-academy': 'ทรัพยากร เวลา พลัง และโบนัสของ War Academy', 'troop-training': 'จำนวนฝึก/เลื่อนขั้นพร้อมสปีดอัพ', 'fort-sanc': 'แผนหมุนเวียน Fort และ Sanctuary' },
+      id: { building: 'Resource, waktu, power, buff, dan level Truegold bangunan.', 'war-academy': 'Resource, waktu, power, dan bonus riset War Academy.', 'troop-training': 'Jumlah training/promosi dengan speedup.', 'fort-sanc': 'Rotasi Fort dan Sanctuary untuk aliansi.' }
+    };
+    Object.assign(I18N.ko, { appTitle: 'Kingshot 계산기 허브', appSubtitle: '건설, 병력 훈련, 워아카데미, 장비, VIP, 패키지, 이전권 계산기를 한곳에서 엽니다.', navTitle: '계산기', dataReady: '사용 가능', dataPending: '외부 연결' });
+    Object.assign(I18N.ja, { appTitle: 'Kingshot 計算機ハブ', appSubtitle: '建設、訓練、War Academy、装備、VIP、パック、移転パス計算をまとめて開けます。', navTitle: '計算機', dataReady: '利用可能', dataPending: '外部リンク' });
+    Object.assign(I18N.fr, { appTitle: 'Hub de calculateurs Kingshot', appSubtitle: 'Ouvrez les calculateurs bâtiments, entraînement, War Academy, équipement, VIP, packs et transfert.', navTitle: 'Calculateurs', dataReady: 'Prêt', dataPending: 'Lien externe' });
+    Object.assign(I18N.de, { appTitle: 'Kingshot Rechner-Hub', appSubtitle: 'Öffne Rechner für Gebäude, Training, War Academy, Ausrüstung, VIP, Pakete und Transfer.', navTitle: 'Rechner', dataReady: 'Bereit', dataPending: 'Externer Link' });
+    Object.assign(I18N['zh-CN'], { appTitle: 'Kingshot 计算器中心', appSubtitle: '集中打开建筑、训练、战争学院、装备、VIP、礼包和迁城计算器。', navTitle: '计算器', dataReady: '可用', dataPending: '外部链接' });
+    Object.assign(I18N['zh-TW'], { appTitle: 'Kingshot 計算器中心', appSubtitle: '集中開啟建築、訓練、戰爭學院、裝備、VIP、禮包與遷城計算器。', navTitle: '計算器', dataReady: '可用', dataPending: '外部連結' });
+    Object.assign(I18N.th, { appTitle: 'ศูนย์เครื่องคำนวณ Kingshot', appSubtitle: 'รวมเครื่องคำนวณอาคาร ฝึกทหาร War Academy อุปกรณ์ VIP แพ็ก และย้ายอาณาจักร', navTitle: 'เครื่องคำนวณ', dataReady: 'พร้อมใช้', dataPending: 'ลิงก์ภายนอก' });
+    Object.assign(I18N.id, { appTitle: 'Hub Kalkulator Kingshot', appSubtitle: 'Buka kalkulator bangunan, training, War Academy, gear, VIP, paket, dan transfer.', navTitle: 'Kalkulator', dataReady: 'Siap', dataPending: 'Link eksternal' });
     const supportedLangs = ['ko', 'ja', 'en', 'de', 'fr', 'zh', 'zh-CN', 'zh-TW', 'th', 'id'];
     const normalizeLang = (value) => {
       const raw = String(value || "");
@@ -699,6 +765,7 @@
     const $ = (id) => document.getElementById(id);
     const t = (key) => I18N[lang]?.[key] || I18N.en[key] || I18N.ko[key] || key;
     const nameOf = (id) => ((I18N[lang]?.calculators || I18N.en.calculators)[id] || I18N.en.calculators[id] || I18N.ko.calculators[id])[1];
+    const summaryOf = (id) => (CALC_SUMMARIES[lang] && CALC_SUMMARIES[lang][id]) || (CALC_SUMMARIES.en && CALC_SUMMARIES.en[id]) || '';
     const localeOf = () => ({ ko: "ko-KR", en: "en-US", zh: "zh-CN", "zh-CN": "zh-CN", "zh-TW": "zh-TW", de: "de-DE", fr: "fr-FR", th: "th-TH", id: "id-ID" }[lang] || "en-US");
     const fmt = (n) => Math.round(Number(n) || 0).toLocaleString(localeOf());
 
@@ -745,6 +812,7 @@
       $("calculatorNav").innerHTML = CALCULATORS.map(([id]) => `
         <button type="button" class="${id === activeId ? "active" : ""}" data-id="${id}">
           ${nameOf(id)}
+          <span class="calc-summary">${summaryOf(id)}</span>
           <span class="status ${hasData(id) ? "" : "pending"}">${hasData(id) ? t("dataReady") : t("dataPending")}</span>
         </button>`).join("");
       document.querySelectorAll("#calculatorNav button").forEach((button) => {
@@ -925,9 +993,9 @@
       const mithrilMilestones = data["hero-gear"]?.mithrilMilestones || {};
       renderShell(`
         <div class="grid">
-          <div class="field"><label>${t("current")} Quality</label><select id="currentQuality"><option value="mythic">Mythic / ?좏솕</option><option value="red">Red / ?덈뱶</option></select></div>
+          <div class="field"><label>${t("current")} Quality</label><select id="currentQuality"><option value="mythic">Mythic / ?醫륁넅</option><option value="red">Red / ??덈굡</option></select></div>
           <div class="field"><label>${t("current")} ${t("level")}</label><input id="current" type="number" min="0" max="100" value="0"></div>
-          <div class="field"><label>${t("target")} Quality</label><select id="targetQuality"><option value="mythic">Mythic / ?좏솕</option><option value="red">Red / ?덈뱶</option></select></div>
+          <div class="field"><label>${t("target")} Quality</label><select id="targetQuality"><option value="mythic">Mythic / ?醫륁넅</option><option value="red">Red / ??덈굡</option></select></div>
           <div class="field"><label>${t("target")} ${t("level")}</label><input id="target" type="number" min="0" max="100" value="1"></div>
         </div>
         <p class="note">Mythic is 0-100. Red starts after Mythic 100 and is calculated as 101-200 internally.</p>
@@ -1177,9 +1245,9 @@
         archer: "Archer"
       };
       const troopIcons = {
-        infantry: "?뷂툘",
-        cavalry: "?릮",
-        archer: "?뤉"
+        infantry: "?酉귦닔",
+        cavalry: "?由?,
+        archer: "?琉?
       };
       const statLabels = {
         deployment_capacity: "Deployment Capacity",
@@ -1247,7 +1315,7 @@
                       <div class="tech-heading">
                         <span class="tech-icon" aria-hidden="true">
                           ${tech.image ? `<img src="${techImage(tech)}" alt="" loading="lazy" onerror="this.parentElement.classList.add('image-error')">` : ""}
-                          <span class="fallback-icon">${tech.icon || troopIcons[type] || "?뷂툘"}</span>
+                          <span class="fallback-icon">${tech.icon || troopIcons[type] || "?酉귦닔"}</span>
                         </span>
                         <div>
                           <h4 class="tech-name">${tech.name}</h4>
@@ -1818,7 +1886,7 @@
           return;
         }
         if (!countedToday) localStorage.setItem(visitKey, "1");
-        target.textContent = `${t("visitors")} ${fmt(stats.total || 0)} · ${t("today")} ${fmt(stats.today || 0)}`;
+        target.textContent = `${t("visitors")} ${fmt(stats.total || 0)} 쨌 ${t("today")} ${fmt(stats.today || 0)}`;
       } catch {
         target.textContent = t("visitorsOffline");
       }
@@ -1829,4 +1897,5 @@
   <script src="./static/legend-i18n.js?v=20260710-i18n-unified"></script>
 </body>
 </html>
+
 

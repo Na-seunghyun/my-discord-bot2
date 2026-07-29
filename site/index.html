@@ -128,10 +128,13 @@
     .top-actions {
       display: flex;
       align-items: center;
+      flex-wrap: wrap;
       gap: 10px;
+      min-width: 0;
     }
     select, button, .pill {
       min-height: 42px;
+      max-width: 100%;
       border: 1px solid var(--line);
       border-radius: 13px;
       background: rgba(255,255,255,.06);
@@ -140,6 +143,9 @@
       font: inherit;
       font-size: 13px;
       font-weight: 850;
+      line-height: 1.2;
+      white-space: normal;
+      overflow-wrap: anywhere;
     }
     select option { background: #12192b; color: var(--text); }
     .support {
@@ -528,7 +534,9 @@
       --flow-angle: 0deg;
       position: relative;
       display: grid;
+      grid-template-rows: auto auto minmax(0, 1fr) auto;
       min-height: 250px;
+      min-width: 0;
       padding: 22px;
       border: 1px solid rgba(154, 183, 255, .2);
       border-radius: 22px;
@@ -677,37 +685,49 @@
     }
     .tag {
       width: fit-content;
-      height: 30px;
+      min-height: 30px;
+      max-width: 100%;
       padding: 0 10px;
       display: inline-flex;
       align-items: center;
+      justify-content: center;
       border: 1px solid var(--line2);
       border-radius: 999px;
       background: rgba(246,207,114,.09);
       color: #ffe8a6;
       font-size: 11px;
       font-weight: 950;
+      line-height: 1.18;
+      white-space: normal;
+      overflow-wrap: anywhere;
       text-transform: uppercase;
     }
     .tool h2 {
       margin: 16px 0 9px;
-      font-size: 25px;
+      min-width: 0;
+      font-size: clamp(19px, 2.1vw, 25px);
       line-height: 1.12;
       letter-spacing: 0;
+      overflow-wrap: anywhere;
     }
     .tool p {
       margin: 0;
+      min-width: 0;
       color: var(--muted);
       font-size: 14px;
       line-height: 1.62;
+      overflow-wrap: anywhere;
     }
     .open {
       align-self: end;
       justify-self: start;
       margin-top: 24px;
       min-height: 42px;
+      max-width: 100%;
+      min-width: 0;
       display: inline-flex;
       align-items: center;
+      justify-content: center;
       padding: 0 14px;
       border-radius: 13px;
       background: rgba(255,255,255,.08);
@@ -715,6 +735,9 @@
       color: var(--text);
       font-size: 13px;
       font-weight: 950;
+      line-height: 1.18;
+      white-space: normal;
+      overflow-wrap: anywhere;
     }
     .footer {
       margin-top: 20px;
@@ -759,7 +782,7 @@
       .core-icon { width: 46px; height: 46px; border-radius: 15px; }
       .core-open { width: 100%; }
       .tools { grid-template-columns: 1fr; }
-      .tool.large, .tool.mid, .tool.standard { grid-column: span 1; min-height: 218px; }
+      .tool.large, .tool.mid, .tool.standard { grid-column: span 1; min-height: auto; }
       .hero-buttons { display: grid; grid-template-columns: 1fr; }
       h1 { font-size: clamp(30px, 8vw, 42px); }
     }

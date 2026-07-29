@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="ko">
 <head>
   <meta charset="utf-8">
@@ -539,7 +539,12 @@
       .panel-body { padding: 14px; }
       h1 { font-size: clamp(30px, 9vw, 44px); }
     }
-  </style>
+    /* 885 text fit guard */
+  .hubbar,.hubbrand,.hubnav,.top-actions,.actions,.toolbar,.tabs,.seg,.panel,.card,.field,.row,.grid,.hero,.hero-actions,.stat,.metric,.result,.summary,.control,.controls{min-width:0}
+  button,select,input,textarea,.btn,.button,.primary,.secondary,.ghost,.pill,.chip,.badge,.tabs button,.seg button,.hubnav a,.hubnav select{max-width:100%;line-height:1.2}
+  button,.btn,.button,.primary,.secondary,.ghost,.pill,.chip,.badge,.tabs button,.seg button,.hubnav a{white-space:normal;overflow-wrap:anywhere}
+  h1,h2,h3,p,small,label,td,th,pre,.hint,.sub,.desc,.note,.status,.metric,.result,.card-note{overflow-wrap:anywhere}
+  @media(max-width:720px){.hubnav,.top-actions,.actions,.toolbar,.tabs,.seg{min-width:0}.hubnav a,.hubnav select,.actions button,.toolbar button,.tabs button,.seg button{min-width:0}}</style>
   <link rel="stylesheet" href="./static/legend-ui.css?v=20260710-i18n-unified">
 </head>
 <body>
@@ -679,6 +684,24 @@
       }
     };
     ['ko','ja','fr','de','zh-CN','zh-TW','th','id'].forEach((code) => { I18N[code] = { ...I18N.en, resources: I18N.en.resources, buildings: I18N.en.buildings, timeUnits: I18N.en.timeUnits }; });
+    Object.assign(I18N.ko, {
+      subtitle: '현재 레벨과 목표 레벨을 선택해 건물 업그레이드 자원, 전투력, 건설 시간을 계산합니다.',
+      badgeTg: 'TG6-10 지원', badgeBuff: '건설 버프', badgeCost: '자원 할인',
+      inventoryHint: '보유 자원을 입력하면 부족분과 남는 자원을 바로 확인할 수 있습니다.',
+      dataSource: '건물 레벨 데이터는 빠른 사용을 위해 로컬에서 불러옵니다.'
+    });
+    Object.assign(I18N.ja, {
+      subtitle: '現在レベルと目標レベルを選び、建物アップグレードの資源、戦力、建設時間を計算します。',
+      badgeTg: 'TG6-10対応', badgeBuff: '建設バフ', badgeCost: '資源割引',
+      inventoryHint: '所持資源を入力すると不足分と残りを確認できます。',
+      dataSource: '建物レベルデータは高速利用のためローカルで読み込みます。'
+    });
+    Object.assign(I18N.fr, { subtitle: 'Choisissez les niveaux actuel et cible pour calculer ressources, puissance et temps de construction.', inventoryHint: 'Entrez vos ressources pour voir les manques et les restes.' });
+    Object.assign(I18N.de, { subtitle: 'Wähle aktuelles und Ziellevel, um Ressourcen, Macht und Bauzeit zu berechnen.', inventoryHint: 'Gib vorhandene Ressourcen ein, um Fehlmengen und Reste zu sehen.' });
+    Object.assign(I18N['zh-CN'], { subtitle: '选择当前等级和目标等级，计算建筑升级资源、战力和建造时间。', inventoryHint: '输入已有资源即可查看缺口和剩余。' });
+    Object.assign(I18N['zh-TW'], { subtitle: '選擇目前等級與目標等級，計算建築升級資源、戰力與建造時間。', inventoryHint: '輸入已有資源即可查看缺口與剩餘。' });
+    Object.assign(I18N.th, { subtitle: 'เลือกเลเวลปัจจุบันและเป้าหมายเพื่อคำนวณทรัพยากร พลัง และเวลาก่อสร้าง', inventoryHint: 'ใส่ทรัพยากรที่มีเพื่อดูส่วนที่ขาดและคงเหลือ' });
+    Object.assign(I18N.id, { subtitle: 'Pilih level saat ini dan target untuk menghitung resource, power, dan waktu bangunan.', inventoryHint: 'Masukkan resource yang dimiliki untuk melihat kekurangan dan sisa.' });
     const RESOURCE_KEYS = ['bread', 'wood', 'stone', 'iron', 'truegold', 'tempered_truegold'];
     const WOLF = { 0: 0, 1: 5, 2: 7, 3: 9, 4: 12, 5: 15 };
     const MINISTER = { none: 0, 10: 10, 15: 15 };

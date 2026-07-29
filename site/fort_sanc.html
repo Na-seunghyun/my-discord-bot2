@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -132,7 +132,12 @@ pre{font-family:var(--mono);font-size:12.5px;line-height:1.6;background:var(--in
   .rail{border-right:none;border-bottom:1px solid var(--line)}.stage{grid-template-columns:1fr}}
 @media (max-width:720px){.hubbar{padding:10px 12px;align-items:flex-start}.hubnav{width:100%}.hubnav a,.hubnav select{flex:1;min-width:120px;text-align:center}header{padding:16px 14px}.meters{margin-left:0}.meter{flex:1;min-width:96px}main{padding:16px 14px 48px}.rail{padding:16px 14px}.field{align-items:flex-start}.field label{line-height:1.35}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
-</style>
+  /* 885 text fit guard */
+  .hubbar,.hubbrand,.hubnav,.top-actions,.actions,.toolbar,.tabs,.seg,.panel,.card,.field,.row,.grid,.hero,.hero-actions,.stat,.metric,.result,.summary,.control,.controls{min-width:0}
+  button,select,input,textarea,.btn,.button,.primary,.secondary,.ghost,.pill,.chip,.badge,.tabs button,.seg button,.hubnav a,.hubnav select{max-width:100%;line-height:1.2}
+  button,.btn,.button,.primary,.secondary,.ghost,.pill,.chip,.badge,.tabs button,.seg button,.hubnav a{white-space:normal;overflow-wrap:anywhere}
+  h1,h2,h3,p,small,label,td,th,pre,.hint,.sub,.desc,.note,.status,.metric,.result,.card-note{overflow-wrap:anywhere}
+  @media(max-width:720px){.hubnav,.top-actions,.actions,.toolbar,.tabs,.seg{min-width:0}.hubnav a,.hubnav select,.actions button,.toolbar button,.tabs button,.seg button{min-width:0}}</style>
 </head>
 <body>
 <nav class="hubbar" aria-label="Hub navigation">
