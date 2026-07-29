@@ -1,11 +1,10 @@
 ﻿Upload guide
 
-Copy the folders inside this package to the same paths in GitHub:
-- site/
-- src/
+Copy this file to the same GitHub path:
+- site/tri_alliance.html
 
-Main changes:
-- Hub card/button text-fit fixes
-- Shared text-fit guard for detail pages
-- Tri-Alliance font aligned with the hub/Swordland style
-- Tri-Alliance mobile/table/button overflow guards
+Change summary:
+- Added Swordland-style 885 hub navigation banner above Tri-Alliance header
+- Added quick links to Hub, Swordland, Auto Redeem, and Fort/Sanc
+- Added shared language selector state so navigation keeps the selected lang value
+- Kept the Tri-Alliance map and planner logic unchanged

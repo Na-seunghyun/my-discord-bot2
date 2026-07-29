@@ -23,6 +23,18 @@
   h1,h2,h3,.display{font-family:var(--serif);letter-spacing:.02em}
   .mono{font-family:var(--mono)}
   .wrap{max-width:1440px;margin:0 auto;padding:0 18px 70px}
+  .hubbar{
+    width:min(100% - 36px,1440px);margin:18px auto 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+    border:1px solid var(--line);background:rgba(22,30,42,.86);border-radius:10px;padding:10px 12px;
+    box-shadow:0 16px 42px rgba(0,0,0,.26), inset 0 1px 0 rgba(255,255,255,.04);
+    backdrop-filter:blur(14px)
+  }
+  .hubbrand{display:flex;align-items:center;gap:9px;color:var(--gold-soft);text-decoration:none;font-weight:800;min-width:0}
+  .hubbrand .mark{display:grid;place-items:center;width:34px;height:34px;flex:0 0 34px;border:1px solid var(--gold-soft);border-radius:8px;background:rgba(201,162,75,.12);font-family:var(--mono);font-size:12px;color:#ffe8a6}
+  .hubbrand span:last-child{overflow-wrap:anywhere}
+  .hubnav{display:flex;gap:7px;flex-wrap:wrap;align-items:center;justify-content:flex-end;min-width:0}
+  .hubnav a,.hubnav select{min-height:36px;border:1px solid var(--line);border-radius:8px;background:var(--panel-3);color:var(--text);padding:7px 10px;text-decoration:none;font-weight:700;font-size:12px;line-height:1.2;max-width:100%}
+  .hubnav a:hover,.hubnav select:hover{border-color:var(--gold-soft);color:var(--gold-soft)}
 
   header.mast{padding:24px 18px 14px;text-align:center;border-bottom:1px solid var(--line);background:linear-gradient(180deg,rgba(201,162,75,.06),transparent)}
   .eyebrow{font-family:var(--mono);text-transform:uppercase;letter-spacing:.4em;font-size:10.5px;color:var(--gold);margin-bottom:9px;padding-left:.4em}
@@ -205,6 +217,11 @@
   .ordtable td.b{width:58px}
   .ordtable td.pt{width:64px}
   @media(max-width:720px){
+    .hubbar{width:calc(100% - 20px);margin:10px auto 12px;border-radius:9px;align-items:flex-start}
+    .hubbrand{width:100%}
+    .hubnav{width:100%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));justify-content:stretch}
+    .hubnav a,.hubnav select{text-align:center;min-width:0}
+    .hubnav select{grid-column:1/-1}
     .wrap{padding-left:12px;padding-right:12px}
     header.mast{padding:18px 12px 12px}
     .eyebrow{letter-spacing:.18em;line-height:1.35}
@@ -224,6 +241,26 @@
 </style>
 </head>
 <body>
+<nav class="hubbar" aria-label="Hub navigation">
+  <a class="hubbrand" href="./index.html" data-hub-link><span class="mark">885</span><span>885 LEGEND NASHSH</span></a>
+  <div class="hubnav">
+    <a href="./index.html" data-hub-link>Hub</a>
+    <a href="./swordland_planner.html" data-hub-link>Swordland</a>
+    <a href="./auto_redeem.html" data-hub-link>Auto Redeem</a>
+    <a href="./fort_sanc.html" data-hub-link>Fort/Sanc</a>
+    <select id="pageLang" aria-label="Language">
+      <option value="ko">🇰🇷 한국어</option>
+      <option value="ja">🇯🇵 日本語</option>
+      <option value="en">🇺🇸 English</option>
+      <option value="fr">🇫🇷 Français</option>
+      <option value="de">🇩🇪 Deutsch</option>
+      <option value="zh-CN">🇨🇳 简体中文</option>
+      <option value="zh-TW">🇹🇼 繁體中文</option>
+      <option value="th">🇹🇭 ไทย</option>
+      <option value="id">🇮🇩 Indonesia</option>
+    </select>
+  </div>
+</nav>
 <header class="mast">
   <div class="eyebrow">Kingshot · Tri-Alliance Clash</div>
   <h1>Battle <span class="g">Planner</span></h1>
@@ -616,6 +653,31 @@ function flash(btnId,msg){const b=document.getElementById(btnId),o=b.textContent
 document.addEventListener("keydown",e=>{if(e.key==="Escape")deselect();});
 
 buildMarkers(); buildFilters(); renderRoster(); renderStats(); renderOrders(); applyZoom(); updateTimeline();
+
+(function(){
+  const pick=document.getElementById("pageLang");
+  if(!pick)return;
+  const params=new URLSearchParams(location.search);
+  const saved=params.get("lang")||localStorage.getItem("lang")||localStorage.getItem("siteLang")||"ko";
+  if([...pick.options].some(option=>option.value===saved))pick.value=saved;
+  document.documentElement.lang=pick.value;
+  const syncLinks=()=>{
+    document.querySelectorAll("[data-hub-link]").forEach(link=>{
+      const href=link.getAttribute("href").split("?")[0];
+      link.href=href+"?lang="+encodeURIComponent(pick.value);
+    });
+  };
+  syncLinks();
+  pick.addEventListener("change",()=>{
+    localStorage.setItem("lang",pick.value);
+    localStorage.setItem("siteLang",pick.value);
+    document.documentElement.lang=pick.value;
+    const url=new URL(location.href);
+    url.searchParams.set("lang",pick.value);
+    history.replaceState(null,"",url);
+    syncLinks();
+  });
+})();
 </script>
 </body>
 </html>
