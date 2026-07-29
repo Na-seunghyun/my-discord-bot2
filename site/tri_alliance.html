@@ -1,1454 +1,253 @@
-<!doctype html>
-<html lang="ko">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Tri-Alliance Battle Planner | 885 LEGEND NASHSH</title>
-  <meta name="description" content="Unofficial Kingshot tri-alliance battle planner with map targets, assignments, scoring timeline, filters, and shareable orders.">
-  <link rel="canonical" href="https://my-discord-bot2.looloo90.workers.dev/tri_alliance.html">
-  <style>
-    :root {
-      color-scheme: dark;
-      --bg: #10141b;
-      --panel: #151c27;
-      --panel2: #1d2633;
-      --panel3: #111721;
-      --line: #314055;
-      --line-soft: rgba(255,255,255,.08);
-      --text: #f5ecd8;
-      --muted: #a9b4c4;
-      --dim: #788596;
-      --gold: #d7ad35;
-      --gold2: #f4d77b;
-      --blue: #67a9ff;
-      --red: #e36c72;
-      --green: #70c995;
-      --amber: #d98a33;
-      --shadow: 0 20px 54px rgba(0,0,0,.32);
-      --font: Inter, Pretendard, "Noto Sans KR", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    }
-    * { box-sizing: border-box; }
-    html, body { margin: 0; min-height: 100%; }
-    body {
-      background:
-        radial-gradient(circle at 18% 0%, rgba(215,173,53,.13), transparent 30%),
-        radial-gradient(circle at 82% 8%, rgba(103,169,255,.1), transparent 26%),
-        linear-gradient(180deg, #171d29 0%, #0f141d 54%, #090d14 100%);
-      color: var(--text);
-      font: 14px/1.5 var(--font);
-      -webkit-font-smoothing: antialiased;
-    }
-    body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      background-image:
-        linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,.028) 1px, transparent 1px);
-      background-size: 42px 42px;
-      mask-image: linear-gradient(to bottom, rgba(0,0,0,.82), transparent 72%);
-    }
-    a { color: inherit; text-decoration: none; }
-    button, input, select, textarea { font: inherit; color: inherit; }
-    button { cursor: pointer; }
-    .shell {
-      position: relative;
-      z-index: 1;
-      width: min(1480px, calc(100% - 28px));
-      margin: 0 auto;
-      padding: 14px 0 36px;
-    }
-    .hubbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      padding: 10px 12px;
-      border: 1px solid var(--line);
-      border-radius: 7px;
-      background: rgba(16, 22, 32, .94);
-      box-shadow: var(--shadow);
-    }
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      min-width: 0;
-      color: var(--gold2);
-      font-weight: 950;
-    }
-    .mark {
-      display: grid;
-      place-items: center;
-      width: 38px;
-      height: 38px;
-      flex: 0 0 38px;
-      border: 1px solid rgba(244,215,123,.72);
-      border-radius: 6px;
-      background: linear-gradient(180deg, rgba(244,215,123,.16), rgba(215,173,53,.08));
-      color: var(--gold2);
-      font-size: 12px;
-      font-weight: 950;
-    }
-    .brand small {
-      display: block;
-      color: var(--muted);
-      font-size: 11px;
-      font-weight: 750;
-      margin-top: 1px;
-    }
-    .nav {
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      flex-wrap: wrap;
-      gap: 7px;
-    }
-    .nav a, .nav select, .btn {
-      min-height: 34px;
-      border: 1px solid var(--line);
-      border-radius: 6px;
-      background: var(--panel2);
-      color: var(--text);
-      padding: 0 10px;
-      font-size: 12px;
-      font-weight: 850;
-    }
-    .nav a:hover, .btn:hover { border-color: var(--gold); color: var(--gold2); }
-    .nav select option { background: var(--panel2); color: var(--text); }
-    .top {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      gap: 18px;
-      align-items: end;
-      margin: 18px 0 12px;
-      padding: 0 4px 14px;
-      border-bottom: 1px solid var(--line);
-    }
-    .eyebrow {
-      color: var(--gold);
-      font-size: 10px;
-      letter-spacing: .18em;
-      text-transform: uppercase;
-      font-weight: 850;
-    }
-    h1 {
-      margin: 6px 0 4px;
-      font-size: clamp(30px, 4vw, 54px);
-      line-height: 1;
-      letter-spacing: 0;
-    }
-    .subtitle {
-      max-width: 860px;
-      margin: 0;
-      color: var(--muted);
-      font-size: 14px;
-      line-height: 1.65;
-    }
-    .top-actions {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-    }
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      white-space: nowrap;
-    }
-    .btn.gold {
-      border-color: rgba(244,215,123,.58);
-      color: var(--gold2);
-      background: linear-gradient(180deg, #2d2a1d, #1f1e1b);
-    }
-    .btn.on {
-      background: var(--gold);
-      border-color: var(--gold);
-      color: #151006;
-    }
-    .btn.danger { color: #ffb9be; border-color: rgba(227,108,114,.56); }
-    .statline {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 10px;
-      margin: 0 0 12px;
-    }
-    .stat {
-      border: 1px solid var(--line);
-      border-radius: 7px;
-      background: linear-gradient(180deg, rgba(29,38,51,.95), rgba(18,24,34,.95));
-      padding: 12px;
-      box-shadow: 0 14px 36px rgba(0,0,0,.22);
-      min-width: 0;
-    }
-    .stat span {
-      display: block;
-      color: var(--muted);
-      font-size: 10px;
-      font-weight: 850;
-      text-transform: uppercase;
-    }
-    .stat strong {
-      display: block;
-      margin-top: 4px;
-      color: var(--gold2);
-      font-size: clamp(18px, 2.4vw, 28px);
-      line-height: 1.08;
-      word-break: keep-all;
-    }
-    .timeline {
-      border: 1px solid var(--line);
-      border-radius: 7px;
-      background: var(--panel);
-      padding: 12px 14px;
-      margin-bottom: 12px;
-      box-shadow: var(--shadow);
-    }
-    .time-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      gap: 12px;
-      margin-bottom: 8px;
-    }
-    .clock {
-      color: var(--gold2);
-      font-size: 28px;
-      font-weight: 950;
-      line-height: 1;
-    }
-    .phase {
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 850;
-      text-align: right;
-    }
-    input[type=range] {
-      width: 100%;
-      accent-color: var(--gold);
-      margin: 0;
-    }
-    .ticks {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 7px;
-      color: var(--dim);
-      font-size: 10px;
-      font-weight: 850;
-      margin-top: 7px;
-    }
-    .tick {
-      border-top: 1px solid rgba(255,255,255,.12);
-      padding-top: 5px;
-    }
-    .grid {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) 360px;
-      gap: 14px;
-      align-items: start;
-    }
-    .stage { min-width: 0; }
-    .toolbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-bottom: 8px;
-    }
-    .filters {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-    }
-    .zoom-pill {
-      min-width: 64px;
-      justify-content: center;
-      color: var(--gold2);
-    }
-    .map-frame {
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: #121824;
-      box-shadow: var(--shadow);
-      overflow: auto;
-      padding: 12px;
-    }
-    .map {
-      position: relative;
-      width: min(100%, 1050px);
-      min-width: 760px;
-      aspect-ratio: 1900 / 1386;
-      margin: 0 auto;
-      border: 10px solid #615542;
-      border-radius: 26px;
-      overflow: hidden;
-      transform-origin: top center;
-      background: #8f643e;
-      box-shadow:
-        inset 0 0 0 2px rgba(0,0,0,.38),
-        inset 0 0 70px rgba(38, 18, 7, .65);
-    }
-    #terrainCanvas {
-      position: absolute;
-      inset: 0;
-      z-index: 0;
-      width: 100%;
-      height: 100%;
-      display: block;
-    }
-    .map-image {
-      position: absolute;
-      inset: 0;
-      z-index: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: none;
-      user-select: none;
-      -webkit-user-drag: none;
-    }
-    .map.has-image #terrainCanvas { display: none; }
-    .map.has-image .map-image { display: block; }
-    .map::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      z-index: 1;
-      pointer-events: none;
-      background:
-        linear-gradient(rgba(80, 44, 20, .14) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(80, 44, 20, .14) 1px, transparent 1px),
-        radial-gradient(circle at 50% 50%, transparent 0 34%, rgba(0,0,0,.16) 74%, rgba(0,0,0,.35) 100%);
-      background-size: 10% 10%, 10% 10%, 100% 100%;
-    }
-    .route {
-      position: absolute;
-      z-index: 2;
-      left: 9%;
-      right: 9%;
-      height: 2px;
-      top: 52%;
-      background: linear-gradient(90deg, transparent, rgba(255,235,176,.48), transparent);
-      transform: rotate(-18deg);
-      pointer-events: none;
-    }
-    .route.r2 { transform: rotate(18deg); top: 48%; }
-    .node {
-      position: absolute;
-      z-index: 4;
-      transform: translate(-50%, -50%);
-      display: grid;
-      justify-items: center;
-      gap: 4px;
-      min-width: 18px;
-      border: 0;
-      padding: 0;
-      background: transparent;
-      touch-action: none;
-    }
-    .node.hide { display: none; }
-    .node.locked { opacity: .38; }
-    .gem {
-      display: grid;
-      place-items: center;
-      width: 15px;
-      height: 15px;
-      border: 2px solid rgba(245,210,105,.95);
-      border-radius: 50%;
-      background: rgba(43, 25, 11, .82);
-      box-shadow: 0 4px 11px rgba(0,0,0,.44), 0 0 0 2px rgba(0,0,0,.18);
-      transition: transform .13s, box-shadow .13s, border-color .13s;
-    }
-    .gem span {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      overflow: hidden;
-      clip: rect(0 0 0 0);
-    }
-    .node.hq .gem,
-    .node.garrison .gem,
-    .node.temple .gem {
-      width: 26px;
-      height: 26px;
-      border-radius: 7px;
-      rotate: 45deg;
-    }
-    .node.hq .gem span,
-    .node.garrison .gem span,
-    .node.temple .gem span {
-      position: static;
-      width: auto;
-      height: auto;
-      overflow: visible;
-      clip: auto;
-      rotate: -45deg;
-      color: #fff6d2;
-      font-size: 9px;
-      font-weight: 950;
-      text-shadow: 0 1px 3px rgba(0,0,0,.86);
-    }
-    .node:hover .gem,
-    .node.selected .gem {
-      transform: scale(1.16);
-      border-color: #fff0a6;
-      box-shadow: 0 0 0 4px rgba(255,240,166,.24), 0 8px 22px rgba(0,0,0,.48);
-    }
-    .node[data-alliance=blue] .gem { border-color: #93c9ff; background: rgba(39, 93, 159, .82); }
-    .node[data-alliance=gold] .gem { border-color: #f4d77b; background: rgba(142, 91, 15, .85); }
-    .node[data-alliance=red] .gem { border-color: #ff9ca3; background: rgba(135, 36, 45, .85); }
-    .node[data-status=enemy] .gem { border-color: #ff8288; background: rgba(91, 20, 27, .88); }
-    .node[data-status=unassigned] .gem { border-color: rgba(255,255,255,.46); background: rgba(35, 23, 12, .64); }
-    .label {
-      max-width: 142px;
-      border: 1px solid rgba(255,235,176,.35);
-      border-radius: 12px;
-      background: rgba(39, 24, 12, .88);
-      color: #f7e2bd;
-      padding: 2px 7px;
-      font-size: 10px;
-      line-height: 1.25;
-      font-weight: 850;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      box-shadow: 0 4px 12px rgba(0,0,0,.3);
-      display: none;
-    }
-    .node.show-label .label,
-    .node.hq .label,
-    .node.selected .label { display: block; }
-    .label small {
-      display: block;
-      color: #ffd979;
-      font-size: 9px;
-      font-weight: 900;
-    }
-    .legend {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-top: 10px;
-      color: var(--muted);
-      font-size: 11px;
-      font-weight: 750;
-    }
-    .legend i {
-      display: inline-block;
-      width: 10px;
-      height: 10px;
-      margin-right: 5px;
-      border: 2px solid;
-      border-radius: 50%;
-      vertical-align: -1px;
-    }
-    .side {
-      display: grid;
-      gap: 12px;
-    }
-    .panel {
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: rgba(21, 28, 39, .96);
-      box-shadow: var(--shadow);
-      overflow: hidden;
-    }
-    .panel h2 {
-      margin: 0;
-      padding: 10px 12px;
-      border-bottom: 1px solid var(--line);
-      color: var(--gold2);
-      font-size: 12px;
-      text-transform: uppercase;
-    }
-    .body { padding: 12px; }
-    .scores {
-      display: grid;
-      gap: 8px;
-    }
-    .score {
-      border: 1px solid var(--line-soft);
-      border-radius: 7px;
-      padding: 10px;
-      background: rgba(255,255,255,.035);
-      min-width: 0;
-    }
-    .score span { display:block; color: var(--muted); font-size: 11px; font-weight: 850; }
-    .score strong { display:block; margin-top: 2px; font-size: 22px; color: var(--text); }
-    .score small { color: var(--dim); font-weight: 750; }
-    .score.blue { border-color: rgba(103,169,255,.28); }
-    .score.gold { border-color: rgba(244,215,123,.28); }
-    .score.red { border-color: rgba(227,108,114,.28); }
-    .inline {
-      display: flex;
-      gap: 7px;
-      align-items: center;
-      min-width: 0;
-    }
-    input, select, textarea {
-      width: 100%;
-      min-height: 34px;
-      border: 1px solid var(--line);
-      border-radius: 6px;
-      background: var(--panel3);
-      color: var(--text);
-      padding: 7px 9px;
-      outline: 0;
-    }
-    textarea {
-      resize: vertical;
-      min-height: 78px;
-    }
-    .chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-top: 9px;
-    }
-    .chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      min-height: 28px;
-      border: 1px solid rgba(244,215,123,.25);
-      border-radius: 14px;
-      background: rgba(244,215,123,.08);
-      padding: 0 7px 0 9px;
-      color: var(--gold2);
-      font-size: 12px;
-      font-weight: 850;
-      max-width: 100%;
-    }
-    .chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .chip button {
-      border: 0;
-      background: transparent;
-      color: var(--muted);
-      padding: 0;
-      font-weight: 950;
-    }
-    .field {
-      display: grid;
-      gap: 5px;
-      margin-bottom: 9px;
-    }
-    .field label {
-      color: var(--muted);
-      font-size: 11px;
-      font-weight: 850;
-    }
-    .seg {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 5px;
-    }
-    .seg button {
-      min-height: 32px;
-      border: 1px solid var(--line);
-      border-radius: 6px;
-      background: var(--panel3);
-      color: var(--muted);
-      font-size: 11px;
-      font-weight: 850;
-    }
-    .seg button.on {
-      background: rgba(215,173,53,.16);
-      border-color: var(--gold);
-      color: var(--gold2);
-    }
-    .meta {
-      color: var(--muted);
-      font-size: 11px;
-      font-weight: 750;
-    }
-    .wide { grid-column: 1 / -1; }
-    .orders {
-      display: grid;
-      gap: 7px;
-      max-height: 360px;
-      overflow: auto;
-      padding-right: 2px;
-    }
-    .order {
-      display: grid;
-      gap: 2px;
-      border: 1px solid var(--line-soft);
-      border-radius: 7px;
-      background: rgba(255,255,255,.035);
-      padding: 9px;
-    }
-    .order b { color: var(--text); font-size: 12px; }
-    .order em { color: var(--muted); font-style: normal; font-size: 11px; overflow-wrap: anywhere; }
-    .empty {
-      margin: 0;
-      color: var(--muted);
-      font-size: 12px;
-      line-height: 1.55;
-    }
-    .plan-code {
-      min-height: 104px;
-      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
-      font-size: 11px;
-    }
-    .footer {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      gap: 8px;
-      margin-top: 16px;
-      color: var(--dim);
-      font-size: 11px;
-      font-weight: 750;
-    }
-    @media (max-width: 1100px) {
-      .grid { grid-template-columns: 1fr; }
-      .side { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .panel.wide { grid-column: auto; }
-    }
-    @media (max-width: 760px) {
-      .shell { width: min(100% - 16px, 1480px); padding-top: 8px; }
-      .hubbar, .top, .time-head { align-items: stretch; flex-direction: column; }
-      .hubbar, .nav, .top-actions { justify-content: stretch; }
-      .nav a, .nav select, .top-actions .btn { flex: 1 1 auto; }
-      .top { display: grid; grid-template-columns: 1fr; }
-      h1 { font-size: 32px; }
-      .statline { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .side { grid-template-columns: 1fr; }
-      .map { min-width: 760px; }
-      .toolbar { align-items: stretch; }
-      .filters .btn { flex: 1 1 auto; }
-      .inline { flex-wrap: wrap; }
-      .inline .btn { flex: 1 1 auto; }
-    }
-    @media (max-width: 470px) {
-      .statline { grid-template-columns: 1fr; }
-      .clock { font-size: 24px; }
-      .ticks { grid-template-columns: repeat(2, 1fr); }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tri-Alliance Clash — Battle Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Barlow:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0E131B;--panel:#161E2A;--panel-2:#1D2735;--panel-3:#243043;
+    --line:#2C384A;--text:#ECE4D4;--muted:#8E98A8;--muted-2:#68727F;
+    --gold:#C9A24B;--gold-soft:#E0C173;
+    --cap:#E0902F;--hold:#4FB06E;--def:#4194D6;--enemy:#B23A32;
+    --atk:#E0902F;--dfd:#4194D6;
+    --shadow:0 10px 40px rgba(0,0,0,.5);--r:14px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:radial-gradient(1100px 640px at 12% -6%,#1a2534 0,transparent 55%),radial-gradient(900px 560px at 100% 0,#1c1620 0,transparent 50%),var(--bg);
+    color:var(--text);font-family:"Barlow",system-ui,sans-serif;font-size:15.5px;line-height:1.5;min-height:100vh;-webkit-font-smoothing:antialiased}
+  h1,h2,h3,.display{font-family:"Cinzel",serif;letter-spacing:.02em}
+  .mono{font-family:"JetBrains Mono",monospace}
+  .wrap{max-width:1440px;margin:0 auto;padding:0 18px 70px}
+
+  header.mast{padding:24px 18px 14px;text-align:center;border-bottom:1px solid var(--line);background:linear-gradient(180deg,rgba(201,162,75,.06),transparent)}
+  .eyebrow{font-family:"JetBrains Mono";text-transform:uppercase;letter-spacing:.4em;font-size:10.5px;color:var(--gold);margin-bottom:9px;padding-left:.4em}
+  header.mast h1{font-size:clamp(24px,4.4vw,40px);font-weight:700;margin:0}
+  header.mast h1 .g{color:var(--gold)}
+  .sub{color:var(--muted);max-width:640px;margin:9px auto 0;font-size:14px}
+
+  .stats{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:16px 0 14px}
+  .stat{border:1px solid var(--line);background:var(--panel);border-radius:11px;padding:9px 15px;text-align:center;min-width:92px}
+  .stat.big{border-color:var(--cap);background:linear-gradient(180deg,rgba(224,144,47,.14),var(--panel))}
+  .stat.temple.on{border-color:var(--gold-soft);background:linear-gradient(180deg,rgba(224,193,115,.18),var(--panel))}
+  .stat .num{font-family:"JetBrains Mono";font-weight:700;font-size:19px;color:var(--gold-soft);line-height:1}
+  .stat.big .num{color:var(--cap);font-size:21px}
+  .stat .lb{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:4px}
+
+  .timeline{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line);border-radius:12px;padding:15px 18px;margin-bottom:16px}
+  .tl-top{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:12px}
+  .tl-clock{font-family:"JetBrains Mono";font-weight:700;font-size:30px;line-height:1;color:var(--text)}
+  .tl-phase{font-family:"JetBrains Mono";font-size:11px;letter-spacing:.12em;text-transform:uppercase;padding:5px 11px;border-radius:999px;border:1px solid var(--line);color:var(--gold-soft);background:var(--panel-3)}
+  .tl-score{margin-left:auto;text-align:right}
+  .tl-score .n{font-family:"JetBrains Mono";font-weight:700;font-size:24px;color:var(--cap);line-height:1}
+  .tl-score .l{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
+  .tl-live{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px;justify-content:flex-end}
+  .livechip{font-family:"JetBrains Mono";font-size:10px;letter-spacing:.04em;padding:3px 8px;border-radius:7px;border:1px solid var(--line);background:var(--panel-3);color:var(--muted-2)}
+  .livechip.on{color:#12100a;font-weight:700}
+  .livechip.garr.on{background:var(--gold-soft);border-color:var(--gold)}
+  .livechip.temp.on{background:#e6c46f;border-color:var(--gold-soft)}
+  .tl-track{position:relative;height:34px;margin-top:12px}
+  .tl-seg{position:absolute;top:0;height:14px;border-radius:3px;opacity:.5}
+  .tl-seglabel{position:absolute;top:16px;font-family:"JetBrains Mono";font-size:9px;color:var(--muted-2);transform:translateX(-50%)}
+  input[type=range].slider{-webkit-appearance:none;appearance:none;width:100%;height:14px;background:transparent;position:absolute;top:0;left:0;margin:0;cursor:pointer}
+  input[type=range].slider::-webkit-slider-thumb{-webkit-appearance:none;width:8px;height:26px;border-radius:3px;background:var(--gold-soft);border:2px solid #12100a;margin-top:-6px;box-shadow:0 0 8px rgba(224,193,115,.8)}
+  input[type=range].slider::-moz-range-thumb{width:8px;height:26px;border-radius:3px;background:var(--gold-soft);border:2px solid #12100a;box-shadow:0 0 8px rgba(224,193,115,.8)}
+  input[type=range].slider:focus-visible{outline:2px solid var(--gold-soft);outline-offset:4px}
+
+  .grid{display:grid;grid-template-columns:1fr 340px;gap:18px;align-items:start}
+  @media(max-width:1080px){.grid{grid-template-columns:1fr}}
+  .panel{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+
+  .maptools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:11px 14px;border-bottom:1px solid var(--line)}
+  .toggle{font-family:"Barlow";font-weight:600;font-size:12.5px;color:var(--muted);background:var(--panel-3);border:1px solid var(--line);border-radius:8px;padding:7px 11px;cursor:pointer;transition:.15s}
+  .toggle:hover{color:var(--text)}
+  .toggle.on{background:var(--gold);color:#12100a;border-color:var(--gold)}
+  .toggle.move.on{background:var(--def);border-color:var(--def);color:#fff}
+  .toggle:focus-visible{outline:2px solid var(--gold-soft);outline-offset:2px}
+  .spring{flex:1}
+  .zoomctl{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  .zoomctl button{background:var(--panel-3);border:0;color:var(--text);font-family:"JetBrains Mono";font-size:14px;padding:6px 12px;cursor:pointer}
+  .zoomctl button:hover{color:var(--gold-soft)}
+  .zoomctl .z{font-family:"JetBrains Mono";font-size:11px;color:var(--muted);padding:0 8px;min-width:44px;text-align:center}
+
+  .scroll{overflow:auto;border-radius:0 0 var(--r) var(--r);max-height:80vh}
+  .stage{position:relative;width:100%}
+  .stage img{width:100%;display:block;-webkit-user-drag:none;user-select:none}
+  .layer{position:absolute;inset:0}
+  .stage.moving{cursor:grab}
+  .stage.moving .mk{cursor:grab}
+  .stage.moving .mk:active{cursor:grabbing}
+
+  .mk{position:absolute;transform:translate(-50%,-50%);cursor:pointer;border:0;background:transparent;padding:0;z-index:2;touch-action:none}
+  .mk .dot{display:block;width:14px;height:14px;border-radius:50%;border:2px solid rgba(255,255,255,.85);
+    background:rgba(30,40,54,.5);box-shadow:0 1px 4px rgba(0,0,0,.5);transition:transform .12s}
+  .mk:hover .dot{transform:scale(1.28)}
+  .mk .cap{position:absolute;left:50%;top:calc(50% + 12px);transform:translateX(-50%);white-space:nowrap;
+    font-family:"JetBrains Mono";font-size:9px;font-weight:700;color:#fff;background:rgba(12,16,22,.82);
+    padding:1px 5px;border-radius:5px;pointer-events:none;display:none;border:1px solid rgba(255,255,255,.15)}
+  .mk .badge-n{position:absolute;top:-6px;right:-6px;background:var(--gold);color:#12100a;font-family:"JetBrains Mono";font-weight:700;font-size:8px;border-radius:8px;padding:0 4px;line-height:13px;display:none;border:1px solid #12100a}
+  .mk.multi .badge-n{display:block}
+  .mk.show-id .cap,.mk.assigned .cap{display:block}
+  .mk.assigned .dot{width:18px;height:18px}
+  .mk.k-temple .dot{width:25px;height:25px;background:radial-gradient(circle,#f0dfa8,#c99a3a);border-color:#8a6d2e}
+  .mk.k-garrison .dot{width:20px;height:20px;border-radius:5px;background:rgba(201,162,75,.5);border-color:var(--gold-soft)}
+  .mk.k-hq .dot{border-radius:4px;width:19px;height:19px}
+  .mk.ownhq .dot{background:var(--cap);border-color:#fff;box-shadow:0 0 0 2px rgba(224,144,47,.5)}
+  .mk.enemyhq .dot{background:var(--enemy);border-color:rgba(255,255,255,.7);opacity:.9}
+  .mk[data-act=capture] .dot{background:var(--cap);border-color:#fff}
+  .mk[data-act=hold] .dot{background:var(--hold);border-color:#fff}
+  .mk[data-act=defend] .dot{background:var(--def);border-color:#fff}
+  .mk.sel .dot{box-shadow:0 0 0 3px var(--gold),0 0 12px rgba(201,162,75,.7);transform:scale(1.15)}
+  .mk.dim{opacity:.16;filter:grayscale(.4)}
+  .mk.hl .dot{box-shadow:0 0 0 3px var(--gold-soft),0 0 14px rgba(224,193,115,.8)}
+  .mk.locked .dot{opacity:.4;border-style:dashed}
+
+  .rail{display:flex;flex-direction:column;gap:14px;position:sticky;top:12px}
+  .card{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line);border-radius:12px;padding:15px}
+  .card h3{font-family:"Barlow";font-weight:700;font-size:12px;letter-spacing:.11em;text-transform:uppercase;color:var(--gold);margin:0 0 12px;display:flex;align-items:center;gap:8px}
+
+  .addrow{display:flex;gap:7px;margin-bottom:11px}
+  input.txt,select.txt{width:100%;background:var(--panel-3);border:1px solid var(--line);border-radius:8px;color:var(--text);font-family:"Barlow";font-size:13.5px;padding:8px 10px;outline:none}
+  input.txt:focus,select.txt:focus{border-color:var(--gold)}
+  .btn{font-family:"Barlow";font-weight:600;font-size:13px;border:1px solid var(--line);background:var(--panel-3);color:var(--text);padding:8px 13px;border-radius:8px;cursor:pointer;transition:.15s;white-space:nowrap}
+  .btn:hover{border-color:var(--gold);color:var(--gold-soft)}
+  .btn.primary{background:linear-gradient(180deg,var(--gold-soft),var(--gold));color:#12100a;border-color:var(--gold)}
+  .btn.sm{padding:6px 10px;font-size:12px}
+  .btn:focus-visible{outline:2px solid var(--gold-soft);outline-offset:2px}
+
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{display:inline-flex;align-items:center;gap:7px;background:var(--panel-3);border:1px solid var(--line);border-radius:20px;padding:5px 8px 5px 11px;font-size:12.5px;cursor:pointer;transition:.15s}
+  .chip:hover{border-color:var(--gold-soft)}
+  .chip.active{background:var(--gold);color:#12100a;border-color:var(--gold)}
+  .chip .ct{font-family:"JetBrains Mono";font-size:10px;background:rgba(0,0,0,.22);border-radius:10px;padding:1px 6px}
+  .chip .x{border:0;background:transparent;color:inherit;cursor:pointer;font-size:14px;line-height:1;opacity:.6;padding:0 2px}
+  .chip .x:hover{opacity:1}
+  .empty{font-size:12.5px;color:var(--muted-2);font-style:italic}
+
+  .pchip{display:inline-flex;align-items:center;gap:6px;border-radius:8px;padding:5px 8px 5px 10px;font-size:12.5px;border:1px solid var(--line);background:var(--panel-3)}
+  .pchip .rl{font-family:"JetBrains Mono";font-size:9px;text-transform:uppercase;letter-spacing:.05em;padding:1px 5px;border-radius:5px}
+  .pchip .rl.Attacker{background:rgba(224,144,47,.22);color:var(--atk)}
+  .pchip .rl.Defender{background:rgba(65,148,214,.22);color:var(--dfd)}
+  .pchip .x{border:0;background:transparent;color:var(--muted);cursor:pointer;font-size:14px;line-height:1;padding:0 1px}
+  .pchip .x:hover{color:var(--text)}
+
+  .ed-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+  .ed-head .id{font-family:"Cinzel";font-weight:700;font-size:22px}
+  .badge{font-family:"JetBrains Mono";font-size:9.5px;letter-spacing:.07em;text-transform:uppercase;padding:3px 7px;border-radius:6px;border:1px solid var(--line);color:var(--gold-soft)}
+  .badge.own{color:var(--cap);border-color:var(--cap)}
+  .badge.enemy{color:var(--enemy);border-color:var(--enemy)}
+  .infobox{border:1px solid var(--line);background:var(--panel-3);border-radius:9px;padding:10px 12px;margin-bottom:13px;font-size:12.5px;color:var(--muted);line-height:1.45}
+  .infobox b{color:var(--text)}
+  .valrow{display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--panel-3);border-radius:9px;padding:9px 11px;margin-bottom:13px}
+  .valrow label{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+  .valrow input{width:78px;background:var(--bg);border:1px solid var(--line);border-radius:7px;color:var(--gold-soft);font-family:"JetBrains Mono";font-weight:700;font-size:15px;padding:5px 8px;text-align:right;outline:none}
+  .valrow input:focus{border-color:var(--gold)}
+  .valrow .unit{font-family:"JetBrains Mono";color:var(--muted);font-size:12px}
+  .fld{margin-bottom:12px}
+  .fld label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:5px}
+  .actgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+  .actbtn{border:1px solid var(--line);background:var(--panel-3);color:var(--text);border-radius:8px;padding:8px 6px;font-size:12.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:.13s}
+  .actbtn:hover{border-color:var(--gold-soft)}
+  .actbtn .sw{width:10px;height:10px;border-radius:3px}
+  .actbtn.on{color:#12100a}
+  .actbtn.on.capture{background:var(--cap);border-color:var(--cap)}
+  .actbtn.on.hold{background:var(--hold);border-color:var(--hold)}
+  .actbtn.on.defend{background:var(--def);border-color:var(--def)}
+  .padd{display:grid;grid-template-columns:1fr auto auto;gap:6px;margin-bottom:8px}
+  .ed-actions{display:flex;gap:7px;margin-top:6px}
+  .noselect{font-size:13px;color:var(--muted);text-align:center;padding:14px 6px;line-height:1.5}
+
+  .orders{margin-top:20px}
+  .ordhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+  .ordgrp{margin-bottom:14px}
+  .ordgrp h4{display:flex;align-items:center;gap:9px;font-family:"Barlow";font-weight:700;font-size:13px;margin:0 0 8px}
+  .ordgrp h4 .sw{width:13px;height:13px;border-radius:4px}
+  .ordgrp h4 .n{font-family:"JetBrains Mono";font-size:11px;color:var(--muted);font-weight:400}
+  .ordgrp h4 .sum{font-family:"JetBrains Mono";font-size:11px;color:var(--gold-soft);margin-left:auto;font-weight:700}
+  .ordtable{width:100%;border-collapse:collapse;font-size:13px}
+  .ordtable td{padding:6px 9px;border-bottom:1px solid var(--line);vertical-align:top}
+  .ordtable td.b{font-family:"JetBrains Mono";font-weight:700;color:var(--gold-soft);width:60px}
+  .ordtable td.pt{font-family:"JetBrains Mono";color:var(--muted);font-size:11.5px;width:70px}
+  .ordtable td.who{color:var(--text)}
+  .ordtable td.who .r{color:var(--muted-2);font-size:11px}
+  .ordtable td.nt{color:var(--muted);font-size:11.5px;font-style:italic}
+
+  textarea.io{width:100%;height:70px;background:var(--panel-3);border:1px solid var(--line);border-radius:8px;color:var(--muted);font-family:"JetBrains Mono";font-size:10.5px;padding:9px;resize:vertical;outline:none}
+  textarea.io:focus{border-color:var(--gold);color:var(--text)}
+
+  .legend2{display:flex;flex-wrap:wrap;gap:12px;font-size:11.5px;color:var(--muted)}
+  .legend2 span{display:inline-flex;align-items:center;gap:6px}
+  .legend2 i{width:12px;height:12px;border-radius:4px;display:inline-block}
+
+  .ytcard{display:flex;align-items:center;gap:12px;text-decoration:none;background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line);border-radius:12px;padding:12px 14px;transition:.15s;box-shadow:var(--shadow)}
+  .ytcard:hover{border-color:#FF3D3D;transform:translateY(-1px)}
+  .ytcard .ytbtn{flex:0 0 auto;width:42px;height:30px;border-radius:8px;background:#FF0033;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(255,0,51,.35)}
+  .ytcard .ytbtn svg{width:16px;height:16px;fill:#fff;margin-left:1px}
+  .ytcard .yttext{display:flex;flex-direction:column;line-height:1.2;min-width:0}
+  .ytcard .yttext b{font-family:"Barlow";font-weight:700;font-size:15px;color:var(--text)}
+  .ytcard .yttext small{font-size:11.5px;color:var(--muted)}
+  .ytcard .ytgo{margin-left:auto;color:var(--muted-2);font-size:16px;transition:.15s}
+  .ytcard:hover .ytgo{color:#FF3D3D}
+  footer{text-align:center;color:var(--muted-2);font-size:12px;padding:34px 20px 0;line-height:1.7}
+  footer .chan{color:var(--gold-soft);font-weight:600;text-decoration:none}
+  footer .chan:hover{text-decoration:underline}
+  @media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
 </head>
 <body>
-  <div class="shell">
-    <nav class="hubbar">
-      <a class="brand" id="homeLink" href="./index.html">
-        <span class="mark">885</span>
-        <span>885 LEGEND NASHSH<small data-i18n="brandSub">Kingshot command tools</small></span>
-      </a>
-      <div class="nav">
-        <a id="navHub" href="./index.html" data-i18n="hub">Hub</a>
-        <a id="navSword" href="./swordland_planner.html" data-i18n="swordlandNav">Swordland</a>
-        <a id="navFort" href="./fort_sanc.html" data-i18n="fortNav">Fort / Sanc</a>
-        <a id="navRedeem" href="./auto_redeem.html" data-i18n="redeemNav">Auto Redeem</a>
-        <select id="pageLang" aria-label="Language"></select>
-      </div>
-    </nav>
+<header class="mast">
+  <div class="eyebrow">Kingshot · Tri-Alliance Clash</div>
+  <h1>Battle <span class="g">Planner</span></h1>
+  <p class="sub">Assign players and orders to the real battlefield, then scrub the 60-minute timeline to watch your score build minute by minute.</p>
+</header>
 
-    <header class="top">
-      <div>
-        <div class="eyebrow" data-i18n="pageKicker">Tri-alliance operation</div>
-        <h1 data-i18n="pageTitle">Battle Planner</h1>
-        <p class="subtitle" data-i18n="pageIntro">Build the battle map, assign players, then move the clock to check score flow and orders.</p>
-      </div>
-      <div class="top-actions">
-        <button class="btn gold" id="copyOrdersTop" type="button" data-i18n="copyOrders">Copy orders</button>
-        <button class="btn" id="exportTop" type="button" data-i18n="exportPlan">Export plan</button>
-        <button class="btn" id="resetView" type="button" data-i18n="resetView">Reset view</button>
-      </div>
-    </header>
+<div class="wrap">
+  <div class="stats" id="stats"></div>
 
-    <section class="statline">
-      <div class="stat"><span data-i18n="statCapturedRate">Captured per minute</span><strong id="capturedRate">0</strong></div>
-      <div class="stat"><span data-i18n="statFinalScore">Projected final score</span><strong id="finalScore">0</strong></div>
-      <div class="stat"><span data-i18n="statGarrisons">Garrisons held</span><strong id="garrisonCount">0 / 3</strong></div>
-      <div class="stat"><span data-i18n="statTemple">Temple bonus</span><strong id="templeBonus">-</strong></div>
-    </section>
-
-    <section class="timeline">
-      <div class="time-head">
-        <div class="clock" id="clock">00:00</div>
-        <div class="phase"><span id="phaseLabel" data-i18n="phaseSetup">Preparation</span><br><span data-i18n="timelineHint">60-minute battle timeline</span></div>
-      </div>
-      <input id="timeSlider" type="range" min="0" max="60" value="0" aria-label="Battle minute">
-      <div class="ticks">
-        <span class="tick" data-i18n="stagePrep">Prep</span>
-        <span class="tick" data-i18n="stageSeize">Seize 3'</span>
-        <span class="tick" data-i18n="stageGarrisons">Garrisons 20'</span>
-        <span class="tick" data-i18n="stageTemple">Temple 40'</span>
-      </div>
-    </section>
-
-    <main class="grid">
-      <section class="stage">
-        <div class="toolbar">
-          <div class="filters">
-            <button class="btn on" type="button" data-filter="all" data-i18n="filterAll">All</button>
-            <button class="btn" type="button" data-filter="captured" data-i18n="filterCaptured">Captured</button>
-            <button class="btn" type="button" data-filter="hold" data-i18n="filterHold">Hold</button>
-            <button class="btn" type="button" data-filter="defend" data-i18n="filterDefend">Defend</button>
-            <button class="btn" type="button" data-filter="enemy" data-i18n="filterEnemy">Enemy</button>
-          </div>
-          <div class="filters">
-            <button class="btn on" id="toggleLabels" type="button" data-i18n="showIds">Show IDs & points</button>
-            <button class="btn" id="toggleCaptured" type="button" data-i18n="onlyCaptured">Only captured</button>
-            <button class="btn" id="toggleMove" type="button" data-i18n="moveMarkers">Move markers</button>
-            <button class="btn" id="zoomOut" type="button" aria-label="Zoom out">-</button>
-            <span class="btn zoom-pill" id="zoomLabel">100%</span>
-            <button class="btn" id="zoomIn" type="button" aria-label="Zoom in">+</button>
-          </div>
+  <div class="timeline">
+    <div class="tl-top">
+      <div class="tl-clock mono" id="tlClock">00:00</div>
+      <div class="tl-phase" id="tlPhase">Preparation</div>
+      <div class="tl-score">
+        <div class="n mono" id="tlScore">0</div>
+        <div class="l">Points accumulated by this minute</div>
+        <div class="tl-live">
+          <span class="livechip garr" id="lcGarr">Garrisons 20'</span>
+          <span class="livechip temp" id="lcTemp">Temple 40'</span>
+          <span class="livechip" id="lcRate">+0/min</span>
         </div>
-        <div class="map-frame">
-          <div class="map" id="map">
-            <canvas id="terrainCanvas" width="1900" height="1386" aria-hidden="true"></canvas>
-            <img id="battleMapImage" class="map-image" src="./static/tri-alliance-map.png" alt="" loading="eager" decoding="async">
-            <span class="route"></span>
-            <span class="route r2"></span>
-          </div>
-        </div>
-        <div class="legend">
-          <span><i style="border-color:var(--blue)"></i><span data-i18n="legendOwn">Capture or allied hold</span></span>
-          <span><i style="border-color:var(--gold)"></i><span data-i18n="legendNeutral">Neutral target</span></span>
-          <span><i style="border-color:var(--red)"></i><span data-i18n="legendEnemy">Enemy or threat</span></span>
-          <span><i style="border-color:rgba(255,255,255,.45)"></i><span data-i18n="legendLocked">Locked by time</span></span>
-        </div>
-      </section>
-
-      <aside class="side">
-        <section class="panel">
-          <h2 data-i18n="scoresTitle">Scoreboard</h2>
-          <div class="body"><div class="scores" id="scores"></div></div>
-        </section>
-
-        <section class="panel">
-          <h2 data-i18n="rosterTitle">Roster</h2>
-          <div class="body">
-            <div class="inline">
-              <input id="memberInput" type="text" data-i18n-placeholder="rosterPlaceholder" placeholder="Add a member...">
-              <button class="btn gold" id="addMember" type="button" data-i18n="addMember">Add</button>
-            </div>
-            <div class="chips" id="rosterList"></div>
-          </div>
-        </section>
-
-        <section class="panel">
-          <h2 data-i18n="selectedTitle">Selected structure</h2>
-          <div class="body" id="targetEditor"></div>
-        </section>
-
-        <section class="panel">
-          <h2 data-i18n="filterTitle">Filter Map</h2>
-          <div class="body">
-            <p class="empty" data-i18n="filterHint">Use the buttons above to focus the battlefield without changing saved assignments.</p>
-          </div>
-        </section>
-
-        <section class="panel wide">
-          <h2 data-i18n="ordersTitle">Battle Orders</h2>
-          <div class="body">
-            <div class="inline" style="margin-bottom:8px">
-              <button class="btn gold" id="copyOrders" type="button" data-i18n="copyOrders">Copy orders</button>
-              <button class="btn danger" id="clearAll" type="button" data-i18n="clearAll">Clear all</button>
-            </div>
-            <div class="orders" id="ordersList"></div>
-          </div>
-        </section>
-
-        <section class="panel wide">
-          <h2 data-i18n="planTitle">Save / Load Plan</h2>
-          <div class="body">
-            <p class="empty" data-i18n="planHint">Copy this plan code to share or save the current board.</p>
-            <textarea id="planCode" class="plan-code" data-i18n-placeholder="planPlaceholder" placeholder="Plan code appears here..."></textarea>
-            <div class="inline" style="margin-top:8px">
-              <button class="btn gold" id="copyPlan" type="button" data-i18n="copyPlan">Copy plan code</button>
-              <button class="btn" id="loadPlan" type="button" data-i18n="loadPlan">Load pasted plan</button>
-            </div>
-          </div>
-        </section>
-      </aside>
-    </main>
-
-    <footer class="footer">
-      <span data-i18n="footerCredit">Created for #885 Legend nashsh</span>
-      <span data-i18n="footerNote">Unofficial Kingshot community tool</span>
-    </footer>
+      </div>
+    </div>
+    <div class="tl-track">
+      <div class="tl-seg" style="left:0%;width:5%;background:#6b7480"></div>
+      <div class="tl-seg" style="left:5%;width:28.3%;background:var(--cap)"></div>
+      <div class="tl-seg" style="left:33.3%;width:33.3%;background:var(--gold)"></div>
+      <div class="tl-seg" style="left:66.6%;width:33.4%;background:#d16b60"></div>
+      <div class="tl-seglabel" style="left:2.5%">Prep</div>
+      <div class="tl-seglabel" style="left:19%">Seize 3'</div>
+      <div class="tl-seglabel" style="left:50%">Garrisons 20'</div>
+      <div class="tl-seglabel" style="left:83%">Temple 40'</div>
+      <input type="range" class="slider" id="tlSlider" min="0" max="60" step="1" value="0" aria-label="Battle minute">
+    </div>
   </div>
 
-  <script>
-    const LANGUAGES = [
-      ["ko", "🇰🇷 한국어"], ["ja", "🇯🇵 日本語"], ["en", "🇺🇸 English"], ["fr", "🇫🇷 Français"],
-      ["de", "🇩🇪 Deutsch"], ["zh-CN", "🇨🇳 简体中文"], ["zh-TW", "🇹🇼 繁體中文"],
-      ["th", "🇹🇭 ไทย"], ["id", "🇮🇩 Indonesia"]
-    ];
-    const en = {
-      brandSub: "Kingshot command tools",
-      hub: "Hub",
-      swordlandNav: "Swordland",
-      fortNav: "Fort / Sanc",
-      redeemNav: "Auto Redeem",
-      pageKicker: "Tri-alliance operation",
-      pageTitle: "Battle Planner",
-      pageIntro: "Build the battle map, assign players, then move the clock to check score flow and orders.",
-      copyOrders: "Copy orders",
-      exportPlan: "Export plan",
-      resetView: "Reset view",
-      statCapturedRate: "Captured per minute",
-      statFinalScore: "Projected final score",
-      statGarrisons: "Garrisons held",
-      statTemple: "Temple bonus",
-      phaseSetup: "Preparation",
-      phaseClash: "Outer fight",
-      phaseCore: "Garrison fight",
-      phaseFinal: "Temple finish",
-      timelineHint: "60-minute battle timeline",
-      stagePrep: "Prep",
-      stageSeize: "Seize 3'",
-      stageGarrisons: "Garrisons 20'",
-      stageTemple: "Temple 40'",
-      filterAll: "All",
-      filterCaptured: "Captured",
-      filterHold: "Hold",
-      filterDefend: "Defend",
-      filterEnemy: "Enemy",
-      showIds: "Show IDs & points",
-      onlyCaptured: "Only captured",
-      moveMarkers: "Move markers",
-      legendOwn: "Capture or allied hold",
-      legendNeutral: "Neutral target",
-      legendEnemy: "Enemy or threat",
-      legendLocked: "Locked by time",
-      scoresTitle: "Scoreboard",
-      rosterTitle: "Roster",
-      rosterPlaceholder: "Add a member...",
-      addMember: "Add",
-      selectedTitle: "Selected structure",
-      filterTitle: "Filter Map",
-      filterHint: "Use the buttons above to focus the battlefield without changing saved assignments.",
-      noSelected: "Select a structure on the map.",
-      statusLabel: "Status",
-      statusUnassigned: "Unassigned",
-      statusCaptured: "Captured",
-      statusHold: "Hold",
-      statusDefend: "Defend",
-      statusEnemy: "Enemy",
-      allianceLabel: "Alliance",
-      assigneeLabel: "Assignee",
-      captureMinuteLabel: "Capture minute",
-      noteLabel: "Order note",
-      notePlaceholder: "Optional rally, shield, swap, or timing note",
-      setToTimeline: "Use current minute",
-      clearMarker: "Clear structure",
-      targetMeta: "Unlock {unlock}m · +{points}/min · bonus {bonus}",
-      ordersTitle: "Battle Orders",
-      clearAll: "Clear all",
-      noOrders: "No assigned targets yet.",
-      planTitle: "Save / Load Plan",
-      planHint: "Copy this plan code to share or save the current board.",
-      planPlaceholder: "Plan code appears here...",
-      copyPlan: "Copy plan code",
-      loadPlan: "Load pasted plan",
-      copied: "Copied",
-      invalidPlan: "Invalid plan code.",
-      footerCredit: "Created for #885 Legend nashsh",
-      footerNote: "Unofficial Kingshot community tool",
-      teamBlue: "Blue",
-      teamGold: "Gold",
-      teamRed: "Red",
-      total: "Total",
-      perMin: "per min",
-      held: "held",
-      unassigned: "Unassigned",
-      typeHq: "Headquarters",
-      typeGarrison: "Garrison",
-      typeTemple: "Temple",
-      typeOutpost: "Outpost",
-      typeRelay: "Relay",
-      typeGate: "Gate"
-    };
-    const I18N = {
-      en,
-      ko: {
-        ...en,
-        brandSub: "킹샷 지휘 도구", hub: "허브", swordlandNav: "소드랜드", fortNav: "포트 / 성소", redeemNav: "오토 리딤",
-        pageKicker: "삼대연맹전 작전", pageTitle: "전투 플래너", pageIntro: "전장 거점을 배치하고 담당자를 지정한 뒤, 시간을 움직이며 점수 흐름과 명령을 확인하세요.",
-        copyOrders: "명령 복사", exportPlan: "계획 내보내기", resetView: "화면 초기화",
-        statCapturedRate: "점령 분당 점수", statFinalScore: "예상 최종 점수", statGarrisons: "주둔지 점령", statTemple: "사원 보너스",
-        phaseSetup: "준비 단계", phaseClash: "외곽 교전", phaseCore: "주둔지 교전", phaseFinal: "사원 마무리",
-        timelineHint: "60분 전투 타임라인", stagePrep: "준비", stageSeize: "3분 점령", stageGarrisons: "20분 주둔지", stageTemple: "40분 사원",
-        filterAll: "전체", filterCaptured: "점령", filterHold: "유지", filterDefend: "방어", filterEnemy: "적",
-        showIds: "ID와 점수 표시", onlyCaptured: "점령만 보기", moveMarkers: "마커 이동",
-        legendOwn: "점령 또는 아군 유지", legendNeutral: "중립 목표", legendEnemy: "적 또는 위협", legendLocked: "시간 잠금",
-        scoresTitle: "점수판", rosterTitle: "명단", rosterPlaceholder: "멤버 추가...", addMember: "추가",
-        selectedTitle: "선택 구조물", filterTitle: "지도 필터", filterHint: "위 버튼으로 저장된 배정은 그대로 두고 전장 표시만 좁혀 볼 수 있습니다.",
-        noSelected: "지도에서 구조물을 선택하세요.", statusLabel: "상태", statusUnassigned: "미배정", statusCaptured: "점령",
-        statusHold: "유지", statusDefend: "방어", statusEnemy: "적", allianceLabel: "연맹", assigneeLabel: "담당자",
-        captureMinuteLabel: "점령 시간", noteLabel: "명령 메모", notePlaceholder: "집결, 보호막, 교대, 타이밍 메모",
-        setToTimeline: "현재 시간 사용", clearMarker: "구조물 초기화", targetMeta: "{unlock}분 개방 · +{points}/분 · 보너스 {bonus}",
-        ordersTitle: "전투 명령", clearAll: "전체 초기화", noOrders: "아직 배정된 목표가 없습니다.",
-        planTitle: "계획 저장 / 불러오기", planHint: "현재 전장을 저장하거나 공유하려면 계획 코드를 복사하세요.",
-        planPlaceholder: "계획 코드가 여기에 표시됩니다...", copyPlan: "계획 코드 복사", loadPlan: "붙여넣은 계획 불러오기",
-        copied: "복사됨", invalidPlan: "계획 코드가 올바르지 않습니다.", footerCredit: "#885 Legend nashsh 전용 제작",
-        footerNote: "비공식 킹샷 커뮤니티 도구", teamBlue: "블루", teamGold: "골드", teamRed: "레드",
-        total: "총점", perMin: "분당", held: "점령", unassigned: "미배정", typeHq: "본부", typeGarrison: "주둔지",
-        typeTemple: "사원", typeOutpost: "전초", typeRelay: "연결 거점", typeGate: "관문"
-      },
-      ja: {
-        ...en,
-        brandSub: "Kingshot 指揮ツール", hub: "ハブ", swordlandNav: "ソードランド", fortNav: "砦 / 聖所", redeemNav: "自動交換",
-        pageKicker: "三同盟戦 作戦", pageTitle: "バトルプランナー", pageIntro: "戦場目標を配置し、担当者を割り当て、時間を動かしてスコアと指示を確認します。",
-        copyOrders: "指示をコピー", exportPlan: "プラン出力", resetView: "表示リセット",
-        statCapturedRate: "占領中の毎分ポイント", statFinalScore: "予測最終スコア", statGarrisons: "駐屯地保持", statTemple: "神殿ボーナス",
-        phaseSetup: "準備", phaseClash: "外周戦", phaseCore: "駐屯地戦", phaseFinal: "神殿終盤",
-        filterAll: "全て", filterCaptured: "占領", filterHold: "維持", filterDefend: "防衛", filterEnemy: "敵",
-        showIds: "IDとポイント表示", onlyCaptured: "占領のみ", moveMarkers: "マーカー移動",
-        scoresTitle: "スコア", rosterTitle: "名簿", rosterPlaceholder: "メンバー追加...", addMember: "追加",
-        selectedTitle: "選択した構造物", noSelected: "マップ上の構造物を選択してください。", statusLabel: "状態",
-        statusUnassigned: "未割当", statusCaptured: "占領", statusHold: "維持", statusDefend: "防衛", statusEnemy: "敵",
-        allianceLabel: "同盟", assigneeLabel: "担当", captureMinuteLabel: "占領分", noteLabel: "指示メモ",
-        setToTimeline: "現在の分を使用", clearMarker: "構造物をクリア", ordersTitle: "戦闘指示", clearAll: "全てクリア",
-        noOrders: "割り当て済み目標はまだありません。", planTitle: "保存 / 読み込み", copyPlan: "プランコードをコピー",
-        loadPlan: "読み込み", copied: "コピー済み", teamBlue: "ブルー", teamGold: "ゴールド", teamRed: "レッド",
-        total: "合計", perMin: "毎分", held: "保持", unassigned: "未割当", typeHq: "本部", typeGarrison: "駐屯地", typeTemple: "神殿",
-        typeOutpost: "前哨", typeRelay: "中継", typeGate: "ゲート"
-      },
-      fr: {
-        ...en,
-        brandSub: "Outils de commandement Kingshot", hub: "Accueil", swordlandNav: "Swordland", fortNav: "Fort / Sanctuaire", redeemNav: "Auto Redeem",
-        pageKicker: "Opération tri-alliance", pageTitle: "Planificateur de bataille", pageIntro: "Placez les objectifs, assignez les joueurs, puis déplacez l'horloge pour lire le score et les ordres.",
-        copyOrders: "Copier les ordres", exportPlan: "Exporter", resetView: "Réinitialiser", statCapturedRate: "Points par minute", statFinalScore: "Score final estimé",
-        statGarrisons: "Garnisons tenues", statTemple: "Bonus du temple", phaseSetup: "Préparation", phaseClash: "Combat extérieur", phaseCore: "Garnisons", phaseFinal: "Temple",
-        filterAll: "Tout", filterCaptured: "Capturé", filterHold: "Tenir", filterDefend: "Défendre", filterEnemy: "Ennemi", showIds: "IDs et points", onlyCaptured: "Capturés seuls",
-        moveMarkers: "Déplacer", scoresTitle: "Score", rosterTitle: "Équipe", addMember: "Ajouter", selectedTitle: "Structure choisie", noSelected: "Sélectionnez une structure.",
-        statusLabel: "Statut", allianceLabel: "Alliance", assigneeLabel: "Responsable", captureMinuteLabel: "Minute", noteLabel: "Note", ordersTitle: "Ordres",
-        clearAll: "Effacer", noOrders: "Aucune cible assignée.", planTitle: "Sauver / charger", copyPlan: "Copier le code", loadPlan: "Charger", teamBlue: "Bleu", teamGold: "Or", teamRed: "Rouge"
-      },
-      de: {
-        ...en,
-        brandSub: "Kingshot Kommandowerkzeuge", hub: "Hub", swordlandNav: "Swordland", fortNav: "Fort / Sanktum", redeemNav: "Auto Redeem",
-        pageKicker: "Drei-Allianz-Einsatz", pageTitle: "Battle Planner", pageIntro: "Setze Ziele, weise Spieler zu und bewege die Uhr, um Punkte und Befehle zu prüfen.",
-        copyOrders: "Befehle kopieren", exportPlan: "Exportieren", resetView: "Zurücksetzen", statCapturedRate: "Punkte pro Minute", statFinalScore: "Prognose Endscore",
-        statGarrisons: "Garnisonen", statTemple: "Tempelbonus", phaseSetup: "Vorbereitung", phaseClash: "Außenkampf", phaseCore: "Garnisonen", phaseFinal: "Tempel",
-        filterAll: "Alle", filterCaptured: "Erobert", filterHold: "Halten", filterDefend: "Verteidigen", filterEnemy: "Feind", showIds: "IDs und Punkte",
-        onlyCaptured: "Nur eroberte", moveMarkers: "Marker bewegen", scoresTitle: "Punkte", rosterTitle: "Liste", addMember: "Hinzufügen",
-        selectedTitle: "Gewählte Struktur", noSelected: "Struktur auf der Karte wählen.", statusLabel: "Status", allianceLabel: "Allianz", assigneeLabel: "Zuständig",
-        captureMinuteLabel: "Minute", noteLabel: "Notiz", ordersTitle: "Befehle", clearAll: "Löschen", noOrders: "Noch keine Ziele.", planTitle: "Speichern / laden",
-        copyPlan: "Code kopieren", loadPlan: "Laden", teamBlue: "Blau", teamGold: "Gold", teamRed: "Rot"
-      },
-      "zh-CN": {
-        ...en,
-        brandSub: "Kingshot 指挥工具", hub: "主页", swordlandNav: "剑域", fortNav: "堡垒 / 圣所", redeemNav: "自动兑换",
-        pageKicker: "三联盟作战", pageTitle: "战斗规划器", pageIntro: "布置战场目标、分配玩家，并移动时间轴查看积分和指令。",
-        copyOrders: "复制指令", exportPlan: "导出计划", resetView: "重置视图", statCapturedRate: "占领每分钟积分", statFinalScore: "预计最终积分",
-        statGarrisons: "驻地占领", statTemple: "神殿加成", phaseSetup: "准备", phaseClash: "外围战", phaseCore: "驻地战", phaseFinal: "神殿终局",
-        filterAll: "全部", filterCaptured: "已占领", filterHold: "保持", filterDefend: "防守", filterEnemy: "敌方", showIds: "显示ID和积分",
-        onlyCaptured: "仅占领", moveMarkers: "移动标记", scoresTitle: "积分", rosterTitle: "名单", addMember: "添加", selectedTitle: "选中建筑",
-        noSelected: "请选择地图上的建筑。", statusLabel: "状态", allianceLabel: "联盟", assigneeLabel: "负责人", captureMinuteLabel: "占领分钟",
-        noteLabel: "指令备注", ordersTitle: "战斗指令", clearAll: "全部清除", noOrders: "尚未分配目标。", planTitle: "保存 / 读取",
-        copyPlan: "复制计划码", loadPlan: "读取", teamBlue: "蓝", teamGold: "金", teamRed: "红"
-      },
-      "zh-TW": {
-        ...en,
-        brandSub: "Kingshot 指揮工具", hub: "首頁", swordlandNav: "劍域", fortNav: "堡壘 / 聖所", redeemNav: "自動兌換",
-        pageKicker: "三聯盟作戰", pageTitle: "戰鬥規劃器", pageIntro: "布置戰場目標、分配玩家，並移動時間軸查看積分和指令。",
-        copyOrders: "複製指令", exportPlan: "匯出計畫", resetView: "重置視圖", statCapturedRate: "佔領每分鐘積分", statFinalScore: "預計最終積分",
-        statGarrisons: "駐地佔領", statTemple: "神殿加成", phaseSetup: "準備", phaseClash: "外圍戰", phaseCore: "駐地戰", phaseFinal: "神殿終局",
-        filterAll: "全部", filterCaptured: "已佔領", filterHold: "維持", filterDefend: "防守", filterEnemy: "敵方", showIds: "顯示ID和積分",
-        onlyCaptured: "只看佔領", moveMarkers: "移動標記", scoresTitle: "積分", rosterTitle: "名單", addMember: "新增", selectedTitle: "選中建築",
-        noSelected: "請選擇地圖上的建築。", statusLabel: "狀態", allianceLabel: "聯盟", assigneeLabel: "負責人", captureMinuteLabel: "佔領分鐘",
-        noteLabel: "指令備註", ordersTitle: "戰鬥指令", clearAll: "全部清除", noOrders: "尚未分配目標。", planTitle: "儲存 / 讀取",
-        copyPlan: "複製計畫碼", loadPlan: "讀取", teamBlue: "藍", teamGold: "金", teamRed: "紅"
-      },
-      th: {
-        ...en,
-        brandSub: "เครื่องมือบัญชาการ Kingshot", hub: "ฮับ", swordlandNav: "Swordland", fortNav: "Fort / Sanc", redeemNav: "Auto Redeem",
-        pageKicker: "ปฏิบัติการสามพันธมิตร", pageTitle: "ตัววางแผนรบ", pageIntro: "วางเป้าหมาย มอบหมายผู้เล่น แล้วเลื่อนเวลาเพื่อดูคะแนนและคำสั่ง",
-        copyOrders: "คัดลอกคำสั่ง", exportPlan: "ส่งออก", resetView: "รีเซ็ต", statCapturedRate: "คะแนนต่อนาที", statFinalScore: "คะแนนสุดท้ายโดยประมาณ",
-        statGarrisons: "กองรักษาการณ์", statTemple: "โบนัสวิหาร", phaseSetup: "เตรียมพร้อม", phaseClash: "รอบนอก", phaseCore: "กองรักษาการณ์", phaseFinal: "วิหาร",
-        filterAll: "ทั้งหมด", filterCaptured: "ยึดแล้ว", filterHold: "ถือไว้", filterDefend: "ป้องกัน", filterEnemy: "ศัตรู", showIds: "แสดง ID และแต้ม",
-        onlyCaptured: "เฉพาะที่ยึด", moveMarkers: "ย้ายมาร์กเกอร์", scoresTitle: "คะแนน", rosterTitle: "รายชื่อ", addMember: "เพิ่ม",
-        selectedTitle: "สิ่งปลูกสร้างที่เลือก", noSelected: "เลือกสิ่งปลูกสร้างบนแผนที่", statusLabel: "สถานะ", allianceLabel: "พันธมิตร", assigneeLabel: "ผู้รับผิดชอบ",
-        captureMinuteLabel: "นาทีที่ยึด", noteLabel: "หมายเหตุ", ordersTitle: "คำสั่งรบ", clearAll: "ล้างทั้งหมด", noOrders: "ยังไม่มีเป้าหมาย",
-        planTitle: "บันทึก / โหลด", copyPlan: "คัดลอกรหัส", loadPlan: "โหลด", teamBlue: "น้ำเงิน", teamGold: "ทอง", teamRed: "แดง"
-      },
-      id: {
-        ...en,
-        brandSub: "Alat komando Kingshot", hub: "Hub", swordlandNav: "Swordland", fortNav: "Fort / Sanc", redeemNav: "Auto Redeem",
-        pageKicker: "Operasi tri-alliance", pageTitle: "Battle Planner", pageIntro: "Susun target, tugaskan pemain, lalu geser waktu untuk melihat skor dan order.",
-        copyOrders: "Salin order", exportPlan: "Ekspor", resetView: "Reset", statCapturedRate: "Poin per menit", statFinalScore: "Estimasi skor akhir",
-        statGarrisons: "Garrison dikuasai", statTemple: "Bonus temple", phaseSetup: "Persiapan", phaseClash: "Pertarungan luar", phaseCore: "Garrison", phaseFinal: "Temple",
-        filterAll: "Semua", filterCaptured: "Direbut", filterHold: "Tahan", filterDefend: "Bertahan", filterEnemy: "Musuh", showIds: "ID & poin",
-        onlyCaptured: "Hanya direbut", moveMarkers: "Pindah marker", scoresTitle: "Skor", rosterTitle: "Roster", addMember: "Tambah",
-        selectedTitle: "Struktur dipilih", noSelected: "Pilih struktur di map.", statusLabel: "Status", allianceLabel: "Aliansi", assigneeLabel: "PIC",
-        captureMinuteLabel: "Menit rebut", noteLabel: "Catatan", ordersTitle: "Order", clearAll: "Bersihkan", noOrders: "Belum ada target.",
-        planTitle: "Simpan / muat", copyPlan: "Salin kode", loadPlan: "Muat", teamBlue: "Biru", teamGold: "Emas", teamRed: "Merah"
-      }
-    };
-
-    const TEAMS = ["blue", "gold", "red"];
-    const MARKERS = [
-      { id: "A1", kind: "hq", type: "hq", team: "blue", own: true, x: 51.01, y: 95.09, unlock: 0, per: 1800, bonus: 0 },
-      { id: "E1", kind: "hq", type: "hq", enemy: true, x: 11.4, y: 50.7, unlock: 0, per: 1800, bonus: 0 },
-      { id: "E2", kind: "hq", type: "hq", enemy: true, x: 88.7, y: 50.4, unlock: 0, per: 1800, bonus: 0 },
-      { id: "G1", kind: "garrison", type: "garrison", x: 39.44, y: 20.38, unlock: 20, per: 900, bonus: 0 },
-      { id: "G2", kind: "garrison", type: "garrison", x: 82.4, y: 62.7, unlock: 20, per: 900, bonus: 0 },
-      { id: "G3", kind: "garrison", type: "garrison", x: 38.1, y: 81.92, unlock: 20, per: 900, bonus: 0 },
-      { id: "TP", kind: "temple", type: "temple", x: 51.42, y: 59.62, unlock: 40, per: 1500, bonus: 3000 },
-      { id: "P01", kind: "normal", type: "outpost", x: 17.89, y: 28.18, unlock: 3, per: 120, bonus: 0 },
-      { id: "P02", kind: "normal", type: "outpost", x: 84.33, y: 36.09, unlock: 3, per: 120, bonus: 0 },
-      { id: "P03", kind: "normal", type: "outpost", x: 22.8, y: 17.19, unlock: 3, per: 120, bonus: 0 },
-      { id: "P04", kind: "normal", type: "outpost", x: 76.38, y: 28.12, unlock: 3, per: 120, bonus: 0 },
-      { id: "P05", kind: "normal", type: "outpost", x: 16.32, y: 44.34, unlock: 3, per: 120, bonus: 0 },
-      { id: "P06", kind: "normal", type: "outpost", x: 17.64, y: 36.56, unlock: 3, per: 120, bonus: 0 },
-      { id: "P07", kind: "normal", type: "outpost", x: 70.54, y: 15, unlock: 3, per: 120, bonus: 0 },
-      { id: "P08", kind: "normal", type: "outpost", x: 69.55, y: 76.47, unlock: 3, per: 120, bonus: 0 },
-      { id: "P09", kind: "normal", type: "outpost", x: 79.82, y: 25.72, unlock: 3, per: 120, bonus: 0 },
-      { id: "P10", kind: "normal", type: "outpost", x: 25.47, y: 28.4, unlock: 3, per: 120, bonus: 0 },
-      { id: "P11", kind: "normal", type: "outpost", x: 84.82, y: 45.3, unlock: 3, per: 120, bonus: 0 },
-      { id: "P12", kind: "normal", type: "outpost", x: 79.86, y: 50.81, unlock: 3, per: 120, bonus: 0 },
-      { id: "P13", kind: "normal", type: "relay", x: 43.42, y: 15.5, unlock: 3, per: 160, bonus: 0 },
-      { id: "P14", kind: "normal", type: "relay", x: 43.23, y: 87.39, unlock: 3, per: 160, bonus: 0 },
-      { id: "P15", kind: "normal", type: "relay", x: 51.28, y: 85.96, unlock: 3, per: 160, bonus: 0 },
-      { id: "P16", kind: "normal", type: "outpost", x: 25.52, y: 35.68, unlock: 3, per: 120, bonus: 0 },
-      { id: "P17", kind: "normal", type: "outpost", x: 26.43, y: 45.57, unlock: 3, per: 120, bonus: 0 },
-      { id: "P18", kind: "normal", type: "outpost", x: 74.66, y: 18.79, unlock: 3, per: 120, bonus: 0 },
-      { id: "P19", kind: "normal", type: "outpost", x: 70.13, y: 50.88, unlock: 3, per: 120, bonus: 0 },
-      { id: "P20", kind: "normal", type: "outpost", x: 78.17, y: 16.02, unlock: 3, per: 120, bonus: 0 },
-      { id: "P21", kind: "normal", type: "relay", x: 46.98, y: 81.42, unlock: 3, per: 160, bonus: 0 },
-      { id: "P22", kind: "normal", type: "gate", x: 36.4, y: 73, unlock: 3, per: 180, bonus: 0 },
-      { id: "P23", kind: "normal", type: "outpost", x: 21.42, y: 25.97, unlock: 3, per: 120, bonus: 0 },
-      { id: "P24", kind: "normal", type: "outpost", x: 75.61, y: 45.81, unlock: 3, per: 120, bonus: 0 },
-      { id: "P25", kind: "normal", type: "relay", x: 55.19, y: 73.3, unlock: 3, per: 160, bonus: 0 },
-      { id: "P26", kind: "normal", type: "relay", x: 43.32, y: 78.03, unlock: 3, per: 160, bonus: 0 },
-      { id: "P27", kind: "normal", type: "gate", x: 64.01, y: 81.67, unlock: 3, per: 180, bonus: 0 },
-      { id: "P28", kind: "normal", type: "outpost", x: 76.21, y: 35.47, unlock: 3, per: 120, bonus: 0 },
-      { id: "P29", kind: "normal", type: "relay", x: 55.47, y: 81.27, unlock: 3, per: 160, bonus: 0 },
-      { id: "P30", kind: "normal", type: "outpost", x: 38.55, y: 10.69, unlock: 3, per: 120, bonus: 0 },
-      { id: "P31", kind: "normal", type: "gate", x: 32.5, y: 48.32, unlock: 3, per: 180, bonus: 0 },
-      { id: "P32", kind: "normal", type: "gate", x: 66.34, y: 27.52, unlock: 3, per: 180, bonus: 0 },
-      { id: "P33", kind: "normal", type: "relay", x: 51.23, y: 70.29, unlock: 3, per: 160, bonus: 0 },
-      { id: "P34", kind: "normal", type: "outpost", x: 32.15, y: 77.08, unlock: 3, per: 120, bonus: 0 },
-      { id: "P35", kind: "normal", type: "gate", x: 35.79, y: 37.88, unlock: 3, per: 180, bonus: 0 },
-      { id: "P36", kind: "normal", type: "outpost", x: 84.84, y: 28.57, unlock: 3, per: 120, bonus: 0 },
-      { id: "P37", kind: "normal", type: "outpost", x: 14.2, y: 63.2, unlock: 3, per: 120, bonus: 0 },
-      { id: "P38", kind: "normal", type: "outpost", x: 21.9, y: 66.8, unlock: 3, per: 120, bonus: 0 },
-      { id: "P39", kind: "normal", type: "outpost", x: 28.7, y: 59.5, unlock: 3, per: 120, bonus: 0 },
-      { id: "P40", kind: "normal", type: "gate", x: 34.4, y: 61.9, unlock: 3, per: 180, bonus: 0 },
-      { id: "P41", kind: "normal", type: "relay", x: 41.8, y: 63.6, unlock: 3, per: 160, bonus: 0 },
-      { id: "P42", kind: "normal", type: "relay", x: 58.8, y: 63.4, unlock: 3, per: 160, bonus: 0 },
-      { id: "P43", kind: "normal", type: "gate", x: 66.7, y: 61.6, unlock: 3, per: 180, bonus: 0 },
-      { id: "P44", kind: "normal", type: "outpost", x: 73.2, y: 58.7, unlock: 3, per: 120, bonus: 0 },
-      { id: "P45", kind: "normal", type: "outpost", x: 83.1, y: 68.3, unlock: 3, per: 120, bonus: 0 },
-      { id: "P46", kind: "normal", type: "outpost", x: 74.3, y: 71.8, unlock: 3, per: 120, bonus: 0 },
-      { id: "P47", kind: "normal", type: "outpost", x: 62.2, y: 12.2, unlock: 3, per: 120, bonus: 0 },
-      { id: "P48", kind: "normal", type: "outpost", x: 54.1, y: 18.6, unlock: 3, per: 120, bonus: 0 },
-      { id: "P49", kind: "normal", type: "relay", x: 48.2, y: 25.4, unlock: 3, per: 160, bonus: 0 },
-      { id: "P50", kind: "normal", type: "gate", x: 58.2, y: 36.8, unlock: 3, per: 180, bonus: 0 },
-      { id: "P51", kind: "normal", type: "outpost", x: 47.3, y: 38.6, unlock: 3, per: 120, bonus: 0 },
-      { id: "P52", kind: "normal", type: "outpost", x: 42.4, y: 51.2, unlock: 3, per: 120, bonus: 0 },
-      { id: "P53", kind: "normal", type: "outpost", x: 57.6, y: 51.4, unlock: 3, per: 120, bonus: 0 },
-      { id: "P54", kind: "normal", type: "outpost", x: 49.9, y: 48.6, unlock: 3, per: 120, bonus: 0 },
-      { id: "P55", kind: "normal", type: "outpost", x: 13.3, y: 76.5, unlock: 3, per: 120, bonus: 0 },
-      { id: "P56", kind: "normal", type: "outpost", x: 20.6, y: 83.5, unlock: 3, per: 120, bonus: 0 },
-      { id: "P57", kind: "normal", type: "relay", x: 29.7, y: 86.6, unlock: 3, per: 160, bonus: 0 },
-      { id: "P58", kind: "normal", type: "relay", x: 70.2, y: 86.2, unlock: 3, per: 160, bonus: 0 },
-      { id: "P59", kind: "normal", type: "outpost", x: 81.4, y: 83.4, unlock: 3, per: 120, bonus: 0 },
-      { id: "P60", kind: "normal", type: "outpost", x: 87.1, y: 76.9, unlock: 3, per: 120, bonus: 0 }
-    ];
-    const STORE_KEY = "nashshTriAlliancePlannerV3";
-    const state = { lang: "ko", minute: 0, filter: "all", showLabels: true, onlyCaptured: false, moveMode: false, zoom: 1, selected: "A1", roster: [], claims: {}, positions: {} };
-
-    function t(key, vars) {
-      let value = (I18N[state.lang] || I18N.ko)[key] || en[key] || key;
-      if (vars) Object.entries(vars).forEach(([k, v]) => value = value.replace(`{${k}}`, v));
-      return value;
-    }
-    function fmt(value) { return Number(value || 0).toLocaleString(state.lang); }
-    function normalizeLang(value) { return LANGUAGES.some(([code]) => code === value) ? value : "ko"; }
-    function escapeHtml(value) { return String(value || "").replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch])); }
-    function markerType(marker) {
-      const key = marker.type === "hq" ? "typeHq" : marker.type === "garrison" ? "typeGarrison" : marker.type === "temple" ? "typeTemple" : marker.type === "relay" ? "typeRelay" : marker.type === "gate" ? "typeGate" : "typeOutpost";
-      return t(key);
-    }
-    function markerName(marker) { return `${marker.id} · ${markerType(marker)}`; }
-    function statusKey(status) {
-      return status === "captured" ? "statusCaptured" : status === "hold" ? "statusHold" : status === "defend" ? "statusDefend" : status === "enemy" ? "statusEnemy" : "statusUnassigned";
-    }
-    function teamLabel(team) { return team === "blue" ? t("teamBlue") : team === "gold" ? t("teamGold") : t("teamRed"); }
-    function encodePlan(payload) { return btoa(unescape(encodeURIComponent(JSON.stringify(payload)))); }
-    function decodePlan(text) { return JSON.parse(decodeURIComponent(escape(atob(String(text).trim())))); }
-
-    function ensureClaims() {
-      MARKERS.forEach((marker) => {
-        if (!state.claims[marker.id]) {
-          const status = marker.own ? "captured" : marker.enemy ? "enemy" : "unassigned";
-          const alliance = marker.team || (marker.enemy ? "red" : "blue");
-          state.claims[marker.id] = { status, alliance, assignee: "", minute: marker.own ? 0 : marker.unlock, note: "" };
-        }
-      });
-    }
-    function isActive(marker, minute = state.minute) {
-      const claim = state.claims[marker.id];
-      return ["captured", "hold", "defend"].includes(claim.status) && minute >= marker.unlock && minute >= Number(claim.minute || 0);
-    }
-    function computeScores(minute = state.minute) {
-      const scores = Object.fromEntries(TEAMS.map((team) => [team, { total: 0, per: 0, held: 0 }]));
-      MARKERS.forEach((marker) => {
-        if (!isActive(marker, minute)) return;
-        const claim = state.claims[marker.id];
-        const start = Math.max(marker.unlock, Number(claim.minute || 0));
-        const heldMinutes = Math.max(0, minute - start + 1);
-        scores[claim.alliance].total += marker.bonus + marker.per * heldMinutes;
-        scores[claim.alliance].per += marker.per;
-        scores[claim.alliance].held += 1;
-      });
-      return scores;
-    }
-    function drawTerrain() {
-      const canvas = document.getElementById("terrainCanvas");
-      if (!canvas) return;
-      const ctx = canvas.getContext("2d");
-      const w = canvas.width;
-      const h = canvas.height;
-      const grd = ctx.createLinearGradient(0, 0, w, h);
-      grd.addColorStop(0, "#b47a47");
-      grd.addColorStop(.42, "#a66c3e");
-      grd.addColorStop(.74, "#8f5b35");
-      grd.addColorStop(1, "#6d452b");
-      ctx.fillStyle = grd;
-      ctx.fillRect(0, 0, w, h);
-
-      let seed = 885;
-      const rand = () => {
-        seed = (seed * 1664525 + 1013904223) >>> 0;
-        return seed / 4294967296;
-      };
-      for (let i = 0; i < 780; i += 1) {
-        const x = rand() * w;
-        const y = rand() * h;
-        const r = 6 + rand() * 28;
-        ctx.fillStyle = `rgba(${80 + rand() * 80}, ${45 + rand() * 35}, ${22 + rand() * 22}, ${0.06 + rand() * 0.08})`;
-        ctx.beginPath();
-        ctx.arc(x, y, r, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      const drawPath = (points, color, width) => {
-        ctx.save();
-        ctx.strokeStyle = color;
-        ctx.lineWidth = width;
-        ctx.lineCap = "round";
-        ctx.lineJoin = "round";
-        ctx.shadowColor = "rgba(0,0,0,.25)";
-        ctx.shadowBlur = 8;
-        ctx.beginPath();
-        points.forEach(([x, y], idx) => idx ? ctx.lineTo(x * w, y * h) : ctx.moveTo(x * w, y * h));
-        ctx.stroke();
-        ctx.restore();
-      };
-      drawPath([[.09,.52],[.27,.43],[.43,.52],[.50,.59],[.64,.52],[.83,.49],[.91,.52]], "rgba(238,198,126,.42)", 34);
-      drawPath([[.22,.16],[.36,.29],[.49,.45],[.51,.59],[.59,.72],[.51,.94]], "rgba(238,198,126,.34)", 26);
-      drawPath([[.82,.16],[.66,.28],[.55,.44],[.51,.59],[.40,.73],[.30,.88]], "rgba(238,198,126,.28)", 24);
-
-      const drawForest = (cx, cy, sx, sy, color) => {
-        ctx.fillStyle = color;
-        for (let i = 0; i < 90; i += 1) {
-          const x = (cx + (rand() - .5) * sx) * w;
-          const y = (cy + (rand() - .5) * sy) * h;
-          const r = 7 + rand() * 12;
-          ctx.beginPath();
-          ctx.arc(x, y, r, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      };
-      drawForest(.15, .22, .22, .18, "rgba(42,76,48,.24)");
-      drawForest(.84, .74, .22, .18, "rgba(38,70,50,.22)");
-      drawForest(.53, .13, .26, .14, "rgba(44,75,49,.2)");
-
-      const drawStructure = (marker) => {
-        const x = marker.x / 100 * w;
-        const y = marker.y / 100 * h;
-        const size = marker.kind === "hq" ? 38 : marker.kind === "temple" ? 34 : marker.kind === "garrison" ? 30 : 12;
-        ctx.save();
-        ctx.translate(x, y);
-        ctx.rotate(Math.PI / 4);
-        ctx.fillStyle = marker.enemy ? "rgba(126,35,39,.55)" : marker.own ? "rgba(44,95,156,.55)" : marker.kind === "temple" ? "rgba(202,158,61,.5)" : "rgba(71,45,24,.42)";
-        ctx.strokeStyle = marker.kind === "temple" ? "rgba(255,230,142,.72)" : marker.kind === "garrison" ? "rgba(255,230,142,.55)" : "rgba(25,15,8,.55)";
-        ctx.lineWidth = 4;
-        ctx.fillRect(-size / 2, -size / 2, size, size);
-        ctx.strokeRect(-size / 2, -size / 2, size, size);
-        ctx.restore();
-      };
-      MARKERS.forEach(drawStructure);
-
-      ctx.fillStyle = "rgba(28,15,8,.2)";
-      ctx.fillRect(0, 0, w, 18);
-      ctx.fillRect(0, h - 18, w, 18);
-      ctx.fillRect(0, 0, 18, h);
-      ctx.fillRect(w - 18, 0, 18, h);
-    }
-    function setupBattleMapImage() {
-      const map = document.getElementById("map");
-      const image = document.getElementById("battleMapImage");
-      if (!map || !image) return;
-      const useImage = () => {
-        map.classList.add("has-image");
-        image.setAttribute("aria-hidden", "true");
-      };
-      const useFallback = () => {
-        map.classList.remove("has-image");
-        drawTerrain();
-      };
-      image.addEventListener("load", useImage, { once: true });
-      image.addEventListener("error", useFallback, { once: true });
-      if (image.complete && image.naturalWidth > 0) useImage();
-    }
-    function translate() {
-      document.documentElement.lang = state.lang;
-      document.querySelectorAll("[data-i18n]").forEach((node) => { node.textContent = t(node.dataset.i18n); });
-      document.querySelectorAll("[data-i18n-placeholder]").forEach((node) => { node.placeholder = t(node.dataset.i18nPlaceholder); });
-      const suffix = `?lang=${encodeURIComponent(state.lang)}`;
-      document.getElementById("homeLink").href = `./index.html${suffix}`;
-      document.getElementById("navHub").href = `./index.html${suffix}`;
-      document.getElementById("navSword").href = `./swordland_planner.html${suffix}`;
-      document.getElementById("navFort").href = `./fort_sanc.html${suffix}`;
-      document.getElementById("navRedeem").href = `./auto_redeem.html${suffix}`;
-    }
-    function renderLang() {
-      const select = document.getElementById("pageLang");
-      select.innerHTML = LANGUAGES.map(([code, label]) => `<option value="${code}">${label}</option>`).join("");
-      select.value = state.lang;
-    }
-    function renderTime() {
-      document.getElementById("clock").textContent = `${String(state.minute).padStart(2, "0")}:00`;
-      document.getElementById("timeSlider").value = state.minute;
-      const key = state.minute < 15 ? "phaseSetup" : state.minute < 30 ? "phaseClash" : state.minute < 50 ? "phaseCore" : "phaseFinal";
-      document.getElementById("phaseLabel").textContent = t(key);
-    }
-    function renderMap() {
-      const map = document.getElementById("map");
-      map.style.transform = `scale(${state.zoom})`;
-      map.style.marginBottom = state.zoom > 1 ? `${(state.zoom - 1) * 310}px` : "0";
-      document.getElementById("zoomLabel").textContent = `${Math.round(state.zoom * 100)}%`;
-      map.querySelectorAll(".node").forEach((node) => node.remove());
-      MARKERS.forEach((marker) => {
-        const claim = state.claims[marker.id];
-        const pos = state.positions[marker.id] || { x: marker.x, y: marker.y };
-        const active = isActive(marker);
-        const status = active ? claim.status : claim.status === "enemy" ? "enemy" : "unassigned";
-        const alliance = active || claim.status === "enemy" ? claim.alliance : "";
-        let hide = state.onlyCaptured && !active;
-        if (state.filter !== "all") hide = state.filter === "captured" ? !active : status !== state.filter;
-        const node = document.createElement("button");
-        node.type = "button";
-        node.className = `node ${marker.kind}${state.selected === marker.id ? " selected" : ""}${state.minute < marker.unlock ? " locked" : ""}${hide ? " hide" : ""}${state.showLabels || active ? " show-label" : ""}`;
-        node.style.left = `${pos.x}%`;
-        node.style.top = `${pos.y}%`;
-        node.dataset.id = marker.id;
-        node.dataset.status = status;
-        node.dataset.alliance = alliance;
-        node.innerHTML = `<span class="gem"><span>${marker.id}</span></span><span class="label">${markerName(marker)}<small>+${fmt(marker.per)}/m</small></span>`;
-        node.addEventListener("click", () => {
-          if (!state.moveMode) {
-            state.selected = marker.id;
-            render();
-          }
-        });
-        node.addEventListener("pointerdown", (event) => startDrag(event, marker.id));
-        map.appendChild(node);
-      });
-    }
-    function startDrag(event, id) {
-      if (!state.moveMode) return;
-      const map = document.getElementById("map");
-      const rect = map.getBoundingClientRect();
-      const move = (nextEvent) => {
-        const x = Math.max(2.5, Math.min(97.5, ((nextEvent.clientX - rect.left) / rect.width) * 100));
-        const y = Math.max(2.5, Math.min(97.5, ((nextEvent.clientY - rect.top) / rect.height) * 100));
-        state.positions[id] = { x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10 };
-        renderMap();
-      };
-      const done = () => {
-        window.removeEventListener("pointermove", move);
-        window.removeEventListener("pointerup", done);
-        saveLocal();
-      };
-      window.addEventListener("pointermove", move);
-      window.addEventListener("pointerup", done);
-      event.preventDefault();
-    }
-    function renderScores() {
-      const scores = computeScores();
-      document.getElementById("scores").innerHTML = TEAMS.map((team) => `<div class="score ${team}"><span>${teamLabel(team)}</span><strong>${fmt(scores[team].total)}</strong><small>${fmt(scores[team].per)} ${t("perMin")} · ${fmt(scores[team].held)} ${t("held")}</small></div>`).join("");
-    }
-    function renderStats() {
-      const scoresNow = computeScores(state.minute);
-      const scoresFinal = computeScores(60);
-      const currentPer = Object.values(scoresNow).reduce((sum, item) => sum + item.per, 0);
-      const finalTotal = Object.values(scoresFinal).reduce((sum, item) => sum + item.total, 0);
-      const heldGarrisons = MARKERS.filter((marker) => marker.kind === "garrison" && isActive(marker)).length;
-      const temple = MARKERS.find((marker) => marker.kind === "temple" && isActive(marker));
-      document.getElementById("capturedRate").textContent = `+${fmt(currentPer)}`;
-      document.getElementById("finalScore").textContent = fmt(finalTotal);
-      document.getElementById("garrisonCount").textContent = `${heldGarrisons} / 3`;
-      document.getElementById("templeBonus").textContent = temple ? teamLabel(state.claims[temple.id].alliance) : "-";
-    }
-    function renderRoster() {
-      const list = document.getElementById("rosterList");
-      list.innerHTML = state.roster.map((name, index) => `<span class="chip"><span>${escapeHtml(name)}</span><button type="button" data-remove="${index}" aria-label="Remove">×</button></span>`).join("");
-      list.querySelectorAll("[data-remove]").forEach((button) => button.addEventListener("click", () => {
-        state.roster.splice(Number(button.dataset.remove), 1);
-        saveLocal();
-        render();
-      }));
-    }
-    function renderEditor() {
-      const marker = MARKERS.find((item) => item.id === state.selected);
-      const box = document.getElementById("targetEditor");
-      if (!marker) {
-        box.innerHTML = `<p class="empty">${t("noSelected")}</p>`;
-        return;
-      }
-      const claim = state.claims[marker.id];
-      box.innerHTML = `
-        <p class="meta">${markerName(marker)} · ${t("targetMeta", { unlock: marker.unlock, points: fmt(marker.per), bonus: fmt(marker.bonus) })}</p>
-        <div class="field"><label>${t("statusLabel")}</label><div class="seg">${["unassigned","captured","hold","defend","enemy"].map((status) => `<button type="button" data-status="${status}" class="${claim.status === status ? "on" : ""}">${t(statusKey(status))}</button>`).join("")}</div></div>
-        <div class="field"><label>${t("allianceLabel")}</label><select id="claimAlliance">${TEAMS.map((team) => `<option value="${team}" ${claim.alliance === team ? "selected" : ""}>${teamLabel(team)}</option>`).join("")}</select></div>
-        <div class="field"><label>${t("assigneeLabel")}</label><select id="claimAssignee"><option value="">${t("unassigned")}</option>${state.roster.map((name) => `<option value="${escapeHtml(name)}" ${claim.assignee === name ? "selected" : ""}>${escapeHtml(name)}</option>`).join("")}</select></div>
-        <div class="field"><label>${t("captureMinuteLabel")}</label><div class="inline"><input id="claimMinute" type="number" min="0" max="60" value="${Number(claim.minute || 0)}"><button class="btn" id="setTimeline" type="button">${t("setToTimeline")}</button></div></div>
-        <div class="field"><label>${t("noteLabel")}</label><textarea id="claimNote" placeholder="${escapeHtml(t("notePlaceholder"))}">${escapeHtml(claim.note || "")}</textarea></div>
-        <button class="btn danger" id="clearMarker" type="button">${t("clearMarker")}</button>`;
-      box.querySelectorAll("[data-status]").forEach((button) => button.addEventListener("click", () => {
-        claim.status = button.dataset.status;
-        if (claim.status === "enemy" && !claim.alliance) claim.alliance = "red";
-        saveLocal();
-        render();
-      }));
-      box.querySelector("#claimAlliance").addEventListener("change", (event) => { claim.alliance = event.target.value; saveLocal(); render(); });
-      box.querySelector("#claimAssignee").addEventListener("change", (event) => { claim.assignee = event.target.value; saveLocal(); renderOrders(); renderPlanCode(); });
-      box.querySelector("#claimMinute").addEventListener("input", (event) => { claim.minute = Math.max(0, Math.min(60, Number(event.target.value || 0))); saveLocal(); render(); });
-      box.querySelector("#setTimeline").addEventListener("click", () => { claim.minute = state.minute; saveLocal(); render(); });
-      box.querySelector("#claimNote").addEventListener("input", (event) => { claim.note = event.target.value.slice(0, 180); saveLocal(); renderOrders(); renderPlanCode(); });
-      box.querySelector("#clearMarker").addEventListener("click", () => {
-        const status = marker.own ? "captured" : marker.enemy ? "enemy" : "unassigned";
-        const alliance = marker.team || (marker.enemy ? "red" : "blue");
-        state.claims[marker.id] = { status, alliance, assignee: "", minute: marker.own ? 0 : marker.unlock, note: "" };
-        saveLocal();
-        render();
-      });
-    }
-    function assignedOrders() {
-      return MARKERS
-        .filter((marker) => ["captured", "hold", "defend"].includes(state.claims[marker.id].status))
-        .map((marker) => ({ marker, claim: state.claims[marker.id] }))
-        .sort((a, b) => TEAMS.indexOf(a.claim.alliance) - TEAMS.indexOf(b.claim.alliance) || Number(a.claim.minute) - Number(b.claim.minute) || a.marker.id.localeCompare(b.marker.id));
-    }
-    function orderText() {
-      return assignedOrders().map(({ marker, claim }) => `[${teamLabel(claim.alliance)}] ${markerName(marker)} | ${t(statusKey(claim.status))} | ${claim.minute}m | ${claim.assignee || t("unassigned")}${claim.note ? " - " + claim.note : ""}`).join("\n");
-    }
-    function renderOrders() {
-      const rows = assignedOrders();
-      document.getElementById("ordersList").innerHTML = rows.length ? rows.map(({ marker, claim }) => `<div class="order"><b>${teamLabel(claim.alliance)} · ${markerName(marker)}</b><em>${t(statusKey(claim.status))} · ${claim.minute}m · ${escapeHtml(claim.assignee || t("unassigned"))}</em>${claim.note ? `<em>${escapeHtml(claim.note)}</em>` : ""}</div>`).join("") : `<p class="empty">${t("noOrders")}</p>`;
-    }
-    function renderPlanCode() {
-      const payload = { version: 3, claims: state.claims, positions: state.positions, roster: state.roster };
-      document.getElementById("planCode").value = encodePlan(payload);
-    }
-    function renderToggles() {
-      document.getElementById("toggleLabels").classList.toggle("on", state.showLabels);
-      document.getElementById("toggleCaptured").classList.toggle("on", state.onlyCaptured);
-      document.getElementById("toggleMove").classList.toggle("on", state.moveMode);
-      document.querySelectorAll("[data-filter]").forEach((button) => button.classList.toggle("on", button.dataset.filter === state.filter));
-    }
-    function render() {
-      translate();
-      renderLang();
-      renderTime();
-      renderToggles();
-      renderMap();
-      renderScores();
-      renderStats();
-      renderRoster();
-      renderEditor();
-      renderOrders();
-      renderPlanCode();
-    }
-    function saveLocal() {
-      try {
-        localStorage.setItem(STORE_KEY, JSON.stringify({ lang: state.lang, minute: state.minute, showLabels: state.showLabels, onlyCaptured: state.onlyCaptured, zoom: state.zoom, roster: state.roster, claims: state.claims, positions: state.positions }));
-      } catch (error) {}
-    }
-    function loadLocal() {
-      try {
-        const saved = JSON.parse(localStorage.getItem(STORE_KEY) || "{}");
-        Object.assign(state, saved);
-      } catch (error) {}
-      const params = new URLSearchParams(location.search);
-      state.lang = normalizeLang(params.get("lang") || state.lang || "ko");
-      state.zoom = Math.max(.8, Math.min(1.55, Number(state.zoom || 1)));
-      ensureClaims();
-    }
-    function copyText(text, button) {
-      navigator.clipboard?.writeText(text).then(() => {
-        const original = button.textContent;
-        button.textContent = t("copied");
-        setTimeout(() => { button.textContent = original; translate(); }, 900);
-      });
-    }
-    function bindEvents() {
-      document.getElementById("pageLang").addEventListener("change", (event) => {
-        state.lang = normalizeLang(event.target.value);
-        saveLocal();
-        const url = new URL(location.href);
-        url.searchParams.set("lang", state.lang);
-        history.replaceState(null, "", url);
-        render();
-      });
-      document.getElementById("timeSlider").addEventListener("input", (event) => { state.minute = Number(event.target.value); saveLocal(); render(); });
-      document.querySelectorAll("[data-filter]").forEach((button) => button.addEventListener("click", () => { state.filter = button.dataset.filter; render(); }));
-      document.getElementById("toggleLabels").addEventListener("click", () => { state.showLabels = !state.showLabels; saveLocal(); render(); });
-      document.getElementById("toggleCaptured").addEventListener("click", () => { state.onlyCaptured = !state.onlyCaptured; saveLocal(); render(); });
-      document.getElementById("toggleMove").addEventListener("click", () => { state.moveMode = !state.moveMode; saveLocal(); render(); });
-      document.getElementById("zoomOut").addEventListener("click", () => { state.zoom = Math.max(.8, Math.round((state.zoom - .1) * 10) / 10); saveLocal(); render(); });
-      document.getElementById("zoomIn").addEventListener("click", () => { state.zoom = Math.min(1.55, Math.round((state.zoom + .1) * 10) / 10); saveLocal(); render(); });
-      document.getElementById("addMember").addEventListener("click", () => {
-        const input = document.getElementById("memberInput");
-        const name = input.value.trim().slice(0, 28);
-        if (name && !state.roster.includes(name)) {
-          state.roster.push(name);
-          input.value = "";
-          saveLocal();
-          render();
-        }
-      });
-      document.getElementById("memberInput").addEventListener("keydown", (event) => {
-        if (event.key === "Enter") document.getElementById("addMember").click();
-      });
-      [document.getElementById("copyOrders"), document.getElementById("copyOrdersTop")].forEach((button) => button.addEventListener("click", () => copyText(orderText(), button)));
-      document.getElementById("clearAll").addEventListener("click", () => { state.claims = {}; ensureClaims(); saveLocal(); render(); });
-      document.getElementById("exportTop").addEventListener("click", () => { renderPlanCode(); document.getElementById("planCode").focus(); });
-      document.getElementById("resetView").addEventListener("click", () => { state.zoom = 1; state.showLabels = true; state.onlyCaptured = false; state.filter = "all"; state.moveMode = false; state.positions = {}; saveLocal(); drawTerrain(); render(); });
-      document.getElementById("copyPlan").addEventListener("click", () => copyText(document.getElementById("planCode").value, document.getElementById("copyPlan")));
-      document.getElementById("loadPlan").addEventListener("click", () => {
-        try {
-          const payload = decodePlan(document.getElementById("planCode").value);
-          state.claims = payload.claims || {};
-          state.positions = payload.positions || {};
-          state.roster = Array.isArray(payload.roster) ? payload.roster.slice(0, 120) : [];
-          ensureClaims();
-          saveLocal();
-          render();
-        } catch (error) {
-          alert(t("invalidPlan"));
-        }
-      });
-    }
-    loadLocal();
-    drawTerrain();
-    setupBattleMapImage();
-    bindEvents();
-    render();
-  </script>
-</body>
-</html>
+  <div class="grid">
+    <div class="panel">
+      <div class="maptools">
+        <button class="toggle" id="tgIds">Show IDs &amp; points</button>
+        <button class="toggle" id="tgCap">Only captured</button>
+        <button class="toggle move" id="tgMove">Move markers</button>
+        <div class="spring"></div>
+        <div class="zoomctl">
+          <button id="zOut" aria-label="Zoom out">−</button>
+          <span class="z mono" id="zLbl">100%</span>
+          <button id="zIn" aria-label="Zoom in">+</button>
+        </div>
+      </div>
+      <div class="scroll" id="scroll">
+        <div class="stage" id="stage">
+          <img src="data:image/jpeg;base64,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... (486KB 남음)
