@@ -1979,6 +1979,14 @@
         rgba(18, 12, 4, .72);
       box-shadow: 0 18px 48px rgba(0, 0, 0, .22), inset 0 1px 0 rgba(255,255,255,.08);
     }
+    .service-limit-banner.is-partial {
+      border-color: rgba(67, 246, 215, .34);
+      color: #dffdf8;
+      background:
+        linear-gradient(135deg, rgba(67, 246, 215, .13), rgba(96, 165, 250, .08)),
+        rgba(5, 16, 24, .72);
+    }
+    .service-limit-banner.is-partial p { color: rgba(223, 253, 248, .8); }
     .service-limit-banner[hidden] { display: none; }
     .service-limit-banner strong {
       display: block;
@@ -2744,7 +2752,7 @@
 
       <section class="service-limit-banner" id="serviceLimitBanner" hidden role="status" aria-live="polite">
         <div>
-          <strong data-i18n="serviceLimitedTitle">Auto Redeem is temporarily limited</strong>
+          <strong id="serviceLimitTitle" data-i18n="serviceLimitedTitle">Auto Redeem is temporarily limited</strong>
           <p id="serviceLimitMessage" data-i18n="serviceLimitedBody">Supabase resources are currently exhausted, so some live counts and registration actions may be delayed. Please try again in a few hours.</p>
         </div>
         <button class="ghost" id="serviceLimitRetryBtn" type="button" data-i18n="serviceRetry">Check again</button>
@@ -2974,6 +2982,8 @@
       trustText: 'HTTPS protected · safe connection. Auto Redeem stores only Kingshot player IDs and public profile summaries. It never asks for passwords, payment information, email login, or device access.',
       serviceLimitedTitle: 'Auto Redeem is temporarily limited',
       serviceLimitedBody: 'Supabase resources are currently exhausted, so live counts, registration, and queue actions may be delayed. Please try again in a few hours.',
+      servicePartialTitle: 'Some status panels are delayed',
+      servicePartialBody: 'Auto Redeem is still operating. A few live numbers may refresh slowly, but registration and queue actions remain available.',
       serviceRetry: 'Check again',
       security: 'Security', privacy: 'Privacy', contact: 'Contact',
       orbitAuto: 'AUTO', orbitRedeem: 'REDEEM',
@@ -3161,6 +3171,8 @@
       trustText: 'HTTPS 보호 연결 · Auto Redeem은 Kingshot 플레이어 ID와 공개 프로필 요약만 저장합니다. 비밀번호, 결제 정보, 이메일 로그인, 기기 접근 권한은 요청하지 않습니다.',
       serviceLimitedTitle: 'Auto Redeem이 일시 제한 모드입니다',
       serviceLimitedBody: '현재 Supabase 리소스가 소진되어 실시간 숫자, 등록, 큐 작업이 지연될 수 있습니다. 몇 시간 후 다시 시도해주세요.',
+      servicePartialTitle: '일부 상태 갱신이 지연 중입니다',
+      servicePartialBody: '오토 리딤은 계속 작동 중입니다. 일부 숫자 표시만 잠시 늦을 수 있으며 등록과 큐 작업은 유지됩니다.',
       serviceRetry: '다시 확인',
       security: '보안',
       privacy: '개인정보',
@@ -3319,6 +3331,8 @@
       trustText: 'HTTPS保護接続 · Auto RedeemはKingshotプレイヤーIDと公開プロフィール概要のみを保存します。パスワード、決済情報、メールログイン、端末アクセス権限は要求しません。',
       serviceLimitedTitle: 'Auto Redeemは一時的に制限中です',
       serviceLimitedBody: '現在Supabaseリソースが不足しているため、ライブ数値、登録、キュー処理が遅れる場合があります。数時間後にもう一度お試しください。',
+      servicePartialTitle: '一部の状態更新が遅れています',
+      servicePartialBody: 'Auto Redeemは稼働中です。一部のライブ数値だけ遅れる場合がありますが、登録とキュー処理は利用できます。',
       serviceRetry: '再確認',
       security: 'セキュリティ',
       privacy: 'プライバシー',
@@ -3881,31 +3895,43 @@
       fr: {
         serviceLimitedTitle: 'Auto Redeem est temporairement limité',
         serviceLimitedBody: 'Les ressources Supabase sont actuellement saturées. Les compteurs, inscriptions et files peuvent être retardés. Réessayez dans quelques heures.',
+        servicePartialTitle: 'Certains statuts sont retardés',
+        servicePartialBody: 'Auto Redeem continue de fonctionner. Quelques compteurs peuvent se mettre à jour lentement, mais les inscriptions et la file restent disponibles.',
         serviceRetry: 'Vérifier'
       },
       de: {
         serviceLimitedTitle: 'Auto Redeem ist vorübergehend eingeschränkt',
         serviceLimitedBody: 'Supabase-Ressourcen sind derzeit ausgelastet. Live-Zahlen, Registrierung und Warteschlange können verzögert sein. Bitte später erneut versuchen.',
+        servicePartialTitle: 'Einige Statusanzeigen sind verzögert',
+        servicePartialBody: 'Auto Redeem läuft weiter. Einige Live-Zahlen können langsam aktualisiert werden, Registrierung und Warteschlange bleiben verfügbar.',
         serviceRetry: 'Erneut prüfen'
       },
       'zh-CN': {
         serviceLimitedTitle: 'Auto Redeem 暂时受限',
         serviceLimitedBody: 'Supabase 资源当前已耗尽，实时数字、注册和队列操作可能会延迟。请几小时后再试。',
+        servicePartialTitle: '部分状态更新延迟',
+        servicePartialBody: 'Auto Redeem 仍在运行。部分实时数字可能刷新较慢，但注册和队列操作仍可使用。',
         serviceRetry: '重新检查'
       },
       'zh-TW': {
         serviceLimitedTitle: 'Auto Redeem 暫時受限',
         serviceLimitedBody: 'Supabase 資源目前已耗盡，即時數字、註冊與佇列操作可能會延遲。請幾小時後再試。',
+        servicePartialTitle: '部分狀態更新延遲',
+        servicePartialBody: 'Auto Redeem 仍在運作。部分即時數字可能刷新較慢，但註冊與佇列操作仍可使用。',
         serviceRetry: '重新檢查'
       },
       th: {
         serviceLimitedTitle: 'Auto Redeem ถูกจำกัดชั่วคราว',
         serviceLimitedBody: 'ขณะนี้ทรัพยากร Supabase เต็ม ทำให้ตัวเลขสด การลงทะเบียน และคิวอาจล่าช้า กรุณาลองใหม่ในอีกไม่กี่ชั่วโมง',
+        servicePartialTitle: 'บางสถานะอัปเดตช้า',
+        servicePartialBody: 'Auto Redeem ยังทำงานอยู่ ตัวเลขสดบางส่วนอาจอัปเดตช้า แต่การลงทะเบียนและคิวยังใช้งานได้',
         serviceRetry: 'ตรวจอีกครั้ง'
       },
       id: {
         serviceLimitedTitle: 'Auto Redeem sementara dibatasi',
         serviceLimitedBody: 'Resource Supabase sedang penuh, sehingga angka live, registrasi, dan antrean bisa tertunda. Coba lagi beberapa jam nanti.',
+        servicePartialTitle: 'Beberapa status tertunda',
+        servicePartialBody: 'Auto Redeem tetap berjalan. Beberapa angka live mungkin lambat diperbarui, tetapi registrasi dan antrean tetap tersedia.',
         serviceRetry: 'Cek lagi'
       }
     };
@@ -3916,6 +3942,7 @@
     let latestVisibleActiveCodes = null;
     let latestRegistrySearchData = null;
     let serviceLimitedActive = false;
+    let serviceLimitMode = 'limited';
     let priorityChallengeToken = '';
     let priorityChallengeQuestion = '';
     let priorityChallengePlayerId = '';
@@ -4114,7 +4141,7 @@
       localStorage.setItem('siteLang', currentLang);
       $('registeredBadge').textContent = '-';
       $('activeCodeBadge').textContent = latestVisibleActiveCodes === null ? '-' : formatNumber(latestVisibleActiveCodes);
-      if (serviceLimitedActive) setServiceLimited(true);
+      if (serviceLimitedActive) setServiceLimited(true, '', serviceLimitMode);
       updateBulkPreview();
       renderVipStrip();
       enableHorizontalDrag($('priorityTrack'));
@@ -4137,15 +4164,26 @@
       if (!response.ok || data.ok === false) throw new Error(data.error || `HTTP ${response.status}`);
       return data;
     }
-    function setServiceLimited(isLimited, message = '') {
+    function setServiceLimited(isLimited, message = '', mode = 'limited') {
       serviceLimitedActive = Boolean(isLimited);
+      serviceLimitMode = mode || 'limited';
       const banner = $('serviceLimitBanner');
+      const title = $('serviceLimitTitle');
       const body = $('serviceLimitMessage');
-      if (banner) banner.hidden = !isLimited;
-      if (body) body.textContent = message || tr('serviceLimitedBody');
+      const isPartial = serviceLimitMode === 'partial';
+      const titleKey = isPartial ? 'servicePartialTitle' : 'serviceLimitedTitle';
+      const bodyKey = isPartial ? 'servicePartialBody' : 'serviceLimitedBody';
+      if (banner) {
+        banner.hidden = !isLimited;
+        banner.classList.toggle('is-partial', Boolean(isLimited && isPartial));
+        banner.classList.toggle('is-limited', Boolean(isLimited && !isPartial));
+      }
+      if (title) title.textContent = tr(titleKey);
+      if (body) body.textContent = message || tr(bodyKey);
+      const shouldDisableActions = Boolean(isLimited && !isPartial);
       ['registerBtn', 'bulkBtn', 'removeBtn', 'priorityChallengeBtn', 'priorityBoostBtn', 'registrySearchBtn'].forEach((id) => {
         const node = $(id);
-        if (node) node.disabled = Boolean(isLimited);
+        if (node) node.disabled = shouldDisableActions;
       });
     }
     function readKingdomRegistryCache() {
@@ -4223,14 +4261,20 @@
       try {
         const data = await api('/api/redeem/status');
         const service = data.service || {};
-        setServiceLimited(service.state === 'limited' || service.ok === false, service.message ? `${tr('serviceLimitedBody')}` : '');
+        if (service.state === 'limited' && service.partial !== true) {
+          setServiceLimited(true, tr('serviceLimitedBody'), 'limited');
+        } else if (service.state === 'partial' || service.partial === true) {
+          setServiceLimited(true, tr('servicePartialBody'), 'partial');
+        } else {
+          setServiceLimited(false);
+        }
         if (Number.isFinite(Number(data.activeCodes))) latestVisibleActiveCodes = Number(data.activeCodes);
         $('registeredBadge').textContent = formatNumber(data.registeredPlayers || 0);
         $('activeCodeBadge').textContent = latestVisibleActiveCodes === null ? '-' : formatNumber(latestVisibleActiveCodes);
         renderQueueStatus(data.queue);
         renderAutomationStatus(data.automation || data.daemon);
       } catch {
-        setServiceLimited(true);
+        setServiceLimited(true, tr('serviceLimitedBody'), 'limited');
         $('registeredBadge').textContent = '-';
         $('activeCodeBadge').textContent = '-';
         renderQueueStatus(null);

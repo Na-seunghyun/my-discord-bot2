@@ -2322,6 +2322,21 @@ function limitedServicePayload(error) {
   };
 }
 
+function partialServicePayload(errors = []) {
+  const normalized = (errors || []).map((item) => item && item.code ? item : classifySupabaseError(item));
+  const first = normalized[0] || { code: "partial_status_delay", message: "Some status panels are delayed." };
+  return {
+    state: "partial",
+    ok: true,
+    partial: true,
+    code: first.code || "partial_status_delay",
+    message: "Some Auto Redeem status panels are delayed, but the main database connection is healthy.",
+    detail: first.message || "Some live status queries are delayed.",
+    errors: normalized.slice(0, 3),
+    checkedAtMs: Date.now(),
+  };
+}
+
 function normalServicePayload() {
   return {
     state: "normal",
@@ -2720,7 +2735,7 @@ async function redeemStatus(env) {
     readRedeemAutomationStatus(env),
   ].map((promise) => promise.catch((error) => ({ __error: error }))));
   const errors = [players, activeCodes, queue, daemon, automation].filter((item) => item && item.__error).map((item) => classifySupabaseError(item.__error));
-  const service = errors.length ? { ...limitedServicePayload({ message: errors[0].message }), partial: true, errors: errors.slice(0, 3) } : serviceHealth;
+  const service = errors.length ? partialServicePayload(errors) : serviceHealth;
   return json({
     ok: true,
     supabase: true,
