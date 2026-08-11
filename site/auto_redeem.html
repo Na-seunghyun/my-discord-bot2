@@ -1482,6 +1482,41 @@
       font-weight: 1000;
       white-space: nowrap;
     }
+    .registry-search-panel {
+      display: grid;
+      grid-template-columns: minmax(130px, .8fr) minmax(160px, 1fr) minmax(100px, .55fr) minmax(120px, .72fr) auto;
+      gap: 10px;
+      align-items: end;
+      margin-bottom: 14px;
+      padding: 12px;
+      border: 1px solid rgba(154,183,255,.18);
+      border-radius: 18px;
+      background: rgba(2, 7, 15, .28);
+    }
+    .registry-search-panel label {
+      align-self: center;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 1000;
+    }
+    .registry-search-panel input,
+    .registry-search-panel button {
+      min-width: 0;
+      min-height: 44px;
+    }
+    .registry-search-result {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .registry-search-card {
+      display: grid;
+      gap: 12px;
+      padding: 14px;
+    }
+    .registry-search-card .kingdom-player {
+      border: 1px solid rgba(154,183,255,.16);
+      border-radius: 16px;
+      background: rgba(255,255,255,.035);
+    }
     .kingdom-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(min(100%, 310px), 1fr));
@@ -2022,6 +2057,9 @@
       max-height: min(440px, 62vh);
     }
     @media (max-width: 760px) {
+      .registry-search-panel {
+        grid-template-columns: 1fr;
+      }
       .priority-actions,
       .input-command,
       .split-actions,
@@ -2790,10 +2828,17 @@
 
       <section class="neo-card kingdom-registry">
         <div class="kingdom-head">
-          <div><span class="console-kicker" data-i18n="kickerKingdom">KINGDOM REGISTRY</span><h2 data-i18n="kingdomRegistryTitle">Registered IDs by Kingdom</h2><p data-i18n="kingdomRegistryHelp">Browse saved auto-redeem IDs grouped by kingdom number.</p></div>
-          <span class="kingdom-summary" id="kingdomSummary">-</span>
+          <div><span class="console-kicker" data-i18n="kickerKingdom">REGISTRY LOOKUP</span><h2 data-i18n="registrySearchTitle">Find Registered ID</h2><p data-i18n="registrySearchHelp">Enter a player ID and kingdom to check whether that ID is already saved for auto redeem.</p></div>
+          <span class="kingdom-summary" id="kingdomSummary" data-i18n="registrySearchSummary">Private lookup</span>
         </div>
-        <div class="kingdom-grid" id="kingdomGrid"><div class="note" data-i18n="loadingKingdoms">Loading kingdom registry...</div></div>
+        <div class="registry-search-panel">
+          <label for="registrySearchPlayerId" data-i18n="registrySearchPlayerId">Player ID</label>
+          <input id="registrySearchPlayerId" inputmode="numeric" maxlength="12" autocomplete="off" data-placeholder="registrySearchPlayerPlaceholder" placeholder="Example: 132498752">
+          <label for="registrySearchKingdom" data-i18n="registrySearchKingdom">Kingdom</label>
+          <input id="registrySearchKingdom" inputmode="numeric" maxlength="5" autocomplete="off" data-placeholder="registrySearchKingdomPlaceholder" placeholder="Example: 885">
+          <button class="primary" id="registrySearchBtn" type="button" data-i18n="registrySearchButton">Search registration</button>
+        </div>
+        <div class="kingdom-grid registry-search-result" id="kingdomGrid"><div class="note" data-i18n="registrySearchIdle">No full registry is shown. Search with player ID and kingdom number.</div></div>
       </section>
     </main>
   </div>
@@ -3540,13 +3585,154 @@
       }
     };
     Object.entries(KINGDOM_I18N).forEach(([lang, dict]) => Object.assign(I18N[lang] || (I18N[lang] = { ...BASE_I18N_EN }), dict));
+    const REGISTRY_SEARCH_I18N = {
+      en: {
+        registrySearchTitle: 'Find Registered ID',
+        registrySearchHelp: 'Enter a player ID and kingdom to check whether that ID is already saved for auto redeem.',
+        registrySearchSummary: 'Private lookup',
+        registrySearchPlayerId: 'Player ID',
+        registrySearchPlayerPlaceholder: 'Example: 132498752',
+        registrySearchKingdom: 'Kingdom',
+        registrySearchKingdomPlaceholder: 'Example: 885',
+        registrySearchButton: 'Search registration',
+        registrySearchIdle: 'No full registry is shown. Search with player ID and kingdom number.',
+        registrySearchFound: 'Registered ID found',
+        registrySearchNotFound: 'No matching registered ID was found.',
+        registrySearchError: 'Could not search registration.',
+        recentRedeemHistory: 'Recent redeem history'
+      },
+      ko: {
+        registrySearchTitle: '등록 ID 검색',
+        registrySearchHelp: '플레이어 ID와 왕국 번호를 입력하면 오토리딤에 저장된 ID인지 확인할 수 있습니다.',
+        registrySearchSummary: '개별 조회',
+        registrySearchPlayerId: '플레이어 ID',
+        registrySearchPlayerPlaceholder: '예: 132498752',
+        registrySearchKingdom: '왕국',
+        registrySearchKingdomPlaceholder: '예: 885',
+        registrySearchButton: '등록 여부 검색',
+        registrySearchIdle: '전체 등록 명단은 표시하지 않습니다. ID와 왕국 번호로 필요한 대상만 검색하세요.',
+        registrySearchFound: '등록된 ID를 찾았습니다',
+        registrySearchNotFound: '일치하는 등록 ID를 찾지 못했습니다.',
+        registrySearchError: '등록 ID를 검색하지 못했습니다.',
+        recentRedeemHistory: '최근 리딤 내역'
+      },
+      ja: {
+        registrySearchTitle: '登録ID検索',
+        registrySearchHelp: 'プレイヤーIDと王国番号を入力して、Auto Redeemに保存済みか確認できます。',
+        registrySearchSummary: '個別検索',
+        registrySearchPlayerId: 'プレイヤーID',
+        registrySearchPlayerPlaceholder: '例: 132498752',
+        registrySearchKingdom: '王国',
+        registrySearchKingdomPlaceholder: '例: 885',
+        registrySearchButton: '登録を検索',
+        registrySearchIdle: '全登録リストは表示しません。IDと王国番号で必要な対象だけ検索してください。',
+        registrySearchFound: '登録IDが見つかりました',
+        registrySearchNotFound: '一致する登録IDが見つかりません。',
+        registrySearchError: '登録IDを検索できませんでした。',
+        recentRedeemHistory: '最近のリディーム履歴'
+      },
+      fr: {
+        registrySearchTitle: 'Rechercher un ID inscrit',
+        registrySearchHelp: 'Saisissez l’ID joueur et le royaume pour vérifier si cet ID est déjà enregistré.',
+        registrySearchSummary: 'Recherche privée',
+        registrySearchPlayerId: 'ID joueur',
+        registrySearchPlayerPlaceholder: 'Exemple: 132498752',
+        registrySearchKingdom: 'Royaume',
+        registrySearchKingdomPlaceholder: 'Exemple: 885',
+        registrySearchButton: 'Rechercher',
+        registrySearchIdle: 'La liste complète n’est pas affichée. Recherchez avec l’ID joueur et le royaume.',
+        registrySearchFound: 'ID inscrit trouvé',
+        registrySearchNotFound: 'Aucun ID inscrit correspondant.',
+        registrySearchError: 'Impossible de rechercher cet ID.',
+        recentRedeemHistory: 'Historique récent'
+      },
+      de: {
+        registrySearchTitle: 'Registrierte ID suchen',
+        registrySearchHelp: 'Gib Spieler-ID und Königreich ein, um die Auto-Redeem-Registrierung zu prüfen.',
+        registrySearchSummary: 'Private Suche',
+        registrySearchPlayerId: 'Spieler-ID',
+        registrySearchPlayerPlaceholder: 'Beispiel: 132498752',
+        registrySearchKingdom: 'Königreich',
+        registrySearchKingdomPlaceholder: 'Beispiel: 885',
+        registrySearchButton: 'Registrierung suchen',
+        registrySearchIdle: 'Die vollständige Liste wird nicht angezeigt. Suche mit Spieler-ID und Königreich.',
+        registrySearchFound: 'Registrierte ID gefunden',
+        registrySearchNotFound: 'Keine passende registrierte ID gefunden.',
+        registrySearchError: 'Registrierung konnte nicht gesucht werden.',
+        recentRedeemHistory: 'Letzte Redeem-Historie'
+      },
+      'zh-CN': {
+        registrySearchTitle: '查询已注册 ID',
+        registrySearchHelp: '输入玩家 ID 和王国编号，确认该 ID 是否已保存到自动兑换。',
+        registrySearchSummary: '单独查询',
+        registrySearchPlayerId: '玩家 ID',
+        registrySearchPlayerPlaceholder: '例: 132498752',
+        registrySearchKingdom: '王国',
+        registrySearchKingdomPlaceholder: '例: 885',
+        registrySearchButton: '查询注册',
+        registrySearchIdle: '不显示完整注册名单。请用玩家 ID 和王国编号查询。',
+        registrySearchFound: '找到已注册 ID',
+        registrySearchNotFound: '未找到匹配的注册 ID。',
+        registrySearchError: '无法查询注册 ID。',
+        recentRedeemHistory: '最近兑换记录'
+      },
+      'zh-TW': {
+        registrySearchTitle: '查詢已註冊 ID',
+        registrySearchHelp: '輸入玩家 ID 與王國編號，確認該 ID 是否已保存到自動兌換。',
+        registrySearchSummary: '單獨查詢',
+        registrySearchPlayerId: '玩家 ID',
+        registrySearchPlayerPlaceholder: '例: 132498752',
+        registrySearchKingdom: '王國',
+        registrySearchKingdomPlaceholder: '例: 885',
+        registrySearchButton: '查詢註冊',
+        registrySearchIdle: '不顯示完整註冊名單。請用玩家 ID 與王國編號查詢。',
+        registrySearchFound: '找到已註冊 ID',
+        registrySearchNotFound: '未找到符合的註冊 ID。',
+        registrySearchError: '無法查詢註冊 ID。',
+        recentRedeemHistory: '最近兌換紀錄'
+      },
+      th: {
+        registrySearchTitle: 'ค้นหา ID ที่ลงทะเบียน',
+        registrySearchHelp: 'ใส่ Player ID และ Kingdom เพื่อตรวจว่า ID นี้ถูกบันทึกไว้สำหรับ Auto Redeem แล้วหรือไม่',
+        registrySearchSummary: 'ค้นหาแบบส่วนตัว',
+        registrySearchPlayerId: 'Player ID',
+        registrySearchPlayerPlaceholder: 'ตัวอย่าง: 132498752',
+        registrySearchKingdom: 'Kingdom',
+        registrySearchKingdomPlaceholder: 'ตัวอย่าง: 885',
+        registrySearchButton: 'ค้นหาการลงทะเบียน',
+        registrySearchIdle: 'จะไม่แสดงรายชื่อทั้งหมด ค้นหาเฉพาะด้วย Player ID และ Kingdom',
+        registrySearchFound: 'พบ ID ที่ลงทะเบียนแล้ว',
+        registrySearchNotFound: 'ไม่พบ ID ที่ลงทะเบียนตรงกัน',
+        registrySearchError: 'ค้นหาการลงทะเบียนไม่สำเร็จ',
+        recentRedeemHistory: 'ประวัติ Redeem ล่าสุด'
+      },
+      id: {
+        registrySearchTitle: 'Cari ID terdaftar',
+        registrySearchHelp: 'Masukkan Player ID dan kingdom untuk memeriksa apakah ID sudah tersimpan untuk auto redeem.',
+        registrySearchSummary: 'Pencarian privat',
+        registrySearchPlayerId: 'Player ID',
+        registrySearchPlayerPlaceholder: 'Contoh: 132498752',
+        registrySearchKingdom: 'Kingdom',
+        registrySearchKingdomPlaceholder: 'Contoh: 885',
+        registrySearchButton: 'Cari registrasi',
+        registrySearchIdle: 'Daftar lengkap tidak ditampilkan. Cari dengan Player ID dan nomor kingdom.',
+        registrySearchFound: 'ID terdaftar ditemukan',
+        registrySearchNotFound: 'ID terdaftar yang cocok tidak ditemukan.',
+        registrySearchError: 'Gagal mencari registrasi.',
+        recentRedeemHistory: 'Riwayat redeem terbaru'
+      }
+    };
+    Object.entries(REGISTRY_SEARCH_I18N).forEach(([lang, dict]) => Object.assign(I18N[lang] || (I18N[lang] = { ...BASE_I18N_EN }), dict));
     let currentLang = new URL(location.href).searchParams.get('lang') || localStorage.getItem('siteLang') || localStorage.getItem('lang') || 'ko';
     if (!I18N[currentLang]) currentLang = 'ko';
     const saved = JSON.parse(localStorage.getItem('autoRedeemRegistration') || '{}');
     let latestVisibleActiveCodes = null;
+    let latestRegistrySearchData = null;
     let priorityChallengeToken = '';
     let priorityChallengeQuestion = '';
     let priorityChallengePlayerId = '';
+    const KINGDOM_REGISTRY_SESSION_KEY = 'redeem-kingdom-registry-cache-v2';
+    const KINGDOM_REGISTRY_SESSION_MS = 5 * 60 * 1000;
     const $ = (id) => document.getElementById(id);
     const setTextById = (id, value) => {
       document.querySelectorAll(`[id="${id}"]`).forEach((node) => { node.textContent = value; });
@@ -3761,6 +3947,27 @@
       const data = await response.json().catch(() => ({}));
       if (!response.ok || data.ok === false) throw new Error(data.error || `HTTP ${response.status}`);
       return data;
+    }
+    function readKingdomRegistryCache() {
+      try {
+        const raw = sessionStorage.getItem(KINGDOM_REGISTRY_SESSION_KEY);
+        if (!raw) return null;
+        const cached = JSON.parse(raw);
+        if (!cached || !cached.savedAtMs || Date.now() - cached.savedAtMs > KINGDOM_REGISTRY_SESSION_MS) return null;
+        return cached.data || null;
+      } catch {
+        return null;
+      }
+    }
+    function writeKingdomRegistryCache(data) {
+      try {
+        sessionStorage.setItem(KINGDOM_REGISTRY_SESSION_KEY, JSON.stringify({ savedAtMs: Date.now(), data }));
+      } catch {}
+    }
+    function clearKingdomRegistryCache() {
+      try {
+        sessionStorage.removeItem(KINGDOM_REGISTRY_SESSION_KEY);
+      } catch {}
     }
     function formatTime(ms) {
       const n = Number(ms);
@@ -4169,62 +4376,85 @@
         </div>`;
     }
 
-    function renderKingdomRegistry(data) {
-      const kingdoms = Array.isArray(data.kingdoms) ? data.kingdoms : [];
-      const total = Number(data.total || 0);
-      const kingdomCount = Number(data.kingdomCount || kingdoms.length || 0);
-      setTextById('kingdomSummary', `${unitText(kingdomCount, 'kingdoms')} / ${unitText(total, 'registeredIdsShort')}`);
+    function renderRegistryIdle() {
       const grid = $('kingdomGrid');
-      if (!grid) return;
-      if (!kingdoms.length) {
-        grid.innerHTML = `<div class="note">${escapeHtml(tr('noKingdomRegistry'))}</div>`;
-        renderVipStrip();
-        return;
-      }
-      kingdoms.forEach((kingdom) => rememberPlayers(Array.isArray(kingdom.players) ? kingdom.players : []));
-      renderVipStrip();
-      grid.innerHTML = kingdoms.map((kingdom, index) => {
-        const players = Array.isArray(kingdom.players) ? kingdom.players : [];
-        const openAttr = index === 0 ? ' open' : '';
-        return `
-          <details class="kingdom-card"${openAttr}>
-            <summary class="kingdom-card-head">
-              <span class="kingdom-title-pack">
-                <strong class="kingdom-id">${escapeHtml(kingdomDisplayLabel(kingdom))}</strong>
-                <span class="kingdom-rollup">${kingdomRollup(players)}</span>
-              </span>
-              <span class="kingdom-count">${escapeHtml(unitText(kingdom.count || players.length || 0, 'ids'))}</span>
-            </summary>
-            <div class="kingdom-player-list">
-              ${players.length ? players.map((player) => `
-                <div class="kingdom-player">
-                  ${avatarNode(player)}
-                  <div>
-                    <div class="kingdom-player-name">
-                      <span>${escapeHtml(playerName(player))}</span>
-                      <span>${escapeHtml(maskId(player.id))}</span>
-                    </div>
-                    <div class="kingdom-player-meta">${escapeHtml(playerMeta(player))} · ${escapeHtml(formatTime(player.created_at_ms || player.updated_at_ms))}</div>
-                    ${recentRedeemHtml(player)}
-                  </div>
-                </div>`).join('') : `<div class="note">${escapeHtml(tr('noRecentUsers'))}</div>`}
-            </div>
-          </details>`;
-      }).join('');
+      setTextById('kingdomSummary', tr('registrySearchSummary'));
+      if (grid) grid.innerHTML = `<div class="note">${escapeHtml(tr('registrySearchIdle'))}</div>`;
     }
 
-    async function loadKingdomRegistry() {
+    function renderKingdomRegistry(data) {
+      latestRegistrySearchData = data || null;
       const grid = $('kingdomGrid');
-      if (grid && !grid.dataset.loaded) {
-        grid.innerHTML = `<div class="note">${escapeHtml(tr('loadingKingdoms'))}</div>`;
+      if (!grid) return;
+      if (!data) return renderRegistryIdle();
+      if (!data.found || !data.player) {
+        setTextById('kingdomSummary', tr('registrySearchNotFound'));
+        grid.innerHTML = `<div class="note">${escapeHtml(tr('registrySearchNotFound'))}</div>`;
+        return;
       }
+      const player = rememberPlayer(data.player) || data.player;
+      const jobs = Array.isArray(data.jobs) ? data.jobs : [];
+      setTextById('kingdomSummary', `${tr('registrySearchFound')} / K${player.state || '-'}`);
+      renderVipStrip();
+      grid.innerHTML = `
+        <article class="kingdom-card registry-search-card">
+          <div class="kingdom-player">
+            ${avatarNode(player)}
+            <div>
+              <div class="kingdom-player-name">
+                <span>${escapeHtml(playerName(player))}</span>
+                <span>${escapeHtml(maskId(player.id))}</span>
+              </div>
+              <div class="kingdom-player-meta">${escapeHtml(playerMeta(player))} · ${escapeHtml(formatTime(player.created_at_ms || player.updated_at_ms))}</div>
+              ${recentRedeemHtml(player)}
+            </div>
+          </div>
+          <div>
+            <div class="panel-head"><span>${escapeHtml(tr('recentRedeemHistory'))}</span><span class="panel-count">${formatNumber(jobs.length)}</span></div>
+            <div class="kingdom-player-list">
+              ${jobs.length ? jobs.map((job) => {
+                const status = normalizeRedeemStatus(job.status);
+                return `
+                  <div class="kingdom-redeem-row">
+                    <span class="redeem-status ${escapeHtml(status)}">${escapeHtml(redeemJobStatusLabel(status))}</span>
+                    <span class="redeem-code-chip">${escapeHtml(tr('code'))}: ${escapeHtml(job.gift_code || '-')}</span>
+                    <span class="redeem-code-chip">${escapeHtml(formatTime(job.redeemed_at_ms || job.updated_at_ms))}</span>
+                    <span class="redeem-reason">${escapeHtml(tr('reason'))}: ${escapeHtml(job.last_error || redeemJobStatusLabel(status))}</span>
+                  </div>`;
+              }).join('') : `<div class="note">${escapeHtml(tr('noRecentRedeem'))}</div>`}
+            </div>
+          </div>
+        </article>`;
+    }
+
+    function loadKingdomRegistry() {
+      renderKingdomRegistry(latestRegistrySearchData);
+    }
+
+    async function searchRegisteredPlayer() {
+      const playerInput = $('registrySearchPlayerId');
+      const kingdomInput = $('registrySearchKingdom');
+      const playerId = (playerInput ? playerInput.value : '').replace(/\D/g, '');
+      const kingdom = cleanKingdom(kingdomInput ? kingdomInput.value : '');
+      const grid = $('kingdomGrid');
+      if (!playerId) {
+        setTextById('kingdomSummary', tr('enterId'));
+        if (grid) grid.innerHTML = `<div class="note">${escapeHtml(tr('enterId'))}</div>`;
+        return;
+      }
+      if (!kingdom) {
+        setTextById('kingdomSummary', tr('enterKingdom'));
+        if (grid) grid.innerHTML = `<div class="note">${escapeHtml(tr('enterKingdom'))}</div>`;
+        return;
+      }
+      setTextById('kingdomSummary', tr('checking'));
+      if (grid) grid.innerHTML = `<div class="note">${escapeHtml(tr('loadingActivity'))}</div>`;
       try {
-        const data = await api('/api/redeem/kingdoms?limit=12000&pageSize=1000');
+        const data = await api(`/api/redeem/player-search?playerId=${encodeURIComponent(playerId)}&kingdom=${encodeURIComponent(kingdom)}`);
         renderKingdomRegistry(data);
-        if (grid) grid.dataset.loaded = '1';
       } catch (error) {
-        setTextById('kingdomSummary', '-');
-        if (grid) grid.innerHTML = `<div class="note">${escapeHtml(`${tr('kingdomRegistryError')} ${error.message || ''}`)}</div>`;
+        setTextById('kingdomSummary', tr('registrySearchError'));
+        if (grid) grid.innerHTML = `<div class="note">${escapeHtml(`${tr('registrySearchError')} ${error.message || ''}`)}</div>`;
       }
     }
 
@@ -4254,9 +4484,11 @@
     if (saved.playerId) {
       $('playerId').value = saved.playerId;
       $('priorityPlayerId').value = saved.playerId;
+      $('registrySearchPlayerId').value = saved.playerId;
     }
     if (saved.kingdom) {
       $('kingdomId').value = saved.kingdom;
+      $('registrySearchKingdom').value = saved.kingdom;
     }
 
     $('registerBtn').addEventListener('click', async () => {
@@ -4283,7 +4515,9 @@
         loadStatus();
         loadActivity();
         loadPriority();
-        loadKingdomRegistry();
+        $('registrySearchPlayerId').value = playerId;
+        $('registrySearchKingdom').value = kingdom;
+        searchRegisteredPlayer();
       } catch (error) {
         setStatus('registerStatus', error.message);
       }
@@ -4317,6 +4551,7 @@
         loadStatus();
         loadActivity();
         loadPriority();
+        latestRegistrySearchData = null;
         loadKingdomRegistry();
       } catch (error) {
         setStatus('registerStatus', error.message);
@@ -4344,7 +4579,7 @@
         setStatus('manageStatus', tr('removed'));
         loadStatus();
         loadActivity();
-        loadKingdomRegistry();
+        searchRegisteredPlayer();
       } catch (error) {
         setStatus('manageStatus', error.message);
       }
@@ -4367,6 +4602,12 @@
       loadActivity();
       loadPriority();
       loadKingdomRegistry();
+    });
+    $('registrySearchBtn').addEventListener('click', searchRegisteredPlayer);
+    ['registrySearchPlayerId', 'registrySearchKingdom'].forEach((id) => {
+      $(id).addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') searchRegisteredPlayer();
+      });
     });
     $('priorityChallengeBtn').addEventListener('click', requestPriorityChallenge);
     $('priorityBoostBtn').addEventListener('click', submitPriorityBoost);
@@ -4401,7 +4642,6 @@
       loadActivity();
       loadPriority();
     }, 60000);
-    setInterval(loadKingdomRegistry, 300000);
   </script>
   <script src="./static/legend-i18n.js?v=20260710-i18n-unified"></script>
 </body>

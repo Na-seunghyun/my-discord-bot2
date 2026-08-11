@@ -71,6 +71,8 @@ let cachedToken = "";
 let cachedTokenExpires = 0;
 let tokenPromise = null;
 let intelSchemaReady = false;
+let redeemKingdomRegistryCache = null;
+const REDEEM_KINGDOM_REGISTRY_CACHE_MS = 90 * 1000;
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const todayKey = () => new Date().toISOString().slice(0, 10);
@@ -2678,6 +2680,43 @@ function publicRedeemJobStatus(row) {
   };
 }
 
+async function redeemPlayerLookup(request, env) {
+  const ready = requireSupabase(env);
+  if (!ready.ok) return ready.response;
+  const url = new URL(request.url);
+  const playerId = meaningfulText(url.searchParams.get("playerId") || url.searchParams.get("id"), 40).replace(/\D/g, "");
+  const kingdom = normalizeKingdomNumber(url.searchParams.get("kingdom") || url.searchParams.get("state") || url.searchParams.get("kid"));
+  if (!/^\d{3,12}$/.test(playerId) || !kingdom) {
+    return json({ ok: false, error: "Player ID and kingdom number are required." }, 400);
+  }
+
+  const rows = await supabaseJson(
+    env,
+    `/redeem_players?id=eq.${encodeURIComponent(playerId)}&state=eq.${encodeURIComponent(kingdom)}&enabled=eq.true&consent=eq.true&select=id,nickname,state,town_hall_level,avatar_url,created_at_ms,updated_at_ms,profile_json&limit=1`
+  ).catch(() => []);
+  const row = Array.isArray(rows) && rows.length ? rows[0] : null;
+  if (!row) {
+    return json({ ok: true, found: false, playerId, kingdom: Number(kingdom) });
+  }
+
+  const jobs = await supabaseJson(
+    env,
+    `/redeem_jobs?player_id=eq.${encodeURIComponent(playerId)}&select=gift_code,status,attempts,last_error,redeemed_at_ms,updated_at_ms&order=updated_at_ms.desc&limit=12`
+  ).catch(() => []);
+  const safeJobs = (Array.isArray(jobs) ? jobs : []).map(publicRedeemJobStatus);
+  const player = {
+    ...publicRedeemPlayer(row),
+    recent_redeem: safeJobs[0] || null,
+  };
+  return json({
+    ok: true,
+    found: true,
+    player,
+    jobs: safeJobs,
+    checkedAtMs: Date.now(),
+  });
+}
+
 function publicPriorityBoost(row) {
   const snapshot = isPlainObject(row && row.player_snapshot) ? row.player_snapshot : {};
   return {
@@ -3053,11 +3092,17 @@ async function redeemKingdomRegistry(request, env) {
   const url = new URL(request.url);
   const limit = Math.min(12000, Math.max(50, Number(url.searchParams.get("limit")) || 8000));
   const pageSize = Math.min(1000, Math.max(100, Number(url.searchParams.get("pageSize")) || 1000));
+  const refresh = url.searchParams.get("refresh") === "1";
+  const cacheKey = `${limit}:${pageSize}`;
+  const now = Date.now();
+  if (!refresh && redeemKingdomRegistryCache && redeemKingdomRegistryCache.key === cacheKey && now - redeemKingdomRegistryCache.updatedAtMs < REDEEM_KINGDOM_REGISTRY_CACHE_MS) {
+    return json({ ...redeemKingdomRegistryCache.payload, cached: true, cacheAgeMs: now - redeemKingdomRegistryCache.updatedAtMs });
+  }
   const rows = [];
   for (let offset = 0; offset < limit; offset += pageSize) {
     const page = await supabaseJson(
       env,
-      `/redeem_players?enabled=eq.true&consent=eq.true&select=id,nickname,state,town_hall_level,avatar_url,created_at_ms,updated_at_ms,profile_json&order=state.asc.nullslast,created_at_ms.desc&limit=${pageSize}&offset=${offset}`
+      `/redeem_players?enabled=eq.true&consent=eq.true&select=id,nickname,state,town_hall_level,avatar_url,created_at_ms,updated_at_ms&order=state.asc.nullslast,created_at_ms.desc&limit=${pageSize}&offset=${offset}`
     ).catch(() => []);
     const chunk = Array.isArray(page) ? page : [];
     rows.push(...chunk);
@@ -3067,8 +3112,8 @@ async function redeemKingdomRegistry(request, env) {
   const playerIdSet = new Set(playerIds);
   const recentJobByPlayer = new Map();
   if (playerIds.length) {
-    const jobPageSize = 1000;
-    const jobLimit = Math.min(16000, Math.max(4000, playerIds.length * 8));
+    const jobPageSize = 750;
+    const jobLimit = Math.min(9000, Math.max(2500, playerIds.length * 4));
     for (let offset = 0; offset < jobLimit && recentJobByPlayer.size < playerIdSet.size; offset += jobPageSize) {
       const recentJobs = await supabaseJson(
         env,
@@ -3109,13 +3154,16 @@ async function redeemKingdomRegistry(request, env) {
     if (b.state === null || b.state === undefined) return -1;
     return Number(a.state) - Number(b.state);
   });
-  return json({
+  const payload = {
     ok: true,
     limit,
     total: (rows || []).length,
     kingdomCount: kingdoms.length,
     kingdoms,
-  });
+    generatedAtMs: Date.now(),
+  };
+  redeemKingdomRegistryCache = { key: cacheKey, updatedAtMs: Date.now(), payload };
+  return json(payload);
 }
 
 async function runRedeemJobs(env, reason = "manual") {
@@ -4645,20 +4693,7 @@ async function transformedTroopCalculator(request, env) {
   const lang = new URL(location.href).searchParams.get('lang') || localStorage.getItem('siteLang') || localStorage.getItem('lang') || 'ko';
   if (/tool=fort-sanc|calculator=fort-sanc|#fort-sanc/.test(location.href)) {
     location.replace('./fort_sanc.html?lang=' + encodeURIComponent(lang));
-    return;
   }
-  function removeFortSancEntry() {
-    document.querySelectorAll('button, a, [data-calculator], [data-id]').forEach((node) => {
-      const text = (node.textContent || '').replace(/\\s+/g, ' ').trim().toLowerCase();
-      const id = String(node.dataset.calculator || node.dataset.id || node.id || '').toLowerCase();
-      if (id === 'fort-sanc' || text.includes('fort / sanc') || text.includes('fort/sanc')) {
-        const card = node.closest('li, .card, .calc-card, .nav-item') || node;
-        card.remove();
-      }
-    });
-  }
-  removeFortSancEntry();
-  new MutationObserver(removeFortSancEntry).observe(document.documentElement, { childList: true, subtree: true });
 })();
 </script>`;
 
@@ -4710,6 +4745,7 @@ export default {
     if (url.pathname === "/api/redeem/priority" && request.method === "GET") return redeemPriority(request, env);
     if (url.pathname === "/api/redeem/priority-challenge" && request.method === "GET") return redeemPriorityChallenge(request, env);
     if (url.pathname === "/api/redeem/priority-boost" && request.method === "POST") return boostRedeemPriority(request, env);
+    if (url.pathname === "/api/redeem/player-search" && request.method === "GET") return redeemPlayerLookup(request, env);
     if (url.pathname === "/api/redeem/kingdoms" && request.method === "GET") return redeemKingdomRegistry(request, env);
     if (url.pathname === "/api/redeem/codes" && request.method === "GET") return listRedeemCodes(request, env);
     if (url.pathname === "/api/redeem/code" && request.method === "POST") return addRedeemCode(request, env);

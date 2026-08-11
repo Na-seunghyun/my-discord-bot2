@@ -627,17 +627,17 @@
       <div class="lang">
         <a class="hub-link" id="hubLink" href="./index.html">Hub</a>
         <a class="coffee-link" id="supportLink" href="https://buymeacoffee.com/nashsh" target="_blank" rel="noreferrer">Support page</a>
-        <label for="languageSelect" id="languageLabel">?紐꾨선</label>
+        <label for="languageSelect" id="languageLabel">Language</label>
         <select id="languageSelect" class="lang-select" data-lang-select>
-          <option value="ko">?눖?눟 ?쒓뎅??/option>
-          <option value="ja">?눓?눝 ?ζ쑍沃?/option>
-          <option value="en">?눣?눡 English</option>
-          <option value="fr">?눏?눟 Fran챌ais</option>
-          <option value="de">?눍?눎 Deutsch</option>
-          <option value="zh-CN">?눊?눛 嶸鵝볞릎??/option>
-          <option value="zh-TW">?눢?눥 濚곲쳱訝?뻼</option>
-          <option value="th">?눢?눑 仙꾝툠錫?/option>
-          <option value="id">?눒?눍 Indonesia</option>
+          <option value="ko">🇰🇷 한국어</option>
+          <option value="ja">🇯🇵 日本語</option>
+          <option value="en">🇺🇸 English</option>
+          <option value="fr">🇫🇷 Français</option>
+          <option value="de">🇩🇪 Deutsch</option>
+          <option value="zh-CN">🇨🇳 简体中文</option>
+          <option value="zh-TW">🇹🇼 繁體中文</option>
+          <option value="th">🇹🇭 ไทย</option>
+          <option value="id">🇮🇩 Indonesia</option>
         </select>
       </div>
     </div>
@@ -653,7 +653,7 @@
     <div class="layout">
       <aside class="panel">
         <div class="panel-header">
-          <h2 class="panel-title" id="navTitle">?④쑴沅쎿묾?/h2>
+          <h2 class="panel-title" id="navTitle">Calculators</h2>
         </div>
         <nav class="nav" id="calculatorNav" aria-label="Calculators"></nav>
       </aside>
@@ -681,9 +681,9 @@
       ["forgehammer-set", "https://kingshot.net/forgehammer-set-calculator", "forgehammerSet"],
       ["vip", "https://kingshot.net/vip-calculator", "vip"],
       ["pack", "https://kingshot.net/pack-calculator", "pack"],
-      ["troop-training", "https://kingshot.net/troop-training-calculator", "troop"],
+      ["troop-training", "./troop_training_ui.html", "troop"],
       ["war-academy", "./war_academy_calculator.html", "warAcademy"],
-      ["fort-sanc", "https://github.com/Na-seunghyun/fr_web", "fortSanc"],
+      ["fort-sanc", "./fort_sanc.html", "fortSanc"],
       ["transfer-pass", "https://kingshot.net/transfer-pass-calculator", "transferPass"]
     ];
 
@@ -817,10 +817,11 @@
         </button>`).join("");
       document.querySelectorAll("#calculatorNav button").forEach((button) => {
         button.addEventListener("click", () => {
-          if (button.dataset.id === "building" || button.dataset.id === "war-academy") {
+          if (button.dataset.id === "building" || button.dataset.id === "war-academy" || button.dataset.id === "fort-sanc") {
             const localPages = {
               building: "./building_calculator.html",
-              "war-academy": "./war_academy_calculator.html"
+              "war-academy": "./war_academy_calculator.html",
+              "fort-sanc": "./fort_sanc.html"
             };
             location.href = `${localPages[button.dataset.id]}?lang=${encodeURIComponent(lang)}`;
             return;
@@ -1245,9 +1246,9 @@
         archer: "Archer"
       };
       const troopIcons = {
-        infantry: "?酉귦닔",
-        cavalry: "?由?,
-        archer: "?琉?
+        infantry: "INF",
+        cavalry: "CAV",
+        archer: "ARC"
       };
       const statLabels = {
         deployment_capacity: "Deployment Capacity",
@@ -1315,7 +1316,7 @@
                       <div class="tech-heading">
                         <span class="tech-icon" aria-hidden="true">
                           ${tech.image ? `<img src="${techImage(tech)}" alt="" loading="lazy" onerror="this.parentElement.classList.add('image-error')">` : ""}
-                          <span class="fallback-icon">${tech.icon || troopIcons[type] || "?酉귦닔"}</span>
+                          <span class="fallback-icon">${tech.icon || troopIcons[type] || "TECH"}</span>
                         </span>
                         <div>
                           <h4 class="tech-name">${tech.name}</h4>
