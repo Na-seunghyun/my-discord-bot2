@@ -1,21 +1,34 @@
-Metric zero flicker fix - 2026-08-12
+Supabase load relief patch - 2026-08-12
 
 What changed:
-- Auto Redeem live numbers no longer fall back to 0 when Supabase is slow or partially unavailable.
-- Registered IDs, active code count, success count, code dock count, queue badge, and daemon badge keep the last reliable value.
-- Worker status APIs now return null instead of false 0 values when counts are temporarily unavailable.
-- Active gift code count uses the trusted kingshot.net cache when Supabase count queries fail.
+- Auto Redeem status, activity, and gift-code APIs now use short Worker/KV cache.
+- The page no longer refreshes every live panel every 60 seconds.
+- Refresh intervals are split:
+  - status: 2 minutes
+  - recent activity: 3 minutes
+  - priority strip: 5 minutes
+  - gift codes: 15 minutes
+- Hidden browser tabs do not keep refreshing live data.
+- Cached values are reused if Supabase is temporarily slow.
 
 Files to upload/replace:
 - src/index.js
 - site/auto_redeem.html
 
-Deployment:
-- No Supabase SQL is required.
-- No PuTTY daemon restart is required for this display fix.
-- Redeploy the Cloudflare Worker/static assets after replacing the files.
+Supabase SQL:
+- migrations/redeem_db_load_relief_20260812.sql
 
-Expected result:
-- Registered IDs should stay around the last real value instead of flashing 0.
-- Active codes should not flash 0 when a refresh request fails.
-- Temporary Supabase pressure should show a partial/limited notice without erasing live numbers.
+Recommended order:
+1. Keep the PuTTY auto-redeem daemon stopped until Supabase CPU/Disk IO calms down.
+2. Upload/replace the two code files and redeploy Cloudflare.
+3. When Supabase is usable again, run migrations/redeem_db_load_relief_20260812.sql.
+4. After indexes are created, optionally run:
+   select public.cleanup_old_redeem_jobs(30);
+   analyze public.redeem_jobs;
+   analyze public.redeem_players;
+   analyze public.redeem_codes;
+
+Notes:
+- No new Cloudflare variable is required.
+- The Worker uses the existing VISITS or FEEDBACK KV binding for lightweight status cache.
+- Live numbers may update a little slower, but Supabase load should drop sharply.

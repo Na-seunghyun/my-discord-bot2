@@ -4963,17 +4963,20 @@
     $('bulkIds').addEventListener('input', updateBulkPreview);
     $('kingdomId').addEventListener('input', updateBulkPreview);
     $('bulkKingdomId').addEventListener('input', updateBulkPreview);
+    function scheduleVisibleRefresh(fn, ms) {
+      setInterval(() => {
+        if (!document.hidden) fn();
+      }, ms);
+    }
     applyI18n();
-    loadCodes(true).finally(loadStatus);
+    loadCodes(false).finally(loadStatus);
     loadActivity();
     loadPriority();
     loadKingdomRegistry();
-    setInterval(() => {
-      loadStatus();
-      loadCodes();
-      loadActivity();
-      loadPriority();
-    }, 60000);
+    scheduleVisibleRefresh(loadStatus, 2 * 60 * 1000);
+    scheduleVisibleRefresh(loadActivity, 3 * 60 * 1000);
+    scheduleVisibleRefresh(loadPriority, 5 * 60 * 1000);
+    scheduleVisibleRefresh(loadCodes, 15 * 60 * 1000);
   </script>
   <script src="./static/legend-i18n.js?v=20260710-i18n-unified"></script>
 </body>

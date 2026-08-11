@@ -24,6 +24,10 @@ const AUTO_REDEEM_DEFAULT_CLOUDFLARE_BATCH_SIZE = 6;
 const AUTO_REDEEM_DEFAULT_DELAY_MS = 700;
 const AUTO_REDEEM_DEFAULT_MAX_ATTEMPTS = 4;
 const AUTO_REDEEM_RUNNER_STALE_MS = 25 * 60 * 1000;
+const AUTO_REDEEM_STATUS_CACHE_MS = 2 * 60 * 1000;
+const AUTO_REDEEM_ACTIVITY_CACHE_MS = 3 * 60 * 1000;
+const AUTO_REDEEM_CODES_CACHE_MS = 15 * 60 * 1000;
+const AUTO_REDEEM_STALE_CACHE_MS = 30 * 60 * 1000;
 const PUBLIC_GIFT_CODE_PROBE_LIMIT = 3;
 const PUBLIC_GIFT_CODE_PROBE_PLAYER_LIMIT = 3;
 const KINGSHOT_NET_GIFT_CODES_URL = "https://kingshot.net/gift-codes";
@@ -77,6 +81,7 @@ let tokenPromise = null;
 let intelSchemaReady = false;
 let redeemKingdomRegistryCache = null;
 const REDEEM_KINGDOM_REGISTRY_CACHE_MS = 90 * 1000;
+const runtimeMemoryCache = new Map();
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const todayKey = () => new Date().toISOString().slice(0, 10);
@@ -122,6 +127,80 @@ const json = (payload, status = 200) =>
       ...baseSecurityHeaders(),
     },
   });
+
+function runtimeCacheStore(env) {
+  return env && (env.VISITS || env.FEEDBACK) || null;
+}
+
+function payloadHasUsefulData(payload) {
+  if (!payload || typeof payload !== "object" || payload.ok === false) return false;
+  if (payload.service && payload.service.state === "limited") return false;
+  if (Array.isArray(payload.codes) && payload.codes.length > 0) return true;
+  if (Array.isArray(payload.recentPlayers) && payload.recentPlayers.length > 0) return true;
+  if (Array.isArray(payload.recentSuccess) && payload.recentSuccess.length > 0) return true;
+  if (payload.queue && typeof payload.queue === "object") return true;
+  for (const key of ["registeredPlayers", "activeCodes", "pendingJobs", "successJobs"]) {
+    const value = Number(payload[key]);
+    if (Number.isFinite(value) && value > 0) return true;
+  }
+  return false;
+}
+
+async function readRuntimeJsonCache(env, key, maxAgeMs) {
+  const memory = runtimeMemoryCache.get(key);
+  const now = Date.now();
+  if (memory && now - memory.savedAtMs <= maxAgeMs) return { payload: memory.payload, savedAtMs: memory.savedAtMs, ageMs: now - memory.savedAtMs, source: "memory" };
+  const store = runtimeCacheStore(env);
+  if (!store || !store.get) return null;
+  const raw = await store.get(`runtime-cache:${key}`).catch(() => null);
+  if (!raw) return null;
+  const parsed = JSON.parse(raw);
+  if (!parsed || !parsed.savedAtMs || now - parsed.savedAtMs > maxAgeMs) return null;
+  runtimeMemoryCache.set(key, { payload: parsed.payload, savedAtMs: parsed.savedAtMs });
+  return { payload: parsed.payload, savedAtMs: parsed.savedAtMs, ageMs: now - parsed.savedAtMs, source: "kv" };
+}
+
+async function writeRuntimeJsonCache(env, key, payload, ttlMs, staleMs = AUTO_REDEEM_STALE_CACHE_MS) {
+  if (!payloadHasUsefulData(payload)) return false;
+  const savedAtMs = Date.now();
+  runtimeMemoryCache.set(key, { payload, savedAtMs });
+  const store = runtimeCacheStore(env);
+  if (!store || !store.put) return true;
+  const expirationTtl = Math.max(60, Math.ceil(Math.max(ttlMs, staleMs) / 1000));
+  await store.put(`runtime-cache:${key}`, JSON.stringify({ savedAtMs, payload }), { expirationTtl }).catch(() => {});
+  return true;
+}
+
+async function cachedJsonResponse(env, key, ttlMs, producer, options = {}) {
+  const staleMs = options.staleMs || AUTO_REDEEM_STALE_CACHE_MS;
+  const bypass = Boolean(options.bypass);
+  if (!bypass) {
+    const cached = await readRuntimeJsonCache(env, key, ttlMs).catch(() => null);
+    if (cached) return json({ ...cached.payload, cached: true, cacheAgeMs: cached.ageMs });
+  }
+  const stale = await readRuntimeJsonCache(env, key, staleMs).catch(() => null);
+  try {
+    const produced = await producer();
+    if (produced instanceof Response) {
+      const payload = await produced.clone().json().catch(() => null);
+      if (produced.ok && payloadHasUsefulData(payload)) {
+        await writeRuntimeJsonCache(env, key, payload, ttlMs, staleMs);
+      } else if (stale) {
+        return json({ ...stale.payload, cached: true, stale: true, cacheAgeMs: stale.ageMs });
+      }
+      return produced;
+    }
+    if (payloadHasUsefulData(produced)) {
+      await writeRuntimeJsonCache(env, key, produced, ttlMs, staleMs);
+      return json(produced);
+    }
+    if (stale) return json({ ...stale.payload, cached: true, stale: true, cacheAgeMs: stale.ageMs });
+    return json(produced);
+  } catch (error) {
+    if (stale) return json({ ...stale.payload, cached: true, stale: true, cacheAgeMs: stale.ageMs });
+    throw error;
+  }
+}
 
 function publicTextResponse(body, contentType) {
   return new Response(body, {
@@ -2750,6 +2829,7 @@ async function listRedeemCodes(request, env) {
   const limit = Math.min(50, Math.max(1, Number(url.searchParams.get("limit")) || 20));
   const scanLimit = Math.max(100, limit * 5);
   const refresh = url.searchParams.get("refresh") === "1";
+  return cachedJsonResponse(env, `redeem-codes:${limit}:v5`, AUTO_REDEEM_CODES_CACHE_MS, async () => {
   const discovery = await refreshPublicRedeemCodesIfAllowed(env, refresh ? 0 : 10 * 60 * 1000)
     .catch((error) => ({ discovered: [], active: [], expired: [], jobsCreated: 0, errors: [cleanText(error.message, 120)] }));
   const [codes, players, activeCodes] = await Promise.all([
@@ -2789,10 +2869,12 @@ async function listRedeemCodes(request, env) {
   const fallbackActiveCount = fallbackRows.filter(redeemCodeTrustedActiveForDisplay).length;
   const safeActiveCodes = activeCodes || fallbackActiveCount || merged.filter(redeemCodeTrustedActiveForDisplay).length || null;
   return json({ ok: true, codes: merged.slice(0, limit), registeredPlayers: players, activeCodes: safeActiveCodes, discovery });
+  }, { bypass: refresh, staleMs: AUTO_REDEEM_STALE_CACHE_MS });
 }
 
 async function redeemStatus(env) {
   if (!supabaseConfig(env).enabled) return json({ ok: true, supabase: false, registeredPlayers: 0, activeCodes: 0, queue: null, daemon: null, automation: null, service: { state: "disabled", ok: false } });
+  return cachedJsonResponse(env, "redeem-status:v5", AUTO_REDEEM_STATUS_CACHE_MS, async () => {
   const serviceHealth = await supabaseJson(env, "/redeem_players?select=id&limit=1").then(() => normalServicePayload()).catch(limitedServicePayload);
   if (!serviceHealth.ok) {
     return json({ ok: true, supabase: true, registeredPlayers: null, activeCodes: null, queue: null, daemon: null, automation: null, service: serviceHealth });
@@ -2819,6 +2901,7 @@ async function redeemStatus(env) {
     automation: automation && automation.__error ? null : automation,
     service,
   });
+  }, { staleMs: AUTO_REDEEM_STALE_CACHE_MS });
 }
 
 async function countSupabaseRows(env, path) {
@@ -3322,6 +3405,7 @@ async function redeemActivity(request, env) {
   const playerLimit = Math.min(12, Math.max(3, Number(url.searchParams.get("players")) || 6));
   const successLimit = Math.min(50, Math.max(5, Number(url.searchParams.get("success")) || 50));
 
+  return cachedJsonResponse(env, `redeem-activity:${playerLimit}:${successLimit}:v5`, AUTO_REDEEM_ACTIVITY_CACHE_MS, async () => {
   const priorityCfg = priorityBoostConfig(env);
   const [recentPlayersRaw, recentSuccessRaw, pendingJobs, successJobs, activeCodes, registeredPlayers, queue, daemon, automation, priorityLeaderboard] = await Promise.all([
     supabaseJson(env, `/redeem_players?enabled=eq.true&consent=eq.true&select=id,nickname,state,town_hall_level,avatar_url,created_at_ms,updated_at_ms,profile_json&order=created_at_ms.desc&limit=${playerLimit}`).catch(() => []),
@@ -3368,6 +3452,7 @@ async function redeemActivity(request, env) {
     recentPlayers,
     recentSuccess: (recentSuccessRaw || []).map((row) => publicRedeemJob(row, playerMap)),
   });
+  }, { staleMs: AUTO_REDEEM_STALE_CACHE_MS });
 }
 
 async function redeemKingdomRegistry(request, env) {
