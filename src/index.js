@@ -1382,15 +1382,20 @@ function extractRedeemPlayerEntries(value, defaultKingdom = null, max = 250) {
   return entries.slice(0, max);
 }
 
-async function countRedeemPlayers(env) {
+async function countRedeemPlayersStrict(env) {
   if (!supabaseConfig(env).enabled) return 0;
   const response = await supabaseFetch(env, "/redeem_players?enabled=eq.true&consent=eq.true&select=id&limit=1", {
     headers: { prefer: "count=exact", range: "0-0" },
-  }).catch(() => null);
-  if (!response) return 0;
+  });
+  if (!response) throw new Error("Could not count registered redeem players.");
   const range = response.headers.get("content-range") || "";
   const total = Number(range.split("/")[1]);
-  return Number.isFinite(total) ? total : 0;
+  if (!Number.isFinite(total)) throw new Error("Registered player count was not returned.");
+  return total;
+}
+
+async function countRedeemPlayers(env) {
+  return countRedeemPlayersStrict(env).catch(() => 0);
 }
 
 async function upsertRedeemPlayer(env, playerId, options = {}) {
@@ -2347,10 +2352,18 @@ function normalServicePayload() {
 }
 
 async function countVisibleActiveRedeemCodes(env, scanLimit = 300) {
-  const rows = await supabaseJson(
-    env,
-    `/redeem_codes?source=eq.${TRUSTED_GIFT_CODE_SOURCE_ENCODED}&status=eq.active&select=code,source,status,is_active,last_redeem_status,updated_at_ms&order=updated_at_ms.desc&limit=${scanLimit}`
-  ).catch(() => []);
+  let rows = [];
+  try {
+    rows = await supabaseJson(
+      env,
+      `/redeem_codes?source=eq.${TRUSTED_GIFT_CODE_SOURCE_ENCODED}&status=eq.active&select=code,source,status,is_active,last_redeem_status,updated_at_ms&order=updated_at_ms.desc&limit=${scanLimit}`
+    );
+  } catch (error) {
+    const cachedRows = await readCachedPublicRedeemCodeRows(env).catch(() => []);
+    const cachedCount = (cachedRows || []).filter(redeemCodeTrustedActiveForDisplay).length;
+    if (cachedCount > 0) return cachedCount;
+    throw error;
+  }
   const count = (rows || []).filter(redeemCodeTrustedActiveForDisplay).length;
   if (count > 0) return count;
   const cachedRows = await readCachedPublicRedeemCodeRows(env).catch(() => []);
@@ -2741,8 +2754,8 @@ async function listRedeemCodes(request, env) {
     .catch((error) => ({ discovered: [], active: [], expired: [], jobsCreated: 0, errors: [cleanText(error.message, 120)] }));
   const [codes, players, activeCodes] = await Promise.all([
     supabaseJson(env, `/redeem_codes?source=eq.${TRUSTED_GIFT_CODE_SOURCE_ENCODED}&select=code,source,status,is_active,last_redeem_status,last_redeemed_at_ms,discovered_at_ms,updated_at_ms&order=discovered_at_ms.desc&limit=${scanLimit}`).catch(() => []),
-    countRedeemPlayers(env).catch(() => 0),
-    countVisibleActiveRedeemCodes(env).catch(() => 0),
+    countRedeemPlayersStrict(env).catch(() => null),
+    countVisibleActiveRedeemCodes(env).catch(() => null),
   ]);
   const visibleBase = (codes || []).filter(redeemCodeAllowedForPublicUseStrict);
   const trustedActive = new Set(visibleBase
@@ -2774,7 +2787,7 @@ async function listRedeemCodes(request, env) {
     merged.push(row);
   }
   const fallbackActiveCount = fallbackRows.filter(redeemCodeTrustedActiveForDisplay).length;
-  const safeActiveCodes = activeCodes || fallbackActiveCount || merged.filter(redeemCodeTrustedActiveForDisplay).length;
+  const safeActiveCodes = activeCodes || fallbackActiveCount || merged.filter(redeemCodeTrustedActiveForDisplay).length || null;
   return json({ ok: true, codes: merged.slice(0, limit), registeredPlayers: players, activeCodes: safeActiveCodes, discovery });
 }
 
@@ -2782,11 +2795,11 @@ async function redeemStatus(env) {
   if (!supabaseConfig(env).enabled) return json({ ok: true, supabase: false, registeredPlayers: 0, activeCodes: 0, queue: null, daemon: null, automation: null, service: { state: "disabled", ok: false } });
   const serviceHealth = await supabaseJson(env, "/redeem_players?select=id&limit=1").then(() => normalServicePayload()).catch(limitedServicePayload);
   if (!serviceHealth.ok) {
-    return json({ ok: true, supabase: true, registeredPlayers: 0, activeCodes: 0, queue: null, daemon: null, automation: null, service: serviceHealth });
+    return json({ ok: true, supabase: true, registeredPlayers: null, activeCodes: null, queue: null, daemon: null, automation: null, service: serviceHealth });
   }
   const statusDiscovery = await refreshPublicRedeemCodesIfAllowed(env, 10 * 60 * 1000).catch(() => null);
   const [players, activeCodes, queue, daemon, automation] = await Promise.all([
-    countRedeemPlayers(env),
+    countRedeemPlayersStrict(env),
     countVisibleActiveRedeemCodes(env),
     redeemQueueSummary(env),
     readRedeemDaemonStatus(env),
@@ -2795,11 +2808,11 @@ async function redeemStatus(env) {
   const errors = [players, activeCodes, queue, daemon, automation].filter((item) => item && item.__error).map((item) => classifySupabaseError(item.__error));
   const service = errors.length ? partialServicePayload(errors) : serviceHealth;
   const fallbackActiveCodes = Array.isArray(statusDiscovery && statusDiscovery.active) ? statusDiscovery.active.length : 0;
-  const visibleActiveCodes = activeCodes && activeCodes.__error ? fallbackActiveCodes : (numberValue(activeCodes) || fallbackActiveCodes);
+  const visibleActiveCodes = activeCodes && activeCodes.__error ? (fallbackActiveCodes || null) : (numberValue(activeCodes) || fallbackActiveCodes || null);
   return json({
     ok: true,
     supabase: true,
-    registeredPlayers: players && players.__error ? 0 : players,
+    registeredPlayers: players && players.__error ? null : players,
     activeCodes: visibleActiveCodes,
     queue: queue && queue.__error ? null : queue,
     daemon: daemon && daemon.__error ? null : daemon,
@@ -2811,11 +2824,12 @@ async function redeemStatus(env) {
 async function countSupabaseRows(env, path) {
   const response = await supabaseFetch(env, path, {
     headers: { prefer: "count=exact", range: "0-0" },
-  }).catch(() => null);
-  if (!response) return 0;
+  });
+  if (!response) throw new Error("Could not count Supabase rows.");
   const range = response.headers.get("content-range") || "";
   const total = Number(range.split("/")[1]);
-  return Number.isFinite(total) ? total : 0;
+  if (!Number.isFinite(total)) throw new Error("Supabase count was not returned.");
+  return total;
 }
 
 function shouldFallbackFromFastQueueSummary(error) {
@@ -2879,16 +2893,16 @@ async function redeemQueueSummary(env) {
     ? `/redeem_priority_boosts?expires_at_ms=gte.${now}&player_id=in.(${vipIds.map(encodeURIComponent).join(",")})&select=boost_key&limit=1`
     : "";
   const [pending, retryPending, running, staleRunning, deferred, browserReview, success, failedTerminal, priorityActive, activeVipBoosts] = await Promise.all([
-    countSupabaseRows(env, "/redeem_jobs?status=eq.pending&select=job_key&limit=1").catch(() => 0),
-    countSupabaseRows(env, "/redeem_jobs?status=eq.pending&attempts=gt.0&select=job_key&limit=1").catch(() => 0),
-    countSupabaseRows(env, "/redeem_jobs?status=eq.running&select=job_key&limit=1").catch(() => 0),
-    countSupabaseRows(env, `/redeem_jobs?status=eq.running&updated_at_ms=lt.${staleCutoff}&select=job_key&limit=1`).catch(() => 0),
-    countSupabaseRows(env, "/redeem_jobs?status=eq.deferred&select=job_key&limit=1").catch(() => 0),
-    countSupabaseRows(env, "/redeem_jobs?status=eq.browser_review&select=job_key&limit=1").catch(() => 0),
-    countSupabaseRows(env, "/redeem_jobs?status=eq.success&select=job_key&limit=1").catch(() => 0),
-    countSupabaseRows(env, "/redeem_jobs?status=in.(failed,invalid_code,expired,already_claimed,time_window_closed,player_not_found,kingdom_check_required,not_logged_in,captcha_required,claim_limit_reached,deferred,official_blocked)&select=job_key&limit=1").catch(() => 0),
-    countSupabaseRows(env, `/redeem_priority_boosts?expires_at_ms=gte.${now}&select=boost_key&limit=1`).catch(() => 0),
-    vipActivePath ? countSupabaseRows(env, vipActivePath).catch(() => 0) : Promise.resolve(0),
+    countSupabaseRows(env, "/redeem_jobs?status=eq.pending&select=job_key&limit=1"),
+    countSupabaseRows(env, "/redeem_jobs?status=eq.pending&attempts=gt.0&select=job_key&limit=1"),
+    countSupabaseRows(env, "/redeem_jobs?status=eq.running&select=job_key&limit=1"),
+    countSupabaseRows(env, `/redeem_jobs?status=eq.running&updated_at_ms=lt.${staleCutoff}&select=job_key&limit=1`),
+    countSupabaseRows(env, "/redeem_jobs?status=eq.deferred&select=job_key&limit=1"),
+    countSupabaseRows(env, "/redeem_jobs?status=eq.browser_review&select=job_key&limit=1"),
+    countSupabaseRows(env, "/redeem_jobs?status=eq.success&select=job_key&limit=1"),
+    countSupabaseRows(env, "/redeem_jobs?status=in.(failed,invalid_code,expired,already_claimed,time_window_closed,player_not_found,kingdom_check_required,not_logged_in,captcha_required,claim_limit_reached,deferred,official_blocked)&select=job_key&limit=1"),
+    countSupabaseRows(env, `/redeem_priority_boosts?expires_at_ms=gte.${now}&select=boost_key&limit=1`),
+    vipActivePath ? countSupabaseRows(env, vipActivePath) : Promise.resolve(0),
   ]);
   return {
     pending,
@@ -3312,10 +3326,10 @@ async function redeemActivity(request, env) {
   const [recentPlayersRaw, recentSuccessRaw, pendingJobs, successJobs, activeCodes, registeredPlayers, queue, daemon, automation, priorityLeaderboard] = await Promise.all([
     supabaseJson(env, `/redeem_players?enabled=eq.true&consent=eq.true&select=id,nickname,state,town_hall_level,avatar_url,created_at_ms,updated_at_ms,profile_json&order=created_at_ms.desc&limit=${playerLimit}`).catch(() => []),
     supabaseJson(env, `/redeem_jobs?status=eq.success&select=player_id,gift_code,status,redeemed_at_ms,updated_at_ms&order=redeemed_at_ms.desc&limit=${successLimit}`).catch(() => []),
-    countSupabaseRows(env, "/redeem_jobs?status=in.(pending,running)&select=job_key&limit=1").catch(() => 0),
-    countSupabaseRows(env, "/redeem_jobs?status=eq.success&select=job_key&limit=1").catch(() => 0),
-    countVisibleActiveRedeemCodes(env).catch(() => 0),
-    countRedeemPlayers(env).catch(() => 0),
+    countSupabaseRows(env, "/redeem_jobs?status=in.(pending,running)&select=job_key&limit=1").catch((error) => ({ __error: error })),
+    countSupabaseRows(env, "/redeem_jobs?status=eq.success&select=job_key&limit=1").catch((error) => ({ __error: error })),
+    countVisibleActiveRedeemCodes(env).catch((error) => ({ __error: error })),
+    countRedeemPlayersStrict(env).catch((error) => ({ __error: error })),
     redeemQueueSummary(env).catch(() => null),
     readRedeemDaemonStatus(env).catch(() => null),
     readRedeemAutomationStatus(env).catch(() => null),
@@ -3338,10 +3352,10 @@ async function redeemActivity(request, env) {
 
   return json({
     ok: true,
-    registeredPlayers,
-    activeCodes,
-    pendingJobs,
-    successJobs,
+    registeredPlayers: registeredPlayers && registeredPlayers.__error ? null : registeredPlayers,
+    activeCodes: activeCodes && activeCodes.__error ? null : activeCodes,
+    pendingJobs: pendingJobs && pendingJobs.__error ? null : pendingJobs,
+    successJobs: successJobs && successJobs.__error ? null : successJobs,
     queue,
     daemon,
     automation,

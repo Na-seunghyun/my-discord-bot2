@@ -3940,6 +3940,17 @@
     if (!I18N[currentLang]) currentLang = 'ko';
     const saved = JSON.parse(localStorage.getItem('autoRedeemRegistration') || '{}');
     let latestVisibleActiveCodes = null;
+    const latestMetrics = {
+      registeredPlayers: null,
+      activeCodes: null,
+      successJobs: null,
+      userDockCount: null,
+    };
+    let latestQueueText = null;
+    let latestQueueTitle = '';
+    let latestAutomationText = null;
+    let latestAutomationClass = 'engine-card daemon-badge unknown';
+    let latestAutomationTitle = '';
     let latestRegistrySearchData = null;
     let serviceLimitedActive = false;
     let serviceLimitMode = 'limited';
@@ -3956,6 +3967,26 @@
     };
     const tr = (key) => (I18N[currentLang] && I18N[currentLang][key]) || I18N.en[key] || key;
     const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (ch) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+    function reliableNumber(value) {
+      const n = Number(value);
+      return Number.isFinite(n) ? n : null;
+    }
+    function rememberMetric(key, value, options = {}) {
+      const n = reliableNumber(value);
+      if (n !== null && (n > 0 || options.allowZero === true)) latestMetrics[key] = n;
+      return latestMetrics[key];
+    }
+    function metricDisplay(key, value, options = {}) {
+      const remembered = rememberMetric(key, value, options);
+      return remembered === null || remembered === undefined ? '-' : formatNumber(remembered);
+    }
+    function setMetricText(id, key, value, options = {}) {
+      const remembered = rememberMetric(key, value, options);
+      document.querySelectorAll(`[id="${id}"]`).forEach((node) => {
+        node.textContent = remembered === null || remembered === undefined ? '-' : formatNumber(remembered);
+      });
+      return remembered;
+    }
     const VIP_PLAYER_IDS = ['132400657', '130500207', '132498752', '131598020', '133662121', '132891924'];
     const knownRedeemPlayers = new Map();
     function canonicalPlayerId(player) {
@@ -4141,8 +4172,8 @@
       document.querySelectorAll('.redeem-shell #langSelect').forEach((select) => { select.value = currentLang; });
       localStorage.setItem('lang', currentLang);
       localStorage.setItem('siteLang', currentLang);
-      $('registeredBadge').textContent = '-';
-      $('activeCodeBadge').textContent = latestVisibleActiveCodes === null ? '-' : formatNumber(latestVisibleActiveCodes);
+      setMetricText('registeredBadge', 'registeredPlayers', null);
+      setMetricText('activeCodeBadge', 'activeCodes', latestVisibleActiveCodes);
       if (serviceLimitedActive) setServiceLimited(true, '', serviceLimitMode);
       updateBulkPreview();
       renderVipStrip();
@@ -4270,15 +4301,16 @@
         } else {
           setServiceLimited(false);
         }
-        if (Number.isFinite(Number(data.activeCodes))) latestVisibleActiveCodes = Number(data.activeCodes);
-        $('registeredBadge').textContent = formatNumber(data.registeredPlayers || 0);
-        $('activeCodeBadge').textContent = latestVisibleActiveCodes === null ? '-' : formatNumber(latestVisibleActiveCodes);
+        const nextActiveCodes = reliableNumber(data.activeCodes);
+        if (nextActiveCodes !== null && nextActiveCodes > 0) latestVisibleActiveCodes = nextActiveCodes;
+        setMetricText('registeredBadge', 'registeredPlayers', data.registeredPlayers);
+        setMetricText('activeCodeBadge', 'activeCodes', latestVisibleActiveCodes);
         renderQueueStatus(data.queue);
         renderAutomationStatus(data.automation || data.daemon);
       } catch {
         setServiceLimited(true, tr('serviceLimitedBody'), 'limited');
-        $('registeredBadge').textContent = '-';
-        $('activeCodeBadge').textContent = '-';
+        setMetricText('registeredBadge', 'registeredPlayers', null);
+        setMetricText('activeCodeBadge', 'activeCodes', latestVisibleActiveCodes);
         renderQueueStatus(null);
         renderAutomationStatus(null);
       }
@@ -4287,8 +4319,8 @@
       const badge = $('queueBadge');
       if (!badge) return;
       if (!queue) {
-        badge.textContent = '-';
-        badge.title = '';
+        badge.textContent = latestQueueText || '-';
+        badge.title = latestQueueTitle || '';
         return;
       }
       const pending = Number(queue.pending || 0);
@@ -4306,15 +4338,18 @@
       const reviewText = browserReview > 0 ? ` / ${reviewLabel} ${formatNumber(browserReview)}` : '';
       const priorityText = priorityActive > 0 ? ` / ${tr('queuePriority')} ${formatNumber(priorityActive)}` : '';
       const batchText = batchSize > 0 ? ` / ${tr('queueBatch')} ${formatNumber(batchSize)}` : '';
-      badge.textContent = `${tr('queuePending')} ${formatNumber(pending)} / ${tr('queueRunning')} ${formatNumber(running)}${priorityText}${deferredText}${reviewText}${staleText}${batchText}`;
-      badge.title = `${tr('queueStale')}: ${formatNumber(stale)} / ${tr('queuePriority')}: ${formatNumber(priorityActive)} / ${deferredLabel}: ${formatNumber(deferred)} / ${reviewLabel}: ${formatNumber(browserReview)} / retry: ${formatNumber(retryPending)} / ${tr('queueBatch')}: ${batchSize ? formatNumber(batchSize) : '-'} / ${queue.claimMode || '-'} / ${queue.runningStaleMinutes || 5}m / cooldown ${queue.deferredCooldownMinutes || 60}m`;
+      latestQueueText = `${tr('queuePending')} ${formatNumber(pending)} / ${tr('queueRunning')} ${formatNumber(running)}${priorityText}${deferredText}${reviewText}${staleText}${batchText}`;
+      latestQueueTitle = `${tr('queueStale')}: ${formatNumber(stale)} / ${tr('queuePriority')}: ${formatNumber(priorityActive)} / ${deferredLabel}: ${formatNumber(deferred)} / ${reviewLabel}: ${formatNumber(browserReview)} / retry: ${formatNumber(retryPending)} / ${tr('queueBatch')}: ${batchSize ? formatNumber(batchSize) : '-'} / ${queue.claimMode || '-'} / ${queue.runningStaleMinutes || 5}m / cooldown ${queue.deferredCooldownMinutes || 60}m`;
+      badge.textContent = latestQueueText;
+      badge.title = latestQueueTitle;
     }
     function renderAutomationStatus(daemon) {
       const badge = $('daemonBadge');
       if (!badge) return;
       if (!daemon || !daemon.lastSeenAtMs) {
-        badge.className = 'engine-card daemon-badge unknown';
-        badge.textContent = tr('automationUnknown');
+        badge.className = latestAutomationClass;
+        badge.textContent = latestAutomationText || tr('automationUnknown');
+        badge.title = latestAutomationTitle || '';
         return;
       }
       const state = daemon.state || (daemon.stale ? 'offline' : daemon.ok === false ? 'error' : 'online');
@@ -4328,10 +4363,12 @@
       const extra = jobs ? ` / ${formatNumber(jobs)} ${tr('daemonJobs')}` : '';
       const primarySource = daemon.primary && daemon.primary.source ? daemon.primary.source : daemon.source;
       const source = primarySource === 'cloudflare-cron' ? tr('automationCloudflare') : tr('automationPutty');
-      badge.className = `engine-card daemon-badge ${uiState}`;
-      badge.textContent = `${label} · ${formatAgo(daemon.lastSeenAtMs)}${extra}`;
-      badge.title = daemon.error || '';
-      badge.textContent = `${label} · ${source} · ${formatAgo(daemon.lastSeenAtMs)}${extra}`;
+      latestAutomationClass = `engine-card daemon-badge ${uiState}`;
+      latestAutomationText = `${label} · ${source} · ${formatAgo(daemon.lastSeenAtMs)}${extra}`;
+      latestAutomationTitle = daemon.error || '';
+      badge.className = latestAutomationClass;
+      badge.textContent = latestAutomationText;
+      badge.title = latestAutomationTitle;
     }
 
     function renderDaemonStatus(daemon) {
@@ -4341,11 +4378,13 @@
     function renderCodeDock(codes, activeOverride = null) {
       const rows = (Array.isArray(codes) ? codes : []).filter(isDisplayableGiftCode);
       const active = rows.filter((row) => statusClass(row) === 'active').length;
-      const overrideCount = Number(activeOverride);
-      const trustedActive = Number.isFinite(overrideCount) ? overrideCount : active;
-      latestVisibleActiveCodes = trustedActive;
-      $('codeDockCount').textContent = `${formatNumber(trustedActive)}/${formatNumber(rows.length || 0)}`;
-      $('activeCodeBadge').textContent = formatNumber(trustedActive);
+      const overrideCount = reliableNumber(activeOverride);
+      const trustedActive = overrideCount !== null && overrideCount > 0 ? overrideCount : active;
+      if (trustedActive > 0) latestVisibleActiveCodes = trustedActive;
+      const visibleActive = setMetricText('activeCodeBadge', 'activeCodes', trustedActive);
+      $('codeDockCount').textContent = rows.length
+        ? `${visibleActive === null || visibleActive === undefined ? '-' : formatNumber(visibleActive)}/${formatNumber(rows.length)}`
+        : (visibleActive === null || visibleActive === undefined ? '-' : `${formatNumber(visibleActive)}/-`);
       if (!rows.length) {
         $('codeDockList').innerHTML = `<div class="note">${escapeHtml(tr('noCodes'))}</div>`;
         return;
@@ -4371,11 +4410,13 @@
       try {
         const rows = (Array.isArray(codes) ? codes : []).filter(isDisplayableGiftCode);
         if (!rows.length) return;
+        const activeMetric = reliableNumber(activeCodes);
+        const registeredMetric = reliableNumber(registeredPlayers);
         localStorage.setItem(CODE_DOCK_CACHE_KEY, JSON.stringify({
           savedAtMs: Date.now(),
           codes: rows.slice(0, 24),
-          activeCodes: Number(activeCodes) || rows.filter((row) => statusClass(row) === 'active').length,
-          registeredPlayers: Number(registeredPlayers) || 0,
+          activeCodes: activeMetric !== null && activeMetric > 0 ? activeMetric : rows.filter((row) => statusClass(row) === 'active').length,
+          registeredPlayers: registeredMetric !== null && registeredMetric > 0 ? registeredMetric : null,
         }));
       } catch {}
     }
@@ -4416,11 +4457,10 @@
       rememberPlayers(recentPlayers);
       rememberPlayers(recentSuccess);
       renderVipStrip();
-      const successTotal = Number(data.successJobs || 0);
-      $('userDockCount').textContent = `${formatNumber(data.registeredPlayers || recentPlayers.length || 0)}`;
-      setTextById('successDockCount', `${formatNumber(successTotal || recentSuccess.length || 0)}`);
-      $('registeredBadge').textContent = formatNumber(data.registeredPlayers || 0);
-      $('activeCodeBadge').textContent = latestVisibleActiveCodes === null ? '-' : formatNumber(latestVisibleActiveCodes);
+      setMetricText('userDockCount', 'userDockCount', data.registeredPlayers);
+      setMetricText('successDockCount', 'successJobs', data.successJobs);
+      setMetricText('registeredBadge', 'registeredPlayers', data.registeredPlayers);
+      setMetricText('activeCodeBadge', 'activeCodes', latestVisibleActiveCodes);
       renderQueueStatus(data.queue);
       if (data.automation !== undefined || data.daemon !== undefined) renderAutomationStatus(data.automation || data.daemon);
       if (data.priority !== undefined) renderPriority(data.priority);
@@ -4588,7 +4628,7 @@
       } catch (error) {
         $('recentUsersList').innerHTML = `<div class="note">${escapeHtml(error.message)}</div>`;
         $('successList').innerHTML = `<div class="note">${escapeHtml(error.message)}</div>`;
-        setTextById('successDockCount', '-');
+        setMetricText('successDockCount', 'successJobs', null);
       }
     }
 
@@ -4871,17 +4911,17 @@
       $('codeDockList').innerHTML = `<div class="note">${escapeHtml(tr('loadingCodes'))}</div>`;
       try {
         const data = await api(`/api/redeem/codes?limit=24${refresh ? '&refresh=1' : ''}`);
-        $('codeSummary').textContent = `${tr('registeredPlayers')}: ${formatNumber(data.registeredPlayers || 0)}`;
+        $('codeSummary').textContent = `${tr('registeredPlayers')}: ${metricDisplay('registeredPlayers', data.registeredPlayers)}`;
         renderCodeDock(data.codes || [], data.activeCodes);
-        writeCodeDockCache(data.codes || [], data.activeCodes, data.registeredPlayers || 0);
+        writeCodeDockCache(data.codes || [], data.activeCodes, data.registeredPlayers);
       } catch (error) {
         const cached = readCodeDockCache();
         if (cached) {
-          $('codeSummary').textContent = `${tr('registeredPlayers')}: ${cached.registeredPlayers ? formatNumber(cached.registeredPlayers) : '-'}`;
+          $('codeSummary').textContent = `${tr('registeredPlayers')}: ${metricDisplay('registeredPlayers', cached.registeredPlayers)}`;
           renderCodeDock(cached.codes, cached.activeCodes);
         } else {
           $('codeDockList').innerHTML = `<div class="note">${escapeHtml(error.message)}</div>`;
-          $('codeDockCount').textContent = '-';
+          setMetricText('activeCodeBadge', 'activeCodes', latestVisibleActiveCodes);
         }
       }
     }
