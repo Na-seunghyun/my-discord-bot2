@@ -28,6 +28,7 @@ import hashlib
 import http.cookiejar
 import json
 import os
+import socket
 import sys
 import time
 import urllib.error
@@ -50,6 +51,7 @@ REVIEW_ONLY = os.getenv("AUTO_REDEEM_DAEMON_REVIEW_ONLY", "false").strip().lower
 AUTO_REVIEW = os.getenv("AUTO_REDEEM_DAEMON_AUTO_REVIEW", "true").strip().lower() not in {"0", "false", "no", "off"}
 INTERVAL = max(2, int(os.getenv("AUTO_REDEEM_DAEMON_INTERVAL", "10")))
 REST_SECONDS = max(0.0, float(os.getenv("AUTO_REDEEM_DAEMON_REST_SECONDS", "0")))
+ERROR_BACKOFF_MAX_SECONDS = max(60, int(os.getenv("AUTO_REDEEM_DAEMON_ERROR_BACKOFF_MAX_SECONDS", "900")))
 BATCH_SIZE = max(1, min(80, int(os.getenv("AUTO_REDEEM_DAEMON_BATCH_SIZE", "40"))))
 REVIEW_BATCH_SIZE = max(1, min(10, int(os.getenv("AUTO_REDEEM_DAEMON_REVIEW_BATCH_SIZE", "3"))))
 CONCURRENCY = max(1, min(6, int(os.getenv("AUTO_REDEEM_DAEMON_CONCURRENCY", "4"))))
@@ -110,6 +112,31 @@ def request_json(path: str, payload: dict | None = None) -> dict:
     with urllib.request.urlopen(request, timeout=60) as response:
         raw = response.read().decode("utf-8", "replace")
     return json.loads(raw or "{}")
+
+
+def is_transient_backend_error(error: Exception) -> bool:
+    text = str(error or "").lower()
+    return isinstance(error, (TimeoutError, socket.timeout, urllib.error.URLError)) or any(
+        marker in text
+        for marker in (
+            "timed out",
+            "timeout",
+            "temporarily unavailable",
+            "too many",
+            "rate limit",
+            "resource",
+            "exhaust",
+            "503",
+            "504",
+            "502",
+        )
+    )
+
+
+def backend_backoff_seconds(streak: int) -> int:
+    if streak <= 0:
+        return INTERVAL
+    return int(min(ERROR_BACKOFF_MAX_SECONDS, max(INTERVAL, 60 * (2 ** min(streak - 1, 4)))))
 
 
 def official_gift_sign(data: dict) -> str:
@@ -1027,10 +1054,12 @@ def main() -> int:
         f"fallback={'browser' if DAEMON_MODE in {'api', 'hybrid'} and API_FALLBACK_BROWSER else 'off'}",
         flush=True,
     )
+    transient_error_streak = 0
     while True:
         sleep_seconds = INTERVAL
         try:
             claimed = asyncio.run(run_once())
+            transient_error_streak = 0
             sleep_seconds = REST_SECONDS if claimed else INTERVAL
         except urllib.error.HTTPError as error:
             detail = error.read().decode("utf-8", "replace")
@@ -1041,10 +1070,18 @@ def main() -> int:
                     "/api/redeem/* or allow this server IP."
                 )
             print(f"{time.strftime('%Y-%m-%d %H:%M:%S')} HTTP {error.code}: {detail}", flush=True)
+            if error.code in {429, 502, 503, 504}:
+                transient_error_streak += 1
+                sleep_seconds = backend_backoff_seconds(transient_error_streak)
+                print(f"{time.strftime('%Y-%m-%d %H:%M:%S')} BACKOFF: backend is busy; resting {sleep_seconds}s before retry.", flush=True)
         except KeyboardInterrupt:
             raise
         except Exception as error:
             print(f"{time.strftime('%Y-%m-%d %H:%M:%S')} ERROR: {error}", flush=True)
+            if is_transient_backend_error(error):
+                transient_error_streak += 1
+                sleep_seconds = backend_backoff_seconds(transient_error_streak)
+                print(f"{time.strftime('%Y-%m-%d %H:%M:%S')} BACKOFF: backend timeout/limit detected; resting {sleep_seconds}s before retry.", flush=True)
         time.sleep(sleep_seconds)
 
 

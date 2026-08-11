@@ -1,29 +1,33 @@
-Auto redeem registry search optimization
+Supabase limit guard package
 
-Upload these files to the same paths in GitHub:
+What changed:
 
 1. site/auto_redeem.html
-   - Removes the full registered-ID list from the bottom of the page.
-   - Adds a private lookup box where users search by Player ID + Kingdom.
-   - New registrations are still shown immediately by filling the search box and checking the registered ID.
-   - The page no longer refreshes the full registry every few minutes.
+   - Adds an automatic limited-mode banner.
+   - If /api/redeem/status reports Supabase overload, the page shows a notice asking users to retry later.
+   - Register, bulk register, removal request, priority boost, and registry lookup buttons are temporarily disabled while limited mode is active.
+   - The banner hides automatically when /api/redeem/status reports normal service again.
 
 2. src/index.js
-   - Adds /api/redeem/player-search.
-   - The endpoint returns only the exact registered player matching Player ID + Kingdom.
-   - This avoids sending the entire registered-user list to every visitor.
+   - Adds a short Supabase request timeout so the Worker can respond with limited mode instead of hanging.
+   - Adds a light health check before expensive status reads.
+   - Uses public.redeem_queue_summary_fast when installed to reduce many queue count requests into one summary call.
 
-Included for cumulative safety from the previous optimization package:
+3. auto_redeem_daemon.py
+   - Adds automatic backoff when the Worker/Supabase read operation times out.
+   - The daemon rests longer after repeated backend timeouts, then returns to normal speed after a successful loop.
 
-3. site/troop_training_ui.html
-   - Calculator hub connection fix.
+4. migrations/redeem_queue_summary_fast_20260812.sql
+   - Run this once in Supabase SQL Editor.
+   - Adds indexes and the fast queue summary function used by the Worker.
 
-4. migrations/redeem_performance_maintenance_20260812.sql
-   - Optional Supabase performance indexes and cleanup helper.
-   - No new SQL is required only for the registry search feature.
+Recommended order:
+1. Upload site/auto_redeem.html, src/index.js, and auto_redeem_daemon.py to GitHub.
+2. Run migrations/redeem_queue_summary_fast_20260812.sql in Supabase SQL Editor.
+3. Redeploy Cloudflare Worker.
+4. On PuTTY, git pull and restart the auto-redeem tmux session.
 
-After uploading:
-1. Redeploy Cloudflare Worker.
-2. Open /auto_redeem.html.
-3. Confirm the bottom section shows the search form, not the full kingdom list.
-4. Search a known Player ID + Kingdom pair.
+Optional existing cleanup:
+- If you already uploaded redeem_performance_maintenance_20260812.sql, you can also run:
+  select public.cleanup_old_redeem_jobs(45);
+  This removes old terminal job rows older than 45 days.

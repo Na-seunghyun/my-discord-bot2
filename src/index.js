@@ -6,6 +6,7 @@ const FEEDBACK_INDEX_LIMIT = 200;
 const MAX_FEEDBACK_MESSAGE = 2000;
 const MAX_FEEDBACK_CONTACT = 160;
 const SUPABASE_MAX_CACHE_BYTES = 120000;
+const SUPABASE_REQUEST_TIMEOUT_MS = 7000;
 const VISIT_DAILY_COUNT_CAP = 400;
 const DEFAULT_POST_MAX_BYTES = 128 * 1024;
 const ADMIN_POST_MAX_BYTES = 1024 * 1024;
@@ -2215,6 +2216,39 @@ function redeemCodeLooksActiveForDisplay(row) {
   return redeemCodeTrustedActiveForDisplay(row);
 }
 
+function classifySupabaseError(error) {
+  const message = cleanText((error && error.message) || String(error || ""), 240);
+  const lower = message.toLowerCase();
+  if ((error && error.name === "AbortError") || /timeout|timed\s*out|abort/i.test(message)) {
+    return { code: "timeout", message: message || "Supabase request timed out." };
+  }
+  if (/exhaust|resource|too many|rate|quota|limit|429|503|504|502/i.test(message)) {
+    return { code: "resource_limited", message: message || "Supabase resources are limited." };
+  }
+  return { code: "supabase_error", message: message || "Supabase is not responding normally." };
+}
+
+function limitedServicePayload(error) {
+  const detail = classifySupabaseError(error);
+  return {
+    state: "limited",
+    ok: false,
+    code: detail.code,
+    message: "Auto Redeem is in limited mode because the database is overloaded. Please try again later.",
+    detail: detail.message,
+    checkedAtMs: Date.now(),
+  };
+}
+
+function normalServicePayload() {
+  return {
+    state: "normal",
+    ok: true,
+    message: "Auto Redeem database is responding normally.",
+    checkedAtMs: Date.now(),
+  };
+}
+
 async function countVisibleActiveRedeemCodes(env, scanLimit = 300) {
   const rows = await supabaseJson(
     env,
@@ -2578,15 +2612,30 @@ async function listRedeemCodes(request, env) {
 }
 
 async function redeemStatus(env) {
-  if (!supabaseConfig(env).enabled) return json({ ok: true, supabase: false, registeredPlayers: 0, activeCodes: 0, queue: null, daemon: null, automation: null });
+  if (!supabaseConfig(env).enabled) return json({ ok: true, supabase: false, registeredPlayers: 0, activeCodes: 0, queue: null, daemon: null, automation: null, service: { state: "disabled", ok: false } });
+  const serviceHealth = await supabaseJson(env, "/redeem_players?select=id&limit=1").then(() => normalServicePayload()).catch(limitedServicePayload);
+  if (!serviceHealth.ok) {
+    return json({ ok: true, supabase: true, registeredPlayers: 0, activeCodes: 0, queue: null, daemon: null, automation: null, service: serviceHealth });
+  }
   const [players, activeCodes, queue, daemon, automation] = await Promise.all([
-    countRedeemPlayers(env).catch(() => 0),
-    countVisibleActiveRedeemCodes(env).catch(() => 0),
-    redeemQueueSummary(env).catch(() => null),
-    readRedeemDaemonStatus(env).catch(() => null),
-    readRedeemAutomationStatus(env).catch(() => null),
-  ]);
-  return json({ ok: true, supabase: true, registeredPlayers: players, activeCodes, queue, daemon, automation });
+    countRedeemPlayers(env),
+    countVisibleActiveRedeemCodes(env),
+    redeemQueueSummary(env),
+    readRedeemDaemonStatus(env),
+    readRedeemAutomationStatus(env),
+  ].map((promise) => promise.catch((error) => ({ __error: error }))));
+  const errors = [players, activeCodes, queue, daemon, automation].filter((item) => item && item.__error).map((item) => classifySupabaseError(item.__error));
+  const service = errors.length ? { ...limitedServicePayload({ message: errors[0].message }), partial: true, errors: errors.slice(0, 3) } : serviceHealth;
+  return json({
+    ok: true,
+    supabase: true,
+    registeredPlayers: players && players.__error ? 0 : players,
+    activeCodes: activeCodes && activeCodes.__error ? 0 : activeCodes,
+    queue: queue && queue.__error ? null : queue,
+    daemon: daemon && daemon.__error ? null : daemon,
+    automation: automation && automation.__error ? null : automation,
+    service,
+  });
 }
 
 async function countSupabaseRows(env, path) {
@@ -2599,12 +2648,63 @@ async function countSupabaseRows(env, path) {
   return Number.isFinite(total) ? total : 0;
 }
 
+function shouldFallbackFromFastQueueSummary(error) {
+  const message = String((error && error.message) || error || "");
+  return /redeem_queue_summary_fast|function .* does not exist|could not find|schema cache|PGRST202|404/i.test(message);
+}
+
+async function redeemQueueSummaryFast(env, cfg, priorityCfg, staleCutoff, now, vipIds) {
+  const summary = await supabaseJson(env, "/rpc/redeem_queue_summary_fast", {
+    method: "POST",
+    body: JSON.stringify({
+      p_stale_cutoff: staleCutoff,
+      p_now_ms: now,
+      p_vip_ids: vipIds,
+    }),
+  });
+  const row = Array.isArray(summary) ? summary[0] : summary;
+  if (!row || typeof row !== "object") throw new Error("Fast queue summary returned no data.");
+  const pending = numberValue(row.pending);
+  const retryPending = numberValue(row.retryPending);
+  const running = numberValue(row.running);
+  const staleRunning = numberValue(row.staleRunning);
+  const deferred = numberValue(row.deferred);
+  const browserReview = numberValue(row.browserReview);
+  const success = numberValue(row.success);
+  const failedTerminal = numberValue(row.failedTerminal);
+  const priorityActive = numberValue(row.priorityActive);
+  const activeVipBoosts = numberValue(row.activeVipBoosts);
+  return {
+    pending,
+    retryPending,
+    running,
+    staleRunning,
+    deferred,
+    browserReview,
+    success,
+    failedTerminal,
+    priorityActive: priorityActive + Math.max(0, vipIds.length - activeVipBoosts),
+    waitingTotal: pending + running + deferred + browserReview,
+    runningStaleMinutes: Math.round(cfg.runningStaleMs / 60000),
+    batchSize: cfg.batchSize,
+    claimMode: "summary-rpc",
+    deferredCooldownMinutes: Math.round((cfg.deferredCooldownMs || 0) / 60000),
+    priorityVip: vipIds.length,
+    priorityVipScore: priorityCfg.vipScore,
+  };
+}
+
 async function redeemQueueSummary(env) {
   const cfg = autoRedeemConfig(env);
   const priorityCfg = priorityBoostConfig(env);
   const staleCutoff = Date.now() - cfg.runningStaleMs;
   const now = Date.now();
   const vipIds = priorityVipIds(env);
+  try {
+    return await redeemQueueSummaryFast(env, cfg, priorityCfg, staleCutoff, now, vipIds);
+  } catch (error) {
+    if (!shouldFallbackFromFastQueueSummary(error)) throw error;
+  }
   const vipActivePath = vipIds.length
     ? `/redeem_priority_boosts?expires_at_ms=gte.${now}&player_id=in.(${vipIds.map(encodeURIComponent).join(",")})&select=boost_key&limit=1`
     : "";
@@ -3787,10 +3887,18 @@ async function supabaseFetch(env, path, init = {}) {
   headers.set("authorization", `Bearer ${cfg.key}`);
   headers.set("accept", "application/json");
   if (init.body && !headers.has("content-type")) headers.set("content-type", "application/json");
-  const response = await fetch(`${cfg.url}/rest/v1${path}`, { ...init, headers });
-  if (!response.ok) {
-    const detail = await response.text().catch(() => "");
-    throw new Error(`Supabase ${response.status}: ${detail || response.statusText}`);
+  const timeoutMs = Math.max(2500, Number(env.SUPABASE_REQUEST_TIMEOUT_MS || SUPABASE_REQUEST_TIMEOUT_MS) || SUPABASE_REQUEST_TIMEOUT_MS);
+  const controller = typeof AbortController !== "undefined" && !init.signal ? new AbortController() : null;
+  const timeout = controller ? setTimeout(() => controller.abort("supabase_timeout"), timeoutMs) : null;
+  let response;
+  try {
+    response = await fetch(`${cfg.url}/rest/v1${path}`, { ...init, headers, signal: init.signal || (controller && controller.signal) });
+    if (!response.ok) {
+      const detail = await response.text().catch(() => "");
+      throw new Error(`Supabase ${response.status}: ${detail || response.statusText}`);
+    }
+  } finally {
+    if (timeout) clearTimeout(timeout);
   }
   return response;
 }
