@@ -2351,7 +2351,10 @@ async function countVisibleActiveRedeemCodes(env, scanLimit = 300) {
     env,
     `/redeem_codes?source=eq.${TRUSTED_GIFT_CODE_SOURCE_ENCODED}&status=eq.active&select=code,source,status,is_active,last_redeem_status,updated_at_ms&order=updated_at_ms.desc&limit=${scanLimit}`
   ).catch(() => []);
-  return (rows || []).filter(redeemCodeTrustedActiveForDisplay).length;
+  const count = (rows || []).filter(redeemCodeTrustedActiveForDisplay).length;
+  if (count > 0) return count;
+  const cachedRows = await readCachedPublicRedeemCodeRows(env).catch(() => []);
+  return (cachedRows || []).filter(redeemCodeTrustedActiveForDisplay).length;
 }
 
 function collectKingshotNetGiftCodes(text, source, url) {
@@ -2508,19 +2511,23 @@ async function discoverRedeemCodesFromPublicPages(env) {
         .map((row) => normalizeGiftCode(row.code))
         .filter(Boolean));
       for (const row of rows) {
+        const code = normalizeGiftCode(row && row.code);
+        if (!code) continue;
+        result.discovered.push(code);
+        if (row.status === "active") result.active.push(code);
+        else if (row.status === "expired" || row.status === "invalid_code") result.expired.push(code);
+        else result.candidates.push(code);
         const saved = await saveRedeemCode(env, row).catch(() => false);
         if (!saved) continue;
         const savedStatus = isPlainObject(saved) ? saved.status : row.status;
-        result.discovered.push(row.code);
         if (savedStatus === "active") {
-          result.active.push(row.code);
-          result.jobsCreated += await createRedeemJobsForCode(env, row.code).catch(() => 0);
+          result.jobsCreated += await createRedeemJobsForCode(env, code).catch(() => 0);
         } else if (savedStatus === "expired" || savedStatus === "invalid_code") {
-          result.expired.push(row.code);
+          result.expired.push(code);
         } else {
-          result.candidates.push(row.code);
+          result.candidates.push(code);
           if (row.status === "active" && probeCodesCreated < PUBLIC_GIFT_CODE_PROBE_LIMIT) {
-            const probes = await createRedeemProbeJobsForCode(env, row.code).catch(() => 0);
+            const probes = await createRedeemProbeJobsForCode(env, code).catch(() => 0);
             if (probes) {
               probeCodesCreated += 1;
               result.probesCreated += probes;
@@ -2545,13 +2552,48 @@ async function discoverRedeemCodesFromPublicPages(env) {
   return result;
 }
 
+function activeCodesFromRefreshMetaRow(row) {
+  const value = row && row.value_json && typeof row.value_json === "object" ? row.value_json : {};
+  const active = Array.isArray(value.active) ? value.active : [];
+  return [...new Set(active
+    .map((code) => normalizeGiftCode(code))
+    .filter((code) => isLikelyGiftCodeValue(code)))];
+}
+
+function trustedRowsFromActiveCodes(codes, atMs = Date.now(), source = "kingshot.net-cache") {
+  return [...new Set((codes || [])
+    .map((code) => normalizeGiftCode(code))
+    .filter((code) => isLikelyGiftCodeValue(code)))]
+    .map((code) => ({
+      code,
+      source: TRUSTED_GIFT_CODE_SOURCE,
+      status: "active",
+      is_active: true,
+      last_redeem_status: null,
+      last_redeemed_at_ms: null,
+      discovered_at_ms: atMs,
+      updated_at_ms: atMs,
+      raw_json: { source, fallback: true },
+    }));
+}
+
+async function readCachedPublicRedeemCodeRows(env) {
+  if (!supabaseConfig(env).enabled) return [];
+  const rows = await supabaseJson(
+    env,
+    `/redeem_meta?key=eq.${encodeURIComponent("redeem_public_code_refresh")}&select=key,value_json,updated_at_ms&limit=1`,
+  ).catch(() => []);
+  const row = rows && rows[0];
+  return trustedRowsFromActiveCodes(activeCodesFromRefreshMetaRow(row), numberValue(row && row.updated_at_ms) || Date.now(), "kingshot.net-meta-cache");
+}
+
 async function refreshPublicRedeemCodesIfAllowed(env, minIntervalMs = 5 * 60 * 1000) {
   const key = "redeem_public_code_refresh";
   const now = Date.now();
   const rows = await supabaseJson(env, `/redeem_meta?key=eq.${encodeURIComponent(key)}&select=key,value_json,updated_at_ms&limit=1`).catch(() => []);
   const last = numberValue(rows && rows[0] && rows[0].updated_at_ms);
   if (last && now - last < minIntervalMs) {
-    return { skipped: "cooldown", nextAtMs: last + minIntervalMs };
+    return { skipped: "cooldown", nextAtMs: last + minIntervalMs, active: activeCodesFromRefreshMetaRow(rows && rows[0]), cached: true };
   }
   const discovery = await discoverRedeemCodesFromPublicPages(env);
   if ((discovery.errors || []).length && !(discovery.discovered || []).length) {
@@ -2717,7 +2759,23 @@ async function listRedeemCodes(request, env) {
     if (aActive !== bActive) return bActive - aActive;
     return numberValue(b && b.discovered_at_ms) - numberValue(a && a.discovered_at_ms);
   });
-  return json({ ok: true, codes: visible.slice(0, limit), registeredPlayers: players, activeCodes, discovery });
+  const hasVisibleActive = visible.some(redeemCodeTrustedActiveForDisplay);
+  let fallbackRows = [];
+  if (!hasVisibleActive) {
+    const discoveryActiveRows = trustedRowsFromActiveCodes(discovery && discovery.active, Date.now(), "kingshot.net-live-fallback");
+    fallbackRows = discoveryActiveRows.length ? discoveryActiveRows : await readCachedPublicRedeemCodeRows(env).catch(() => []);
+  }
+  const merged = [];
+  const seenCodes = new Set();
+  for (const row of [...fallbackRows, ...visible]) {
+    const code = normalizeGiftCode(row && row.code);
+    if (!code || seenCodes.has(code)) continue;
+    seenCodes.add(code);
+    merged.push(row);
+  }
+  const fallbackActiveCount = fallbackRows.filter(redeemCodeTrustedActiveForDisplay).length;
+  const safeActiveCodes = activeCodes || fallbackActiveCount || merged.filter(redeemCodeTrustedActiveForDisplay).length;
+  return json({ ok: true, codes: merged.slice(0, limit), registeredPlayers: players, activeCodes: safeActiveCodes, discovery });
 }
 
 async function redeemStatus(env) {
@@ -2726,7 +2784,7 @@ async function redeemStatus(env) {
   if (!serviceHealth.ok) {
     return json({ ok: true, supabase: true, registeredPlayers: 0, activeCodes: 0, queue: null, daemon: null, automation: null, service: serviceHealth });
   }
-  await refreshPublicRedeemCodesIfAllowed(env, 10 * 60 * 1000).catch(() => null);
+  const statusDiscovery = await refreshPublicRedeemCodesIfAllowed(env, 10 * 60 * 1000).catch(() => null);
   const [players, activeCodes, queue, daemon, automation] = await Promise.all([
     countRedeemPlayers(env),
     countVisibleActiveRedeemCodes(env),
@@ -2736,11 +2794,13 @@ async function redeemStatus(env) {
   ].map((promise) => promise.catch((error) => ({ __error: error }))));
   const errors = [players, activeCodes, queue, daemon, automation].filter((item) => item && item.__error).map((item) => classifySupabaseError(item.__error));
   const service = errors.length ? partialServicePayload(errors) : serviceHealth;
+  const fallbackActiveCodes = Array.isArray(statusDiscovery && statusDiscovery.active) ? statusDiscovery.active.length : 0;
+  const visibleActiveCodes = activeCodes && activeCodes.__error ? fallbackActiveCodes : (numberValue(activeCodes) || fallbackActiveCodes);
   return json({
     ok: true,
     supabase: true,
     registeredPlayers: players && players.__error ? 0 : players,
-    activeCodes: activeCodes && activeCodes.__error ? 0 : activeCodes,
+    activeCodes: visibleActiveCodes,
     queue: queue && queue.__error ? null : queue,
     daemon: daemon && daemon.__error ? null : daemon,
     automation: automation && automation.__error ? null : automation,

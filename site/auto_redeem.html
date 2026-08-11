@@ -3948,6 +3948,8 @@
     let priorityChallengePlayerId = '';
     const KINGDOM_REGISTRY_SESSION_KEY = 'redeem-kingdom-registry-cache-v2';
     const KINGDOM_REGISTRY_SESSION_MS = 5 * 60 * 1000;
+    const CODE_DOCK_CACHE_KEY = 'redeem-code-dock-cache-v1';
+    const CODE_DOCK_CACHE_MS = 6 * 60 * 60 * 1000;
     const $ = (id) => document.getElementById(id);
     const setTextById = (id, value) => {
       document.querySelectorAll(`[id="${id}"]`).forEach((node) => { node.textContent = value; });
@@ -4363,6 +4365,32 @@
             </div>
           </div>`;
       }).join('');
+    }
+
+    function writeCodeDockCache(codes, activeCodes, registeredPlayers) {
+      try {
+        const rows = (Array.isArray(codes) ? codes : []).filter(isDisplayableGiftCode);
+        if (!rows.length) return;
+        localStorage.setItem(CODE_DOCK_CACHE_KEY, JSON.stringify({
+          savedAtMs: Date.now(),
+          codes: rows.slice(0, 24),
+          activeCodes: Number(activeCodes) || rows.filter((row) => statusClass(row) === 'active').length,
+          registeredPlayers: Number(registeredPlayers) || 0,
+        }));
+      } catch {}
+    }
+
+    function readCodeDockCache() {
+      try {
+        const raw = localStorage.getItem(CODE_DOCK_CACHE_KEY);
+        if (!raw) return null;
+        const cached = JSON.parse(raw);
+        if (!cached || !cached.savedAtMs || Date.now() - cached.savedAtMs > CODE_DOCK_CACHE_MS) return null;
+        if (!Array.isArray(cached.codes) || !cached.codes.length) return null;
+        return cached;
+      } catch {
+        return null;
+      }
     }
 
     async function copyText(text) {
@@ -4845,9 +4873,16 @@
         const data = await api(`/api/redeem/codes?limit=24${refresh ? '&refresh=1' : ''}`);
         $('codeSummary').textContent = `${tr('registeredPlayers')}: ${formatNumber(data.registeredPlayers || 0)}`;
         renderCodeDock(data.codes || [], data.activeCodes);
+        writeCodeDockCache(data.codes || [], data.activeCodes, data.registeredPlayers || 0);
       } catch (error) {
-        $('codeDockList').innerHTML = `<div class="note">${escapeHtml(error.message)}</div>`;
-        $('codeDockCount').textContent = '-';
+        const cached = readCodeDockCache();
+        if (cached) {
+          $('codeSummary').textContent = `${tr('registeredPlayers')}: ${cached.registeredPlayers ? formatNumber(cached.registeredPlayers) : '-'}`;
+          renderCodeDock(cached.codes, cached.activeCodes);
+        } else {
+          $('codeDockList').innerHTML = `<div class="note">${escapeHtml(error.message)}</div>`;
+          $('codeDockCount').textContent = '-';
+        }
       }
     }
 
