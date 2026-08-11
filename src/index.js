@@ -26,8 +26,11 @@ const AUTO_REDEEM_DEFAULT_MAX_ATTEMPTS = 4;
 const AUTO_REDEEM_RUNNER_STALE_MS = 25 * 60 * 1000;
 const PUBLIC_GIFT_CODE_PROBE_LIMIT = 3;
 const PUBLIC_GIFT_CODE_PROBE_PLAYER_LIMIT = 3;
+const KINGSHOT_NET_GIFT_CODES_URL = "https://kingshot.net/gift-codes";
+const TRUSTED_GIFT_CODE_SOURCE = "trusted-public:kingshot.net";
+const TRUSTED_GIFT_CODE_SOURCE_ENCODED = encodeURIComponent(TRUSTED_GIFT_CODE_SOURCE);
 const PUBLIC_GIFT_CODE_SOURCES = [
-  { source: "kingshot.net", url: "https://kingshot.net/gift-codes" },
+  { source: "kingshot.net", url: KINGSHOT_NET_GIFT_CODES_URL },
 ];
 const GIFT_CODE_DENYLIST = new Set([
   "ABOUT", "ACTIVE", "AUTOMATIC", "BROWSE", "BUTTON", "CLAIM", "CODES", "CODE", "COMMUNITY",
@@ -156,7 +159,7 @@ function contentSecurityPolicy() {
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "img-src 'self' data: blob: https:",
     "font-src 'self' data: https://fonts.gstatic.com",
-    "connect-src 'self' https://kingshot.jeab.dev https://kingshot.net https://ks-rewards.com https://ksredeem.com https://kingshot-giftcode.centurygame.com https://ks-giftcode.centurygame.com https://*.supabase.co",
+    "connect-src 'self' https://kingshot.jeab.dev https://kingshot.net https://kingshot-giftcode.centurygame.com https://ks-giftcode.centurygame.com https://*.supabase.co",
     "frame-src 'none'",
     "media-src 'none'",
     "upgrade-insecure-requests",
@@ -936,7 +939,7 @@ function autoRedeemConfig(env) {
     allowUnverifiedRegister: envBool(env.AUTO_REDEEM_ALLOW_UNVERIFIED_REGISTER, true),
     profileLookupEnabled: envBool(env.AUTO_REDEEM_PROFILE_LOOKUP_ENABLED, false),
     daemonDiscover: envBool(env.AUTO_REDEEM_DAEMON_DISCOVER, false),
-    upstreamCodesEnabled: envBool(env.AUTO_REDEEM_UPSTREAM_CODES_ENABLED, false),
+    upstreamCodesEnabled: false,
   };
 }
 
@@ -1651,7 +1654,7 @@ function redeemResultProvesCodeInactive(status) {
 
 function redeemCodeSourceTrustedForJobs(source) {
   const value = String(source || "").toLowerCase();
-  return value === "trusted-public:kingshot.net";
+  return value === TRUSTED_GIFT_CODE_SOURCE;
 }
 
 async function expireRedeemCodeEverywhere(env, giftCode, reason = "Gift code expired.", atMs = Date.now()) {
@@ -1759,6 +1762,28 @@ async function expireTrustedPublicCodesMissingFromSource(env, sourceName, active
     const code = normalizeGiftCode(row && row.code);
     if (!code || activeCodes.has(code)) continue;
     if (await expireRedeemCodeEverywhere(env, code, `${sourceName} no longer lists this code as active.`, atMs).catch(() => false)) {
+      expired += 1;
+    }
+  }
+  return expired;
+}
+
+async function expireNonAuthoritativeActiveRedeemCodes(env, activeCodes, atMs = Date.now()) {
+  if (!supabaseConfig(env).enabled || !activeCodes || !activeCodes.size) return 0;
+  const rows = await supabaseJson(
+    env,
+    "/redeem_codes?status=eq.active&select=code,source&limit=500",
+  ).catch(() => []);
+  let expired = 0;
+  for (const row of rows || []) {
+    const code = normalizeGiftCode(row && row.code);
+    const source = String(row && row.source || "").toLowerCase();
+    if (!code) continue;
+    if (source === TRUSTED_GIFT_CODE_SOURCE && activeCodes.has(code)) continue;
+    const reason = source === TRUSTED_GIFT_CODE_SOURCE
+      ? "Kingshot.net no longer lists this code as active."
+      : "Kingshot.net Gift Codes is the only trusted active source.";
+    if (await expireRedeemCodeEverywhere(env, code, reason, atMs).catch(() => false)) {
       expired += 1;
     }
   }
@@ -1975,7 +2000,7 @@ async function listActiveRedeemPlayerIds(env, maxPlayers = 10000) {
 async function listActiveRedeemCodes(env, maxCodes = 200, options = {}) {
   const load = () => supabaseJson(
     env,
-    `/redeem_codes?status=eq.active&select=code,source,status,is_active,last_redeem_status,discovered_at_ms&order=discovered_at_ms.desc&limit=${maxCodes}`
+    `/redeem_codes?source=eq.${TRUSTED_GIFT_CODE_SOURCE_ENCODED}&status=eq.active&select=code,source,status,is_active,last_redeem_status,discovered_at_ms&order=discovered_at_ms.desc&limit=${maxCodes}`
   ).catch(() => []);
   let rows = await load();
   let active = (rows || []).filter(redeemCodeReadyForAutoRedeem);
@@ -2256,7 +2281,7 @@ function redeemCodeAllowedForPublicUseStrict(row) {
   const status = cleanText((row && row.status) || "", 40).toLowerCase();
   if (status === "invalid_code" || status === "invalid" || status === "bad_candidate") return false;
   const source = String((row && row.source) || "").toLowerCase();
-  const kingshotNetTrusted = source === "trusted-public:kingshot.net";
+  const kingshotNetTrusted = source === TRUSTED_GIFT_CODE_SOURCE;
   if ((source.startsWith("public:") || source.startsWith("trusted-public:")) && !/\d/.test(code) && !kingshotNetTrusted) return false;
   return true;
 }
@@ -2265,7 +2290,7 @@ function redeemCodeTrustedActiveForDisplay(row) {
   const status = cleanText((row && row.status) || "", 40).toLowerCase();
   if (status !== "active") return false;
   if (row && row.is_active === false) return false;
-  if (String((row && row.source) || "").toLowerCase() !== "trusted-public:kingshot.net") return false;
+  if (String((row && row.source) || "").toLowerCase() !== TRUSTED_GIFT_CODE_SOURCE) return false;
   return redeemCodeAllowedForPublicUseStrict(row);
 }
 
@@ -2309,7 +2334,7 @@ function normalServicePayload() {
 async function countVisibleActiveRedeemCodes(env, scanLimit = 300) {
   const rows = await supabaseJson(
     env,
-    `/redeem_codes?status=eq.active&select=code,source,status,is_active,last_redeem_status,updated_at_ms&order=updated_at_ms.desc&limit=${scanLimit}`
+    `/redeem_codes?source=eq.${TRUSTED_GIFT_CODE_SOURCE_ENCODED}&status=eq.active&select=code,source,status,is_active,last_redeem_status,updated_at_ms&order=updated_at_ms.desc&limit=${scanLimit}`
   ).catch(() => []);
   return (rows || []).filter(redeemCodeTrustedActiveForDisplay).length;
 }
@@ -2491,6 +2516,8 @@ async function discoverRedeemCodesFromPublicPages(env) {
       if (source.source === "kingshot.net" && activeFromSource.size) {
         const expiredMissing = await expireTrustedPublicCodesMissingFromSource(env, source.source, activeFromSource).catch(() => 0);
         if (expiredMissing) result.expired.push(`source-sync:${expiredMissing}`);
+        const expiredNonAuthoritative = await expireNonAuthoritativeActiveRedeemCodes(env, activeFromSource).catch(() => 0);
+        if (expiredNonAuthoritative) result.expired.push(`authoritative-sync:${expiredNonAuthoritative}`);
       }
     } catch (error) {
       result.errors.push(`${source.source}: ${cleanText(error.message, 120)}`);
@@ -2511,16 +2538,27 @@ async function refreshPublicRedeemCodesIfAllowed(env, minIntervalMs = 5 * 60 * 1
   if (last && now - last < minIntervalMs) {
     return { skipped: "cooldown", nextAtMs: last + minIntervalMs };
   }
+  const discovery = await discoverRedeemCodesFromPublicPages(env);
+  if ((discovery.errors || []).length && !(discovery.discovered || []).length) {
+    throw new Error((discovery.errors || []).map((item) => cleanText(item, 120)).join("; ") || "Kingshot.net gift-code refresh failed.");
+  }
   await supabaseJson(env, "/redeem_meta?on_conflict=key", {
     method: "POST",
     headers: { prefer: "resolution=merge-duplicates" },
     body: JSON.stringify([{
       key,
-      value_json: { source: "public_refresh", refreshed_at_ms: now },
+      value_json: {
+        source: "kingshot.net",
+        url: KINGSHOT_NET_GIFT_CODES_URL,
+        refreshed_at_ms: now,
+        active: discovery.active || [],
+        expired_count: (discovery.expired || []).length,
+        errors: discovery.errors || [],
+      },
       updated_at_ms: now,
     }]),
   }).catch(() => {});
-  return discoverRedeemCodesFromPublicPages(env);
+  return discovery;
 }
 
 async function discoverRedeemCodes(env) {
@@ -2602,7 +2640,7 @@ async function discoverRedeemCodes(env) {
   result.candidates.push(...(publicDiscovery.candidates || []));
   result.probesCreated += numberValue(publicDiscovery.probesCreated);
   result.jobsCreated += numberValue(publicDiscovery.jobsCreated);
-  result.errors.push(...(publicDiscovery.errors || []).map((item) => `public: ${cleanText(item, 120)}`));
+  result.errors.push(...(publicDiscovery.errors || []).map((item) => `kingshot.net: ${cleanText(item, 120)}`));
 
   result.discovered = [...new Set(result.discovered)];
   result.active = [...new Set(result.active)];
@@ -2642,11 +2680,10 @@ async function listRedeemCodes(request, env) {
   const limit = Math.min(50, Math.max(1, Number(url.searchParams.get("limit")) || 20));
   const scanLimit = Math.max(100, limit * 5);
   const refresh = url.searchParams.get("refresh") === "1";
-  const discovery = refresh
-    ? await refreshPublicRedeemCodesIfAllowed(env).catch((error) => ({ discovered: [], active: [], expired: [], jobsCreated: 0, errors: [cleanText(error.message, 120)] }))
-    : null;
+  const discovery = await refreshPublicRedeemCodesIfAllowed(env, refresh ? 0 : 10 * 60 * 1000)
+    .catch((error) => ({ discovered: [], active: [], expired: [], jobsCreated: 0, errors: [cleanText(error.message, 120)] }));
   const [codes, players, activeCodes] = await Promise.all([
-    supabaseJson(env, `/redeem_codes?select=code,source,status,is_active,last_redeem_status,last_redeemed_at_ms,discovered_at_ms,updated_at_ms&order=discovered_at_ms.desc&limit=${scanLimit}`).catch(() => []),
+    supabaseJson(env, `/redeem_codes?source=eq.${TRUSTED_GIFT_CODE_SOURCE_ENCODED}&select=code,source,status,is_active,last_redeem_status,last_redeemed_at_ms,discovered_at_ms,updated_at_ms&order=discovered_at_ms.desc&limit=${scanLimit}`).catch(() => []),
     countRedeemPlayers(env).catch(() => 0),
     countVisibleActiveRedeemCodes(env).catch(() => 0),
   ]);
@@ -2674,6 +2711,7 @@ async function redeemStatus(env) {
   if (!serviceHealth.ok) {
     return json({ ok: true, supabase: true, registeredPlayers: 0, activeCodes: 0, queue: null, daemon: null, automation: null, service: serviceHealth });
   }
+  await refreshPublicRedeemCodesIfAllowed(env, 10 * 60 * 1000).catch(() => null);
   const [players, activeCodes, queue, daemon, automation] = await Promise.all([
     countRedeemPlayers(env),
     countVisibleActiveRedeemCodes(env),
