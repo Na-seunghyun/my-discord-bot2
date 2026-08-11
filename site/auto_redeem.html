@@ -1368,6 +1368,24 @@
       font-size: 13px;
       letter-spacing: .02em;
     }
+    .kingdom-change-note {
+      display: grid;
+      gap: 4px;
+      margin-top: 12px;
+      padding: 12px 13px;
+      border: 1px solid rgba(244,200,106,.24);
+      border-radius: 16px;
+      background: linear-gradient(135deg, rgba(244,200,106,.12), rgba(255,255,255,.045));
+      color: #f7e8bd;
+      font-size: 12px;
+      font-weight: 850;
+      line-height: 1.5;
+    }
+    .kingdom-change-note strong {
+      color: #fff3bd;
+      font-size: 12px;
+      letter-spacing: .02em;
+    }
     .bulk-head {
       display: flex;
       align-items: center;
@@ -1768,6 +1786,11 @@
       color: #fff7d6;
       background: rgba(255, 165, 66, .22);
       border-color: rgba(255, 165, 66, .5);
+    }
+    .redeem-status.kingdom_check_required {
+      color: #fff7d6;
+      background: rgba(244, 200, 106, .2);
+      border-color: rgba(244, 200, 106, .5);
     }
     .redeem-code-chip,
     .redeem-reason {
@@ -2793,6 +2816,10 @@
                 <strong data-i18n="safetyTitle">Safety notice</strong>
                 <span data-i18n="safetyBody">This tool only asks for your public Kingshot player ID. It never asks for your password, payment information, email login, or device access.</span>
               </div>
+              <div class="kingdom-change-note">
+                <strong data-i18n="kingdomChangeTitle">Changed kingdom?</strong>
+                <span data-i18n="kingdomChangeNotice">If you moved servers, enter the same Player ID with the new Kingdom. The saved kingdom will be updated and kingdom-check jobs will be queued again.</span>
+              </div>
             </div>
             <div class="bulk-entry">
               <div class="bulk-head"><label for="bulkIds" data-i18n="bulkLabel">Bulk Player IDs</label><span id="bulkPreview">0 ID</span></div>
@@ -2937,11 +2964,13 @@
       kingdoms: 'kingdoms', registeredIdsShort: 'IDs', ids: 'IDs', unknownKingdom: 'Unknown kingdom', latestCode: 'Latest code', noRecentRedeem: 'No redeem record yet', reason: 'Reason',
       status_pending: 'Waiting', status_running: 'Processing', status_success: 'Success', status_failed: 'Failed', status_already_claimed: 'Already claimed',
       status_expired: 'Expired', status_invalid_code: 'Invalid code', status_time_window_closed: 'Time closed', status_not_logged_in: 'Login failed',
-      status_player_not_found: 'Player not found', status_timeout: 'Timeout', status_network_error: 'Network error', status_server_busy: 'Server busy',
+      status_player_not_found: 'Player not found', status_kingdom_check_required: 'Kingdom check needed', status_timeout: 'Timeout', status_network_error: 'Network error', status_server_busy: 'Server busy',
       status_deferred: 'Deferred', status_browser_review: 'Browser review', status_official_blocked: 'Official blocked', status_claim_limit_reached: 'Claim limit reached',
       status_captcha_required: 'Verification required', summarySuccess: 'success', summaryRunning: 'working', summaryFailed: 'failed',
       queueStatus: 'Queue status', queuePending: 'waiting', queueRunning: 'running', queueStale: 'stale', queueBatch: 'batch', queuePriority: 'priority',
       safetyTitle: 'Safety notice', safetyBody: 'This tool only asks for your public Kingshot player ID. It never asks for your password, payment information, email login, or device access.',
+      kingdomChangeTitle: 'Changed kingdom?', kingdomChangeNotice: 'If you moved servers, enter the same Player ID with the new Kingdom. The saved kingdom will be updated and kingdom-check jobs will be queued again.',
+      kingdomUpdated: 'Kingdom updated. Future auto redeem jobs will use the new kingdom.',
       trustText: 'HTTPS protected · safe connection. Auto Redeem stores only Kingshot player IDs and public profile summaries. It never asks for passwords, payment information, email login, or device access.',
       serviceLimitedTitle: 'Auto Redeem is temporarily limited',
       serviceLimitedBody: 'Supabase resources are currently exhausted, so live counts, registration, and queue actions may be delayed. Please try again in a few hours.',
@@ -2978,9 +3007,11 @@
       daemonChecking: 'PuTTY 서버 확인 중...', daemonOnline: 'PuTTY 서버 온라인', daemonWarning: 'PuTTY 서버 경고', daemonOffline: 'PuTTY 서버 오프라인', daemonError: 'PuTTY 서버 오류', daemonUnknown: 'PuTTY 서버 알 수 없음', daemonNever: '아직 신호 없음', daemonJobs: '작업',
       automationStable: '오토 리딤 엔진 안정', automationWarning: '오토 리딤 엔진 경고', automationOffline: '오토 리딤 엔진 확인 필요', automationUnknown: '오토 리딤 엔진 확인 중', automationCloudflare: 'Cloudflare 스케줄', automationPutty: 'Oracle/PuTTY 백업',
       kingdomRegistryTitle: '왕국별 등록 ID', kingdomRegistryHelp: '저장된 오토 리딤 ID를 왕국 번호별로 확인합니다.', loadingKingdoms: '왕국 등록 현황을 불러오는 중...', noKingdomRegistry: '아직 왕국 등록 데이터가 없습니다.', kingdomRegistryError: '왕국 등록 현황을 불러오지 못했습니다.', kingdoms: '왕국', registeredIdsShort: 'ID', ids: 'ID', unknownKingdom: '알 수 없는 왕국',
-      latestCode: '최신 코드', noRecentRedeem: '최근 리딤 기록 없음', reason: '사유', status_pending: '대기', status_running: '처리 중', status_success: '성공', status_failed: '실패', status_already_claimed: '이미 수령', status_expired: '만료', status_invalid_code: '잘못된 코드', status_time_window_closed: '시간 종료', status_not_logged_in: '로그인 실패', status_player_not_found: '유저 없음', status_timeout: '시간 초과', status_network_error: '네트워크 오류', status_server_busy: '서버 혼잡', status_deferred: '보류', status_browser_review: '브라우저 검토', status_official_blocked: '공식 차단', status_claim_limit_reached: '수령 제한', status_captcha_required: '인증 필요',
+      latestCode: '최신 코드', noRecentRedeem: '최근 리딤 기록 없음', reason: '사유', status_pending: '대기', status_running: '처리 중', status_success: '성공', status_failed: '실패', status_already_claimed: '이미 수령', status_expired: '만료', status_invalid_code: '잘못된 코드', status_time_window_closed: '시간 종료', status_not_logged_in: '로그인 실패', status_player_not_found: '유저 없음', status_kingdom_check_required: '왕국 확인 필요', status_timeout: '시간 초과', status_network_error: '네트워크 오류', status_server_busy: '서버 혼잡', status_deferred: '보류', status_browser_review: '브라우저 검토', status_official_blocked: '공식 차단', status_claim_limit_reached: '수령 제한', status_captcha_required: '인증 필요',
       summarySuccess: '성공', summaryRunning: '진행', summaryFailed: '실패', queueStatus: '큐 상태', queuePending: '대기', queueRunning: '진행', queueStale: '멈춤', queueBatch: '배치', queuePriority: '우선권',
       safetyTitle: '안전 안내', safetyBody: '이 도구는 공개 Kingshot 플레이어 ID만 요청합니다. 비밀번호, 결제 정보, 이메일 로그인, 기기 접근 권한은 요구하지 않습니다.',
+      kingdomChangeTitle: '왕국을 이동했나요?', kingdomChangeNotice: '서버 이전으로 왕국이 바뀌었다면 같은 플레이어 ID와 새 왕국 번호를 다시 입력하세요. 저장된 왕국이 갱신되고 왕국 확인 필요 작업이 다시 대기열로 올라갑니다.',
+      kingdomUpdated: '왕국 번호가 갱신되었습니다. 이후 자동 리딤은 새 왕국 기준으로 진행됩니다.',
       priorityTitle: '오늘의 우선권 부스트', priorityHelp: '하루 한 번 방문해 간단한 확인을 통과하면 다음 초기화 전까지 대기 중인 리딤 작업이 더 높은 우선순위로 이동합니다.',
       priorityChecking: '우선권 확인 중...', priorityEmpty: '오늘 우선권을 받은 유저가 아직 없습니다.', priorityChallenge: '오늘 우선권 시작', priorityBoost: '내 큐 우선권 적용',
       priorityReady: 'ID를 등록하거나 불러온 뒤 오늘의 우선권을 시작하세요.', priorityAnswerPlaceholder: '정답 입력', priorityNeedId: '등록된 플레이어 ID를 먼저 입력하거나 불러오세요.',
@@ -3642,6 +3673,72 @@
       }
     };
     Object.entries(KINGDOM_I18N).forEach(([lang, dict]) => Object.assign(I18N[lang] || (I18N[lang] = { ...BASE_I18N_EN }), dict));
+    const KINGDOM_CHANGE_I18N = {
+      en: {
+        kingdomChangeTitle: 'Changed kingdom?',
+        kingdomChangeNotice: 'If you moved servers, enter the same Player ID with the new Kingdom. The saved kingdom will be updated and kingdom-check jobs will be queued again.',
+        kingdomUpdated: 'Kingdom updated. Future auto redeem jobs will use the new kingdom.',
+        kingdomUpdatedShort: 'Kingdom updated',
+        status_kingdom_check_required: 'Kingdom check needed'
+      },
+      ko: {
+        kingdomChangeTitle: '왕국을 이동했나요?',
+        kingdomChangeNotice: '서버 이전으로 왕국이 바뀌었다면 같은 플레이어 ID와 새 왕국 번호를 다시 입력하세요. 저장된 왕국이 갱신되고 왕국 확인 필요 작업이 다시 대기열로 올라갑니다.',
+        kingdomUpdated: '왕국 번호가 갱신되었습니다. 이후 자동 리딤은 새 왕국 기준으로 진행됩니다.',
+        kingdomUpdatedShort: '왕국 갱신',
+        status_kingdom_check_required: '왕국 확인 필요'
+      },
+      ja: {
+        kingdomChangeTitle: '王国を移動しましたか？',
+        kingdomChangeNotice: 'サーバー移転で王国が変わった場合は、同じプレイヤーIDと新しい王国番号を入力してください。保存済みの王国を更新し、王国確認が必要なジョブを再度キューに入れます。',
+        kingdomUpdated: '王国番号を更新しました。今後の自動リディームは新しい王国で実行されます。',
+        kingdomUpdatedShort: '王国更新',
+        status_kingdom_check_required: '王国確認が必要'
+      },
+      'zh-CN': {
+        kingdomChangeTitle: '更换王国了吗？',
+        kingdomChangeNotice: '如果因转服导致王国变更，请用同一玩家ID和新的王国编号重新输入。系统会更新保存的王国，并重新排队需要王国确认的任务。',
+        kingdomUpdated: '王国编号已更新。之后的自动兑换将使用新王国。',
+        kingdomUpdatedShort: '王国已更新',
+        status_kingdom_check_required: '需要确认王国'
+      },
+      'zh-TW': {
+        kingdomChangeTitle: '更換王國了嗎？',
+        kingdomChangeNotice: '如果因轉服導致王國變更，請用同一玩家ID和新的王國編號重新輸入。系統會更新保存的王國，並重新排隊需要王國確認的任務。',
+        kingdomUpdated: '王國編號已更新。之後的自動兌換將使用新王國。',
+        kingdomUpdatedShort: '王國已更新',
+        status_kingdom_check_required: '需要確認王國'
+      },
+      fr: {
+        kingdomChangeTitle: 'Royaume changé ?',
+        kingdomChangeNotice: 'Si vous avez changé de serveur, saisissez le même ID joueur avec le nouveau royaume. Le royaume enregistré sera mis à jour et les tâches à vérifier seront remises en file.',
+        kingdomUpdated: 'Royaume mis à jour. Les prochaines réclamations utiliseront le nouveau royaume.',
+        kingdomUpdatedShort: 'Royaume mis à jour',
+        status_kingdom_check_required: 'Royaume à vérifier'
+      },
+      de: {
+        kingdomChangeTitle: 'Königreich gewechselt?',
+        kingdomChangeNotice: 'Wenn du den Server gewechselt hast, gib dieselbe Spieler-ID mit dem neuen Königreich ein. Das gespeicherte Königreich wird aktualisiert und Prüfaufgaben werden erneut eingereiht.',
+        kingdomUpdated: 'Königreich aktualisiert. Künftige Auto-Einlösungen nutzen das neue Königreich.',
+        kingdomUpdatedShort: 'Königreich aktualisiert',
+        status_kingdom_check_required: 'Königreich prüfen'
+      },
+      th: {
+        kingdomChangeTitle: 'ย้ายอาณาจักรแล้วหรือไม่?',
+        kingdomChangeNotice: 'หากย้ายเซิร์ฟเวอร์และหมายเลขอาณาจักรเปลี่ยน ให้ใส่ Player ID เดิมพร้อม Kingdom ใหม่ ระบบจะอัปเดตข้อมูลและนำงานที่ต้องตรวจ Kingdom กลับเข้าคิว',
+        kingdomUpdated: 'อัปเดต Kingdom แล้ว งาน Auto Redeem ถัดไปจะใช้ Kingdom ใหม่',
+        kingdomUpdatedShort: 'อัปเดต Kingdom',
+        status_kingdom_check_required: 'ต้องตรวจ Kingdom'
+      },
+      id: {
+        kingdomChangeTitle: 'Pindah kingdom?',
+        kingdomChangeNotice: 'Jika pindah server, masukkan Player ID yang sama dengan kingdom baru. Kingdom tersimpan akan diperbarui dan job yang perlu cek kingdom akan masuk antrean lagi.',
+        kingdomUpdated: 'Kingdom diperbarui. Auto redeem berikutnya akan memakai kingdom baru.',
+        kingdomUpdatedShort: 'Kingdom diperbarui',
+        status_kingdom_check_required: 'Perlu cek kingdom'
+      }
+    };
+    Object.entries(KINGDOM_CHANGE_I18N).forEach(([lang, dict]) => Object.assign(I18N[lang] || (I18N[lang] = { ...BASE_I18N_EN }), dict));
     const REGISTRY_SEARCH_I18N = {
       en: {
         registrySearchTitle: 'Find Registered ID',
@@ -4613,10 +4710,15 @@
         localStorage.setItem('autoRedeemRegistration', JSON.stringify({ playerId, kingdom }));
         $('priorityPlayerId').value = playerId;
         $('manageToken').value = '';
-        if (data.status === 'duplicate') {
+        if (data.status === 'kingdom_updated') {
+          const moved = `K${data.previousKingdom || '-'} → K${data.currentKingdom || kingdom}`;
+          const queued = Number(data.jobsCreated || 0) + Number(data.requeuedJobs || 0);
+          setStatus('registerStatus', `${tr('kingdomUpdated')}\n${moved}\n${tr('pendingJobs')}: ${formatNumber(queued)}`);
+        } else if (data.status === 'duplicate') {
           setStatus('registerStatus', `${tr('duplicateNote')}\n${data.player.username || data.player.id}`);
         } else {
-          setStatus('registerStatus', `${tr('registered')}\n${tr('pendingJobs')}: ${formatNumber(data.jobsCreated || 0)}`);
+          const queued = Number(data.jobsCreated || 0) + Number(data.requeuedJobs || 0);
+          setStatus('registerStatus', `${tr('registered')}\n${tr('pendingJobs')}: ${formatNumber(queued)}`);
         }
         loadStatus();
         loadActivity();
@@ -4634,7 +4736,7 @@
       const entries = parseBulkEntries($('bulkIds').value, kingdom, 250);
       if (!entries.length) return setStatus('registerStatus', kingdom ? tr('enterId') : tr('enterKingdom'));
       if (!$('consent').checked) return setStatus('registerStatus', tr('needConsent'));
-      const result = { submitted: entries.length, created: 0, reactivated: 0, duplicate: 0, invalid: 0, jobsCreated: 0 };
+      const result = { submitted: entries.length, created: 0, reactivated: 0, kingdomUpdated: 0, duplicate: 0, invalid: 0, jobsCreated: 0, requeuedJobs: 0 };
       const chunkSize = 8;
       try {
         for (let i = 0; i < entries.length; i += chunkSize) {
@@ -4646,13 +4748,15 @@
           });
           result.created += Number(data.created || 0);
           result.reactivated += Number(data.reactivated || 0);
+          result.kingdomUpdated += Number(data.kingdomUpdated || 0);
           result.duplicate += Number(data.duplicate || 0);
           result.invalid += Number(data.invalid || 0);
           result.jobsCreated += Number(data.jobsCreated || 0);
+          result.requeuedJobs += Number(data.requeuedJobs || 0);
         }
         setStatus(
           'registerStatus',
-          `${tr('bulkDone')}\n${tr('created')}: ${formatNumber(result.created)} / ${tr('reactivated')}: ${formatNumber(result.reactivated)} / ${tr('duplicate')}: ${formatNumber(result.duplicate)} / ${tr('invalid')}: ${formatNumber(result.invalid)}\n${tr('pendingJobs')}: ${formatNumber(result.jobsCreated)}`
+          `${tr('bulkDone')}\n${tr('created')}: ${formatNumber(result.created)} / ${tr('reactivated')}: ${formatNumber(result.reactivated)} / ${tr('kingdomUpdatedShort')}: ${formatNumber(result.kingdomUpdated)} / ${tr('duplicate')}: ${formatNumber(result.duplicate)} / ${tr('invalid')}: ${formatNumber(result.invalid)}\n${tr('pendingJobs')}: ${formatNumber(result.jobsCreated + result.requeuedJobs)}`
         );
         loadStatus();
         loadActivity();

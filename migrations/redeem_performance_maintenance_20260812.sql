@@ -35,6 +35,7 @@ begin
     'already_claimed',
     'time_window_closed',
     'player_not_found',
+    'kingdom_check_required',
     'not_logged_in',
     'captcha_required',
     'claim_limit_reached',

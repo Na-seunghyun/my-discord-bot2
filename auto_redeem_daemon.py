@@ -84,6 +84,20 @@ API_FALLBACK_STATUSES = {
 }
 
 
+def is_kingdom_check_required_message(message: str) -> bool:
+    lower = str(message or "").strip().lower()
+    if not lower:
+        return False
+    if "double check player" in lower:
+        return True
+    if "character info is incorrect" in lower or "character information is incorrect" in lower:
+        return True
+    if "player" in lower and "kingdom" in lower:
+        return True
+    mismatch_words = ("wrong", "incorrect", "invalid", "mismatch", "check", "required")
+    return any(token in lower for token in ("kingdom", "kid", "state", "server")) and any(word in lower for word in mismatch_words)
+
+
 def daemon_source() -> str:
     if REVIEW_ONLY:
         return "putty-browser-review-daemon"
@@ -222,6 +236,8 @@ def classify_official_payload(payload: dict) -> tuple[str, bool, str]:
         return "captcha_required", False, message or "captcha required"
     if err_code == 40014 or "gift code not found" in lower or "case-sensitive" in lower or "invalid code" in lower:
         return "invalid_code", False, message or "invalid code"
+    if is_kingdom_check_required_message(message):
+        return "kingdom_check_required", False, message or "kingdom check required"
     if err_code == 40009 or "not logged in" in lower:
         return "not_logged_in", False, message or "not logged in"
     if "time error" in lower or "redemption time" in lower or "exchange time" in lower or "time limit" in lower:
@@ -238,15 +254,9 @@ def classify_official_payload(payload: dict) -> tuple[str, bool, str]:
         return "server_busy", False, message or "official session was not ready"
     if "server busy" in lower or "try again later" in lower:
         return "server_busy", False, message or "server busy"
-    if "double check player" in lower:
-        return "not_logged_in", False, message or "player check required"
     if (
         "player not found" in lower
         or "invalid player" in lower
-        or "character info is incorrect" in lower
-        or "character information is incorrect" in lower
-        or ("kingdom" in lower and ("wrong" in lower or "incorrect" in lower or "invalid" in lower))
-        or ("kid" in lower and ("wrong" in lower or "incorrect" in lower or "invalid" in lower))
     ):
         return "player_not_found", False, message or "player not found"
     if payload.get("code") == 0 or err_code == 0 or "redeemed, please claim" in lower or "claim the rewards in your mail" in lower:
@@ -267,6 +277,8 @@ def classify_message(message: str) -> tuple[str, bool]:
         return "expired", False
     if "time error" in lower or "redemption time" in lower or "exchange time" in lower:
         return "time_window_closed", False
+    if is_kingdom_check_required_message(text):
+        return "kingdom_check_required", False
     if "not login" in lower or "not logged in" in lower or "problem with logging in" in lower:
         return "not_logged_in", False
     if "server busy" in lower or "try again later" in lower:
@@ -279,15 +291,9 @@ def classify_message(message: str) -> tuple[str, bool]:
         return "success", True
     if "captcha" in lower or "verification" in lower or "verify" in lower:
         return "captcha_required", False
-    if "double check player" in lower:
-        return "not_logged_in", False
     if (
         "player not found" in lower
         or "invalid player" in lower
-        or "character info is incorrect" in lower
-        or "character information is incorrect" in lower
-        or ("kingdom" in lower and ("wrong" in lower or "incorrect" in lower or "invalid" in lower))
-        or ("kid" in lower and ("wrong" in lower or "incorrect" in lower or "invalid" in lower))
     ):
         return "player_not_found", False
     return "failed", False

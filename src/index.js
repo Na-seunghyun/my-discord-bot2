@@ -956,6 +956,12 @@ function isBrowserReviewCandidateStatus(status) {
   return String(status || "") === "server_busy";
 }
 
+function isKingdomCheckRequiredMessage(message) {
+  const text = String(message || "");
+  if (!text) return false;
+  return /double\s+check\s+player|character\s+info(?:rmation)?\s+is\s+incorrect|player.*kingdom|kingdom.*player|kingdom.*(wrong|incorrect|invalid|mismatch|check|required)|kid.*(wrong|incorrect|invalid|mismatch|check|required)|state.*(wrong|incorrect|invalid|mismatch)|server.*(wrong|incorrect|invalid|mismatch)/i.test(text);
+}
+
 async function disableInvalidRedeemPlayer(env, playerId, reason = "Player ID could not be verified.") {
   const id = cleanText(playerId, 40);
   if (!supabaseConfig(env).enabled || !/^\d{3,12}$/.test(id)) return false;
@@ -1428,6 +1434,8 @@ async function upsertRedeemPlayer(env, playerId, options = {}) {
   const now = Date.now();
   const existingRows = await supabaseJson(env, `/redeem_players?id=eq.${encodeURIComponent(profile.id)}&select=id,nickname,state,town_hall_level,avatar_url,profile_json,enabled,consent,manage_token_hash,created_at_ms&limit=1`).catch(() => []);
   const existing = existingRows && existingRows[0];
+  const existingKingdom = normalizeKingdomNumber(existing && existing.state);
+  const kingdomChanged = Boolean(existing && kingdom && String(existingKingdom || "") !== String(kingdom));
   if (!verified && existing) {
     const existingProfile = isPlainObject(existing.profile_json) ? existing.profile_json : {};
     profile = normalizePlayerSummary(mergeMeaningful(profile, existingProfile)) || profile;
@@ -1460,7 +1468,18 @@ async function upsertRedeemPlayer(env, playerId, options = {}) {
       method: "PATCH",
       body: JSON.stringify(patch),
     }).catch(() => {});
-    return { ok: true, status: "duplicate", player: profile, verified };
+    const requeuedJobs = kingdomChanged
+      ? await reactivateKingdomCheckJobsForPlayer(env, profile.id, "Kingdom updated; queued again with the latest kingdom.").catch(() => 0)
+      : 0;
+    return {
+      ok: true,
+      status: kingdomChanged ? "kingdom_updated" : "duplicate",
+      player: profile,
+      verified,
+      previousKingdom: existingKingdom || null,
+      currentKingdom: kingdom,
+      requeuedJobs,
+    };
   }
 
   await supabaseJson(env, "/redeem_players?on_conflict=id", {
@@ -1481,7 +1500,18 @@ async function upsertRedeemPlayer(env, playerId, options = {}) {
       profile_json: profile,
     }]),
   });
-  return { ok: true, status: existing ? "reactivated" : "created", player: profile, verified };
+  const requeuedJobs = existing
+    ? await reactivateKingdomCheckJobsForPlayer(env, profile.id, "Player registration restored; queued kingdom-check jobs again.").catch(() => 0)
+    : 0;
+  return {
+    ok: true,
+    status: existing && kingdomChanged ? "kingdom_updated" : existing ? "reactivated" : "created",
+    player: profile,
+    verified,
+    previousKingdom: existingKingdom || null,
+    currentKingdom: kingdom,
+    requeuedJobs,
+  };
 }
 
 async function refreshRedeemPlayerProfile(env, profile) {
@@ -1513,7 +1543,7 @@ async function registerRedeemPlayer(request, env) {
   const result = await upsertRedeemPlayer(env, playerId, { lang: body.lang, kingdom });
   if (!result.ok) return json({ ok: false, error: result.status === "missing_kingdom" ? "Kingdom number is required." : "Player ID could not be verified.", detail: result.verification || null }, 404);
   const jobsCreated = await createRedeemJobsForPlayer(env, result.player && result.player.id).catch(() => 0);
-  return json({ ok: true, ...result, jobsCreated, registeredPlayers: await countRedeemPlayers(env) });
+  return json({ ok: true, ...result, jobsCreated, requeuedJobs: numberValue(result.requeuedJobs), registeredPlayers: await countRedeemPlayers(env) });
 }
 
 async function registerRedeemPlayersBulk(request, env) {
@@ -1529,7 +1559,7 @@ async function registerRedeemPlayersBulk(request, env) {
     : extractRedeemPlayerEntries(body.ids || body.text || body.playerIds, defaultKingdom, 250);
   if (!entries.length) return json({ ok: false, error: "No valid player ID and kingdom pairs were found." }, 400);
 
-  const result = { ok: true, submitted: entries.length, created: 0, reactivated: 0, duplicate: 0, invalid: 0, jobsCreated: 0, players: [] };
+  const result = { ok: true, submitted: entries.length, created: 0, reactivated: 0, kingdomUpdated: 0, duplicate: 0, invalid: 0, jobsCreated: 0, requeuedJobs: 0, players: [] };
   for (const entry of entries) {
     const saved = await upsertRedeemPlayer(env, entry.playerId, { lang: body.lang, kingdom: entry.kingdom }).catch(() => ({ ok: false, status: "invalid", playerId: entry.playerId }));
     if (!saved.ok) {
@@ -1538,15 +1568,18 @@ async function registerRedeemPlayersBulk(request, env) {
     }
     if (saved.status === "created") result.created += 1;
     else if (saved.status === "reactivated") result.reactivated += 1;
+    else if (saved.status === "kingdom_updated") result.kingdomUpdated += 1;
     else if (saved.status === "duplicate") result.duplicate += 1;
     const jobsCreated = await createRedeemJobsForPlayer(env, saved.player.id).catch(() => 0);
     result.jobsCreated += jobsCreated;
+    result.requeuedJobs += numberValue(saved.requeuedJobs);
     result.players.push({
       id: saved.player.id,
       username: saved.player.username,
       state: saved.player.state,
       status: saved.status,
       jobsCreated,
+      requeuedJobs: numberValue(saved.requeuedJobs),
     });
     await delay(250);
   }
@@ -2010,6 +2043,30 @@ async function createRedeemJobsForPlayer(env, playerId) {
   if (!rows.length) return 0;
   await insertRedeemJobRows(env, rows);
   return rows.length;
+}
+
+async function reactivateKingdomCheckJobsForPlayer(env, playerId, reason = "Kingdom updated; queued again with the latest kingdom.") {
+  const id = meaningfulText(playerId, 40);
+  if (!/^\d{3,12}$/.test(id) || !supabaseConfig(env).enabled) return 0;
+  const codes = await listActiveRedeemCodes(env, 200, { refreshIfEmpty: true });
+  const activeCodes = [...new Set((codes || []).map((row) => normalizeGiftCode(row && row.code)).filter(Boolean))].slice(0, 200);
+  if (!activeCodes.length) return 0;
+  const now = Date.now();
+  const rows = await supabaseJson(
+    env,
+    `/redeem_jobs?player_id=eq.${encodeURIComponent(id)}&gift_code=in.(${activeCodes.map(encodeURIComponent).join(",")})&status=in.(kingdom_check_required,player_not_found,not_logged_in)`,
+    {
+      method: "PATCH",
+      headers: { prefer: "return=representation" },
+      body: JSON.stringify({
+        status: "pending",
+        attempts: 0,
+        last_error: cleanText(reason, 240),
+        updated_at_ms: now,
+      }),
+    },
+  ).catch(() => []);
+  return Array.isArray(rows) ? rows.length : 0;
 }
 
 async function readRedeemPlayerStateMap(env, playerIds) {
@@ -2716,7 +2773,7 @@ async function redeemQueueSummary(env) {
     countSupabaseRows(env, "/redeem_jobs?status=eq.deferred&select=job_key&limit=1").catch(() => 0),
     countSupabaseRows(env, "/redeem_jobs?status=eq.browser_review&select=job_key&limit=1").catch(() => 0),
     countSupabaseRows(env, "/redeem_jobs?status=eq.success&select=job_key&limit=1").catch(() => 0),
-    countSupabaseRows(env, "/redeem_jobs?status=in.(failed,invalid_code,expired,already_claimed,time_window_closed,player_not_found,not_logged_in,captcha_required,claim_limit_reached,deferred,official_blocked)&select=job_key&limit=1").catch(() => 0),
+    countSupabaseRows(env, "/redeem_jobs?status=in.(failed,invalid_code,expired,already_claimed,time_window_closed,player_not_found,kingdom_check_required,not_logged_in,captcha_required,claim_limit_reached,deferred,official_blocked)&select=job_key&limit=1").catch(() => 0),
     countSupabaseRows(env, `/redeem_priority_boosts?expires_at_ms=gte.${now}&select=boost_key&limit=1`).catch(() => 0),
     vipActivePath ? countSupabaseRows(env, vipActivePath).catch(() => 0) : Promise.resolve(0),
   ]);
@@ -3450,7 +3507,7 @@ async function claimRedeemJobs(request, env) {
       await supabaseJson(env, `/redeem_jobs?player_id=eq.${encodeURIComponent(id)}&status=eq.running`, {
         method: "PATCH",
         body: JSON.stringify({
-          status: "failed",
+          status: "kingdom_check_required",
           last_error: "Kingdom number is missing. Re-register this player ID with kingdom number.",
           updated_at_ms: Date.now(),
         }),
@@ -3493,10 +3550,13 @@ function classifyDaemonRedeemResult(row) {
   if (statusHint === "captcha_required" || /captcha|verification|verify/i.test(message)) {
     return { status: "captcha_required", ok: false, message: message || "captcha required" };
   }
-  if (statusHint === "not_logged_in" || /not\s+login|not\s+logged\s+in|problem\s+with\s+logging\s+in|double\s+check\s+player/i.test(message)) {
+  if (statusHint === "kingdom_check_required" || isKingdomCheckRequiredMessage(message)) {
+    return { status: "kingdom_check_required", ok: false, message: message || "kingdom check required" };
+  }
+  if (statusHint === "not_logged_in" || /not\s+login|not\s+logged\s+in|problem\s+with\s+logging\s+in/i.test(message)) {
     return { status: "not_logged_in", ok: false, message: message || "not logged in" };
   }
-  if (statusHint === "player_not_found" || /player\s+not\s+found|invalid\s+player|character\s+info\s+is\s+incorrect|character\s+information\s+is\s+incorrect|kingdom.*(wrong|incorrect|invalid)|kid.*(wrong|incorrect|invalid)/i.test(message)) {
+  if (statusHint === "player_not_found" || /player\s+not\s+found|invalid\s+player/i.test(message)) {
     return { status: "player_not_found", ok: false, message: message || "player not found" };
   }
   if (ok || statusHint === "success" || /redeemed,?\s*please\s*claim|claim\s+the\s+rewards\s+in\s+your\s+mail/i.test(message)) {
@@ -3742,12 +3802,14 @@ function classifyRedeemPayload(payload) {
   }
   if (errCode === 40102) return { status: "captcha_required", ok: false, message: message || "captcha required" };
   if (errCode === 40014) return { status: "invalid_code", ok: false, message: message || "code not found" };
+  if (isKingdomCheckRequiredMessage(message)) return { status: "kingdom_check_required", ok: false, message: message || "kingdom check required" };
   if (errCode === 40009) return { status: "not_logged_in", ok: false, message: message || "not logged in" };
   if (/time\s*error|redemption\s*time|exchange\s*time|time\s*limit|超出兑换时间|교환\s*시간이\s*초과|交換.*時間/i.test(message)) {
     return { status: "time_window_closed", ok: false, message: message || "time window closed" };
   }
   if (/same\s+type\s+exchange|already|claimed|used/i.test(message)) return { status: "already_claimed", ok: false, message };
   if (/expired/i.test(message)) return { status: "expired", ok: false, message };
+  if (/player\s+not\s+found|invalid\s+player/i.test(message)) return { status: "player_not_found", ok: false, message: message || "player not found" };
   if ((payload && payload.code === 0) || errCode === 0 || /redeemed,?\s*please\s*claim|claim\s+the\s+rewards\s+in\s+your\s+mail/i.test(message)) {
     return { status: "success", ok: true, message: message || "success" };
   }
@@ -3776,6 +3838,9 @@ function classifyRedeemPayloadV2(payload) {
   if (errCode === 40014 || /gift\s*code\s*not\s*found|code\s*not\s*found|case-sensitive|invalid\s+gift|invalid\s+code|cdk\s*error/i.test(message)) {
     return { status: "invalid_code", ok: false, message: message || "invalid code" };
   }
+  if (isKingdomCheckRequiredMessage(message)) {
+    return { status: "kingdom_check_required", ok: false, message: message || "kingdom check required" };
+  }
   if (errCode === 40009) return { status: "not_logged_in", ok: false, message: message || "not logged in" };
   if (/time\s*error|redemption\s*time|exchange\s*time|time\s*limit|not\s+open|not\s+started|not\s+available|兑换时间|兌換時間|교환\s*시간|交換.*時間/i.test(message)) {
     return { status: "time_window_closed", ok: false, message: message || "time window closed" };
@@ -3784,10 +3849,10 @@ function classifyRedeemPayloadV2(payload) {
     return { status: "already_claimed", ok: false, message: message || "already claimed" };
   }
   if (/expired|ended|no\s+longer\s+valid/i.test(message)) return { status: "expired", ok: false, message: message || "expired" };
-  if (/not\s+login|not\s+logged\s+in|double\s+check\s+player|problem\s+with\s+logging\s+in/i.test(message)) {
+  if (/not\s+login|not\s+logged\s+in|problem\s+with\s+logging\s+in/i.test(message)) {
     return { status: "not_logged_in", ok: false, message: message || "not logged in" };
   }
-  if (/player\s+not\s+found|invalid\s+player|character\s+info\s+is\s+incorrect|character\s+information\s+is\s+incorrect|kingdom.*(wrong|incorrect|invalid)|kid.*(wrong|incorrect|invalid)/i.test(message)) {
+  if (/player\s+not\s+found|invalid\s+player/i.test(message)) {
     return { status: "player_not_found", ok: false, message: message || "player not found" };
   }
   if ((payload && payload.code === 0) || errCode === 0 || /redeemed,?\s*please\s*claim|claim\s+the\s+rewards\s+in\s+your\s+mail/i.test(message)) {
