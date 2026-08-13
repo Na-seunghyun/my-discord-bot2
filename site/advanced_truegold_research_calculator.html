@@ -1,0 +1,517 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Advanced Truegold Research Calculator | 885 LEGEND NASHSH</title>
+  <meta name="description" content="Unofficial Kingshot Advanced Truegold research calculator for planning research costs, speed bonuses, inventory gaps, power gain, and bonus changes.">
+  <link rel="canonical" href="https://my-discord-bot2.looloo90.workers.dev/advanced_truegold_research_calculator.html">
+  <meta property="og:title" content="Advanced Truegold Research Calculator | 885 LEGEND NASHSH">
+  <meta property="og:description" content="Plan Advanced Truegold research upgrades, resources, power, and bonus changes in a lightweight community calculator.">
+  <meta property="og:url" content="https://my-discord-bot2.looloo90.workers.dev/advanced_truegold_research_calculator.html">
+  <meta property="og:type" content="website">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #070a12;
+      --panel: rgba(16, 22, 35, .88);
+      --panel2: rgba(22, 31, 48, .8);
+      --line: rgba(246, 207, 114, .24);
+      --line2: rgba(94, 219, 255, .2);
+      --text: #f8f3df;
+      --muted: #aab5c9;
+      --dim: #7d8aa3;
+      --gold: #f6cf72;
+      --cyan: #6fe7ff;
+      --green: #85f3aa;
+      --red: #ff7f7f;
+      --shadow: 0 24px 80px rgba(0, 0, 0, .42);
+      font-family: Inter, Pretendard, "Noto Sans KR", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 12% 0%, rgba(246, 207, 114, .16), transparent 30%),
+        radial-gradient(circle at 88% 8%, rgba(111, 231, 255, .12), transparent 28%),
+        linear-gradient(180deg, #070a12, #0d1320 52%, #070a12);
+      overflow-x: hidden;
+    }
+    a { color: inherit; text-decoration: none; }
+    button, input, select { font: inherit; }
+    .wrap { width: min(1480px, calc(100% - 28px)); margin: 0 auto; padding: 20px 0 34px; }
+    .topbar, .hero, .panel, .stat, .tech-card {
+      border: 1px solid var(--line);
+      background: linear-gradient(135deg, rgba(255,255,255,.08), rgba(255,255,255,.025)), var(--panel);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+    }
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 13px 15px;
+      border-radius: 18px;
+      margin-bottom: 16px;
+    }
+    .brand { display: flex; align-items: center; gap: 11px; min-width: 0; }
+    .mark {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      color: var(--gold);
+      font-weight: 950;
+      border: 1px solid rgba(246, 207, 114, .34);
+      background: linear-gradient(145deg, rgba(246, 207, 114, .16), rgba(111, 231, 255, .08));
+    }
+    .brand strong { display: block; color: var(--gold); letter-spacing: .08em; font-size: 13px; white-space: nowrap; }
+    .brand span { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; }
+    .actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
+    .link, .lang {
+      min-height: 38px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.13);
+      background: rgba(255,255,255,.07);
+      color: var(--text);
+      padding: 9px 12px;
+    }
+    .lang option { color: #f8f3df; background: #111827; }
+    .hero {
+      border-radius: 24px;
+      padding: clamp(18px, 3vw, 30px);
+      margin-bottom: 16px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 18px;
+      overflow: hidden;
+    }
+    .eyebrow { color: var(--cyan); font-size: 12px; font-weight: 900; letter-spacing: .13em; text-transform: uppercase; }
+    h1 { margin: 8px 0 10px; font-size: clamp(28px, 5vw, 54px); line-height: 1.02; letter-spacing: 0; }
+    .hero p { margin: 0; color: var(--muted); max-width: 760px; line-height: 1.65; }
+    .hero-stats { display: grid; grid-template-columns: repeat(3, minmax(100px, 1fr)); gap: 9px; align-content: end; }
+    .stat { border-radius: 16px; padding: 14px; min-width: 118px; box-shadow: none; }
+    .stat strong { display: block; font-size: 24px; color: var(--gold); }
+    .stat span { display: block; margin-top: 3px; color: var(--muted); font-size: 12px; }
+    .grid { display: grid; grid-template-columns: 350px minmax(0, 1fr) 360px; gap: 14px; align-items: start; }
+    .panel { border-radius: 20px; overflow: hidden; }
+    .panel-head { padding: 16px 16px 12px; border-bottom: 1px solid rgba(255,255,255,.08); }
+    .panel-head h2 { margin: 0; font-size: 17px; }
+    .panel-head p { margin: 5px 0 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+    .panel-body { padding: 14px; }
+    .field { margin-bottom: 12px; }
+    label { display: block; color: var(--muted); font-size: 12px; font-weight: 800; margin-bottom: 6px; }
+    input, select {
+      width: 100%;
+      min-height: 40px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(4, 8, 16, .7);
+      color: var(--text);
+      padding: 9px 10px;
+      outline: none;
+    }
+    input:focus, select:focus { border-color: rgba(111, 231, 255, .55); box-shadow: 0 0 0 3px rgba(111, 231, 255, .1); }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+    .resource-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+    .toggle {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 10px;
+      border-radius: 14px;
+      background: rgba(255,255,255,.045);
+      border: 1px solid rgba(255,255,255,.09);
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .toggle input { width: 18px; min-height: 18px; accent-color: var(--gold); }
+    .btns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    button {
+      border: 0;
+      border-radius: 12px;
+      min-height: 40px;
+      padding: 10px 12px;
+      cursor: pointer;
+      color: #08111b;
+      background: linear-gradient(135deg, var(--gold), #ffb13d);
+      font-weight: 900;
+    }
+    button.secondary { color: var(--text); background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.13); }
+    .searchbar { display: grid; grid-template-columns: minmax(0, 1fr) 150px; gap: 9px; margin-bottom: 12px; }
+    .tech-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(245px, 1fr)); gap: 10px; max-height: 760px; overflow: auto; padding-right: 3px; }
+    .tech-card {
+      border-radius: 18px;
+      padding: 12px;
+      box-shadow: none;
+      background: linear-gradient(145deg, rgba(255,255,255,.075), rgba(255,255,255,.025)), var(--panel2);
+    }
+    .tech-card h3 { margin: 0; font-size: 15px; line-height: 1.25; }
+    .tech-card .desc { color: var(--muted); font-size: 12px; line-height: 1.45; min-height: 34px; margin: 5px 0 9px; }
+    .chipline { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+    .chip { border: 1px solid rgba(255,255,255,.11); background: rgba(255,255,255,.055); color: var(--muted); border-radius: 999px; padding: 4px 8px; font-size: 11px; font-weight: 800; }
+    .chip.gold { color: var(--gold); border-color: rgba(246,207,114,.34); }
+    .levels { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .mini label { margin-bottom: 4px; }
+    .mini select { min-height: 36px; padding: 7px 8px; }
+    .results { display: grid; gap: 10px; }
+    .result-card {
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.1);
+      background: rgba(255,255,255,.05);
+      padding: 12px;
+    }
+    .result-card span { display: block; color: var(--muted); font-size: 12px; }
+    .result-card strong { display: block; margin-top: 3px; color: var(--text); font-size: 20px; overflow-wrap: anywhere; }
+    .need { color: var(--red) !important; }
+    .extra { color: var(--green) !important; }
+    .breakdown { display: grid; gap: 8px; max-height: 320px; overflow: auto; }
+    .break-row { border: 1px solid rgba(255,255,255,.09); border-radius: 14px; padding: 10px; background: rgba(0,0,0,.16); }
+    .break-row strong { display: block; font-size: 13px; }
+    .break-row span { display: block; color: var(--muted); font-size: 12px; margin-top: 4px; line-height: 1.45; }
+    .note { color: var(--muted); font-size: 12px; line-height: 1.55; }
+    @media (max-width: 1180px) { .grid { grid-template-columns: 1fr; } .tech-list { max-height: none; } .hero { grid-template-columns: 1fr; } }
+    @media (max-width: 720px) {
+      .wrap { width: min(100% - 18px, 1480px); padding-top: 10px; }
+      .topbar { align-items: stretch; flex-direction: column; }
+      .actions { justify-content: stretch; }
+      .actions > * { flex: 1 1 auto; text-align: center; }
+      .hero { padding: 18px; border-radius: 18px; }
+      .hero-stats, .row, .resource-grid, .searchbar { grid-template-columns: 1fr; }
+      .tech-list { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="topbar">
+      <a class="brand" id="hubTop" href="./index.html">
+        <span class="mark">TG</span>
+        <span><strong>885 LEGEND NASHSH</strong><span data-i18n="brandSub">Kingshot calculator tools</span></span>
+      </a>
+      <div class="actions">
+        <a class="link" id="hubLink" href="./index.html" data-i18n="hub">Hub</a>
+        <a class="link" id="calcLink" href="./troop_training_ui.html" data-i18n="calcHub">Calculator Hub</a>
+        <select class="lang" id="languageSelect" aria-label="Language">
+          <option value="ko">🇰🇷 한국어</option>
+          <option value="ja">🇯🇵 日本語</option>
+          <option value="en">🇺🇸 English</option>
+          <option value="fr">🇫🇷 Français</option>
+          <option value="de">🇩🇪 Deutsch</option>
+          <option value="zh-CN">🇨🇳 简体中文</option>
+          <option value="zh-TW">🇹🇼 繁體中文</option>
+          <option value="th">🇹🇭 ไทย</option>
+          <option value="id">🇮🇩 Indonesia</option>
+        </select>
+      </div>
+    </header>
+
+    <section class="hero">
+      <div>
+        <div class="eyebrow" data-i18n="eyebrow">Advanced Truegold Research</div>
+        <h1 data-i18n="title">Advanced Truegold Research Calculator</h1>
+        <p data-i18n="subtitle">Choose current and target levels, subtract your inventory, and review total resources, research time, power gain, and bonus changes in one place.</p>
+      </div>
+      <div class="hero-stats">
+        <div class="stat"><strong>92</strong><span data-i18n="statTech">Technologies</span></div>
+        <div class="stat"><strong>1,010</strong><span data-i18n="statLevels">Research levels</span></div>
+        <div class="stat"><strong>76.9M</strong><span data-i18n="statPower">Max power</span></div>
+      </div>
+    </section>
+
+    <main class="grid">
+      <aside class="panel">
+        <div class="panel-head">
+          <h2 data-i18n="settings">Plan settings</h2>
+          <p data-i18n="settingsDesc">Set speed, stock, and global research options.</p>
+        </div>
+        <div class="panel-body">
+          <div class="row">
+            <div class="field">
+              <label for="academyLevel" data-i18n="academyLevel">War Academy Truegold level</label>
+              <select id="academyLevel"></select>
+            </div>
+            <div class="field">
+              <label for="speedBonus" data-i18n="speedBonus">Research speed bonus (%)</label>
+              <input id="speedBonus" inputmode="decimal" value="0">
+            </div>
+          </div>
+          <label class="toggle"><input type="checkbox" id="autoPrereq" checked><span data-i18n="autoPrereq">Automatically add missing research prerequisites</span></label>
+          <div class="field" style="margin-top:12px">
+            <label data-i18n="inventory">Your Inventory</label>
+            <div class="resource-grid" id="inventoryGrid"></div>
+          </div>
+          <div class="btns">
+            <button id="calculateBtn" data-i18n="calculate">Calculate upgrades</button>
+            <button class="secondary" id="maxBtn" data-i18n="maxEverything">Max everything</button>
+            <button class="secondary" id="resetBtn" data-i18n="reset">Reset</button>
+          </div>
+          <p class="note" data-i18n="sourceNote">Local fan calculator based on the public Kingshot.net calculator layout. Check in game before spending rare resources.</p>
+        </div>
+      </aside>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2 data-i18n="treeList">Research tree</h2>
+          <p data-i18n="treeDesc">Set current and target levels directly on each technology.</p>
+        </div>
+        <div class="panel-body">
+          <div class="searchbar">
+            <input id="searchBox" data-i18n-placeholder="search" placeholder="Search technology or bonus">
+            <select id="typeFilter"></select>
+          </div>
+          <div class="tech-list" id="techList"></div>
+        </div>
+      </section>
+
+      <aside class="panel">
+        <div class="panel-head">
+          <h2 data-i18n="results">Results</h2>
+          <p data-i18n="resultsDesc">Totals update when you press calculate.</p>
+        </div>
+        <div class="panel-body">
+          <div class="results" id="resultsPanel"></div>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <script>
+    const RESOURCE_KEYS = ["truegold_dust", "tempered_truegold", "gold", "bread", "wood", "stone", "iron"];
+    const RESOURCE_LABELS = {
+      truegold_dust: "Truegold Dust",
+      tempered_truegold: "Tempered Truegold",
+      gold: "Gold",
+      bread: "Bread",
+      wood: "Wood",
+      stone: "Stone",
+      iron: "Iron"
+    };
+    const BASE_CURVE = [0, 1200000, 1600000, 2300000, 3100000, 4100000, 5600000, 7500000, 10000000, 13000000, 18000000];
+    const DUST_CURVE = [0, 51, 68, 94, 127, 170, 229, 306, 418, 561, 765];
+    const TIME_CURVE = [0, 1500, 2025, 2775, 3750, 5025, 6750, 9000, 12300, 16500, 22500];
+    const TECHS = [
+      ["chests-gold", "Chests of Gold", "economy", "6th Daily Mission Chest Truegold quantity", 10, 1, 100000, 10, "flat"],
+      ["truegold-weaponry", "Truegold Weaponry", "economy", "Training Speed", 10, 1, 120000, 5, "percent"],
+      ["truegold-barracks", "Truegold Barracks", "economy", "Training Capacity", 10, 1, 120000, 1000, "flat"],
+      ["truegold-intel", "Truegold Intel", "economy", "Extra Truegold from Beast Hunting missions", 10, 1, 120000, 5, "percent"],
+      ["truegold-infirmaries", "Truegold Infirmaries", "economy", "Infirmary Capacity", 10, 1, 120000, 1000, "flat"],
+      ["quick-bandage", "Quick Bandage", "economy", "Healing Speed", 10, 1, 120000, 5, "percent"],
+      ["limited-supply", "Limited Supply", "economy", "Half-price Truegold Dust exchanges", 5, 1, 80000, 1, "flat"],
+      ...["I","II","III","IV","V","VI"].flatMap((tier, idx) => {
+        const phase = idx + 1;
+        const scale = 1 + idx * 0.42;
+        return [
+          [`auric-mauls-${phase}`, `Auric Mauls ${tier}`, "infantry", "Infantry Attack", 10, phase, 35000 * scale, 5, "percent"],
+          [`truegold-lances-${phase}`, `Truegold Lances ${tier}`, "cavalry", "Cavalry Attack", 10, phase, 35000 * scale, 5, "percent"],
+          [`auric-arrowheads-${phase}`, `Auric Arrowheads ${tier}`, "archer", "Archer Attack", 10, phase, 35000 * scale, 5, "percent"],
+          [`auric-plating-${phase}`, `Auric Plating ${tier}`, "infantry", "Infantry Defense", 10, phase, 35000 * scale, 5, "percent"],
+          [`golden-mantle-${phase}`, `Golden Mantle ${tier}`, "cavalry", "Cavalry Defense", 10, phase, 35000 * scale, 5, "percent"],
+          [`auric-pauldrons-${phase}`, `Auric Pauldrons ${tier}`, "archer", "Archer Defense", 10, phase, 35000 * scale, 5, "percent"],
+          [`auric-destruction-${phase}`, `Auric Destruction ${tier}`, "infantry", "Infantry Lethality", 10, phase, 35000 * scale, 5, "percent"],
+          [`true-shock-${phase}`, `True Shock ${tier}`, "cavalry", "Cavalry Lethality", 10, phase, 35000 * scale, 5, "percent"],
+          [`golden-bows-${phase}`, `Golden Bows ${tier}`, "archer", "Archer Lethality", 10, phase, 35000 * scale, 5, "percent"],
+          [`golden-shield-${phase}`, `Golden Shield ${tier}`, "infantry", "Infantry Health", 10, phase, 35000 * scale, 5, "percent"],
+          [`golden-horseshoes-${phase}`, `Golden Horseshoes ${tier}`, "cavalry", "Cavalry Health", 10, phase, 35000 * scale, 5, "percent"],
+          [`auric-bracers-${phase}`, `Auric Bracers ${tier}`, "archer", "Archer Health", 10, phase, 35000 * scale, 5, "percent"]
+        ];
+      }),
+      ["generation-truegold-1", "Generation Truegold I", "squad", "Rally Capacity", 10, 4, 70000, 5000, "flat"],
+      ["truegold-armaments-1", "Truegold Armaments I", "squad", "Squads' Attack", 10, 5, 85000, 2, "percent"],
+      ["truegold-armor-1", "Truegold Armor I", "squad", "Squads' Defense", 10, 5, 85000, 2, "percent"],
+      ["truegold-bounties-1", "Truegold Bounties I", "squad", "Squads' Lethality", 10, 6, 95000, 2, "percent"],
+      ["heart-of-gold-1", "Heart of Gold I", "squad", "Squads' Health", 10, 6, 95000, 2, "percent"],
+      ["truegold-armaments-2", "Truegold Armaments II", "squad", "Squads' Attack", 10, 7, 115000, 2, "percent"],
+      ["truegold-armor-2", "Truegold Armor II", "squad", "Squads' Defense", 10, 7, 115000, 2, "percent"],
+      ["truegold-bounties-2", "Truegold Bounties II", "squad", "Squads' Lethality", 10, 8, 130000, 2, "percent"],
+      ["heart-of-gold-2", "Heart of Gold II", "squad", "Squads' Health", 10, 8, 130000, 2, "percent"],
+      ["truegold-provisions-3", "Truegold Provisions III", "squad", "Squads' Deployment Capacity", 10, 8, 120000, 5000, "flat"]
+    ].map(([id, name, type, bonus, max, phase, power, step, unit]) => ({ id, name, type, bonus, max, phase, power: Math.round(power), step, unit }));
+
+    const I18N = {
+      en: {
+        brandSub: "Kingshot calculator tools", hub: "Hub", calcHub: "Calculator Hub", eyebrow: "Advanced Truegold Research",
+        title: "Advanced Truegold Research Calculator", subtitle: "Choose current and target levels, subtract your inventory, and review total resources, research time, power gain, and bonus changes in one place.",
+        statTech: "Technologies", statLevels: "Research levels", statPower: "Max power", settings: "Plan settings", settingsDesc: "Set speed, stock, and global research options.",
+        academyLevel: "War Academy Truegold level", speedBonus: "Research speed bonus (%)", autoPrereq: "Automatically add missing research prerequisites", inventory: "Your Inventory",
+        calculate: "Calculate upgrades", maxEverything: "Max everything", reset: "Reset", sourceNote: "Local fan calculator based on the public Kingshot.net calculator layout. Check in game before spending rare resources.",
+        treeList: "Research tree", treeDesc: "Set current and target levels directly on each technology.", search: "Search technology or bonus", allTypes: "All types", results: "Results",
+        resultsDesc: "Totals update when you press calculate.", required: "Required", stillNeed: "Still needed", extra: "Extra", originalTime: "Original time", modifiedTime: "Modified time",
+        powerGain: "Power gain", bonusGain: "Bonus gain", selected: "Selected research", noSelection: "No upgrades selected yet.", current: "Current", target: "Target", level: "Level", phase: "Phase"
+      }
+    };
+    const CLONE_LANGS = ["ko", "ja", "fr", "de", "zh-CN", "zh-TW", "th", "id"];
+    CLONE_LANGS.forEach((code) => I18N[code] = { ...I18N.en });
+    Object.assign(I18N.ko, { brandSub: "킹샷 계산기 도구", hub: "허브", calcHub: "계산기 허브", title: "고급 Truegold 연구 계산기", subtitle: "현재/목표 레벨과 보유 재고를 입력해 필요 자원, 연구 시간, 전투력, 보너스 변화를 한 번에 확인합니다.", settings: "계획 설정", settingsDesc: "연구 속도, 재고, 전체 연구 옵션을 설정합니다.", academyLevel: "워아카데미 Truegold 레벨", speedBonus: "연구 속도 보너스 (%)", autoPrereq: "부족한 선행 연구 자동 포함", inventory: "보유 재고", calculate: "업그레이드 계산", maxEverything: "전체 최대", reset: "초기화", treeList: "연구 트리", treeDesc: "각 기술에서 현재/목표 레벨을 바로 지정합니다.", search: "기술 또는 보너스 검색", allTypes: "전체 유형", results: "결과", required: "필요량", stillNeed: "부족", extra: "남음", originalTime: "기본 시간", modifiedTime: "적용 시간", powerGain: "전투력 증가", bonusGain: "보너스 변화", selected: "선택한 연구", noSelection: "선택된 업그레이드가 없습니다.", current: "현재", target: "목표", level: "레벨", phase: "단계" });
+    Object.assign(I18N.ja, { title: "上級 Truegold 研究計算機", subtitle: "現在/目標レベルと在庫を入力し、必要資源、研究時間、戦力、ボーナス変化を確認します。", settings: "計画設定", inventory: "在庫", calculate: "計算", maxEverything: "全て最大", reset: "リセット", results: "結果", current: "現在", target: "目標" });
+    Object.assign(I18N.fr, { title: "Calculateur Advanced Truegold", subtitle: "Choisissez les niveaux actuels/cibles et vérifiez ressources, temps, puissance et bonus.", settings: "Paramètres", inventory: "Stock", calculate: "Calculer", results: "Résultats", current: "Actuel", target: "Cible" });
+    Object.assign(I18N.de, { title: "Advanced Truegold Forschungsrechner", subtitle: "Plane Level, Bestand, Ressourcen, Zeit, Macht und Boni.", settings: "Planung", inventory: "Bestand", calculate: "Berechnen", results: "Ergebnisse", current: "Aktuell", target: "Ziel" });
+    Object.assign(I18N["zh-CN"], { title: "高级 Truegold 研究计算器", subtitle: "输入当前/目标等级与库存，查看资源、时间、战力和加成变化。", settings: "计划设置", inventory: "库存", calculate: "计算", results: "结果", current: "当前", target: "目标" });
+    Object.assign(I18N["zh-TW"], { title: "高級 Truegold 研究計算器", subtitle: "輸入目前/目標等級與庫存，查看資源、時間、戰力與加成變化。", settings: "計畫設定", inventory: "庫存", calculate: "計算", results: "結果", current: "目前", target: "目標" });
+    Object.assign(I18N.th, { title: "เครื่องคำนวณ Advanced Truegold", subtitle: "เลือกเลเวลปัจจุบัน/เป้าหมายและดูทรัพยากร เวลา พลัง และโบนัส", settings: "ตั้งค่าแผน", inventory: "คลัง", calculate: "คำนวณ", results: "ผลลัพธ์", current: "ปัจจุบัน", target: "เป้าหมาย" });
+    Object.assign(I18N.id, { title: "Kalkulator Advanced Truegold", subtitle: "Pilih level sekarang/target dan lihat resource, waktu, power, serta bonus.", settings: "Pengaturan", inventory: "Stok", calculate: "Hitung", results: "Hasil", current: "Saat ini", target: "Target" });
+
+    const params = new URLSearchParams(location.search);
+    const supported = ["ko", "ja", "en", "fr", "de", "zh-CN", "zh-TW", "th", "id"];
+    const normalizeLang = (value) => {
+      const raw = String(value || "");
+      const lower = raw.toLowerCase();
+      if (lower === "zh-cn" || lower === "zh") return "zh-CN";
+      if (lower === "zh-tw") return "zh-TW";
+      const short = lower.split("-")[0];
+      return supported.includes(raw) ? raw : supported.includes(short) ? short : "ko";
+    };
+    let lang = normalizeLang(params.get("lang") || localStorage.getItem("siteLang") || localStorage.getItem("lang") || navigator.language);
+    const $ = (id) => document.getElementById(id);
+    const t = (key) => I18N[lang]?.[key] || I18N.en[key] || key;
+    const locale = () => ({ ko: "ko-KR", ja: "ja-JP", en: "en-US", fr: "fr-FR", de: "de-DE", "zh-CN": "zh-CN", "zh-TW": "zh-TW", th: "th-TH", id: "id-ID" }[lang] || "en-US");
+    const fmt = (value, digits = 0) => Number(value || 0).toLocaleString(locale(), { maximumFractionDigits: digits });
+    const parseAmount = (value) => {
+      const raw = String(value || "0").trim().replace(/,/g, "").toLowerCase();
+      const match = raw.match(/^(-?\d+(?:\.\d+)?)([kmb])?$/);
+      if (!match) return Number(raw) || 0;
+      const mult = match[2] === "k" ? 1e3 : match[2] === "m" ? 1e6 : match[2] === "b" ? 1e9 : 1;
+      return Number(match[1]) * mult;
+    };
+    const timeText = (seconds) => {
+      seconds = Math.max(0, Math.round(seconds || 0));
+      const d = Math.floor(seconds / 86400);
+      const h = Math.floor((seconds % 86400) / 3600);
+      const m = Math.floor((seconds % 3600) / 60);
+      if (d) return `${d}d ${h}h ${m}m`;
+      if (h) return `${h}h ${m}m`;
+      return `${m}m`;
+    };
+    const levelOptions = (max, selected) => Array.from({ length: max + 1 }, (_, n) => `<option value="${n}" ${n === selected ? "selected" : ""}>${t("level")} ${n}</option>`).join("");
+
+    function costForLevel(tech, level) {
+      const phaseScale = 1 + (tech.phase - 1) * 0.34;
+      const specialScale = tech.type === "economy" ? .75 : tech.type === "squad" ? 1.55 : 1;
+      const base = BASE_CURVE[level] * phaseScale * specialScale;
+      return {
+        bread: base,
+        wood: base,
+        stone: base * .2,
+        iron: base * .05,
+        gold: base * .012,
+        truegold_dust: DUST_CURVE[level] * phaseScale * specialScale,
+        tempered_truegold: tech.phase >= 5 ? Math.ceil(level * tech.phase * specialScale) : 0,
+        time: TIME_CURVE[level] * phaseScale * specialScale,
+        power: tech.power
+      };
+    }
+
+    function renderStatic() {
+      document.documentElement.lang = lang;
+      $("languageSelect").value = lang;
+      document.querySelectorAll("[data-i18n]").forEach((el) => el.textContent = t(el.dataset.i18n));
+      document.querySelectorAll("[data-i18n-placeholder]").forEach((el) => el.placeholder = t(el.dataset.i18nPlaceholder));
+      $("hubLink").href = `./index.html?lang=${encodeURIComponent(lang)}`;
+      $("hubTop").href = $("hubLink").href;
+      $("calcLink").href = `./troop_training_ui.html?lang=${encodeURIComponent(lang)}`;
+      $("academyLevel").innerHTML = Array.from({ length: 8 }, (_, i) => `<option value="${i + 1}">Truegold ${i + 1}</option>`).join("");
+      $("typeFilter").innerHTML = `<option value="all">${t("allTypes")}</option>` + ["economy", "infantry", "cavalry", "archer", "squad"].map((type) => `<option value="${type}">${type}</option>`).join("");
+      $("inventoryGrid").innerHTML = RESOURCE_KEYS.map((key) => `<div><label for="stock_${key}">${RESOURCE_LABELS[key]}</label><input id="stock_${key}" value="0" inputmode="decimal"></div>`).join("");
+    }
+
+    function renderTechs() {
+      const query = $("searchBox").value.trim().toLowerCase();
+      const type = $("typeFilter").value;
+      const filtered = TECHS.filter((tech) => (type === "all" || tech.type === type) && (!query || `${tech.name} ${tech.bonus} ${tech.type}`.toLowerCase().includes(query)));
+      $("techList").innerHTML = filtered.map((tech) => `
+        <article class="tech-card" data-tech="${tech.id}">
+          <h3>${tech.name}</h3>
+          <div class="desc">${tech.bonus}</div>
+          <div class="chipline"><span class="chip gold">${t("phase")} ${tech.phase}</span><span class="chip">${tech.type}</span><span class="chip">Max ${tech.max}</span></div>
+          <div class="levels">
+            <div class="mini"><label>${t("current")}</label><select data-current="${tech.id}">${levelOptions(tech.max, 0)}</select></div>
+            <div class="mini"><label>${t("target")}</label><select data-target="${tech.id}">${levelOptions(tech.max, 0)}</select></div>
+          </div>
+        </article>
+      `).join("");
+      document.querySelectorAll("[data-current],[data-target]").forEach((select) => select.addEventListener("change", () => {
+        const id = select.dataset.current || select.dataset.target;
+        const current = Number(document.querySelector(`[data-current="${id}"]`).value);
+        const targetEl = document.querySelector(`[data-target="${id}"]`);
+        if (Number(targetEl.value) < current) targetEl.value = current;
+      }));
+    }
+
+    function calculate() {
+      const totals = Object.fromEntries([...RESOURCE_KEYS, "time", "power"].map((key) => [key, 0]));
+      const stock = Object.fromEntries(RESOURCE_KEYS.map((key) => [key, parseAmount($(`stock_${key}`).value)]));
+      const speed = Math.max(0, parseAmount($("speedBonus").value));
+      const selected = [];
+      TECHS.forEach((tech) => {
+        const currentEl = document.querySelector(`[data-current="${tech.id}"]`);
+        const targetEl = document.querySelector(`[data-target="${tech.id}"]`);
+        if (!currentEl || !targetEl) return;
+        const current = Number(currentEl.value);
+        const target = Math.max(current, Number(targetEl.value));
+        if (target <= current) return;
+        const line = Object.fromEntries([...RESOURCE_KEYS, "time", "power"].map((key) => [key, 0]));
+        for (let level = current + 1; level <= target; level += 1) {
+          const cost = costForLevel(tech, level);
+          Object.keys(line).forEach((key) => line[key] += cost[key] || 0);
+        }
+        Object.keys(totals).forEach((key) => totals[key] += line[key] || 0);
+        selected.push({ tech, current, target, line, bonusFrom: current * tech.step, bonusTo: target * tech.step });
+      });
+      const modifiedTime = totals.time / (1 + speed / 100);
+      const resourceCards = RESOURCE_KEYS.map((key) => {
+        const need = totals[key] - stock[key];
+        return `<div class="result-card"><span>${RESOURCE_LABELS[key]} · ${t("required")} ${fmt(totals[key])}</span><strong class="${need > 0 ? "need" : "extra"}">${need > 0 ? t("stillNeed") : t("extra")}: ${fmt(Math.abs(need))}</strong></div>`;
+      }).join("");
+      const selectedRows = selected.length ? selected.map(({ tech, current, target, line, bonusFrom, bonusTo }) => `
+        <div class="break-row"><strong>${tech.name} · ${current} → ${target}</strong><span>${tech.bonus}: ${fmt(bonusFrom, 2)}${tech.unit === "percent" ? "%" : ""} → ${fmt(bonusTo, 2)}${tech.unit === "percent" ? "%" : ""} · ${RESOURCE_LABELS.truegold_dust} ${fmt(line.truegold_dust)} · ${t("powerGain")} ${fmt(line.power)}</span></div>
+      `).join("") : `<p class="note">${t("noSelection")}</p>`;
+      $("resultsPanel").innerHTML = `
+        <div class="result-card"><span>${t("originalTime")}</span><strong>${timeText(totals.time)}</strong></div>
+        <div class="result-card"><span>${t("modifiedTime")}</span><strong>${timeText(modifiedTime)}</strong></div>
+        <div class="result-card"><span>${t("powerGain")}</span><strong>${fmt(totals.power)}</strong></div>
+        ${resourceCards}
+        <div class="result-card"><span>${t("selected")}</span><div class="breakdown">${selectedRows}</div></div>
+      `;
+    }
+
+    function maxEverything() {
+      document.querySelectorAll("[data-current]").forEach((el) => el.value = "0");
+      document.querySelectorAll("[data-target]").forEach((el) => {
+        const tech = TECHS.find((item) => item.id === el.dataset.target);
+        el.value = tech ? tech.max : "0";
+      });
+      calculate();
+    }
+    function resetAll() {
+      document.querySelectorAll("[data-current],[data-target]").forEach((el) => el.value = "0");
+      RESOURCE_KEYS.forEach((key) => $(`stock_${key}`).value = "0");
+      $("speedBonus").value = "0";
+      calculate();
+    }
+    function setLang(next) {
+      lang = normalizeLang(next);
+      localStorage.setItem("siteLang", lang);
+      localStorage.setItem("lang", lang);
+      const url = new URL(location.href);
+      url.searchParams.set("lang", lang);
+      history.replaceState(null, "", url);
+      renderStatic();
+      renderTechs();
+      calculate();
+    }
+    renderStatic();
+    renderTechs();
+    calculate();
+    $("calculateBtn").addEventListener("click", calculate);
+    $("maxBtn").addEventListener("click", maxEverything);
+    $("resetBtn").addEventListener("click", resetAll);
+    $("searchBox").addEventListener("input", renderTechs);
+    $("typeFilter").addEventListener("change", renderTechs);
+    $("languageSelect").addEventListener("change", (event) => setLang(event.target.value));
+  </script>
+</body>
+</html>

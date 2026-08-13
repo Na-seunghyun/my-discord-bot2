@@ -3,6 +3,8 @@ https://my-discord-bot2.looloo90.workers.dev/auto_redeem.html
 https://my-discord-bot2.looloo90.workers.dev/troop_training_ui.html
 https://my-discord-bot2.looloo90.workers.dev/building_calculator.html
 https://my-discord-bot2.looloo90.workers.dev/war_academy_calculator.html
+https://my-discord-bot2.looloo90.workers.dev/advanced_truegold_research_calculator.html
+https://my-discord-bot2.looloo90.workers.dev/master_calculator.html
 https://my-discord-bot2.looloo90.workers.dev/traplace/
 https://my-discord-bot2.looloo90.workers.dev/fort_sanc.html
 https://my-discord-bot2.looloo90.workers.dev/swordland_planner.html

@@ -683,6 +683,8 @@
       ["pack", "https://kingshot.net/pack-calculator", "pack"],
       ["troop-training", "./troop_training_ui.html", "troop"],
       ["war-academy", "./war_academy_calculator.html", "warAcademy"],
+      ["advanced-truegold-research", "./advanced_truegold_research_calculator.html", "advancedTruegold"],
+      ["master", "./master_calculator.html", "master"],
       ["fort-sanc", "./fort_sanc.html", "fortSanc"],
       ["transfer-pass", "https://kingshot.net/transfer-pass-calculator", "transferPass"]
     ];
@@ -690,7 +692,7 @@
     const I18N = {
       en: {
         appTitle: 'Kingshot Calculator Hub', appSubtitle: 'Open the Kingshot calculators for buildings, troop training, War Academy, gear, VIP, packs, and transfer planning.', hub: 'Hub', support: 'Support page', visitorsLoading: 'Visitors loading...', visitorsOffline: 'Visitor tracking offline', visitors: 'Visitors', today: 'Today', language: 'Language', navTitle: 'Calculators', dataReady: 'Ready', dataPending: 'Linked source', source: 'Open source', input: 'Input', result: 'Results', calculate: 'Calculate', reset: 'Reset', current: 'Current', target: 'Target', level: 'Level', quantity: 'Quantity', resources: 'Resources', time: 'Time', power: 'Power', summary: 'Discord summary', unsupported: 'This calculator links to the source page until the full local formula is added.', troopModeTraining: 'Training', troopModePromoting: 'Promoting', troopType: 'Troop type', trainingSpeed: 'Training Speed Bonus (%)', kingdomSkill: 'Kingdom Skill 30%', kvkBonus: 'KvK Bonus 25%', ministry: 'Ministry Bonus', speedups: 'Speedups owned', days: 'days', hours: 'hours', minutes: 'minutes', possible: 'Possible quantity', currentPasses: 'Current passes', targetPasses: 'Target passes', lastPackage: 'Last package', none: 'None',
-        calculators: { building: ['Building Calculator','Building Calculator'], 'governor-gear': ['Governor Gear','Governor Gear'], 'governor-charm': ['Governor Charm','Governor Charm'], pet: ['Pet','Pet'], 'hero-shard': ['Hero Shard','Hero Shard'], 'hero-exclusive-gear': ['Hero Exclusive Gear','Hero Exclusive Gear'], forgehammer: ['Forgehammer','Forgehammer'], 'hero-gear-xp': ['Hero Gear XP','Hero Gear XP'], 'hero-gear': ['Hero Gear','Hero Gear'], 'forgehammer-set': ['Forgehammer Set','Forgehammer Set'], vip: ['VIP','VIP'], pack: ['Pack','Pack'], 'troop-training': ['Troop Training','Troop Training'], 'war-academy': ['War Academy','War Academy'], 'fort-sanc': ['Fort / Sanc','Fort / Sanc'], 'transfer-pass': ['Transfer Pass','Transfer Pass'] }
+        calculators: { building: ['Building Calculator','Building Calculator'], 'governor-gear': ['Governor Gear','Governor Gear'], 'governor-charm': ['Governor Charm','Governor Charm'], pet: ['Pet','Pet'], 'hero-shard': ['Hero Shard','Hero Shard'], 'hero-exclusive-gear': ['Hero Exclusive Gear','Hero Exclusive Gear'], forgehammer: ['Forgehammer','Forgehammer'], 'hero-gear-xp': ['Hero Gear XP','Hero Gear XP'], 'hero-gear': ['Hero Gear','Hero Gear'], 'forgehammer-set': ['Forgehammer Set','Forgehammer Set'], vip: ['VIP','VIP'], pack: ['Pack','Pack'], 'troop-training': ['Troop Training','Troop Training'], 'war-academy': ['War Academy','War Academy'], 'advanced-truegold-research': ['Advanced Truegold Research','Advanced Truegold Research'], master: ['Master Calculator','Master Calculator'], 'fort-sanc': ['Fort / Sanc','Fort / Sanc'], 'transfer-pass': ['Transfer Pass','Transfer Pass'] }
       }
     };
     ['ko','ja','de','fr','zh','zh-CN','zh-TW','th','id'].forEach((code) => { I18N[code] = { ...I18N.en, calculators: I18N.en.calculators }; });
@@ -710,6 +712,8 @@
         pack: 'Package value comparison and planning.',
         'troop-training': 'Training and promotion quantity with speedups.',
         'war-academy': 'War Academy research resources, time, power, and bonuses.',
+        'advanced-truegold-research': 'Advanced Truegold research resources, time, power, and bonus changes.',
+        master: 'Master Affinity, Emblems, Manuscripts, learning time, power, and squad buffs.',
         'fort-sanc': 'Fort and Sanctuary alliance rotation planning.',
         'transfer-pass': 'Transfer pass needs by power and kingdom rules.'
       },
@@ -728,10 +732,12 @@
         pack: '패키지 가치를 비교하고 구매 계획을 세웁니다.',
         'troop-training': '훈련/승급 수량과 가속 사용량을 계산합니다.',
         'war-academy': '워아카데미 연구 자원, 시간, 전투력, 보너스를 계산합니다.',
+        'advanced-truegold-research': '고급 Truegold 연구 자원, 시간, 전투력, 보너스 변화를 계산합니다.',
+        master: '마스터 친밀도, 엠블럼, 원고, 학습 시간, 전투력, 부대 버프를 계산합니다.',
         'fort-sanc': 'Fort와 Sanctuary 연맹 로테이션을 계획합니다.',
         'transfer-pass': '전투력과 왕국 조건에 따른 이전권 필요량을 계산합니다.'
       },
-      ja: { building: '建物の資源、時間、戦力、バフ、Truegold段階を計算します。', 'war-academy': 'War Academy研究の資源、時間、戦力、ボーナスを計算します。', 'troop-training': '訓練/昇格数と加速使用量を計算します。', 'fort-sanc': 'FortとSanctuaryの同盟ローテーションを計画します。' },
+      ja: { building: '建物の資源、時間、戦力、バフ、Truegold段階を計算します。', 'war-academy': 'War Academy研究の資源、時間、戦力、ボーナスを計算します。', 'advanced-truegold-research': '上級Truegold研究の資源、時間、戦力、ボーナスを計算します。', master: 'マスターの親密度、紋章、原稿、学習時間、戦力、部隊バフを計算します。', 'troop-training': '訓練/昇格数と加速使用量を計算します。', 'fort-sanc': 'FortとSanctuaryの同盟ローテーションを計画します。' },
       fr: { building: 'Ressources, temps, puissance, buffs et niveaux Truegold.', 'war-academy': 'Recherche War Academy: ressources, temps, puissance et bonus.', 'troop-training': 'Quantité d’entraînement/promotion avec accélérations.', 'fort-sanc': 'Rotation Fort et Sanctuaire pour alliance.' },
       de: { building: 'Gebäuderessourcen, Zeit, Macht, Buffs und Truegold-Stufen.', 'war-academy': 'War-Academy-Forschung: Ressourcen, Zeit, Macht und Boni.', 'troop-training': 'Training/Beförderung mit Beschleunigungen.', 'fort-sanc': 'Fort- und Sanctuary-Rotation für Allianzen.' },
       'zh-CN': { building: '建筑资源、时间、战力、增益和 Truegold 阶段。', 'war-academy': '战争学院研究资源、时间、战力和加成。', 'troop-training': '训练/晋升数量与加速消耗。', 'fort-sanc': '联盟 Fort 与 Sanctuary 轮换计划。' },
@@ -747,6 +753,10 @@
     Object.assign(I18N['zh-TW'], { appTitle: 'Kingshot 計算器中心', appSubtitle: '集中開啟建築、訓練、戰爭學院、裝備、VIP、禮包與遷城計算器。', navTitle: '計算器', dataReady: '可用', dataPending: '外部連結' });
     Object.assign(I18N.th, { appTitle: 'ศูนย์เครื่องคำนวณ Kingshot', appSubtitle: 'รวมเครื่องคำนวณอาคาร ฝึกทหาร War Academy อุปกรณ์ VIP แพ็ก และย้ายอาณาจักร', navTitle: 'เครื่องคำนวณ', dataReady: 'พร้อมใช้', dataPending: 'ลิงก์ภายนอก' });
     Object.assign(I18N.id, { appTitle: 'Hub Kalkulator Kingshot', appSubtitle: 'Buka kalkulator bangunan, training, War Academy, gear, VIP, paket, dan transfer.', navTitle: 'Kalkulator', dataReady: 'Siap', dataPending: 'Link eksternal' });
+    I18N.ko.calculators = { ...I18N.en.calculators, 'advanced-truegold-research': ['고급 Truegold 연구','고급 Truegold 연구'], master: ['마스터 계산기','마스터 계산기'] };
+    I18N.ja.calculators = { ...I18N.en.calculators, 'advanced-truegold-research': ['上級 Truegold 研究','上級 Truegold 研究'], master: ['マスター計算機','マスター計算機'] };
+    I18N['zh-CN'].calculators = { ...I18N.en.calculators, 'advanced-truegold-research': ['高级 Truegold 研究','高级 Truegold 研究'], master: ['大师计算器','大师计算器'] };
+    I18N['zh-TW'].calculators = { ...I18N.en.calculators, 'advanced-truegold-research': ['高級 Truegold 研究','高級 Truegold 研究'], master: ['大師計算器','大師計算器'] };
     const supportedLangs = ['ko', 'ja', 'en', 'de', 'fr', 'zh', 'zh-CN', 'zh-TW', 'th', 'id'];
     const normalizeLang = (value) => {
       const raw = String(value || "");
@@ -817,10 +827,12 @@
         </button>`).join("");
       document.querySelectorAll("#calculatorNav button").forEach((button) => {
         button.addEventListener("click", () => {
-          if (button.dataset.id === "building" || button.dataset.id === "war-academy" || button.dataset.id === "fort-sanc") {
+          if (button.dataset.id === "building" || button.dataset.id === "war-academy" || button.dataset.id === "advanced-truegold-research" || button.dataset.id === "master" || button.dataset.id === "fort-sanc") {
             const localPages = {
               building: "./building_calculator.html",
               "war-academy": "./war_academy_calculator.html",
+              "advanced-truegold-research": "./advanced_truegold_research_calculator.html",
+              master: "./master_calculator.html",
               "fort-sanc": "./fort_sanc.html"
             };
             location.href = `${localPages[button.dataset.id]}?lang=${encodeURIComponent(lang)}`;

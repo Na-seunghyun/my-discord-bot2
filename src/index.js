@@ -92,6 +92,8 @@ const PUBLIC_INDEX_URLS = [
   `${PUBLIC_BASE_URL}/troop_training_ui.html`,
   `${PUBLIC_BASE_URL}/building_calculator.html`,
   `${PUBLIC_BASE_URL}/war_academy_calculator.html`,
+  `${PUBLIC_BASE_URL}/advanced_truegold_research_calculator.html`,
+  `${PUBLIC_BASE_URL}/master_calculator.html`,
   `${PUBLIC_BASE_URL}/traplace/`,
   `${PUBLIC_BASE_URL}/fort_sanc.html`,
   `${PUBLIC_BASE_URL}/swordland_planner.html`,

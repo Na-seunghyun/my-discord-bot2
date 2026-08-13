@@ -1,0 +1,522 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Master Calculator | 885 LEGEND NASHSH</title>
+  <meta name="description" content="Unofficial Kingshot Master calculator for planning Affinity, Emblems, Master's Manuscripts, learning time, power gain, and squad buff gains.">
+  <link rel="canonical" href="https://my-discord-bot2.looloo90.workers.dev/master_calculator.html">
+  <meta property="og:title" content="Master Calculator | 885 LEGEND NASHSH">
+  <meta property="og:description" content="Plan Kingshot Master upgrades, skill manuscripts, affinity, emblems, learning time, power, and squad buff gains.">
+  <meta property="og:url" content="https://my-discord-bot2.looloo90.workers.dev/master_calculator.html">
+  <meta property="og:type" content="website">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #070a12;
+      --panel: rgba(15, 22, 36, .9);
+      --panel2: rgba(23, 31, 48, .8);
+      --line: rgba(246, 207, 114, .24);
+      --line2: rgba(111, 231, 255, .22);
+      --text: #f8f4e4;
+      --muted: #aab5ca;
+      --dim: #7e8ba4;
+      --gold: #f6cf72;
+      --cyan: #6fe7ff;
+      --green: #86f3aa;
+      --red: #ff8080;
+      --shadow: 0 24px 82px rgba(0,0,0,.42);
+      font-family: Inter, Pretendard, "Noto Sans KR", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 14% 0%, rgba(246,207,114,.15), transparent 30%),
+        radial-gradient(circle at 88% 8%, rgba(111,231,255,.13), transparent 28%),
+        linear-gradient(180deg, #070a12, #0c1422 54%, #070a12);
+    }
+    a { color: inherit; text-decoration: none; }
+    button, input, select { font: inherit; }
+    .wrap { width: min(1420px, calc(100% - 28px)); margin: 0 auto; padding: 20px 0 34px; }
+    .topbar, .hero, .panel, .master-card, .result-card {
+      border: 1px solid var(--line);
+      background: linear-gradient(135deg, rgba(255,255,255,.08), rgba(255,255,255,.024)), var(--panel);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+    }
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 13px 15px;
+      border-radius: 18px;
+      margin-bottom: 16px;
+    }
+    .brand { display: flex; align-items: center; gap: 11px; min-width: 0; }
+    .mark {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      color: var(--gold);
+      font-weight: 950;
+      border: 1px solid rgba(246,207,114,.34);
+      background: linear-gradient(145deg, rgba(246,207,114,.16), rgba(111,231,255,.08));
+    }
+    .brand strong { display: block; color: var(--gold); letter-spacing: .08em; font-size: 13px; white-space: nowrap; }
+    .brand span { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; }
+    .actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
+    .link, .lang {
+      min-height: 38px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.13);
+      background: rgba(255,255,255,.07);
+      color: var(--text);
+      padding: 9px 12px;
+    }
+    .lang option { color: #f8f4e4; background: #111827; }
+    .hero {
+      border-radius: 24px;
+      padding: clamp(18px, 3vw, 30px);
+      margin-bottom: 16px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 18px;
+      overflow: hidden;
+    }
+    .eyebrow { color: var(--cyan); font-size: 12px; font-weight: 900; letter-spacing: .13em; text-transform: uppercase; }
+    h1 { margin: 8px 0 10px; font-size: clamp(30px, 5vw, 56px); line-height: 1.02; letter-spacing: 0; }
+    .hero p { margin: 0; color: var(--muted); max-width: 780px; line-height: 1.65; }
+    .hero-stats { display: grid; grid-template-columns: repeat(3, minmax(98px, 1fr)); gap: 9px; align-content: end; }
+    .stat {
+      border: 1px solid rgba(255,255,255,.1);
+      background: rgba(255,255,255,.05);
+      border-radius: 16px;
+      padding: 14px;
+    }
+    .stat strong { display: block; font-size: 24px; color: var(--gold); }
+    .stat span { display: block; color: var(--muted); font-size: 12px; margin-top: 3px; }
+    .layout { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 14px; align-items: start; }
+    .panel { border-radius: 20px; overflow: hidden; }
+    .panel-head { padding: 16px 16px 12px; border-bottom: 1px solid rgba(255,255,255,.08); }
+    .panel-head h2 { margin: 0; font-size: 17px; }
+    .panel-head p { margin: 5px 0 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+    .panel-body { padding: 14px; }
+    .masters { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-bottom: 14px; }
+    .master-card {
+      border-radius: 18px;
+      padding: 13px;
+      text-align: left;
+      color: var(--text);
+      background: linear-gradient(145deg, rgba(255,255,255,.075), rgba(255,255,255,.025)), var(--panel2);
+      cursor: pointer;
+      box-shadow: none;
+      min-height: 128px;
+    }
+    .master-card.active { border-color: rgba(246,207,114,.7); box-shadow: 0 0 0 3px rgba(246,207,114,.1); }
+    .avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      margin-bottom: 10px;
+      background: linear-gradient(145deg, rgba(246,207,114,.24), rgba(111,231,255,.1));
+      color: var(--gold);
+      font-weight: 950;
+      border: 1px solid rgba(246,207,114,.35);
+    }
+    .master-card strong { display: block; font-size: 16px; }
+    .master-card span { display: block; color: var(--muted); font-size: 12px; margin-top: 4px; line-height: 1.35; }
+    .badge { display: inline-flex !important; color: #08111b !important; background: linear-gradient(135deg, var(--gold), #ffb13d); border-radius: 999px; padding: 4px 8px; margin-top: 9px !important; font-weight: 900; }
+    .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .field { margin-bottom: 12px; }
+    label { display: block; color: var(--muted); font-size: 12px; font-weight: 800; margin-bottom: 6px; }
+    input, select {
+      width: 100%;
+      min-height: 40px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(4,8,16,.7);
+      color: var(--text);
+      padding: 9px 10px;
+      outline: none;
+    }
+    input:focus, select:focus { border-color: rgba(111,231,255,.55); box-shadow: 0 0 0 3px rgba(111,231,255,.1); }
+    .skill-list { display: grid; gap: 10px; margin-top: 8px; }
+    .skill {
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 16px;
+      background: rgba(255,255,255,.045);
+      padding: 12px;
+    }
+    .skill-head { display: flex; justify-content: space-between; gap: 10px; align-items: start; margin-bottom: 9px; }
+    .skill-head strong { font-size: 14px; }
+    .skill-head span { color: var(--muted); font-size: 12px; }
+    .btns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    button {
+      border: 0;
+      border-radius: 12px;
+      min-height: 40px;
+      padding: 10px 12px;
+      cursor: pointer;
+      color: #08111b;
+      background: linear-gradient(135deg, var(--gold), #ffb13d);
+      font-weight: 900;
+    }
+    button.secondary { color: var(--text); background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.13); }
+    .results { display: grid; gap: 10px; }
+    .result-card {
+      border-radius: 16px;
+      background: rgba(255,255,255,.05);
+      padding: 12px;
+      box-shadow: none;
+    }
+    .result-card span { display: block; color: var(--muted); font-size: 12px; }
+    .result-card strong { display: block; margin-top: 3px; font-size: 21px; overflow-wrap: anywhere; }
+    .need { color: var(--red); }
+    .extra { color: var(--green); }
+    .breakdown { display: grid; gap: 8px; max-height: 280px; overflow: auto; }
+    .break-row { border: 1px solid rgba(255,255,255,.09); border-radius: 14px; padding: 10px; background: rgba(0,0,0,.16); }
+    .break-row strong { display: block; font-size: 13px; }
+    .break-row span { display: block; color: var(--muted); font-size: 12px; margin-top: 4px; line-height: 1.45; }
+    .note { color: var(--muted); font-size: 12px; line-height: 1.55; }
+    @media (max-width: 1080px) { .layout, .hero { grid-template-columns: 1fr; } }
+    @media (max-width: 720px) {
+      .wrap { width: min(100% - 18px, 1420px); padding-top: 10px; }
+      .topbar { align-items: stretch; flex-direction: column; }
+      .actions { justify-content: stretch; }
+      .actions > * { flex: 1 1 auto; text-align: center; }
+      .hero { padding: 18px; border-radius: 18px; }
+      .hero-stats, .form-grid, .masters { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="topbar">
+      <a class="brand" id="hubTop" href="./index.html">
+        <span class="mark">M</span>
+        <span><strong>885 LEGEND NASHSH</strong><span data-i18n="brandSub">Kingshot calculator tools</span></span>
+      </a>
+      <div class="actions">
+        <a class="link" id="hubLink" href="./index.html" data-i18n="hub">Hub</a>
+        <a class="link" id="calcLink" href="./troop_training_ui.html" data-i18n="calcHub">Calculator Hub</a>
+        <select class="lang" id="languageSelect" aria-label="Language">
+          <option value="ko">🇰🇷 한국어</option>
+          <option value="ja">🇯🇵 日本語</option>
+          <option value="en">🇺🇸 English</option>
+          <option value="fr">🇫🇷 Français</option>
+          <option value="de">🇩🇪 Deutsch</option>
+          <option value="zh-CN">🇨🇳 简体中文</option>
+          <option value="zh-TW">🇹🇼 繁體中文</option>
+          <option value="th">🇹🇭 ไทย</option>
+          <option value="id">🇮🇩 Indonesia</option>
+        </select>
+      </div>
+    </header>
+
+    <section class="hero">
+      <div>
+        <div class="eyebrow" data-i18n="eyebrow">Master Calculator</div>
+        <h1 data-i18n="title">Master Calculator</h1>
+        <p data-i18n="subtitle">Pick a Master, set current and target snapshots, then review Affinity, Emblems, Master's Manuscripts, learning time, power gain, and squad buff gain.</p>
+      </div>
+      <div class="hero-stats">
+        <div class="stat"><strong>6</strong><span data-i18n="statMasters">Masters</span></div>
+        <div class="stat"><strong>100</strong><span data-i18n="statLevel">Expert level</span></div>
+        <div class="stat"><strong>20%</strong><span data-i18n="statBuff">Max buff</span></div>
+      </div>
+    </section>
+
+    <main class="layout">
+      <section class="panel">
+        <div class="panel-head">
+          <h2 data-i18n="pickMaster">Pick a Master</h2>
+          <p data-i18n="pickDesc">Select the master and configure your upgrade target.</p>
+        </div>
+        <div class="panel-body">
+          <div class="masters" id="masters"></div>
+          <div class="form-grid">
+            <div class="field"><label for="currentExpert" data-i18n="currentExpert">Current Expert level</label><input id="currentExpert" type="number" min="1" max="100" value="1"></div>
+            <div class="field"><label for="targetExpert" data-i18n="targetExpert">Target Expert level</label><input id="targetExpert" type="number" min="1" max="100" value="100"></div>
+            <div class="field"><label for="currentClass" data-i18n="currentClass">Current relationship class</label><select id="currentClass"></select></div>
+            <div class="field"><label for="targetClass" data-i18n="targetClass">Target relationship class</label><select id="targetClass"></select></div>
+            <div class="field"><label for="currentTalent" data-i18n="currentTalent">Current talent level</label><input id="currentTalent" type="number" min="0" max="11" value="0"></div>
+            <div class="field"><label for="targetTalent" data-i18n="targetTalent">Target talent level</label><input id="targetTalent" type="number" min="0" max="11" value="11"></div>
+          </div>
+          <div class="panel-head" style="padding-left:0;padding-right:0;margin-top:4px">
+            <h2 data-i18n="skills">Skills</h2>
+            <p data-i18n="skillsDesc">Include skill upgrades and optional learned XP offsets.</p>
+          </div>
+          <div class="skill-list" id="skills"></div>
+          <div class="panel-head" style="padding-left:0;padding-right:0;margin-top:4px">
+            <h2 data-i18n="stock">Stock</h2>
+            <p data-i18n="stockDesc">Optional. Inventory is subtracted from the required totals.</p>
+          </div>
+          <div class="form-grid">
+            <div class="field"><label for="stockAffinity" data-i18n="stockAffinity">Affinity in stock</label><input id="stockAffinity" inputmode="decimal" value="0"></div>
+            <div class="field"><label for="stockEmblems" data-i18n="stockEmblems">Emblems in stock</label><input id="stockEmblems" inputmode="decimal" value="0"></div>
+            <div class="field"><label for="stockManuscripts" data-i18n="stockManuscripts">Master's Manuscripts in stock</label><input id="stockManuscripts" inputmode="decimal" value="0"></div>
+          </div>
+          <div class="btns">
+            <button id="calculateBtn" data-i18n="calculate">Calculate</button>
+            <button class="secondary" id="maxBtn" data-i18n="maxTargets">Max targets</button>
+            <button class="secondary" id="resetBtn" data-i18n="reset">Reset</button>
+          </div>
+          <p class="note" data-i18n="sourceNote">Local fan calculator based on the public Kingshot.net calculator layout. Check in game before spending rare materials.</p>
+        </div>
+      </section>
+
+      <aside class="panel">
+        <div class="panel-head">
+          <h2 data-i18n="results">Results</h2>
+          <p data-i18n="resultsDesc">Required resources for this plan.</p>
+        </div>
+        <div class="panel-body">
+          <div class="results" id="results"></div>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <script>
+    const CLASSES = ["Stranger", "Familiar Face", "Acquaintance 1", "Acquaintance 2", "Acquaintance 3", "Casual 1", "Casual 2", "Confidant", "Close Ally", "Trusted Friend", "Kindred Soul"];
+    const BASE_SKILLS = [
+      { name: "Skill I", max: 10, manuscripts: 3150, xp: 162000, power: 30000 },
+      { name: "Skill II", max: 5, manuscripts: 6000, xp: 345000, power: 65000 },
+      { name: "Skill III", max: 5, manuscripts: 7500, xp: 540000, power: 100000 },
+      { name: "Skill IV", max: 10, manuscripts: 4500, xp: 462917, power: 70000 }
+    ];
+    const MASTERS = [
+      { id: "valora", name: "Valora", role: "Bear Hunter", buff: 15, power: 1741000, affinity: 170690, emblems: 275, manuscripts: 21150, initials: "VA", skills: [
+        { name: "Dance of the Hunt", max: 10, manuscripts: 3150, xp: 162000, power: 30000 },
+        { name: "Leader By Example", max: 5, manuscripts: 6000, xp: 345000, power: 65000 },
+        { name: "Weapon Obsession", max: 5, manuscripts: 7500, xp: 540000, power: 100000 },
+        { name: "Savage Advantage", max: 10, manuscripts: 4500, xp: 462917, power: 70000 }
+      ] },
+      { id: "pan", name: "Pan", role: "Palace Administrator", buff: 15, power: 1741000, affinity: 170690, emblems: 275, manuscripts: 21150, initials: "PA" },
+      { id: "roman", name: "Roman", role: "Arena Champion", buff: 15, power: 1741000, affinity: 170690, emblems: 275, manuscripts: 21150, initials: "RO" },
+      { id: "cassia", name: "Cassia", role: "Battle Master", buff: 20, power: 1948000, affinity: 182000, emblems: 310, manuscripts: 23800, initials: "CA" },
+      { id: "guinevere", name: "Guinevere", role: "Queen of Holy Sword", buff: 15, power: 1741000, affinity: 170690, emblems: 275, manuscripts: 21150, initials: "GU" },
+      { id: "wilson", name: "Wilson", role: "Royal Herald", buff: 10, power: 1420000, affinity: 142000, emblems: 220, manuscripts: 17200, initials: "WI" }
+    ].map((master) => ({ ...master, skills: master.skills || BASE_SKILLS.map((skill) => ({ ...skill })) }));
+
+    const I18N = {
+      en: {
+        brandSub: "Kingshot calculator tools", hub: "Hub", calcHub: "Calculator Hub", eyebrow: "Master Calculator", title: "Master Calculator",
+        subtitle: "Pick a Master, set current and target snapshots, then review Affinity, Emblems, Master's Manuscripts, learning time, power gain, and squad buff gain.",
+        statMasters: "Masters", statLevel: "Expert level", statBuff: "Max buff", pickMaster: "Pick a Master", pickDesc: "Select the master and configure your upgrade target.",
+        currentExpert: "Current Expert level", targetExpert: "Target Expert level", currentClass: "Current relationship class", targetClass: "Target relationship class",
+        currentTalent: "Current talent level", targetTalent: "Target talent level", skills: "Skills", skillsDesc: "Include skill upgrades and optional learned XP offsets.",
+        current: "Current", target: "Target", learnedXp: "Learned XP offset", stock: "Stock", stockDesc: "Optional. Inventory is subtracted from the required totals.",
+        stockAffinity: "Affinity in stock", stockEmblems: "Emblems in stock", stockManuscripts: "Master's Manuscripts in stock", calculate: "Calculate", maxTargets: "Max targets", reset: "Reset",
+        sourceNote: "Local fan calculator based on the public Kingshot.net calculator layout. Check in game before spending rare materials.", results: "Results", resultsDesc: "Required resources for this plan.",
+        affinity: "Affinity", emblems: "Emblems", manuscripts: "Manuscripts", time: "Time to learn", xp: "XP", powerGain: "Power gain", buffGain: "Squad buff gain", stillNeed: "still needed", extra: "extra", skillBreakdown: "Manuscripts by skill"
+      }
+    };
+    ["ko", "ja", "fr", "de", "zh-CN", "zh-TW", "th", "id"].forEach((code) => I18N[code] = { ...I18N.en });
+    Object.assign(I18N.ko, { brandSub: "킹샷 계산기 도구", hub: "허브", calcHub: "계산기 허브", title: "마스터 계산기", subtitle: "마스터를 선택하고 현재/목표 상태를 입력해 친밀도, 엠블럼, 마스터 원고, 학습 시간, 전투력, 버프 증가량을 확인합니다.", pickMaster: "마스터 선택", pickDesc: "마스터와 목표 업그레이드 상태를 설정합니다.", currentExpert: "현재 Expert 레벨", targetExpert: "목표 Expert 레벨", currentClass: "현재 관계 등급", targetClass: "목표 관계 등급", currentTalent: "현재 재능 레벨", targetTalent: "목표 재능 레벨", skills: "스킬", skillsDesc: "스킬 업그레이드와 이미 학습한 XP를 반영합니다.", current: "현재", target: "목표", learnedXp: "이미 학습한 XP", stock: "보유 재고", stockAffinity: "보유 친밀도", stockEmblems: "보유 엠블럼", stockManuscripts: "보유 마스터 원고", calculate: "계산", maxTargets: "목표 최대", reset: "초기화", results: "결과", affinity: "친밀도", emblems: "엠블럼", manuscripts: "원고", time: "학습 시간", powerGain: "전투력 증가", buffGain: "부대 버프 증가", stillNeed: "부족", extra: "남음", skillBreakdown: "스킬별 원고" });
+    Object.assign(I18N.ja, { title: "マスター計算機", subtitle: "マスターを選択し、親密度、紋章、原稿、学習時間、戦力、バフを計算します。", pickMaster: "マスター選択", current: "現在", target: "目標", calculate: "計算", results: "結果" });
+    Object.assign(I18N.fr, { title: "Calculateur Master", subtitle: "Calculez Affinity, emblèmes, manuscrits, temps, puissance et buff.", pickMaster: "Choisir un Master", current: "Actuel", target: "Cible", calculate: "Calculer", results: "Résultats" });
+    Object.assign(I18N.de, { title: "Master-Rechner", subtitle: "Berechne Affinity, Embleme, Manuskripte, Zeit, Macht und Buff.", pickMaster: "Master wählen", current: "Aktuell", target: "Ziel", calculate: "Berechnen", results: "Ergebnisse" });
+    Object.assign(I18N["zh-CN"], { title: "大师计算器", subtitle: "计算亲密度、徽章、手稿、学习时间、战力和部队增益。", pickMaster: "选择大师", current: "当前", target: "目标", calculate: "计算", results: "结果" });
+    Object.assign(I18N["zh-TW"], { title: "大師計算器", subtitle: "計算親密度、徽章、手稿、學習時間、戰力與部隊增益。", pickMaster: "選擇大師", current: "目前", target: "目標", calculate: "計算", results: "結果" });
+    Object.assign(I18N.th, { title: "เครื่องคำนวณ Master", subtitle: "คำนวณ Affinity, Emblems, Manuscripts, เวลา, พลัง และบัฟ", pickMaster: "เลือก Master", current: "ปัจจุบัน", target: "เป้าหมาย", calculate: "คำนวณ", results: "ผลลัพธ์" });
+    Object.assign(I18N.id, { title: "Kalkulator Master", subtitle: "Hitung Affinity, Emblem, Manuscript, waktu, power, dan buff.", pickMaster: "Pilih Master", current: "Saat ini", target: "Target", calculate: "Hitung", results: "Hasil" });
+
+    const params = new URLSearchParams(location.search);
+    const supported = ["ko", "ja", "en", "fr", "de", "zh-CN", "zh-TW", "th", "id"];
+    const normalizeLang = (value) => {
+      const raw = String(value || "");
+      const lower = raw.toLowerCase();
+      if (lower === "zh-cn" || lower === "zh") return "zh-CN";
+      if (lower === "zh-tw") return "zh-TW";
+      const short = lower.split("-")[0];
+      return supported.includes(raw) ? raw : supported.includes(short) ? short : "ko";
+    };
+    let lang = normalizeLang(params.get("lang") || localStorage.getItem("siteLang") || localStorage.getItem("lang") || navigator.language);
+    let activeMaster = MASTERS[0].id;
+    const $ = (id) => document.getElementById(id);
+    const t = (key) => I18N[lang]?.[key] || I18N.en[key] || key;
+    const locale = () => ({ ko: "ko-KR", ja: "ja-JP", en: "en-US", fr: "fr-FR", de: "de-DE", "zh-CN": "zh-CN", "zh-TW": "zh-TW", th: "th-TH", id: "id-ID" }[lang] || "en-US");
+    const fmt = (value, digits = 0) => Number(value || 0).toLocaleString(locale(), { maximumFractionDigits: digits });
+    const parseAmount = (value) => {
+      const raw = String(value || "0").trim().replace(/,/g, "").toLowerCase();
+      const match = raw.match(/^(-?\d+(?:\.\d+)?)([kmb])?$/);
+      if (!match) return Number(raw) || 0;
+      const mult = match[2] === "k" ? 1e3 : match[2] === "m" ? 1e6 : match[2] === "b" ? 1e9 : 1;
+      return Number(match[1]) * mult;
+    };
+    const clamp = (value, min, max) => Math.min(max, Math.max(min, Number(value) || min));
+    const curve = (from, to, max, power = 1.35) => {
+      from = clamp(from, 0, max);
+      to = clamp(to, 0, max);
+      if (to <= from) return 0;
+      const denom = Math.pow(max, power);
+      return (Math.pow(to, power) - Math.pow(from, power)) / denom;
+    };
+    const timeText = (seconds) => {
+      seconds = Math.max(0, Math.round(seconds || 0));
+      const d = Math.floor(seconds / 86400);
+      const h = Math.floor((seconds % 86400) / 3600);
+      const m = Math.floor((seconds % 3600) / 60);
+      if (d) return `${d}d ${h}h`;
+      if (h) return `${h}h ${m}m`;
+      return `${m}m`;
+    };
+
+    function master() { return MASTERS.find((item) => item.id === activeMaster) || MASTERS[0]; }
+    function renderStatic() {
+      document.documentElement.lang = lang;
+      $("languageSelect").value = lang;
+      document.querySelectorAll("[data-i18n]").forEach((el) => el.textContent = t(el.dataset.i18n));
+      $("hubLink").href = `./index.html?lang=${encodeURIComponent(lang)}`;
+      $("hubTop").href = $("hubLink").href;
+      $("calcLink").href = `./troop_training_ui.html?lang=${encodeURIComponent(lang)}`;
+      $("currentClass").innerHTML = CLASSES.map((name, idx) => `<option value="${idx + 1}">${name}</option>`).join("");
+      $("targetClass").innerHTML = CLASSES.map((name, idx) => `<option value="${idx + 1}" ${idx === CLASSES.length - 1 ? "selected" : ""}>${name}</option>`).join("");
+    }
+    function renderMasters() {
+      $("masters").innerHTML = MASTERS.map((item) => `
+        <button type="button" class="master-card ${item.id === activeMaster ? "active" : ""}" data-master="${item.id}">
+          <span class="avatar">${item.initials}</span>
+          <strong>${item.name}</strong>
+          <span>${item.role}</span>
+          <span class="badge">+${fmt(item.buff, 2)}%</span>
+        </button>
+      `).join("");
+      document.querySelectorAll("[data-master]").forEach((button) => button.addEventListener("click", () => {
+        activeMaster = button.dataset.master;
+        renderMasters();
+        renderSkills();
+        calculate();
+      }));
+    }
+    function renderSkills() {
+      $("skills").innerHTML = master().skills.map((skill, index) => `
+        <div class="skill" data-skill="${index}">
+          <div class="skill-head"><strong>${skill.name}</strong><span>Max ${skill.max} · ${fmt(skill.manuscripts)}</span></div>
+          <div class="form-grid">
+            <div class="field"><label>${t("current")}</label><input id="skill_${index}_current" type="number" min="0" max="${skill.max}" value="0"></div>
+            <div class="field"><label>${t("target")}</label><input id="skill_${index}_target" type="number" min="0" max="${skill.max}" value="${skill.max}"></div>
+            <div class="field"><label>${t("learnedXp")}</label><input id="skill_${index}_xp" inputmode="decimal" value="0"></div>
+          </div>
+        </div>
+      `).join("");
+      bindInputs();
+    }
+    function bindInputs() {
+      document.querySelectorAll("input,select").forEach((el) => {
+        if (el.dataset.boundCalc) return;
+        el.dataset.boundCalc = "1";
+        el.addEventListener("input", calculate);
+        el.addEventListener("change", calculate);
+      });
+    }
+    function calculate() {
+      const m = master();
+      const currentExpert = clamp($("currentExpert").value, 1, 100);
+      const targetExpert = Math.max(currentExpert, clamp($("targetExpert").value, 1, 100));
+      const currentClass = clamp($("currentClass").value, 1, 11);
+      const targetClass = Math.max(currentClass, clamp($("targetClass").value, 1, 11));
+      const currentTalent = clamp($("currentTalent").value, 0, 11);
+      const targetTalent = Math.max(currentTalent, clamp($("targetTalent").value, 0, 11));
+      const expertPart = curve(currentExpert - 1, targetExpert - 1, 99, 1.28);
+      const classPart = curve(currentClass - 1, targetClass - 1, 10, 1.35);
+      const talentPart = curve(currentTalent, targetTalent, 11, 1.18);
+      const snapshotPart = Math.min(1, expertPart * .42 + classPart * .38 + talentPart * .2);
+      let manuscripts = 0;
+      let xp = 0;
+      let skillPower = 0;
+      const skillRows = m.skills.map((skill, index) => {
+        const cur = clamp($(`skill_${index}_current`).value, 0, skill.max);
+        const tar = Math.max(cur, clamp($(`skill_${index}_target`).value, 0, skill.max));
+        const part = curve(cur, tar, skill.max, 1.18);
+        const learned = parseAmount($(`skill_${index}_xp`).value);
+        const lineManuscripts = skill.manuscripts * part;
+        const lineXp = Math.max(0, skill.xp * part - learned);
+        const linePower = skill.power * part;
+        manuscripts += lineManuscripts;
+        xp += lineXp;
+        skillPower += linePower;
+        return { name: skill.name, cur, tar, manuscripts: lineManuscripts, xp: lineXp, power: linePower };
+      });
+      const affinity = m.affinity * snapshotPart;
+      const emblems = m.emblems * (classPart * .7 + talentPart * .3);
+      const basePower = m.power * (expertPart * .34 + classPart * .28 + talentPart * .18) + skillPower;
+      const buffGain = m.buff * snapshotPart;
+      const stockAffinity = parseAmount($("stockAffinity").value);
+      const stockEmblems = parseAmount($("stockEmblems").value);
+      const stockManuscripts = parseAmount($("stockManuscripts").value);
+      const gap = (need, stock) => need > stock ? `<span class="need">${t("stillNeed")}: ${fmt(need - stock)}</span>` : `<span class="extra">${t("extra")}: ${fmt(stock - need)}</span>`;
+      const rows = skillRows.filter((row) => row.tar > row.cur).map((row) => `<div class="break-row"><strong>${row.name} Lv ${row.cur} → ${row.tar}</strong><span>${t("manuscripts")} ${fmt(row.manuscripts)} · ${t("xp")} ${fmt(row.xp)} · ${t("powerGain")} ${fmt(row.power)}</span></div>`).join("") || `<p class="note">No skill upgrades selected.</p>`;
+      $("results").innerHTML = `
+        <div class="result-card"><span>${t("affinity")}</span><strong>${fmt(affinity)}</strong>${gap(affinity, stockAffinity)}</div>
+        <div class="result-card"><span>${t("emblems")}</span><strong>${fmt(emblems)}</strong>${gap(emblems, stockEmblems)}</div>
+        <div class="result-card"><span>${t("manuscripts")}</span><strong>${fmt(manuscripts)}</strong>${gap(manuscripts, stockManuscripts)}</div>
+        <div class="result-card"><span>${t("time")}</span><strong>${timeText(xp)}</strong><span>${fmt(xp)} ${t("xp")}</span></div>
+        <div class="result-card"><span>${t("powerGain")}</span><strong>+${fmt(basePower)}</strong></div>
+        <div class="result-card"><span>${t("buffGain")}</span><strong>+${fmt(buffGain, 2)}%</strong></div>
+        <div class="result-card"><span>${t("skillBreakdown")}</span><div class="breakdown">${rows}</div></div>
+      `;
+    }
+    function maxTargets() {
+      $("currentExpert").value = 1;
+      $("targetExpert").value = 100;
+      $("currentClass").value = 1;
+      $("targetClass").value = 11;
+      $("currentTalent").value = 0;
+      $("targetTalent").value = 11;
+      master().skills.forEach((skill, index) => {
+        $(`skill_${index}_current`).value = 0;
+        $(`skill_${index}_target`).value = skill.max;
+        $(`skill_${index}_xp`).value = 0;
+      });
+      calculate();
+    }
+    function resetAll() {
+      $("currentExpert").value = 1;
+      $("targetExpert").value = 1;
+      $("currentClass").value = 1;
+      $("targetClass").value = 1;
+      $("currentTalent").value = 0;
+      $("targetTalent").value = 0;
+      $("stockAffinity").value = 0;
+      $("stockEmblems").value = 0;
+      $("stockManuscripts").value = 0;
+      master().skills.forEach((skill, index) => {
+        $(`skill_${index}_current`).value = 0;
+        $(`skill_${index}_target`).value = 0;
+        $(`skill_${index}_xp`).value = 0;
+      });
+      calculate();
+    }
+    function setLang(next) {
+      lang = normalizeLang(next);
+      localStorage.setItem("siteLang", lang);
+      localStorage.setItem("lang", lang);
+      const url = new URL(location.href);
+      url.searchParams.set("lang", lang);
+      history.replaceState(null, "", url);
+      renderStatic();
+      renderMasters();
+      renderSkills();
+      calculate();
+    }
+    renderStatic();
+    renderMasters();
+    renderSkills();
+    calculate();
+    $("calculateBtn").addEventListener("click", calculate);
+    $("maxBtn").addEventListener("click", maxTargets);
+    $("resetBtn").addEventListener("click", resetAll);
+    $("languageSelect").addEventListener("change", (event) => setLang(event.target.value));
+  </script>
+</body>
+</html>

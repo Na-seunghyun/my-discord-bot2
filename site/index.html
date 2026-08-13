@@ -834,7 +834,7 @@
       <aside class="metrics" aria-label="Site status">
         <div class="metric"><strong id="visitTotal">-</strong><span data-i18n="visitsTotal">Total visits</span><small data-i18n="visitHint">Protected by a daily KV safety cap.</small></div>
         <div class="metric"><strong id="visitToday">-</strong><span data-i18n="visitsToday">Today</span><small data-i18n="todayHint">Counts once per browser each day.</small></div>
-        <div class="metric"><strong>9</strong><span data-i18n="toolCount">Tools</span><small data-i18n="toolHint">Planner, Swordland, tri-alliance, intel, auto redeem, calculators, feedback.</small></div>
+        <div class="metric"><strong>11</strong><span data-i18n="toolCount">Tools</span><small data-i18n="toolHint">Planner, Swordland, tri-alliance, intel, auto redeem, calculators, feedback.</small></div>
         <div class="metric"><strong>885</strong><span>LEGEND</span><small>NASHSH command hub</small></div>
       </aside>
     </section>
@@ -909,6 +909,18 @@
         <p data-i18n="warAcademyBody">Plan Truegold Dust, resources, research time, power gain, and troop research bonuses.</p>
         <span class="open" data-i18n="warAcademyButton">Open war academy calculator</span>
       </a>
+      <a class="tool standard" data-link-base="./advanced_truegold_research_calculator.html" href="./advanced_truegold_research_calculator.html">
+        <span class="tag" data-i18n="tagCalc">Calculator Vault</span>
+        <h2 data-i18n="advancedTruegoldTitle">Advanced Truegold Research</h2>
+        <p data-i18n="advancedTruegoldBody">Plan advanced Truegold research levels, resources, speed bonuses, power gain, and bonus changes.</p>
+        <span class="open" data-i18n="advancedTruegoldButton">Open Advanced TG calculator</span>
+      </a>
+      <a class="tool standard" data-link-base="./master_calculator.html" href="./master_calculator.html">
+        <span class="tag" data-i18n="tagCalc">Calculator Vault</span>
+        <h2 data-i18n="masterCalcTitle">Master Calculator</h2>
+        <p data-i18n="masterCalcBody">Plan Master Affinity, Emblems, Manuscripts, learning time, power gain, and squad buffs.</p>
+        <span class="open" data-i18n="masterCalcButton">Open Master calculator</span>
+      </a>
       <a class="tool standard" data-link-base="./kingshot_lookup.html" href="./kingshot_lookup.html">
         <span class="tag" data-i18n="tagIntel">Player Intel</span>
         <h2 data-i18n="intelTitle">Kingshot Intel Lookup</h2>
@@ -946,6 +958,8 @@
         calcTitle: 'Kingshot Calculators', calcBody: 'Training, building, War Academy, VIP, and resource planning calculators.', calcButton: 'Open calculators',
         feedbackTitle: 'Updates / Bug Reports', feedbackBody: 'Send suggestions, calculation issues, translation fixes, or mobile feedback.', feedbackButton: 'Open feedback',
         warAcademyTitle: 'War Academy Calculator', warAcademyBody: 'Plan Truegold Dust, resources, research time, power gain, and troop bonuses.', warAcademyButton: 'Open War Academy calculator',
+        advancedTruegoldTitle: 'Advanced Truegold Research', advancedTruegoldBody: 'Plan advanced Truegold research levels, resources, speed bonuses, power gain, and bonus changes.', advancedTruegoldButton: 'Open Advanced TG calculator',
+        masterCalcTitle: 'Master Calculator', masterCalcBody: 'Plan Master Affinity, Emblems, Manuscripts, learning time, power gain, and squad buffs.', masterCalcButton: 'Open Master calculator',
         buildingTitle: 'Building Calculator', buildingBody: 'Plan building resources, power, and timers.', buildingButton: 'Open Building Calculator',
         autoRedeemTitle: 'Auto Redeem Center', autoRedeemBody: 'Register your Kingshot ID and redeem new gift codes automatically.', autoRedeemButton: 'Open Auto Redeem'
       }
@@ -959,7 +973,13 @@
       swordlandButton: '소드랜드 플래너 열기',
       triAllianceTitle: '3연맹 전투 플래너',
       triAllianceBody: '공식 전장 플래너 맵에서 세 연맹의 목표 배치, 점수 흐름, 담당자, 채팅용 명령을 정리합니다.',
-      triAllianceButton: '3연맹 플래너 열기'
+      triAllianceButton: '3연맹 플래너 열기',
+      advancedTruegoldTitle: '고급 Truegold 연구',
+      advancedTruegoldBody: '고급 Truegold 연구 레벨, 자원, 연구 속도, 전투력, 보너스 변화를 계산합니다.',
+      advancedTruegoldButton: '고급 TG 계산기 열기',
+      masterCalcTitle: '마스터 계산기',
+      masterCalcBody: '마스터 친밀도, 엠블럼, 원고, 학습 시간, 전투력, 부대 버프를 계산합니다.',
+      masterCalcButton: '마스터 계산기 열기'
     });
     Object.assign(I18N.ja, {
       toolHint: 'プランナー、ソードランド、三同盟、インテル、計算機、フィードバック。',
@@ -969,7 +989,13 @@
       swordlandButton: 'ソードランドプランナーを開く',
       triAllianceTitle: '三同盟クラッシュプランナー',
       triAllianceBody: '公式バトルフィールドマップ上で三同盟の目標、得点、担当、チャット用指示を整理します。',
-      triAllianceButton: '三同盟プランナーを開く'
+      triAllianceButton: '三同盟プランナーを開く',
+      advancedTruegoldTitle: '上級 Truegold 研究',
+      advancedTruegoldBody: '上級 Truegold 研究のレベル、資源、速度、戦力、ボーナスを計算します。',
+      advancedTruegoldButton: '上級TG計算機を開く',
+      masterCalcTitle: 'マスター計算機',
+      masterCalcBody: 'マスターの親密度、紋章、原稿、学習時間、戦力、部隊バフを計算します。',
+      masterCalcButton: 'マスター計算機を開く'
     });
     Object.assign(I18N.fr, {
       toolHint: 'Planificateur, Swordland, tri-alliance, intel, calculateurs, retours.',
@@ -979,7 +1005,13 @@
       swordlandButton: 'Ouvrir le planificateur Swordland',
       triAllianceTitle: 'Planificateur Tri-Alliance',
       triAllianceBody: 'Coordonnez trois alliances sur la carte du champ de bataille avec objectifs, score et ordres prêts pour le chat.',
-      triAllianceButton: 'Ouvrir le planificateur tri-alliance'
+      triAllianceButton: 'Ouvrir le planificateur tri-alliance',
+      advancedTruegoldTitle: 'Recherche Advanced Truegold',
+      advancedTruegoldBody: 'Planifiez les niveaux, ressources, vitesse, puissance et bonus Advanced Truegold.',
+      advancedTruegoldButton: 'Ouvrir le calculateur TG avancé',
+      masterCalcTitle: 'Calculateur Master',
+      masterCalcBody: 'Planifiez Affinity, emblèmes, manuscrits, temps, puissance et buffs.',
+      masterCalcButton: 'Ouvrir le calculateur Master'
     });
     Object.assign(I18N.de, {
       toolHint: 'Planer, Swordland, Drei-Allianz, Intel, Rechner, Feedback.',
@@ -989,7 +1021,13 @@
       swordlandButton: 'Swordland-Planer öffnen',
       triAllianceTitle: 'Drei-Allianz Clash-Planer',
       triAllianceBody: 'Koordiniere drei Allianzen auf der Schlachtfeldkarte mit Zielen, Score und chatfertigen Befehlen.',
-      triAllianceButton: 'Drei-Allianz-Planer öffnen'
+      triAllianceButton: 'Drei-Allianz-Planer öffnen',
+      advancedTruegoldTitle: 'Advanced Truegold Forschung',
+      advancedTruegoldBody: 'Plane Level, Ressourcen, Tempo, Macht und Boni der Advanced-Truegold-Forschung.',
+      advancedTruegoldButton: 'Advanced-TG-Rechner öffnen',
+      masterCalcTitle: 'Master-Rechner',
+      masterCalcBody: 'Plane Affinity, Embleme, Manuskripte, Lernzeit, Macht und Truppenbuffs.',
+      masterCalcButton: 'Master-Rechner öffnen'
     });
     Object.assign(I18N['zh-CN'], {
       toolHint: '规划器、剑域、三联盟、情报、计算器、反馈。',
@@ -999,7 +1037,13 @@
       swordlandButton: '打开剑域规划器',
       triAllianceTitle: '三联盟冲突规划器',
       triAllianceBody: '在官方战场规划地图上协调三联盟目标、积分、负责人和聊天指令。',
-      triAllianceButton: '打开三联盟规划器'
+      triAllianceButton: '打开三联盟规划器',
+      advancedTruegoldTitle: '高级 Truegold 研究',
+      advancedTruegoldBody: '规划高级 Truegold 研究等级、资源、速度、战力和加成变化。',
+      advancedTruegoldButton: '打开高级 TG 计算器',
+      masterCalcTitle: '大师计算器',
+      masterCalcBody: '规划大师亲密度、徽章、手稿、学习时间、战力和部队加成。',
+      masterCalcButton: '打开大师计算器'
     });
     Object.assign(I18N['zh-TW'], {
       toolHint: '規劃器、劍域、三聯盟、情報、計算器、回饋。',
@@ -1009,7 +1053,13 @@
       swordlandButton: '開啟劍域規劃器',
       triAllianceTitle: '三聯盟衝突規劃器',
       triAllianceBody: '在官方戰場規劃地圖上協調三聯盟目標、積分、負責人和聊天指令。',
-      triAllianceButton: '開啟三聯盟規劃器'
+      triAllianceButton: '開啟三聯盟規劃器',
+      advancedTruegoldTitle: '高級 Truegold 研究',
+      advancedTruegoldBody: '規劃高級 Truegold 研究等級、資源、速度、戰力與加成變化。',
+      advancedTruegoldButton: '開啟高級 TG 計算器',
+      masterCalcTitle: '大師計算器',
+      masterCalcBody: '規劃大師親密度、徽章、手稿、學習時間、戰力與部隊加成。',
+      masterCalcButton: '開啟大師計算器'
     });
     Object.assign(I18N.th, {
       toolHint: 'ตัววางแผน, Swordland, สามพันธมิตร, ข้อมูลผู้เล่น, เครื่องคำนวณ, ฟีดแบ็ก.',
@@ -1019,7 +1069,13 @@
       swordlandButton: 'เปิดตัววางแผน Swordland',
       triAllianceTitle: 'ตัววางแผนสามพันธมิตร',
       triAllianceBody: 'จัดเป้าหมาย คะแนน ผู้รับผิดชอบ และคำสั่งสำหรับแชตบนแผนที่สนามรบ.',
-      triAllianceButton: 'เปิดตัววางแผนสามพันธมิตร'
+      triAllianceButton: 'เปิดตัววางแผนสามพันธมิตร',
+      advancedTruegoldTitle: 'วิจัย Advanced Truegold',
+      advancedTruegoldBody: 'วางแผนเลเวล ทรัพยากร ความเร็ว พลัง และโบนัส Advanced Truegold.',
+      advancedTruegoldButton: 'เปิดเครื่องคำนวณ TG ขั้นสูง',
+      masterCalcTitle: 'เครื่องคำนวณ Master',
+      masterCalcBody: 'วางแผน Affinity, Emblems, Manuscripts, เวลา, พลัง และบัฟ.',
+      masterCalcButton: 'เปิดเครื่องคำนวณ Master'
     });
     Object.assign(I18N.id, {
       toolHint: 'Planner, Swordland, tri-alliance, intel, kalkulator, feedback.',
@@ -1029,7 +1085,13 @@
       swordlandButton: 'Buka planner Swordland',
       triAllianceTitle: 'Planner Tri-Alliance Clash',
       triAllianceBody: 'Koordinasikan tiga aliansi di map battlefield dengan target, skor, PIC, dan order siap chat.',
-      triAllianceButton: 'Buka planner tri-alliance'
+      triAllianceButton: 'Buka planner tri-alliance',
+      advancedTruegoldTitle: 'Riset Advanced Truegold',
+      advancedTruegoldBody: 'Rencanakan level, resource, speed, power, dan bonus Advanced Truegold.',
+      advancedTruegoldButton: 'Buka kalkulator TG lanjutan',
+      masterCalcTitle: 'Kalkulator Master',
+      masterCalcBody: 'Rencanakan Affinity, Emblem, Manuscript, waktu, power, dan buff.',
+      masterCalcButton: 'Buka kalkulator Master'
     });
     function lang() {
       const q = new URL(location.href).searchParams.get('lang');
