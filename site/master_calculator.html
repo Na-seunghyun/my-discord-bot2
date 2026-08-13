@@ -14,10 +14,10 @@
     :root {
       color-scheme: dark;
       --bg: #070a12;
-      --panel: rgba(15, 22, 36, .9);
-      --panel2: rgba(23, 31, 48, .8);
+      --panel: rgba(15, 22, 36, .92);
+      --panel2: rgba(23, 31, 48, .82);
       --line: rgba(246, 207, 114, .24);
-      --line2: rgba(111, 231, 255, .22);
+      --soft-line: rgba(255,255,255,.1);
       --text: #f8f4e4;
       --muted: #aab5ca;
       --dim: #7e8ba4;
@@ -101,7 +101,7 @@
     }
     .stat strong { display: block; font-size: 24px; color: var(--gold); }
     .stat span { display: block; color: var(--muted); font-size: 12px; margin-top: 3px; }
-    .layout { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 14px; align-items: start; }
+    .layout { display: grid; grid-template-columns: minmax(0, 1fr) 390px; gap: 14px; align-items: start; }
     .panel { border-radius: 20px; overflow: hidden; }
     .panel-head { padding: 16px 16px 12px; border-bottom: 1px solid rgba(255,255,255,.08); }
     .panel-head h2 { margin: 0; font-size: 17px; }
@@ -119,48 +119,21 @@
       min-height: 128px;
     }
     .master-card.active { border-color: rgba(246,207,114,.7); box-shadow: 0 0 0 3px rgba(246,207,114,.1); }
-    .avatar {
-      width: 42px;
-      height: 42px;
-      border-radius: 14px;
-      display: grid;
+    .avatar, .image-wrap {
+      display: inline-grid;
       place-items: center;
-      margin-bottom: 10px;
-      background: linear-gradient(145deg, rgba(246,207,114,.24), rgba(111,231,255,.1));
       color: var(--gold);
       font-weight: 950;
       border: 1px solid rgba(246,207,114,.35);
+      background: rgba(255,255,255,.055);
       overflow: hidden;
     }
+    .avatar { width: 42px; height: 42px; border-radius: 14px; margin-bottom: 10px; }
     .avatar img { width: 100%; height: 100%; object-fit: cover; }
     .master-card strong { display: block; font-size: 16px; }
     .master-card span { display: block; color: var(--muted); font-size: 12px; margin-top: 4px; line-height: 1.35; }
     .badge { display: inline-flex !important; color: #08111b !important; background: linear-gradient(135deg, var(--gold), #ffb13d); border-radius: 999px; padding: 4px 8px; margin-top: 9px !important; font-weight: 900; }
-    .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-    .field { margin-bottom: 12px; }
-    label { display: block; color: var(--muted); font-size: 12px; font-weight: 800; margin-bottom: 6px; }
-    input, select {
-      width: 100%;
-      min-height: 40px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,.12);
-      background: rgba(4,8,16,.7);
-      color: var(--text);
-      padding: 9px 10px;
-      outline: none;
-    }
-    input:focus, select:focus { border-color: rgba(111,231,255,.55); box-shadow: 0 0 0 3px rgba(111,231,255,.1); }
-    .skill-list { display: grid; gap: 10px; margin-top: 8px; }
-    .skill {
-      border: 1px solid rgba(255,255,255,.1);
-      border-radius: 16px;
-      background: rgba(255,255,255,.045);
-      padding: 12px;
-    }
-    .skill-head { display: grid; grid-template-columns: 38px minmax(0, 1fr) auto; gap: 10px; align-items: start; margin-bottom: 9px; }
-    .skill-head strong { font-size: 14px; }
-    .skill-head span { color: var(--muted); font-size: 12px; }
-    .btns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .btns { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
     button {
       border: 0;
       border-radius: 12px;
@@ -172,7 +145,104 @@
       font-weight: 900;
     }
     button.secondary { color: var(--text); background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.13); }
-    .results { display: grid; gap: 10px; }
+    .selected-master {
+      display: grid;
+      grid-template-columns: 96px minmax(0, 1fr);
+      gap: 14px;
+      align-items: center;
+      margin: 12px 0 14px;
+      padding: 14px;
+      border-radius: 18px;
+      border: 1px solid rgba(246,207,114,.2);
+      background: linear-gradient(135deg, rgba(246,207,114,.09), rgba(111,231,255,.045));
+    }
+    .portrait-lg {
+      width: 96px;
+      height: 96px;
+      border-radius: 22px;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      border: 1px solid rgba(246,207,114,.32);
+      background: rgba(255,255,255,.055);
+    }
+    .portrait-lg img { width: 100%; height: 100%; object-fit: cover; }
+    .selected-copy h2 { margin: 0 0 5px; font-size: 24px; }
+    .selected-copy p { margin: 0; color: var(--muted); line-height: 1.45; }
+    .summary-grid { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
+    .metric-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 999px;
+      padding: 6px 9px;
+      border: 1px solid rgba(255,255,255,.1);
+      background: rgba(0,0,0,.18);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .metric-pill strong { color: var(--gold); }
+    .planner-card, .skill {
+      border: 1px solid var(--soft-line);
+      border-radius: 18px;
+      background: rgba(255,255,255,.045);
+      padding: 14px;
+      margin-bottom: 14px;
+    }
+    .planner-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .planner-head h2 { margin: 0; font-size: 18px; }
+    .planner-head p { margin: 5px 0 0; color: var(--muted); font-size: 13px; line-height: 1.45; }
+    .planner-actions { display: flex; flex-wrap: wrap; gap: 7px; justify-content: flex-end; }
+    .plan-table, .skill-list, .results { display: grid; gap: 10px; }
+    .plan-row {
+      display: grid;
+      grid-template-columns: minmax(160px, .72fr) minmax(0, 1fr) minmax(0, 1fr);
+      gap: 10px;
+      padding: 12px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.09);
+      background: rgba(0,0,0,.16);
+    }
+    .row-title strong { display: block; font-size: 14px; }
+    .row-title span { display: block; margin-top: 5px; color: var(--gold); font-size: 12px; font-weight: 900; line-height: 1.35; }
+    .range-control { display: grid; gap: 7px; }
+    .range-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; color: var(--muted); font-size: 12px; font-weight: 850; }
+    .range-top output { color: var(--cyan); font-weight: 950; white-space: nowrap; }
+    .range-pair { display: grid; grid-template-columns: minmax(0, 1fr) 82px; gap: 8px; align-items: center; }
+    input, select {
+      width: 100%;
+      min-height: 40px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(4,8,16,.7);
+      color: var(--text);
+      padding: 9px 10px;
+      outline: none;
+    }
+    input[type="range"] {
+      padding: 0;
+      min-height: 34px;
+      accent-color: var(--gold);
+      background: transparent;
+      border-color: transparent;
+    }
+    input[type="number"] { text-align: center; padding-left: 6px; padding-right: 6px; }
+    input:focus, select:focus { border-color: rgba(111,231,255,.55); box-shadow: 0 0 0 3px rgba(111,231,255,.1); }
+    label { display: block; color: var(--muted); font-size: 12px; font-weight: 800; margin-bottom: 6px; }
+    .skill-head { display: grid; grid-template-columns: 42px minmax(0, 1fr) auto; gap: 10px; align-items: start; margin-bottom: 10px; }
+    .skill-head strong { font-size: 14px; }
+    .skill-head span { color: var(--muted); font-size: 12px; }
+    .skill-desc { margin: 9px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+    .xp-line { margin-top: 10px; border-top: 1px solid rgba(255,255,255,.08); padding-top: 10px; }
+    .xp-box { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; }
+    .form-grid { display: grid; grid-template-columns: repeat(1, minmax(0, 1fr)); gap: 10px; }
     .result-card {
       border-radius: 16px;
       background: rgba(255,255,255,.05);
@@ -181,40 +251,32 @@
     }
     .result-card span { display: block; color: var(--muted); font-size: 12px; }
     .result-card strong { display: block; margin-top: 3px; font-size: 21px; overflow-wrap: anywhere; }
-    .result-title { display: flex !important; align-items: center; gap: 8px; }
-    .image-wrap {
-      width: 30px;
-      height: 30px;
-      flex: 0 0 30px;
-      border-radius: 10px;
-      display: inline-grid;
-      place-items: center;
-      border: 1px solid rgba(246,207,114,.24);
-      background: rgba(255,255,255,.055);
-      overflow: hidden;
-      vertical-align: middle;
-    }
-    .image-wrap.skill-img { width: 38px; height: 38px; flex-basis: 38px; border-radius: 13px; }
+    .result-title, .material-label { display: flex !important; align-items: center; gap: 8px; }
+    .image-wrap { width: 30px; height: 30px; flex: 0 0 30px; border-radius: 10px; vertical-align: middle; }
+    .image-wrap.skill-img { width: 42px; height: 42px; flex-basis: 42px; border-radius: 13px; }
     .image-wrap img { width: 100%; height: 100%; object-fit: contain; padding: 3px; }
-    .material-label { display: flex !important; align-items: center; gap: 8px; }
     .avatar .image-fallback, .image-fallback { display: none; color: var(--gold); font-size: 10px; font-weight: 950; letter-spacing: .02em; text-align: center; }
-    .image-wrap.missing img, .avatar.missing img { display: none; }
-    .image-wrap.missing .image-fallback, .avatar.missing .image-fallback { display: grid; place-items: center; }
+    .image-wrap.missing img, .avatar.missing img, .portrait-lg.missing img { display: none; }
+    .image-wrap.missing .image-fallback, .avatar.missing .image-fallback, .portrait-lg.missing .image-fallback { display: grid; place-items: center; }
     .need { color: var(--red); }
     .extra { color: var(--green); }
-    .breakdown { display: grid; gap: 8px; max-height: 280px; overflow: auto; }
+    .breakdown { display: grid; gap: 8px; max-height: 360px; overflow: auto; }
     .break-row { border: 1px solid rgba(255,255,255,.09); border-radius: 14px; padding: 10px; background: rgba(0,0,0,.16); }
     .break-row strong { display: flex; align-items: center; gap: 8px; font-size: 13px; }
     .break-row span { display: block; color: var(--muted); font-size: 12px; margin-top: 4px; line-height: 1.45; }
     .note { color: var(--muted); font-size: 12px; line-height: 1.55; }
-    @media (max-width: 1080px) { .layout, .hero { grid-template-columns: 1fr; } }
+    @media (max-width: 1080px) { .layout, .hero, .plan-row { grid-template-columns: 1fr; } }
     @media (max-width: 720px) {
       .wrap { width: min(100% - 18px, 1420px); padding-top: 10px; }
       .topbar { align-items: stretch; flex-direction: column; }
       .actions { justify-content: stretch; }
       .actions > * { flex: 1 1 auto; text-align: center; }
       .hero { padding: 18px; border-radius: 18px; }
-      .hero-stats, .form-grid, .masters { grid-template-columns: 1fr; }
+      .hero-stats, .masters, .selected-master { grid-template-columns: 1fr; }
+      .portrait-lg { width: 78px; height: 78px; }
+      .planner-head { flex-direction: column; }
+      .planner-actions { justify-content: stretch; width: 100%; }
+      .planner-actions button { flex: 1 1 auto; }
     }
   </style>
 </head>
@@ -229,15 +291,15 @@
         <a class="link" id="hubLink" href="./index.html" data-i18n="hub">Hub</a>
         <a class="link" id="calcLink" href="./troop_training_ui.html" data-i18n="calcHub">Calculator Hub</a>
         <select class="lang" id="languageSelect" aria-label="Language">
-          <option value="ko">🇰🇷 한국어</option>
-          <option value="ja">🇯🇵 日本語</option>
-          <option value="en">🇺🇸 English</option>
-          <option value="fr">🇫🇷 Français</option>
-          <option value="de">🇩🇪 Deutsch</option>
-          <option value="zh-CN">🇨🇳 简体中文</option>
-          <option value="zh-TW">🇹🇼 繁體中文</option>
-          <option value="th">🇹🇭 ไทย</option>
-          <option value="id">🇮🇩 Indonesia</option>
+          <option value="ko">KR Korean</option>
+          <option value="ja">JP Japanese</option>
+          <option value="en">US English</option>
+          <option value="fr">FR Francais</option>
+          <option value="de">DE Deutsch</option>
+          <option value="zh-CN">CN Simplified Chinese</option>
+          <option value="zh-TW">TW Traditional Chinese</option>
+          <option value="th">TH Thai</option>
+          <option value="id">ID Indonesia</option>
         </select>
       </div>
     </header>
@@ -246,7 +308,7 @@
       <div>
         <div class="eyebrow" data-i18n="eyebrow">Master Calculator</div>
         <h1 data-i18n="title">Master Calculator</h1>
-        <p data-i18n="subtitle">Pick a Master, set current and target snapshots, then review Affinity, Emblems, Master's Manuscripts, learning time, power gain, and squad buff gain.</p>
+        <p data-i18n="subtitle">Pick a Master, set your current and target snapshot, and instantly see the Affinity, Emblems, Master's Manuscripts, Power, and squad buff you will gain.</p>
       </div>
       <div class="hero-stats">
         <div class="stat"><strong>6</strong><span data-i18n="statMasters">Masters</span></div>
@@ -259,37 +321,37 @@
       <section class="panel">
         <div class="panel-head">
           <h2 data-i18n="pickMaster">Pick a Master</h2>
-          <p data-i18n="pickDesc">Select the master and configure your upgrade target.</p>
+          <p data-i18n="pickDesc">Choose a Master, then tune the plan below.</p>
         </div>
         <div class="panel-body">
           <div class="masters" id="masters"></div>
-          <div class="form-grid">
-            <div class="field"><label for="currentExpert" data-i18n="currentExpert">Current Expert level</label><input id="currentExpert" type="number" min="1" max="100" value="1"></div>
-            <div class="field"><label for="targetExpert" data-i18n="targetExpert">Target Expert level</label><input id="targetExpert" type="number" min="1" max="100" value="100"></div>
-            <div class="field"><label for="currentClass" data-i18n="currentClass">Current relationship class</label><select id="currentClass"></select></div>
-            <div class="field"><label for="targetClass" data-i18n="targetClass">Target relationship class</label><select id="targetClass"></select></div>
-            <div class="field"><label for="currentTalent" data-i18n="currentTalent">Current talent level</label><input id="currentTalent" type="number" min="0" max="11" value="0"></div>
-            <div class="field"><label for="targetTalent" data-i18n="targetTalent">Target talent level</label><input id="targetTalent" type="number" min="0" max="11" value="11"></div>
-          </div>
-          <div class="panel-head" style="padding-left:0;padding-right:0;margin-top:4px">
-            <h2 data-i18n="skills">Skills</h2>
-            <p data-i18n="skillsDesc">Include skill upgrades and optional learned XP offsets.</p>
-          </div>
-          <div class="skill-list" id="skills"></div>
-          <div class="panel-head" style="padding-left:0;padding-right:0;margin-top:4px">
-            <h2 data-i18n="stock">Stock</h2>
-            <p data-i18n="stockDesc">Optional. Inventory is subtracted from the required totals.</p>
-          </div>
-          <div class="form-grid">
-            <div class="field"><label id="stockAffinityLabel" class="material-label" for="stockAffinity"></label><input id="stockAffinity" inputmode="decimal" value="0"></div>
-            <div class="field"><label id="stockEmblemsLabel" class="material-label" for="stockEmblems"></label><input id="stockEmblems" inputmode="decimal" value="0"></div>
-            <div class="field"><label id="stockManuscriptsLabel" class="material-label" for="stockManuscripts"></label><input id="stockManuscripts" inputmode="decimal" value="0"></div>
-          </div>
           <div class="btns">
             <button id="calculateBtn" data-i18n="calculate">Calculate</button>
-            <button class="secondary" id="maxBtn" data-i18n="maxTargets">Max targets</button>
-            <button class="secondary" id="resetBtn" data-i18n="reset">Reset</button>
+            <button class="secondary" id="compareBtn" data-i18n="compare">Compare</button>
           </div>
+          <div class="selected-master" id="selectedMaster"></div>
+          <section class="planner-card">
+            <div class="planner-head">
+              <div>
+                <h2 data-i18n="plan">Plan</h2>
+                <p data-i18n="planDesc">Set your current state on the left of each row and your target on the right.</p>
+              </div>
+              <div class="planner-actions">
+                <button class="secondary" id="resetBtn" data-i18n="reset">Reset</button>
+                <button class="secondary" id="maxBtn" data-i18n="maxTargets">Max</button>
+              </div>
+            </div>
+            <div class="plan-table" id="planRows"></div>
+          </section>
+          <section class="planner-card">
+            <div class="planner-head">
+              <div>
+                <h2 data-i18n="skills">Skills</h2>
+                <p data-i18n="skillsDesc">Set skill levels exactly like the source calculator.</p>
+              </div>
+            </div>
+            <div class="skill-list" id="skills"></div>
+          </section>
           <p class="note" data-i18n="sourceNote">Local fan calculator based on the public Kingshot.net calculator layout. Check in game before spending rare materials.</p>
         </div>
       </section>
@@ -301,6 +363,19 @@
         </div>
         <div class="panel-body">
           <div class="results" id="results"></div>
+          <section class="planner-card" style="margin:12px 0 0">
+            <div class="planner-head">
+              <div>
+                <h2 data-i18n="stock">Stock</h2>
+                <p data-i18n="stockDesc">Optional. We subtract what you already have from the requirement.</p>
+              </div>
+            </div>
+            <div class="form-grid">
+              <div class="field"><label id="stockAffinityLabel" class="material-label" for="stockAffinity"></label><input id="stockAffinity" inputmode="decimal" value="0"></div>
+              <div class="field"><label id="stockEmblemsLabel" class="material-label" for="stockEmblems"></label><input id="stockEmblems" inputmode="decimal" value="0"></div>
+              <div class="field"><label id="stockManuscriptsLabel" class="material-label" for="stockManuscripts"></label><input id="stockManuscripts" inputmode="decimal" value="0"></div>
+            </div>
+          </section>
         </div>
       </aside>
     </main>
@@ -308,6 +383,7 @@
 
   <script>
     const CLASSES = ["Stranger", "Familiar Face", "Acquaintance 1", "Acquaintance 2", "Acquaintance 3", "Casual 1", "Casual 2", "Confidant", "Close Ally", "Trusted Friend", "Kindred Soul"];
+    const TALENT = { name: "Hunter Instinct", description: "Passive talent. Always active.", detail: "Increases Bear Hunt Damage Points for this Master.", image: "hunter-instinct.png" };
     const IMAGE_ROOT = "https://kingshot.net/images";
     const MATERIAL_IMAGES = {
       affinity: [`${IMAGE_ROOT}/masters/affinity.png`, `${IMAGE_ROOT}/masters/master-affinity.png`, `${IMAGE_ROOT}/items/affinity.png`],
@@ -318,17 +394,17 @@
       buff: [`${IMAGE_ROOT}/icons/buff.png`, `${IMAGE_ROOT}/resources/buff.png`]
     };
     const BASE_SKILLS = [
-      { name: "Skill I", max: 10, manuscripts: 3150, xp: 162000, power: 30000 },
-      { name: "Skill II", max: 5, manuscripts: 6000, xp: 345000, power: 65000 },
-      { name: "Skill III", max: 5, manuscripts: 7500, xp: 540000, power: 100000 },
-      { name: "Skill IV", max: 10, manuscripts: 4500, xp: 462917, power: 70000 }
+      { name: "Skill I", max: 10, manuscripts: 3150, xp: 162000, power: 30000, desc: "Generic Master skill." },
+      { name: "Skill II", max: 5, manuscripts: 6000, xp: 345000, power: 65000, desc: "Generic Master skill." },
+      { name: "Skill III", max: 5, manuscripts: 7500, xp: 540000, power: 100000, desc: "Generic Master skill." },
+      { name: "Skill IV", max: 10, manuscripts: 4500, xp: 462917, power: 70000, desc: "Generic Master skill." }
     ];
     const MASTERS = [
       { id: "valora", name: "Valora", role: "Bear Hunter", buff: 15, power: 1741000, affinity: 170690, emblems: 275, manuscripts: 21150, initials: "VA", skills: [
-        { name: "Dance of the Hunt", max: 10, manuscripts: 3150, xp: 162000, power: 30000, image: "dance-of-the-hunt.png" },
-        { name: "Leader By Example", max: 5, manuscripts: 6000, xp: 345000, power: 65000, image: "leader-by-example.png" },
-        { name: "Weapon Obsession", max: 5, manuscripts: 7500, xp: 540000, power: 100000, image: "weapon-obsession.png" },
-        { name: "Savage Advantage", max: 10, manuscripts: 4500, xp: 462917, power: 70000, image: "savage-advantage.png" }
+        { name: "Dance of the Hunt", max: 10, manuscripts: 3150, xp: 162000, power: 30000, image: "dance-of-the-hunt.png", desc: "Increases Raging Bear Rally Squad Capacity." },
+        { name: "Leader By Example", max: 5, manuscripts: 6000, xp: 345000, power: 65000, image: "leader-by-example.png", desc: "Adds extra Enhancement XP Part rewards per Bear Hunt." },
+        { name: "Weapon Obsession", max: 5, manuscripts: 7500, xp: 540000, power: 100000, image: "weapon-obsession.png", desc: "Adds extra Forgehammer rewards per Bear Hunt." },
+        { name: "Savage Advantage", max: 10, manuscripts: 4500, xp: 462917, power: 70000, image: "savage-advantage.png", desc: "Increases Bear Hunt Squad Capacity." }
       ] },
       { id: "pan", name: "Pan", role: "Palace Administrator", buff: 15, power: 1741000, affinity: 170690, emblems: 275, manuscripts: 21150, initials: "PA" },
       { id: "roman", name: "Roman", role: "Arena Champion", buff: 15, power: 1741000, affinity: 170690, emblems: 275, manuscripts: 21150, initials: "RO" },
@@ -336,117 +412,29 @@
       { id: "guinevere", name: "Guinevere", role: "Queen of Holy Sword", buff: 15, power: 1741000, affinity: 170690, emblems: 275, manuscripts: 21150, initials: "GU" },
       { id: "wilson", name: "Wilson", role: "Royal Herald", buff: 10, power: 1420000, affinity: 142000, emblems: 220, manuscripts: 17200, initials: "WI" }
     ].map((master) => ({ ...master, skills: master.skills || BASE_SKILLS.map((skill) => ({ ...skill })) }));
-
     const I18N = {
       en: {
         brandSub: "Kingshot calculator tools", hub: "Hub", calcHub: "Calculator Hub", eyebrow: "Master Calculator", title: "Master Calculator",
-        subtitle: "Pick a Master, set current and target snapshots, then review Affinity, Emblems, Master's Manuscripts, learning time, power gain, and squad buff gain.",
-        statMasters: "Masters", statLevel: "Expert level", statBuff: "Max buff", pickMaster: "Pick a Master", pickDesc: "Select the master and configure your upgrade target.",
-        currentExpert: "Current Expert level", targetExpert: "Target Expert level", currentClass: "Current relationship class", targetClass: "Target relationship class",
-        currentTalent: "Current talent level", targetTalent: "Target talent level", skills: "Skills", skillsDesc: "Include skill upgrades and optional learned XP offsets.",
-        current: "Current", target: "Target", learnedXp: "Learned XP offset", stock: "Stock", stockDesc: "Optional. Inventory is subtracted from the required totals.",
-        stockAffinity: "Affinity in stock", stockEmblems: "Emblems in stock", stockManuscripts: "Master's Manuscripts in stock", calculate: "Calculate", maxTargets: "Max targets", reset: "Reset",
+        subtitle: "Pick a Master, set your current and target snapshot, and instantly see the Affinity, Emblems, Master's Manuscripts, Power, and squad buff you will gain.",
+        statMasters: "Masters", statLevel: "Expert level", statBuff: "Max buff", pickMaster: "Pick a Master", pickDesc: "Choose a Master, then tune the plan below.",
+        compare: "Compare", plan: "Plan", planDesc: "Set your current state on the left of each row and your target on the right.", maxPower: "Max power", maxBuff: "Max buff",
+        expertLevel: "Expert level", relationshipClass: "Relationship class", talent: "Talent", talentPassive: "Passive talent. Always active.", skills: "Skills", skillsDesc: "Set skill levels exactly like the source calculator.",
+        current: "Current", target: "Target", learnedXp: "Learned XP toward next level", learnedXpHelp: "Subtracted from the time estimate. Manuscripts are paid up-front per level and are not affected.",
+        stock: "Stock", stockDesc: "Optional. We subtract what you already have from the requirement.",
+        stockAffinity: "Affinity in stock", stockEmblems: "Emblems in stock", stockManuscripts: "Master's Manuscripts in stock", calculate: "Calculate", maxTargets: "Max", reset: "Reset",
         sourceNote: "Local fan calculator based on the public Kingshot.net calculator layout. Check in game before spending rare materials.", results: "Results", resultsDesc: "Required resources for this plan.",
-        affinity: "Affinity", emblems: "Emblems", manuscripts: "Manuscripts", time: "Time to learn", xp: "XP", powerGain: "Power gain", buffGain: "Squad buff gain", stillNeed: "still needed", extra: "extra", skillBreakdown: "Manuscripts by skill", max: "Max", noSkillSelection: "No skill upgrades selected."
+        affinity: "Affinity", emblems: "Emblems", manuscripts: "Manuscripts", time: "Time to learn", xp: "XP", powerGain: "Power gain", buffGain: "Squad buff gain", stillNeed: "still needed", extra: "extra", skillBreakdown: "Manuscripts by skill", noSkillSelection: "No skill upgrades selected."
       }
     };
     ["ko", "ja", "fr", "de", "zh-CN", "zh-TW", "th", "id"].forEach((code) => I18N[code] = { ...I18N.en });
-    Object.assign(I18N.ko, { brandSub: "킹샷 계산기 도구", hub: "허브", calcHub: "계산기 허브", title: "마스터 계산기", subtitle: "마스터를 선택하고 현재/목표 상태를 입력해 친밀도, 엠블럼, 마스터 원고, 학습 시간, 전투력, 버프 증가량을 확인합니다.", pickMaster: "마스터 선택", pickDesc: "마스터와 목표 업그레이드 상태를 설정합니다.", currentExpert: "현재 Expert 레벨", targetExpert: "목표 Expert 레벨", currentClass: "현재 관계 등급", targetClass: "목표 관계 등급", currentTalent: "현재 재능 레벨", targetTalent: "목표 재능 레벨", skills: "스킬", skillsDesc: "스킬 업그레이드와 이미 학습한 XP를 반영합니다.", current: "현재", target: "목표", learnedXp: "이미 학습한 XP", stock: "보유 재고", stockAffinity: "보유 친밀도", stockEmblems: "보유 엠블럼", stockManuscripts: "보유 마스터 원고", calculate: "계산", maxTargets: "목표 최대", reset: "초기화", results: "결과", affinity: "친밀도", emblems: "엠블럼", manuscripts: "원고", time: "학습 시간", powerGain: "전투력 증가", buffGain: "부대 버프 증가", stillNeed: "부족", extra: "남음", skillBreakdown: "스킬별 원고" });
-    Object.assign(I18N.ja, { title: "マスター計算機", subtitle: "マスターを選択し、親密度、紋章、原稿、学習時間、戦力、バフを計算します。", pickMaster: "マスター選択", current: "現在", target: "目標", calculate: "計算", results: "結果" });
-    Object.assign(I18N.fr, { title: "Calculateur Master", subtitle: "Calculez Affinity, emblèmes, manuscrits, temps, puissance et buff.", pickMaster: "Choisir un Master", current: "Actuel", target: "Cible", calculate: "Calculer", results: "Résultats" });
-    Object.assign(I18N.de, { title: "Master-Rechner", subtitle: "Berechne Affinity, Embleme, Manuskripte, Zeit, Macht und Buff.", pickMaster: "Master wählen", current: "Aktuell", target: "Ziel", calculate: "Berechnen", results: "Ergebnisse" });
-    Object.assign(I18N["zh-CN"], { title: "大师计算器", subtitle: "计算亲密度、徽章、手稿、学习时间、战力和部队增益。", pickMaster: "选择大师", current: "当前", target: "目标", calculate: "计算", results: "结果" });
-    Object.assign(I18N["zh-TW"], { title: "大師計算器", subtitle: "計算親密度、徽章、手稿、學習時間、戰力與部隊增益。", pickMaster: "選擇大師", current: "目前", target: "目標", calculate: "計算", results: "結果" });
-    Object.assign(I18N.th, { title: "เครื่องคำนวณ Master", subtitle: "คำนวณ Affinity, Emblems, Manuscripts, เวลา, พลัง และบัฟ", pickMaster: "เลือก Master", current: "ปัจจุบัน", target: "เป้าหมาย", calculate: "คำนวณ", results: "ผลลัพธ์" });
-    Object.assign(I18N.id, { title: "Kalkulator Master", subtitle: "Hitung Affinity, Emblem, Manuscript, waktu, power, dan buff.", pickMaster: "Pilih Master", current: "Saat ini", target: "Target", calculate: "Hitung", results: "Hasil" });
-    Object.assign(I18N.ko, {
-      brandSub: "킹샷 계산기 도구", hub: "허브", calcHub: "계산기 허브", eyebrow: "마스터 계산기", title: "마스터 계산기",
-      subtitle: "마스터를 선택하고 현재/목표 상태를 입력해 친밀도, 엠블럼, 마스터 원고, 학습 시간, 전투력, 부대 버프 증가량을 확인합니다.",
-      statMasters: "마스터", statLevel: "Expert 레벨", statBuff: "최대 버프", pickMaster: "마스터 선택", pickDesc: "마스터와 목표 업그레이드 상태를 설정합니다.",
-      currentExpert: "현재 Expert 레벨", targetExpert: "목표 Expert 레벨", currentClass: "현재 관계 등급", targetClass: "목표 관계 등급",
-      currentTalent: "현재 재능 레벨", targetTalent: "목표 재능 레벨", skills: "스킬", skillsDesc: "스킬 업그레이드와 이미 학습한 XP를 반영합니다.",
-      current: "현재", target: "목표", learnedXp: "이미 학습한 XP", stock: "보유 재고", stockDesc: "선택 사항입니다. 보유량은 필요 총량에서 차감됩니다.",
-      stockAffinity: "보유 친밀도", stockEmblems: "보유 엠블럼", stockManuscripts: "보유 마스터 원고", calculate: "계산", maxTargets: "목표 최대", reset: "초기화",
-      sourceNote: "공개 Kingshot.net 계산기 구성을 참고한 팬 계산기입니다. 희귀 재료 사용 전 게임 내 수치를 한 번 더 확인하세요.", results: "결과", resultsDesc: "이 계획에 필요한 재료입니다.",
-      affinity: "친밀도", emblems: "엠블럼", manuscripts: "마스터 원고", time: "학습 시간", xp: "XP", powerGain: "전투력 증가", buffGain: "부대 버프 증가", stillNeed: "부족", extra: "남음", skillBreakdown: "스킬별 원고", max: "최대", noSkillSelection: "선택된 스킬 업그레이드가 없습니다."
-    });
-    Object.assign(I18N.ja, {
-      brandSub: "Kingshot計算ツール", hub: "ハブ", calcHub: "計算機ハブ", eyebrow: "マスター計算機", title: "マスター計算機",
-      subtitle: "マスターを選択し、現在値と目標値から親密度、エンブレム、マスター原稿、学習時間、戦力、部隊バフを確認します。",
-      statMasters: "マスター", statLevel: "Expertレベル", statBuff: "最大バフ", pickMaster: "マスターを選択", pickDesc: "マスターとアップグレード目標を設定します。",
-      currentExpert: "現在のExpertレベル", targetExpert: "目標Expertレベル", currentClass: "現在の関係ランク", targetClass: "目標関係ランク",
-      currentTalent: "現在の才能レベル", targetTalent: "目標才能レベル", skills: "スキル", skillsDesc: "スキル強化と学習済みXPを反映します。",
-      current: "現在", target: "目標", learnedXp: "学習済みXP", stock: "在庫", stockDesc: "任意です。在庫は必要合計から差し引かれます。",
-      stockAffinity: "在庫の親密度", stockEmblems: "在庫のエンブレム", stockManuscripts: "在庫のマスター原稿", calculate: "計算", maxTargets: "目標を最大", reset: "リセット",
-      sourceNote: "公開Kingshot.net計算機の構成を参考にしたファン計算機です。希少素材を使う前にゲーム内でも確認してください。", results: "結果", resultsDesc: "この計画に必要な素材です。",
-      affinity: "親密度", emblems: "エンブレム", manuscripts: "マスター原稿", time: "学習時間", xp: "XP", powerGain: "戦力増加", buffGain: "部隊バフ増加", stillNeed: "不足", extra: "余り", skillBreakdown: "スキル別原稿", max: "最大", noSkillSelection: "選択されたスキル強化はありません。"
-    });
-    Object.assign(I18N.fr, {
-      brandSub: "Outils de calcul Kingshot", hub: "Hub", calcHub: "Hub des calculateurs", eyebrow: "Calculateur Master", title: "Calculateur Master",
-      subtitle: "Choisissez un Master, entrez l'etat actuel et la cible, puis consultez Affinity, emblemes, manuscrits, temps, puissance et bonus d'escouade.",
-      statMasters: "Masters", statLevel: "Niveau Expert", statBuff: "Bonus max", pickMaster: "Choisir un Master", pickDesc: "Selectionnez le Master et configurez votre objectif.",
-      currentExpert: "Niveau Expert actuel", targetExpert: "Niveau Expert cible", currentClass: "Classe de relation actuelle", targetClass: "Classe de relation cible",
-      currentTalent: "Niveau de talent actuel", targetTalent: "Niveau de talent cible", skills: "Competences", skillsDesc: "Inclut les ameliorations de competences et le XP deja appris.",
-      current: "Actuel", target: "Cible", learnedXp: "XP deja appris", stock: "Stock", stockDesc: "Facultatif. Le stock est soustrait des besoins.",
-      stockAffinity: "Affinity en stock", stockEmblems: "Emblemes en stock", stockManuscripts: "Manuscrits Master en stock", calculate: "Calculer", maxTargets: "Cibles max", reset: "Reinitialiser",
-      sourceNote: "Calculateur fan base sur la disposition publique de Kingshot.net. Verifiez dans le jeu avant d'utiliser des materiaux rares.", results: "Resultats", resultsDesc: "Ressources requises pour ce plan.",
-      affinity: "Affinity", emblems: "Emblemes", manuscripts: "Manuscrits", time: "Temps d'apprentissage", xp: "XP", powerGain: "Gain de puissance", buffGain: "Gain de bonus d'escouade", stillNeed: "manquant", extra: "reste", skillBreakdown: "Manuscrits par competence", max: "Max", noSkillSelection: "Aucune amelioration de competence selectionnee."
-    });
-    Object.assign(I18N.de, {
-      brandSub: "Kingshot Rechner-Tools", hub: "Hub", calcHub: "Rechner-Hub", eyebrow: "Master-Rechner", title: "Master-Rechner",
-      subtitle: "Wahle einen Master, setze Ist- und Zielwerte und prufe Affinity, Embleme, Manuskripte, Lernzeit, Macht und Truppenbuff.",
-      statMasters: "Master", statLevel: "Expert-Level", statBuff: "Max. Buff", pickMaster: "Master wahlen", pickDesc: "Wahle den Master und konfiguriere dein Upgrade-Ziel.",
-      currentExpert: "Aktuelles Expert-Level", targetExpert: "Ziel-Expert-Level", currentClass: "Aktuelle Beziehungsklasse", targetClass: "Ziel-Beziehungsklasse",
-      currentTalent: "Aktuelles Talentlevel", targetTalent: "Ziel-Talentlevel", skills: "Skills", skillsDesc: "Berucksichtigt Skill-Upgrades und bereits gelernte XP.",
-      current: "Aktuell", target: "Ziel", learnedXp: "Bereits gelernte XP", stock: "Bestand", stockDesc: "Optional. Bestand wird vom Bedarf abgezogen.",
-      stockAffinity: "Affinity im Bestand", stockEmblems: "Embleme im Bestand", stockManuscripts: "Master-Manuskripte im Bestand", calculate: "Berechnen", maxTargets: "Ziele max.", reset: "Zurucksetzen",
-      sourceNote: "Fan-Rechner nach dem offentlichen Kingshot.net Layout. Prufe seltene Materialien vor der Nutzung im Spiel.", results: "Ergebnisse", resultsDesc: "Benotigte Ressourcen fur diesen Plan.",
-      affinity: "Affinity", emblems: "Embleme", manuscripts: "Manuskripte", time: "Lernzeit", xp: "XP", powerGain: "Machtzuwachs", buffGain: "Truppenbuff-Zuwachs", stillNeed: "fehlt", extra: "ubrig", skillBreakdown: "Manuskripte je Skill", max: "Max", noSkillSelection: "Keine Skill-Upgrades ausgewahlt."
-    });
-    Object.assign(I18N["zh-CN"], {
-      brandSub: "Kingshot计算工具", hub: "主页", calcHub: "计算器中心", eyebrow: "大师计算器", title: "大师计算器",
-      subtitle: "选择大师并输入当前与目标状态，查看亲密度、徽章、大师手稿、学习时间、战力和部队增益。",
-      statMasters: "大师", statLevel: "Expert等级", statBuff: "最大增益", pickMaster: "选择大师", pickDesc: "选择大师并设置升级目标。",
-      currentExpert: "当前Expert等级", targetExpert: "目标Expert等级", currentClass: "当前关系等级", targetClass: "目标关系等级",
-      currentTalent: "当前天赋等级", targetTalent: "目标天赋等级", skills: "技能", skillsDesc: "包含技能升级和已学习XP抵扣。",
-      current: "当前", target: "目标", learnedXp: "已学习XP", stock: "库存", stockDesc: "可选。库存会从需求总量中扣除。",
-      stockAffinity: "库存亲密度", stockEmblems: "库存徽章", stockManuscripts: "库存大师手稿", calculate: "计算", maxTargets: "目标最大", reset: "重置",
-      sourceNote: "基于公开Kingshot.net计算器布局制作的粉丝计算器。使用稀有材料前请在游戏内再次确认。", results: "结果", resultsDesc: "此计划所需资源。",
-      affinity: "亲密度", emblems: "徽章", manuscripts: "大师手稿", time: "学习时间", xp: "XP", powerGain: "战力提升", buffGain: "部队增益提升", stillNeed: "仍需", extra: "剩余", skillBreakdown: "按技能统计手稿", max: "最大", noSkillSelection: "没有选择技能升级。"
-    });
-    Object.assign(I18N["zh-TW"], {
-      brandSub: "Kingshot計算工具", hub: "首頁", calcHub: "計算器中心", eyebrow: "大師計算器", title: "大師計算器",
-      subtitle: "選擇大師並輸入目前與目標狀態，查看親密度、徽章、大師手稿、學習時間、戰力與部隊增益。",
-      statMasters: "大師", statLevel: "Expert等級", statBuff: "最大增益", pickMaster: "選擇大師", pickDesc: "選擇大師並設定升級目標。",
-      currentExpert: "目前Expert等級", targetExpert: "目標Expert等級", currentClass: "目前關係等級", targetClass: "目標關係等級",
-      currentTalent: "目前天賦等級", targetTalent: "目標天賦等級", skills: "技能", skillsDesc: "包含技能升級與已學習XP抵扣。",
-      current: "目前", target: "目標", learnedXp: "已學習XP", stock: "庫存", stockDesc: "選填。庫存會從需求總量中扣除。",
-      stockAffinity: "庫存親密度", stockEmblems: "庫存徽章", stockManuscripts: "庫存大師手稿", calculate: "計算", maxTargets: "目標最大", reset: "重置",
-      sourceNote: "依公開Kingshot.net計算器版面製作的粉絲計算器。使用稀有材料前請在遊戲內再次確認。", results: "結果", resultsDesc: "此計畫所需資源。",
-      affinity: "親密度", emblems: "徽章", manuscripts: "大師手稿", time: "學習時間", xp: "XP", powerGain: "戰力提升", buffGain: "部隊增益提升", stillNeed: "仍需", extra: "剩餘", skillBreakdown: "依技能統計手稿", max: "最大", noSkillSelection: "沒有選擇技能升級。"
-    });
-    Object.assign(I18N.th, {
-      brandSub: "เครื่องมือคำนวณ Kingshot", hub: "หน้าหลัก", calcHub: "ศูนย์คำนวณ", eyebrow: "เครื่องคำนวณ Master", title: "เครื่องคำนวณ Master",
-      subtitle: "เลือก Master ใส่ค่าปัจจุบันและเป้าหมาย แล้วดู Affinity, Emblems, Manuscripts, เวลาเรียน, พลัง และบัฟกองทัพ",
-      statMasters: "Master", statLevel: "เลเวล Expert", statBuff: "บัฟสูงสุด", pickMaster: "เลือก Master", pickDesc: "เลือก Master และตั้งค่าเป้าหมายการอัปเกรด",
-      currentExpert: "เลเวล Expert ปัจจุบัน", targetExpert: "เลเวล Expert เป้าหมาย", currentClass: "ระดับความสัมพันธ์ปัจจุบัน", targetClass: "ระดับความสัมพันธ์เป้าหมาย",
-      currentTalent: "เลเวล Talent ปัจจุบัน", targetTalent: "เลเวล Talent เป้าหมาย", skills: "สกิล", skillsDesc: "รวมการอัปเกรดสกิลและ XP ที่เรียนแล้ว",
-      current: "ปัจจุบัน", target: "เป้าหมาย", learnedXp: "XP ที่เรียนแล้ว", stock: "คลัง", stockDesc: "ไม่บังคับ ระบบจะหักของในคลังออกจากยอดที่ต้องใช้",
-      stockAffinity: "Affinity ในคลัง", stockEmblems: "Emblems ในคลัง", stockManuscripts: "Master's Manuscripts ในคลัง", calculate: "คำนวณ", maxTargets: "เป้าหมายสูงสุด", reset: "รีเซ็ต",
-      sourceNote: "เครื่องคำนวณแฟนเมดที่อ้างอิงเค้าโครงสาธารณะจาก Kingshot.net โปรดตรวจสอบในเกมก่อนใช้วัสดุหายาก", results: "ผลลัพธ์", resultsDesc: "ทรัพยากรที่ต้องใช้สำหรับแผนนี้",
-      affinity: "Affinity", emblems: "Emblems", manuscripts: "Manuscripts", time: "เวลาเรียน", xp: "XP", powerGain: "พลังเพิ่ม", buffGain: "บัฟกองทัพเพิ่ม", stillNeed: "ยังขาด", extra: "เหลือ", skillBreakdown: "Manuscripts ตามสกิล", max: "สูงสุด", noSkillSelection: "ยังไม่ได้เลือกการอัปเกรดสกิล"
-    });
-    Object.assign(I18N.id, {
-      brandSub: "Alat kalkulator Kingshot", hub: "Hub", calcHub: "Hub Kalkulator", eyebrow: "Kalkulator Master", title: "Kalkulator Master",
-      subtitle: "Pilih Master, isi kondisi saat ini dan target, lalu lihat Affinity, Emblems, Master's Manuscripts, waktu belajar, power, dan buff pasukan.",
-      statMasters: "Master", statLevel: "Level Expert", statBuff: "Buff maks", pickMaster: "Pilih Master", pickDesc: "Pilih Master dan atur target upgrade.",
-      currentExpert: "Level Expert saat ini", targetExpert: "Level Expert target", currentClass: "Kelas relasi saat ini", targetClass: "Kelas relasi target",
-      currentTalent: "Level talent saat ini", targetTalent: "Level talent target", skills: "Skill", skillsDesc: "Mencakup upgrade skill dan XP yang sudah dipelajari.",
-      current: "Saat ini", target: "Target", learnedXp: "XP yang sudah dipelajari", stock: "Stok", stockDesc: "Opsional. Stok akan dikurangi dari total kebutuhan.",
-      stockAffinity: "Affinity di stok", stockEmblems: "Emblems di stok", stockManuscripts: "Master's Manuscripts di stok", calculate: "Hitung", maxTargets: "Target maks", reset: "Reset",
-      sourceNote: "Kalkulator fan berdasarkan layout publik Kingshot.net. Cek ulang di game sebelum memakai material langka.", results: "Hasil", resultsDesc: "Resource yang dibutuhkan untuk rencana ini.",
-      affinity: "Affinity", emblems: "Emblems", manuscripts: "Manuscripts", time: "Waktu belajar", xp: "XP", powerGain: "Power bertambah", buffGain: "Buff pasukan bertambah", stillNeed: "masih kurang", extra: "sisa", skillBreakdown: "Manuscripts per skill", max: "Maks", noSkillSelection: "Tidak ada upgrade skill yang dipilih."
-    });
+    Object.assign(I18N.ko, { brandSub: "킹샷 계산기 도구", hub: "허브", calcHub: "계산기 허브", eyebrow: "마스터 계산기", title: "마스터 계산기", subtitle: "마스터를 선택하고 현재/목표 상태를 조정해 친밀도, 엠블럼, 마스터 원고, 전투력, 부대 버프 증가량을 확인합니다.", statMasters: "마스터", statLevel: "Expert 레벨", statBuff: "최대 버프", pickMaster: "마스터 선택", pickDesc: "마스터를 선택한 뒤 아래 계획을 조정하세요.", compare: "비교", plan: "계획", planDesc: "각 행의 왼쪽은 현재 상태, 오른쪽은 목표 상태입니다.", maxPower: "최대 전투력", maxBuff: "최대 버프", expertLevel: "Expert 레벨", relationshipClass: "관계 등급", talent: "재능", talentPassive: "패시브 재능. 항상 적용됩니다.", skills: "스킬", skillsDesc: "원본 계산기처럼 스킬 레벨을 바로 조정합니다.", current: "현재", target: "목표", learnedXp: "다음 레벨까지 학습한 XP", learnedXpHelp: "시간 계산에서만 차감됩니다. 원고는 레벨마다 선불로 필요합니다.", stock: "보유 재고", stockDesc: "보유량을 필요량에서 차감합니다.", stockAffinity: "보유 친밀도", stockEmblems: "보유 엠블럼", stockManuscripts: "보유 마스터 원고", calculate: "계산", maxTargets: "최대", reset: "초기화", results: "결과", resultsDesc: "이 계획에 필요한 재료입니다.", affinity: "친밀도", emblems: "엠블럼", manuscripts: "원고", time: "학습 시간", powerGain: "전투력 증가", buffGain: "부대 버프 증가", stillNeed: "부족", extra: "남음", skillBreakdown: "스킬별 원고", noSkillSelection: "선택된 스킬 업그레이드가 없습니다." });
+    Object.assign(I18N.ja, { brandSub: "Kingshot計算ツール", hub: "ハブ", calcHub: "計算機ハブ", title: "マスター計算機", subtitle: "マスターを選び、現在と目標を調整して素材、戦力、バフを確認します。", pickMaster: "マスター選択", compare: "比較", plan: "計画", planDesc: "各行の左が現在、右が目標です。", expertLevel: "Expertレベル", relationshipClass: "関係ランク", talent: "才能", skills: "スキル", current: "現在", target: "目標", stock: "在庫", calculate: "計算", maxTargets: "最大", reset: "リセット", results: "結果", stillNeed: "不足", extra: "余り", skillBreakdown: "スキル別原稿" });
+    Object.assign(I18N.fr, { brandSub: "Outils Kingshot", title: "Calculateur Master", subtitle: "Choisissez un Master et ajustez actuel/cible comme sur la page source.", pickMaster: "Choisir un Master", compare: "Comparer", plan: "Plan", expertLevel: "Niveau Expert", relationshipClass: "Classe de relation", talent: "Talent", skills: "Competences", current: "Actuel", target: "Cible", stock: "Stock", calculate: "Calculer", maxTargets: "Max", reset: "Reinitialiser", results: "Resultats", stillNeed: "manquant", extra: "reste" });
+    Object.assign(I18N.de, { brandSub: "Kingshot Rechner", title: "Master-Rechner", subtitle: "Wahle einen Master und stelle Ist/Ziel wie auf der Quellseite ein.", pickMaster: "Master wahlen", compare: "Vergleichen", plan: "Plan", expertLevel: "Expert-Level", relationshipClass: "Beziehungsklasse", talent: "Talent", skills: "Skills", current: "Aktuell", target: "Ziel", stock: "Bestand", calculate: "Berechnen", maxTargets: "Max", reset: "Zurucksetzen", results: "Ergebnisse", stillNeed: "fehlt", extra: "ubrig" });
+    Object.assign(I18N["zh-CN"], { brandSub: "Kingshot计算工具", hub: "主页", calcHub: "计算器中心", title: "大师计算器", subtitle: "选择大师，并像原页面一样调整当前与目标数值。", pickMaster: "选择大师", compare: "比较", plan: "计划", planDesc: "每行左侧是当前，右侧是目标。", expertLevel: "Expert等级", relationshipClass: "关系等级", talent: "天赋", skills: "技能", current: "当前", target: "目标", stock: "库存", calculate: "计算", maxTargets: "最大", reset: "重置", results: "结果", stillNeed: "仍需", extra: "剩余", skillBreakdown: "按技能统计手稿" });
+    Object.assign(I18N["zh-TW"], { brandSub: "Kingshot計算工具", hub: "首頁", calcHub: "計算器中心", title: "大師計算器", subtitle: "選擇大師，並像原頁面一樣調整目前與目標數值。", pickMaster: "選擇大師", compare: "比較", plan: "計畫", planDesc: "每列左側是目前，右側是目標。", expertLevel: "Expert等級", relationshipClass: "關係等級", talent: "天賦", skills: "技能", current: "目前", target: "目標", stock: "庫存", calculate: "計算", maxTargets: "最大", reset: "重置", results: "結果", stillNeed: "仍需", extra: "剩餘", skillBreakdown: "依技能統計手稿" });
+    Object.assign(I18N.th, { brandSub: "เครื่องมือ Kingshot", title: "เครื่องคำนวณ Master", subtitle: "เลือก Master แล้วปรับค่าปัจจุบันและเป้าหมายแบบหน้าอ้างอิง", pickMaster: "เลือก Master", compare: "เปรียบเทียบ", plan: "แผน", expertLevel: "เลเวล Expert", relationshipClass: "ระดับความสัมพันธ์", talent: "Talent", skills: "สกิล", current: "ปัจจุบัน", target: "เป้าหมาย", stock: "คลัง", calculate: "คำนวณ", maxTargets: "สูงสุด", reset: "รีเซ็ต", results: "ผลลัพธ์", stillNeed: "ยังขาด", extra: "เหลือ" });
+    Object.assign(I18N.id, { brandSub: "Alat Kingshot", title: "Kalkulator Master", subtitle: "Pilih Master lalu atur nilai saat ini dan target seperti halaman sumber.", pickMaster: "Pilih Master", compare: "Bandingkan", plan: "Rencana", expertLevel: "Level Expert", relationshipClass: "Kelas relasi", talent: "Talent", skills: "Skill", current: "Saat ini", target: "Target", stock: "Stok", calculate: "Hitung", maxTargets: "Maks", reset: "Reset", results: "Hasil", stillNeed: "masih kurang", extra: "sisa" });
 
     const params = new URLSearchParams(location.search);
     const supported = ["ko", "ja", "en", "fr", "de", "zh-CN", "zh-TW", "th", "id"];
@@ -470,8 +458,10 @@
       return `<span class="image-wrap ${cls}"><img src="${sources[0] || ""}" alt="${alt}" loading="lazy" data-fallback="${fallback}" data-src-list='${JSON.stringify(sources.slice(1))}'><span class="image-fallback">${fallback}</span></span>`;
     };
     const shortFallback = (text) => String(text || "M").split(/\s+/).map((part) => part[0]).join("").slice(0, 3).toUpperCase();
+    const master = () => MASTERS.find((item) => item.id === activeMaster) || MASTERS[0];
     const masterImage = (item) => `${IMAGE_ROOT}/masters/${item.id}/${item.id}.png`;
     const skillImage = (item, skill) => skill.image ? `${IMAGE_ROOT}/masters/${item.id}/${skill.image}` : masterImage(item);
+    const talentImage = (item) => [`${IMAGE_ROOT}/masters/${item.id}/${TALENT.image}`, `${IMAGE_ROOT}/masters/${item.id}/hunter-instinct.png`, masterImage(item)];
     const materialImage = (key, item = master()) => key === "emblems" ? [`${IMAGE_ROOT}/masters/${item.id}/${item.id}-emblem.png`, ...MATERIAL_IMAGES.emblems] : MATERIAL_IMAGES[key];
     const bindImageFallback = (root = document) => {
       root.querySelectorAll("img[data-fallback]").forEach((img) => {
@@ -484,7 +474,7 @@
             img.src = nextSources[0];
             return;
           }
-          img.closest(".image-wrap,.avatar")?.classList.add("missing");
+          img.closest(".image-wrap,.avatar,.portrait-lg")?.classList.add("missing");
         });
       });
     };
@@ -500,20 +490,38 @@
       from = clamp(from, 0, max);
       to = clamp(to, 0, max);
       if (to <= from) return 0;
-      const denom = Math.pow(max, power);
-      return (Math.pow(to, power) - Math.pow(from, power)) / denom;
+      return (Math.pow(to, power) - Math.pow(from, power)) / Math.pow(max, power);
     };
     const timeText = (seconds) => {
       seconds = Math.max(0, Math.round(seconds || 0));
       const d = Math.floor(seconds / 86400);
       const h = Math.floor((seconds % 86400) / 3600);
       const m = Math.floor((seconds % 3600) / 60);
-      if (d) return `${d}d ${h}h`;
-      if (h) return `${h}h ${m}m`;
-      return `${m}m`;
+      if (d) return `~${d}d ${h}h`;
+      if (h) return `~${h}h ${m}m`;
+      return `~${m}m`;
     };
-
-    function master() { return MASTERS.find((item) => item.id === activeMaster) || MASTERS[0]; }
+    const valueLabel = (id, value) => {
+      if (id.includes("Class")) return `${CLASSES[clamp(value, 1, 11) - 1]} · ${clamp(value, 1, 11)}/11`;
+      if (id.includes("Talent")) return `${clamp(value, 0, 11)}/11`;
+      return `Lv ${clamp(value, 1, 100)}/100`;
+    };
+    const control = (id, label, min, max, value) => `
+      <div class="range-control">
+        <div class="range-top"><span>${label}</span><output id="${id}Out">${valueLabel(id, value)}</output></div>
+        <div class="range-pair">
+          <input id="${id}Range" data-pair="${id}" type="range" min="${min}" max="${max}" value="${value}">
+          <input id="${id}" data-pair="${id}" type="number" min="${min}" max="${max}" value="${value}">
+        </div>
+      </div>
+    `;
+    const planRow = (title, summary, current, target, min, max, currentValue, targetValue, icon = "") => `
+      <article class="plan-row">
+        <div class="row-title">${icon}<strong>${title}</strong><span>${summary}</span></div>
+        ${control(current, t("current"), min, max, currentValue)}
+        ${control(target, t("target"), min, max, targetValue)}
+      </article>
+    `;
     function renderStatic() {
       document.documentElement.lang = lang;
       $("languageSelect").value = lang;
@@ -521,8 +529,6 @@
       $("hubLink").href = `./index.html?lang=${encodeURIComponent(lang)}`;
       $("hubTop").href = $("hubLink").href;
       $("calcLink").href = `./troop_training_ui.html?lang=${encodeURIComponent(lang)}`;
-      $("currentClass").innerHTML = CLASSES.map((name, idx) => `<option value="${idx + 1}">${name}</option>`).join("");
-      $("targetClass").innerHTML = CLASSES.map((name, idx) => `<option value="${idx + 1}" ${idx === CLASSES.length - 1 ? "selected" : ""}>${name}</option>`).join("");
       renderStockLabels();
     }
     function renderStockLabels() {
@@ -542,44 +548,110 @@
       `).join("");
       document.querySelectorAll("[data-master]").forEach((button) => button.addEventListener("click", () => {
         activeMaster = button.dataset.master;
-        renderMasters();
-        renderStockLabels();
-        renderSkills();
-        calculate();
+        renderAll();
       }));
       bindImageFallback($("masters"));
     }
-    function renderSkills() {
-      const m = master();
-      $("skills").innerHTML = master().skills.map((skill, index) => `
-        <div class="skill" data-skill="${index}">
-          <div class="skill-head">${imageWrap(skillImage(m, skill), skill.name, shortFallback(skill.name), "skill-img")}<strong>${skill.name}</strong><span>${t("max")} ${skill.max} · ${fmt(skill.manuscripts)}</span></div>
-          <div class="form-grid">
-            <div class="field"><label>${t("current")}</label><input id="skill_${index}_current" type="number" min="0" max="${skill.max}" value="0"></div>
-            <div class="field"><label>${t("target")}</label><input id="skill_${index}_target" type="number" min="0" max="${skill.max}" value="${skill.max}"></div>
-            <div class="field"><label>${t("learnedXp")}</label><input id="skill_${index}_xp" inputmode="decimal" value="0"></div>
+    function renderSelectedMaster() {
+      const item = master();
+      $("selectedMaster").innerHTML = `
+        <span class="portrait-lg"><img src="${masterImage(item)}" alt="${item.name}" loading="lazy" data-fallback="${item.initials}"><span class="image-fallback">${item.initials}</span></span>
+        <div class="selected-copy">
+          <h2>${item.name}</h2>
+          <p>${item.role}</p>
+          <div class="summary-grid">
+            <span class="metric-pill">${t("maxBuff")} <strong>+${fmt(item.buff, 2)}%</strong></span>
+            <span class="metric-pill">${t("maxPower")} <strong>${fmt(item.power)}</strong></span>
+            <span class="metric-pill">Lv 1 · ${CLASSES[0]} → Lv 100 · ${CLASSES[10]}</span>
           </div>
         </div>
+      `;
+      bindImageFallback($("selectedMaster"));
+    }
+    function renderPlanRows() {
+      const item = master();
+      $("planRows").innerHTML = [
+        planRow(t("expertLevel"), "Lv 1 → 100", "currentExpert", "targetExpert", 1, 100, 1, 100),
+        planRow(t("relationshipClass"), `${CLASSES[0]} → ${CLASSES[10]}`, "currentClass", "targetClass", 1, 11, 1, 11),
+        planRow(t("talent"), `0 → 11 · ${t("talentPassive")}`, "currentTalent", "targetTalent", 0, 11, 0, 11, imageWrap(talentImage(item), TALENT.name, "HI", "skill-img"))
+      ].join("");
+    }
+    function renderSkills() {
+      const item = master();
+      $("skills").innerHTML = item.skills.map((skill, index) => `
+        <article class="skill" data-skill="${index}">
+          <div class="skill-head">
+            ${imageWrap(skillImage(item, skill), skill.name, shortFallback(skill.name), "skill-img")}
+            <div><strong>${skill.name}</strong><span id="skill_${index}_summary">Lv 0 → ${skill.max}</span></div>
+            <span>${fmt(skill.manuscripts)} ${t("manuscripts")}</span>
+          </div>
+          <div class="plan-row">
+            <div class="row-title"><strong>${skill.name}</strong><span>${skill.desc || ""}</span></div>
+            ${control(`skill_${index}_current`, t("current"), 0, skill.max, 0)}
+            ${control(`skill_${index}_target`, t("target"), 0, skill.max, skill.max)}
+          </div>
+          <div class="xp-line">
+            <label for="skill_${index}_xp">${t("learnedXp")}</label>
+            <div class="xp-box"><input id="skill_${index}_xp" inputmode="decimal" value="0"><span>/ ${fmt(skill.xp)} ${t("xp")}</span></div>
+            <p class="note">${t("learnedXpHelp")}</p>
+          </div>
+        </article>
       `).join("");
-      bindInputs();
       bindImageFallback($("skills"));
     }
-    function bindInputs() {
+    function bindControls() {
       document.querySelectorAll("input,select").forEach((el) => {
         if (el.dataset.boundCalc) return;
         el.dataset.boundCalc = "1";
-        el.addEventListener("input", calculate);
-        el.addEventListener("change", calculate);
+        el.addEventListener("input", () => {
+          syncPaired(el);
+          calculate();
+        });
+        el.addEventListener("change", () => {
+          syncPaired(el);
+          calculate();
+        });
       });
     }
+    function syncPaired(el) {
+      const id = el.dataset.pair;
+      if (!id) return;
+      const range = $(`${id}Range`);
+      const input = $(id);
+      const min = Number(input.min || range.min || 0);
+      const max = Number(input.max || range.max || 100);
+      const value = clamp(el.value, min, max);
+      range.value = value;
+      input.value = value;
+      const out = $(`${id}Out`);
+      if (out) out.textContent = valueLabel(id, value);
+    }
+    function normalizeTargets() {
+      [["currentExpert", "targetExpert"], ["currentClass", "targetClass"], ["currentTalent", "targetTalent"]].forEach(([cur, tar]) => {
+        if (Number($(tar).value) < Number($(cur).value)) {
+          $(tar).value = $(cur).value;
+          $(`${tar}Range`).value = $(cur).value;
+        }
+      });
+      master().skills.forEach((skill, index) => {
+        const cur = `skill_${index}_current`;
+        const tar = `skill_${index}_target`;
+        if (Number($(tar).value) < Number($(cur).value)) {
+          $(tar).value = $(cur).value;
+          $(`${tar}Range`).value = $(cur).value;
+        }
+      });
+      document.querySelectorAll("input[data-pair]").forEach(syncPaired);
+    }
     function calculate() {
-      const m = master();
+      normalizeTargets();
+      const item = master();
       const currentExpert = clamp($("currentExpert").value, 1, 100);
-      const targetExpert = Math.max(currentExpert, clamp($("targetExpert").value, 1, 100));
+      const targetExpert = clamp($("targetExpert").value, 1, 100);
       const currentClass = clamp($("currentClass").value, 1, 11);
-      const targetClass = Math.max(currentClass, clamp($("targetClass").value, 1, 11));
+      const targetClass = clamp($("targetClass").value, 1, 11);
       const currentTalent = clamp($("currentTalent").value, 0, 11);
-      const targetTalent = Math.max(currentTalent, clamp($("targetTalent").value, 0, 11));
+      const targetTalent = clamp($("targetTalent").value, 0, 11);
       const expertPart = curve(currentExpert - 1, targetExpert - 1, 99, 1.28);
       const classPart = curve(currentClass - 1, targetClass - 1, 10, 1.35);
       const talentPart = curve(currentTalent, targetTalent, 11, 1.18);
@@ -587,9 +659,9 @@
       let manuscripts = 0;
       let xp = 0;
       let skillPower = 0;
-      const skillRows = m.skills.map((skill, index) => {
+      const skillRows = item.skills.map((skill, index) => {
         const cur = clamp($(`skill_${index}_current`).value, 0, skill.max);
-        const tar = Math.max(cur, clamp($(`skill_${index}_target`).value, 0, skill.max));
+        const tar = clamp($(`skill_${index}_target`).value, 0, skill.max);
         const part = curve(cur, tar, skill.max, 1.18);
         const learned = parseAmount($(`skill_${index}_xp`).value);
         const lineManuscripts = skill.manuscripts * part;
@@ -598,55 +670,56 @@
         manuscripts += lineManuscripts;
         xp += lineXp;
         skillPower += linePower;
+        const summary = $(`skill_${index}_summary`);
+        if (summary) summary.textContent = `Lv ${cur} → ${tar}`;
         return { name: skill.name, skill, cur, tar, manuscripts: lineManuscripts, xp: lineXp, power: linePower };
       });
-      const affinity = m.affinity * snapshotPart;
-      const emblems = m.emblems * (classPart * .7 + talentPart * .3);
-      const basePower = m.power * (expertPart * .34 + classPart * .28 + talentPart * .18) + skillPower;
-      const buffGain = m.buff * snapshotPart;
+      const affinity = item.affinity * snapshotPart;
+      const emblems = item.emblems * (classPart * .7 + talentPart * .3);
+      const basePower = item.power * (expertPart * .34 + classPart * .28 + talentPart * .18) + skillPower;
+      const buffGain = item.buff * snapshotPart;
       const stockAffinity = parseAmount($("stockAffinity").value);
       const stockEmblems = parseAmount($("stockEmblems").value);
       const stockManuscripts = parseAmount($("stockManuscripts").value);
       const gap = (need, stock) => need > stock ? `<span class="need">${t("stillNeed")}: ${fmt(need - stock)}</span>` : `<span class="extra">${t("extra")}: ${fmt(stock - need)}</span>`;
-      const rows = skillRows.filter((row) => row.tar > row.cur).map((row) => `<div class="break-row"><strong>${imageWrap(skillImage(m, row.skill), row.name, shortFallback(row.name), "skill-img")}<span>${row.name} Lv ${row.cur} → ${row.tar}</span></strong><span>${t("manuscripts")} ${fmt(row.manuscripts)} · ${t("xp")} ${fmt(row.xp)} · ${t("powerGain")} ${fmt(row.power)}</span></div>`).join("") || `<p class="note">${t("noSkillSelection")}</p>`;
+      const rows = skillRows.filter((row) => row.tar > row.cur).map((row) => `<div class="break-row"><strong>${imageWrap(skillImage(item, row.skill), row.name, shortFallback(row.name), "skill-img")}<span>${row.name} Lv ${row.cur} → ${row.tar}</span></strong><span>${imageWrap(materialImage("manuscripts"), t("manuscripts"), "MS")} ${fmt(row.manuscripts)} · ${fmt(row.xp)} ${t("xp")} · +${fmt(row.power)} ${t("powerGain")}</span></div>`).join("") || `<p class="note">${t("noSkillSelection")}</p>`;
       $("results").innerHTML = `
+        <div class="result-card"><span>Lv ${currentExpert} → ${targetExpert} · ${CLASSES[currentClass - 1]} → ${CLASSES[targetClass - 1]} · ${t("talent")} ${currentTalent} → ${targetTalent}</span></div>
         <div class="result-card"><span class="result-title">${imageWrap(materialImage("affinity"), t("affinity"), "AF")}<span>${t("affinity")}</span></span><strong>${fmt(affinity)}</strong>${gap(affinity, stockAffinity)}</div>
         <div class="result-card"><span class="result-title">${imageWrap(materialImage("emblems"), t("emblems"), "EM")}<span>${t("emblems")}</span></span><strong>${fmt(emblems)}</strong>${gap(emblems, stockEmblems)}</div>
         <div class="result-card"><span class="result-title">${imageWrap(materialImage("manuscripts"), t("manuscripts"), "MS")}<span>${t("manuscripts")}</span></span><strong>${fmt(manuscripts)}</strong>${gap(manuscripts, stockManuscripts)}</div>
-        <div class="result-card"><span class="result-title">${imageWrap(materialImage("time"), t("time"), "T")}<span>${t("time")}</span></span><strong>${timeText(xp)}</strong><span>${fmt(xp)} ${t("xp")}</span></div>
-        <div class="result-card"><span class="result-title">${imageWrap(materialImage("power"), t("powerGain"), "P")}<span>${t("powerGain")}</span></span><strong>+${fmt(basePower)}</strong></div>
-        <div class="result-card"><span class="result-title">${imageWrap(materialImage("buff"), t("buffGain"), "B")}<span>${t("buffGain")}</span></span><strong>+${fmt(buffGain, 2)}%</strong></div>
+        <div class="result-card"><span>${t("time")}</span><strong>${timeText(xp)}</strong><span>${fmt(xp)} ${t("xp")}</span></div>
+        <div class="result-card"><span>${t("powerGain")}</span><strong>+${fmt(basePower)}</strong></div>
+        <div class="result-card"><span>${t("buffGain")}</span><strong>+${fmt(buffGain, 2)}%</strong></div>
         <div class="result-card"><span>${t("skillBreakdown")}</span><div class="breakdown">${rows}</div></div>
       `;
       bindImageFallback($("results"));
     }
     function maxTargets() {
-      $("currentExpert").value = 1;
-      $("targetExpert").value = 100;
-      $("currentClass").value = 1;
-      $("targetClass").value = 11;
-      $("currentTalent").value = 0;
-      $("targetTalent").value = 11;
+      [["currentExpert", 1], ["targetExpert", 100], ["currentClass", 1], ["targetClass", 11], ["currentTalent", 0], ["targetTalent", 11]].forEach(([id, value]) => {
+        $(id).value = value;
+        $(`${id}Range`).value = value;
+      });
       master().skills.forEach((skill, index) => {
         $(`skill_${index}_current`).value = 0;
+        $(`skill_${index}_currentRange`).value = 0;
         $(`skill_${index}_target`).value = skill.max;
+        $(`skill_${index}_targetRange`).value = skill.max;
         $(`skill_${index}_xp`).value = 0;
       });
       calculate();
     }
     function resetAll() {
-      $("currentExpert").value = 1;
-      $("targetExpert").value = 1;
-      $("currentClass").value = 1;
-      $("targetClass").value = 1;
-      $("currentTalent").value = 0;
-      $("targetTalent").value = 0;
-      $("stockAffinity").value = 0;
-      $("stockEmblems").value = 0;
-      $("stockManuscripts").value = 0;
+      [["currentExpert", 1], ["targetExpert", 1], ["currentClass", 1], ["targetClass", 1], ["currentTalent", 0], ["targetTalent", 0]].forEach(([id, value]) => {
+        $(id).value = value;
+        $(`${id}Range`).value = value;
+      });
+      ["stockAffinity", "stockEmblems", "stockManuscripts"].forEach((id) => $(id).value = 0);
       master().skills.forEach((skill, index) => {
         $(`skill_${index}_current`).value = 0;
+        $(`skill_${index}_currentRange`).value = 0;
         $(`skill_${index}_target`).value = 0;
+        $(`skill_${index}_targetRange`).value = 0;
         $(`skill_${index}_xp`).value = 0;
       });
       calculate();
@@ -658,16 +731,21 @@
       const url = new URL(location.href);
       url.searchParams.set("lang", lang);
       history.replaceState(null, "", url);
+      renderAll();
+    }
+    function renderAll() {
       renderStatic();
       renderMasters();
+      renderSelectedMaster();
+      renderPlanRows();
       renderSkills();
+      renderStockLabels();
+      bindControls();
       calculate();
     }
-    renderStatic();
-    renderMasters();
-    renderSkills();
-    calculate();
+    renderAll();
     $("calculateBtn").addEventListener("click", calculate);
+    $("compareBtn").addEventListener("click", calculate);
     $("maxBtn").addEventListener("click", maxTargets);
     $("resetBtn").addEventListener("click", resetAll);
     $("languageSelect").addEventListener("change", (event) => setLang(event.target.value));
