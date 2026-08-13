@@ -196,6 +196,7 @@
     }
     .image-wrap.skill-img { width: 38px; height: 38px; flex-basis: 38px; border-radius: 13px; }
     .image-wrap img { width: 100%; height: 100%; object-fit: contain; padding: 3px; }
+    .material-label { display: flex !important; align-items: center; gap: 8px; }
     .avatar .image-fallback, .image-fallback { display: none; color: var(--gold); font-size: 10px; font-weight: 950; letter-spacing: .02em; text-align: center; }
     .image-wrap.missing img, .avatar.missing img { display: none; }
     .image-wrap.missing .image-fallback, .avatar.missing .image-fallback { display: grid; place-items: center; }
@@ -203,7 +204,7 @@
     .extra { color: var(--green); }
     .breakdown { display: grid; gap: 8px; max-height: 280px; overflow: auto; }
     .break-row { border: 1px solid rgba(255,255,255,.09); border-radius: 14px; padding: 10px; background: rgba(0,0,0,.16); }
-    .break-row strong { display: block; font-size: 13px; }
+    .break-row strong { display: flex; align-items: center; gap: 8px; font-size: 13px; }
     .break-row span { display: block; color: var(--muted); font-size: 12px; margin-top: 4px; line-height: 1.45; }
     .note { color: var(--muted); font-size: 12px; line-height: 1.55; }
     @media (max-width: 1080px) { .layout, .hero { grid-template-columns: 1fr; } }
@@ -280,9 +281,9 @@
             <p data-i18n="stockDesc">Optional. Inventory is subtracted from the required totals.</p>
           </div>
           <div class="form-grid">
-            <div class="field"><label for="stockAffinity" data-i18n="stockAffinity">Affinity in stock</label><input id="stockAffinity" inputmode="decimal" value="0"></div>
-            <div class="field"><label for="stockEmblems" data-i18n="stockEmblems">Emblems in stock</label><input id="stockEmblems" inputmode="decimal" value="0"></div>
-            <div class="field"><label for="stockManuscripts" data-i18n="stockManuscripts">Master's Manuscripts in stock</label><input id="stockManuscripts" inputmode="decimal" value="0"></div>
+            <div class="field"><label id="stockAffinityLabel" class="material-label" for="stockAffinity"></label><input id="stockAffinity" inputmode="decimal" value="0"></div>
+            <div class="field"><label id="stockEmblemsLabel" class="material-label" for="stockEmblems"></label><input id="stockEmblems" inputmode="decimal" value="0"></div>
+            <div class="field"><label id="stockManuscriptsLabel" class="material-label" for="stockManuscripts"></label><input id="stockManuscripts" inputmode="decimal" value="0"></div>
           </div>
           <div class="btns">
             <button id="calculateBtn" data-i18n="calculate">Calculate</button>
@@ -309,12 +310,12 @@
     const CLASSES = ["Stranger", "Familiar Face", "Acquaintance 1", "Acquaintance 2", "Acquaintance 3", "Casual 1", "Casual 2", "Confidant", "Close Ally", "Trusted Friend", "Kindred Soul"];
     const IMAGE_ROOT = "https://kingshot.net/images";
     const MATERIAL_IMAGES = {
-      affinity: `${IMAGE_ROOT}/masters/affinity.png`,
-      emblems: `${IMAGE_ROOT}/masters/emblem.png`,
-      manuscripts: `${IMAGE_ROOT}/masters/manuscript.png`,
-      time: `${IMAGE_ROOT}/icons/time.png`,
-      power: `${IMAGE_ROOT}/icons/power.png`,
-      buff: `${IMAGE_ROOT}/icons/buff.png`
+      affinity: [`${IMAGE_ROOT}/masters/affinity.png`, `${IMAGE_ROOT}/masters/master-affinity.png`, `${IMAGE_ROOT}/items/affinity.png`],
+      emblems: [`${IMAGE_ROOT}/masters/emblem.png`, `${IMAGE_ROOT}/masters/emblems.png`, `${IMAGE_ROOT}/items/master-emblem.png`],
+      manuscripts: [`${IMAGE_ROOT}/items/masters-manuscript.png`, `${IMAGE_ROOT}/masters/manuscript.png`, `${IMAGE_ROOT}/masters/manuscripts.png`, `${IMAGE_ROOT}/items/master-manuscript.png`],
+      time: [`${IMAGE_ROOT}/icons/time.png`, `${IMAGE_ROOT}/resources/time.png`],
+      power: [`${IMAGE_ROOT}/icons/power.png`, `${IMAGE_ROOT}/resources/power.png`],
+      buff: [`${IMAGE_ROOT}/icons/buff.png`, `${IMAGE_ROOT}/resources/buff.png`]
     };
     const BASE_SKILLS = [
       { name: "Skill I", max: 10, manuscripts: 3150, xp: 162000, power: 30000 },
@@ -346,7 +347,7 @@
         current: "Current", target: "Target", learnedXp: "Learned XP offset", stock: "Stock", stockDesc: "Optional. Inventory is subtracted from the required totals.",
         stockAffinity: "Affinity in stock", stockEmblems: "Emblems in stock", stockManuscripts: "Master's Manuscripts in stock", calculate: "Calculate", maxTargets: "Max targets", reset: "Reset",
         sourceNote: "Local fan calculator based on the public Kingshot.net calculator layout. Check in game before spending rare materials.", results: "Results", resultsDesc: "Required resources for this plan.",
-        affinity: "Affinity", emblems: "Emblems", manuscripts: "Manuscripts", time: "Time to learn", xp: "XP", powerGain: "Power gain", buffGain: "Squad buff gain", stillNeed: "still needed", extra: "extra", skillBreakdown: "Manuscripts by skill"
+        affinity: "Affinity", emblems: "Emblems", manuscripts: "Manuscripts", time: "Time to learn", xp: "XP", powerGain: "Power gain", buffGain: "Squad buff gain", stillNeed: "still needed", extra: "extra", skillBreakdown: "Manuscripts by skill", max: "Max", noSkillSelection: "No skill upgrades selected."
       }
     };
     ["ko", "ja", "fr", "de", "zh-CN", "zh-TW", "th", "id"].forEach((code) => I18N[code] = { ...I18N.en });
@@ -358,6 +359,94 @@
     Object.assign(I18N["zh-TW"], { title: "大師計算器", subtitle: "計算親密度、徽章、手稿、學習時間、戰力與部隊增益。", pickMaster: "選擇大師", current: "目前", target: "目標", calculate: "計算", results: "結果" });
     Object.assign(I18N.th, { title: "เครื่องคำนวณ Master", subtitle: "คำนวณ Affinity, Emblems, Manuscripts, เวลา, พลัง และบัฟ", pickMaster: "เลือก Master", current: "ปัจจุบัน", target: "เป้าหมาย", calculate: "คำนวณ", results: "ผลลัพธ์" });
     Object.assign(I18N.id, { title: "Kalkulator Master", subtitle: "Hitung Affinity, Emblem, Manuscript, waktu, power, dan buff.", pickMaster: "Pilih Master", current: "Saat ini", target: "Target", calculate: "Hitung", results: "Hasil" });
+    Object.assign(I18N.ko, {
+      brandSub: "킹샷 계산기 도구", hub: "허브", calcHub: "계산기 허브", eyebrow: "마스터 계산기", title: "마스터 계산기",
+      subtitle: "마스터를 선택하고 현재/목표 상태를 입력해 친밀도, 엠블럼, 마스터 원고, 학습 시간, 전투력, 부대 버프 증가량을 확인합니다.",
+      statMasters: "마스터", statLevel: "Expert 레벨", statBuff: "최대 버프", pickMaster: "마스터 선택", pickDesc: "마스터와 목표 업그레이드 상태를 설정합니다.",
+      currentExpert: "현재 Expert 레벨", targetExpert: "목표 Expert 레벨", currentClass: "현재 관계 등급", targetClass: "목표 관계 등급",
+      currentTalent: "현재 재능 레벨", targetTalent: "목표 재능 레벨", skills: "스킬", skillsDesc: "스킬 업그레이드와 이미 학습한 XP를 반영합니다.",
+      current: "현재", target: "목표", learnedXp: "이미 학습한 XP", stock: "보유 재고", stockDesc: "선택 사항입니다. 보유량은 필요 총량에서 차감됩니다.",
+      stockAffinity: "보유 친밀도", stockEmblems: "보유 엠블럼", stockManuscripts: "보유 마스터 원고", calculate: "계산", maxTargets: "목표 최대", reset: "초기화",
+      sourceNote: "공개 Kingshot.net 계산기 구성을 참고한 팬 계산기입니다. 희귀 재료 사용 전 게임 내 수치를 한 번 더 확인하세요.", results: "결과", resultsDesc: "이 계획에 필요한 재료입니다.",
+      affinity: "친밀도", emblems: "엠블럼", manuscripts: "마스터 원고", time: "학습 시간", xp: "XP", powerGain: "전투력 증가", buffGain: "부대 버프 증가", stillNeed: "부족", extra: "남음", skillBreakdown: "스킬별 원고", max: "최대", noSkillSelection: "선택된 스킬 업그레이드가 없습니다."
+    });
+    Object.assign(I18N.ja, {
+      brandSub: "Kingshot計算ツール", hub: "ハブ", calcHub: "計算機ハブ", eyebrow: "マスター計算機", title: "マスター計算機",
+      subtitle: "マスターを選択し、現在値と目標値から親密度、エンブレム、マスター原稿、学習時間、戦力、部隊バフを確認します。",
+      statMasters: "マスター", statLevel: "Expertレベル", statBuff: "最大バフ", pickMaster: "マスターを選択", pickDesc: "マスターとアップグレード目標を設定します。",
+      currentExpert: "現在のExpertレベル", targetExpert: "目標Expertレベル", currentClass: "現在の関係ランク", targetClass: "目標関係ランク",
+      currentTalent: "現在の才能レベル", targetTalent: "目標才能レベル", skills: "スキル", skillsDesc: "スキル強化と学習済みXPを反映します。",
+      current: "現在", target: "目標", learnedXp: "学習済みXP", stock: "在庫", stockDesc: "任意です。在庫は必要合計から差し引かれます。",
+      stockAffinity: "在庫の親密度", stockEmblems: "在庫のエンブレム", stockManuscripts: "在庫のマスター原稿", calculate: "計算", maxTargets: "目標を最大", reset: "リセット",
+      sourceNote: "公開Kingshot.net計算機の構成を参考にしたファン計算機です。希少素材を使う前にゲーム内でも確認してください。", results: "結果", resultsDesc: "この計画に必要な素材です。",
+      affinity: "親密度", emblems: "エンブレム", manuscripts: "マスター原稿", time: "学習時間", xp: "XP", powerGain: "戦力増加", buffGain: "部隊バフ増加", stillNeed: "不足", extra: "余り", skillBreakdown: "スキル別原稿", max: "最大", noSkillSelection: "選択されたスキル強化はありません。"
+    });
+    Object.assign(I18N.fr, {
+      brandSub: "Outils de calcul Kingshot", hub: "Hub", calcHub: "Hub des calculateurs", eyebrow: "Calculateur Master", title: "Calculateur Master",
+      subtitle: "Choisissez un Master, entrez l'etat actuel et la cible, puis consultez Affinity, emblemes, manuscrits, temps, puissance et bonus d'escouade.",
+      statMasters: "Masters", statLevel: "Niveau Expert", statBuff: "Bonus max", pickMaster: "Choisir un Master", pickDesc: "Selectionnez le Master et configurez votre objectif.",
+      currentExpert: "Niveau Expert actuel", targetExpert: "Niveau Expert cible", currentClass: "Classe de relation actuelle", targetClass: "Classe de relation cible",
+      currentTalent: "Niveau de talent actuel", targetTalent: "Niveau de talent cible", skills: "Competences", skillsDesc: "Inclut les ameliorations de competences et le XP deja appris.",
+      current: "Actuel", target: "Cible", learnedXp: "XP deja appris", stock: "Stock", stockDesc: "Facultatif. Le stock est soustrait des besoins.",
+      stockAffinity: "Affinity en stock", stockEmblems: "Emblemes en stock", stockManuscripts: "Manuscrits Master en stock", calculate: "Calculer", maxTargets: "Cibles max", reset: "Reinitialiser",
+      sourceNote: "Calculateur fan base sur la disposition publique de Kingshot.net. Verifiez dans le jeu avant d'utiliser des materiaux rares.", results: "Resultats", resultsDesc: "Ressources requises pour ce plan.",
+      affinity: "Affinity", emblems: "Emblemes", manuscripts: "Manuscrits", time: "Temps d'apprentissage", xp: "XP", powerGain: "Gain de puissance", buffGain: "Gain de bonus d'escouade", stillNeed: "manquant", extra: "reste", skillBreakdown: "Manuscrits par competence", max: "Max", noSkillSelection: "Aucune amelioration de competence selectionnee."
+    });
+    Object.assign(I18N.de, {
+      brandSub: "Kingshot Rechner-Tools", hub: "Hub", calcHub: "Rechner-Hub", eyebrow: "Master-Rechner", title: "Master-Rechner",
+      subtitle: "Wahle einen Master, setze Ist- und Zielwerte und prufe Affinity, Embleme, Manuskripte, Lernzeit, Macht und Truppenbuff.",
+      statMasters: "Master", statLevel: "Expert-Level", statBuff: "Max. Buff", pickMaster: "Master wahlen", pickDesc: "Wahle den Master und konfiguriere dein Upgrade-Ziel.",
+      currentExpert: "Aktuelles Expert-Level", targetExpert: "Ziel-Expert-Level", currentClass: "Aktuelle Beziehungsklasse", targetClass: "Ziel-Beziehungsklasse",
+      currentTalent: "Aktuelles Talentlevel", targetTalent: "Ziel-Talentlevel", skills: "Skills", skillsDesc: "Berucksichtigt Skill-Upgrades und bereits gelernte XP.",
+      current: "Aktuell", target: "Ziel", learnedXp: "Bereits gelernte XP", stock: "Bestand", stockDesc: "Optional. Bestand wird vom Bedarf abgezogen.",
+      stockAffinity: "Affinity im Bestand", stockEmblems: "Embleme im Bestand", stockManuscripts: "Master-Manuskripte im Bestand", calculate: "Berechnen", maxTargets: "Ziele max.", reset: "Zurucksetzen",
+      sourceNote: "Fan-Rechner nach dem offentlichen Kingshot.net Layout. Prufe seltene Materialien vor der Nutzung im Spiel.", results: "Ergebnisse", resultsDesc: "Benotigte Ressourcen fur diesen Plan.",
+      affinity: "Affinity", emblems: "Embleme", manuscripts: "Manuskripte", time: "Lernzeit", xp: "XP", powerGain: "Machtzuwachs", buffGain: "Truppenbuff-Zuwachs", stillNeed: "fehlt", extra: "ubrig", skillBreakdown: "Manuskripte je Skill", max: "Max", noSkillSelection: "Keine Skill-Upgrades ausgewahlt."
+    });
+    Object.assign(I18N["zh-CN"], {
+      brandSub: "Kingshot计算工具", hub: "主页", calcHub: "计算器中心", eyebrow: "大师计算器", title: "大师计算器",
+      subtitle: "选择大师并输入当前与目标状态，查看亲密度、徽章、大师手稿、学习时间、战力和部队增益。",
+      statMasters: "大师", statLevel: "Expert等级", statBuff: "最大增益", pickMaster: "选择大师", pickDesc: "选择大师并设置升级目标。",
+      currentExpert: "当前Expert等级", targetExpert: "目标Expert等级", currentClass: "当前关系等级", targetClass: "目标关系等级",
+      currentTalent: "当前天赋等级", targetTalent: "目标天赋等级", skills: "技能", skillsDesc: "包含技能升级和已学习XP抵扣。",
+      current: "当前", target: "目标", learnedXp: "已学习XP", stock: "库存", stockDesc: "可选。库存会从需求总量中扣除。",
+      stockAffinity: "库存亲密度", stockEmblems: "库存徽章", stockManuscripts: "库存大师手稿", calculate: "计算", maxTargets: "目标最大", reset: "重置",
+      sourceNote: "基于公开Kingshot.net计算器布局制作的粉丝计算器。使用稀有材料前请在游戏内再次确认。", results: "结果", resultsDesc: "此计划所需资源。",
+      affinity: "亲密度", emblems: "徽章", manuscripts: "大师手稿", time: "学习时间", xp: "XP", powerGain: "战力提升", buffGain: "部队增益提升", stillNeed: "仍需", extra: "剩余", skillBreakdown: "按技能统计手稿", max: "最大", noSkillSelection: "没有选择技能升级。"
+    });
+    Object.assign(I18N["zh-TW"], {
+      brandSub: "Kingshot計算工具", hub: "首頁", calcHub: "計算器中心", eyebrow: "大師計算器", title: "大師計算器",
+      subtitle: "選擇大師並輸入目前與目標狀態，查看親密度、徽章、大師手稿、學習時間、戰力與部隊增益。",
+      statMasters: "大師", statLevel: "Expert等級", statBuff: "最大增益", pickMaster: "選擇大師", pickDesc: "選擇大師並設定升級目標。",
+      currentExpert: "目前Expert等級", targetExpert: "目標Expert等級", currentClass: "目前關係等級", targetClass: "目標關係等級",
+      currentTalent: "目前天賦等級", targetTalent: "目標天賦等級", skills: "技能", skillsDesc: "包含技能升級與已學習XP抵扣。",
+      current: "目前", target: "目標", learnedXp: "已學習XP", stock: "庫存", stockDesc: "選填。庫存會從需求總量中扣除。",
+      stockAffinity: "庫存親密度", stockEmblems: "庫存徽章", stockManuscripts: "庫存大師手稿", calculate: "計算", maxTargets: "目標最大", reset: "重置",
+      sourceNote: "依公開Kingshot.net計算器版面製作的粉絲計算器。使用稀有材料前請在遊戲內再次確認。", results: "結果", resultsDesc: "此計畫所需資源。",
+      affinity: "親密度", emblems: "徽章", manuscripts: "大師手稿", time: "學習時間", xp: "XP", powerGain: "戰力提升", buffGain: "部隊增益提升", stillNeed: "仍需", extra: "剩餘", skillBreakdown: "依技能統計手稿", max: "最大", noSkillSelection: "沒有選擇技能升級。"
+    });
+    Object.assign(I18N.th, {
+      brandSub: "เครื่องมือคำนวณ Kingshot", hub: "หน้าหลัก", calcHub: "ศูนย์คำนวณ", eyebrow: "เครื่องคำนวณ Master", title: "เครื่องคำนวณ Master",
+      subtitle: "เลือก Master ใส่ค่าปัจจุบันและเป้าหมาย แล้วดู Affinity, Emblems, Manuscripts, เวลาเรียน, พลัง และบัฟกองทัพ",
+      statMasters: "Master", statLevel: "เลเวล Expert", statBuff: "บัฟสูงสุด", pickMaster: "เลือก Master", pickDesc: "เลือก Master และตั้งค่าเป้าหมายการอัปเกรด",
+      currentExpert: "เลเวล Expert ปัจจุบัน", targetExpert: "เลเวล Expert เป้าหมาย", currentClass: "ระดับความสัมพันธ์ปัจจุบัน", targetClass: "ระดับความสัมพันธ์เป้าหมาย",
+      currentTalent: "เลเวล Talent ปัจจุบัน", targetTalent: "เลเวล Talent เป้าหมาย", skills: "สกิล", skillsDesc: "รวมการอัปเกรดสกิลและ XP ที่เรียนแล้ว",
+      current: "ปัจจุบัน", target: "เป้าหมาย", learnedXp: "XP ที่เรียนแล้ว", stock: "คลัง", stockDesc: "ไม่บังคับ ระบบจะหักของในคลังออกจากยอดที่ต้องใช้",
+      stockAffinity: "Affinity ในคลัง", stockEmblems: "Emblems ในคลัง", stockManuscripts: "Master's Manuscripts ในคลัง", calculate: "คำนวณ", maxTargets: "เป้าหมายสูงสุด", reset: "รีเซ็ต",
+      sourceNote: "เครื่องคำนวณแฟนเมดที่อ้างอิงเค้าโครงสาธารณะจาก Kingshot.net โปรดตรวจสอบในเกมก่อนใช้วัสดุหายาก", results: "ผลลัพธ์", resultsDesc: "ทรัพยากรที่ต้องใช้สำหรับแผนนี้",
+      affinity: "Affinity", emblems: "Emblems", manuscripts: "Manuscripts", time: "เวลาเรียน", xp: "XP", powerGain: "พลังเพิ่ม", buffGain: "บัฟกองทัพเพิ่ม", stillNeed: "ยังขาด", extra: "เหลือ", skillBreakdown: "Manuscripts ตามสกิล", max: "สูงสุด", noSkillSelection: "ยังไม่ได้เลือกการอัปเกรดสกิล"
+    });
+    Object.assign(I18N.id, {
+      brandSub: "Alat kalkulator Kingshot", hub: "Hub", calcHub: "Hub Kalkulator", eyebrow: "Kalkulator Master", title: "Kalkulator Master",
+      subtitle: "Pilih Master, isi kondisi saat ini dan target, lalu lihat Affinity, Emblems, Master's Manuscripts, waktu belajar, power, dan buff pasukan.",
+      statMasters: "Master", statLevel: "Level Expert", statBuff: "Buff maks", pickMaster: "Pilih Master", pickDesc: "Pilih Master dan atur target upgrade.",
+      currentExpert: "Level Expert saat ini", targetExpert: "Level Expert target", currentClass: "Kelas relasi saat ini", targetClass: "Kelas relasi target",
+      currentTalent: "Level talent saat ini", targetTalent: "Level talent target", skills: "Skill", skillsDesc: "Mencakup upgrade skill dan XP yang sudah dipelajari.",
+      current: "Saat ini", target: "Target", learnedXp: "XP yang sudah dipelajari", stock: "Stok", stockDesc: "Opsional. Stok akan dikurangi dari total kebutuhan.",
+      stockAffinity: "Affinity di stok", stockEmblems: "Emblems di stok", stockManuscripts: "Master's Manuscripts di stok", calculate: "Hitung", maxTargets: "Target maks", reset: "Reset",
+      sourceNote: "Kalkulator fan berdasarkan layout publik Kingshot.net. Cek ulang di game sebelum memakai material langka.", results: "Hasil", resultsDesc: "Resource yang dibutuhkan untuk rencana ini.",
+      affinity: "Affinity", emblems: "Emblems", manuscripts: "Manuscripts", time: "Waktu belajar", xp: "XP", powerGain: "Power bertambah", buffGain: "Buff pasukan bertambah", stillNeed: "masih kurang", extra: "sisa", skillBreakdown: "Manuscripts per skill", max: "Maks", noSkillSelection: "Tidak ada upgrade skill yang dipilih."
+    });
 
     const params = new URLSearchParams(location.search);
     const supported = ["ko", "ja", "en", "fr", "de", "zh-CN", "zh-TW", "th", "id"];
@@ -375,15 +464,28 @@
     const t = (key) => I18N[lang]?.[key] || I18N.en[key] || key;
     const locale = () => ({ ko: "ko-KR", ja: "ja-JP", en: "en-US", fr: "fr-FR", de: "de-DE", "zh-CN": "zh-CN", "zh-TW": "zh-TW", th: "th-TH", id: "id-ID" }[lang] || "en-US");
     const fmt = (value, digits = 0) => Number(value || 0).toLocaleString(locale(), { maximumFractionDigits: digits });
-    const imageWrap = (src, alt, fallback, cls = "") => `<span class="image-wrap ${cls}"><img src="${src}" alt="${alt}" loading="lazy" data-fallback="${fallback}"><span class="image-fallback">${fallback}</span></span>`;
+    const imageSources = (src) => (Array.isArray(src) ? src : [src]).filter(Boolean);
+    const imageWrap = (src, alt, fallback, cls = "") => {
+      const sources = imageSources(src);
+      return `<span class="image-wrap ${cls}"><img src="${sources[0] || ""}" alt="${alt}" loading="lazy" data-fallback="${fallback}" data-src-list='${JSON.stringify(sources.slice(1))}'><span class="image-fallback">${fallback}</span></span>`;
+    };
     const shortFallback = (text) => String(text || "M").split(/\s+/).map((part) => part[0]).join("").slice(0, 3).toUpperCase();
     const masterImage = (item) => `${IMAGE_ROOT}/masters/${item.id}/${item.id}.png`;
     const skillImage = (item, skill) => skill.image ? `${IMAGE_ROOT}/masters/${item.id}/${skill.image}` : masterImage(item);
+    const materialImage = (key, item = master()) => key === "emblems" ? [`${IMAGE_ROOT}/masters/${item.id}/${item.id}-emblem.png`, ...MATERIAL_IMAGES.emblems] : MATERIAL_IMAGES[key];
     const bindImageFallback = (root = document) => {
       root.querySelectorAll("img[data-fallback]").forEach((img) => {
         if (img.dataset.boundFallback) return;
         img.dataset.boundFallback = "1";
-        img.addEventListener("error", () => img.closest(".image-wrap,.avatar")?.classList.add("missing"), { once: true });
+        img.addEventListener("error", () => {
+          const nextSources = JSON.parse(img.dataset.srcList || "[]");
+          if (nextSources.length) {
+            img.dataset.srcList = JSON.stringify(nextSources.slice(1));
+            img.src = nextSources[0];
+            return;
+          }
+          img.closest(".image-wrap,.avatar")?.classList.add("missing");
+        });
       });
     };
     const parseAmount = (value) => {
@@ -421,6 +523,13 @@
       $("calcLink").href = `./troop_training_ui.html?lang=${encodeURIComponent(lang)}`;
       $("currentClass").innerHTML = CLASSES.map((name, idx) => `<option value="${idx + 1}">${name}</option>`).join("");
       $("targetClass").innerHTML = CLASSES.map((name, idx) => `<option value="${idx + 1}" ${idx === CLASSES.length - 1 ? "selected" : ""}>${name}</option>`).join("");
+      renderStockLabels();
+    }
+    function renderStockLabels() {
+      $("stockAffinityLabel").innerHTML = `${imageWrap(materialImage("affinity"), t("stockAffinity"), "AF")}<span>${t("stockAffinity")}</span>`;
+      $("stockEmblemsLabel").innerHTML = `${imageWrap(materialImage("emblems"), t("stockEmblems"), "EM")}<span>${t("stockEmblems")}</span>`;
+      $("stockManuscriptsLabel").innerHTML = `${imageWrap(materialImage("manuscripts"), t("stockManuscripts"), "MS")}<span>${t("stockManuscripts")}</span>`;
+      bindImageFallback(document);
     }
     function renderMasters() {
       $("masters").innerHTML = MASTERS.map((item) => `
@@ -434,6 +543,7 @@
       document.querySelectorAll("[data-master]").forEach((button) => button.addEventListener("click", () => {
         activeMaster = button.dataset.master;
         renderMasters();
+        renderStockLabels();
         renderSkills();
         calculate();
       }));
@@ -443,7 +553,7 @@
       const m = master();
       $("skills").innerHTML = master().skills.map((skill, index) => `
         <div class="skill" data-skill="${index}">
-          <div class="skill-head">${imageWrap(skillImage(m, skill), skill.name, shortFallback(skill.name), "skill-img")}<strong>${skill.name}</strong><span>Max ${skill.max} · ${fmt(skill.manuscripts)}</span></div>
+          <div class="skill-head">${imageWrap(skillImage(m, skill), skill.name, shortFallback(skill.name), "skill-img")}<strong>${skill.name}</strong><span>${t("max")} ${skill.max} · ${fmt(skill.manuscripts)}</span></div>
           <div class="form-grid">
             <div class="field"><label>${t("current")}</label><input id="skill_${index}_current" type="number" min="0" max="${skill.max}" value="0"></div>
             <div class="field"><label>${t("target")}</label><input id="skill_${index}_target" type="number" min="0" max="${skill.max}" value="${skill.max}"></div>
@@ -488,7 +598,7 @@
         manuscripts += lineManuscripts;
         xp += lineXp;
         skillPower += linePower;
-        return { name: skill.name, cur, tar, manuscripts: lineManuscripts, xp: lineXp, power: linePower };
+        return { name: skill.name, skill, cur, tar, manuscripts: lineManuscripts, xp: lineXp, power: linePower };
       });
       const affinity = m.affinity * snapshotPart;
       const emblems = m.emblems * (classPart * .7 + talentPart * .3);
@@ -498,14 +608,14 @@
       const stockEmblems = parseAmount($("stockEmblems").value);
       const stockManuscripts = parseAmount($("stockManuscripts").value);
       const gap = (need, stock) => need > stock ? `<span class="need">${t("stillNeed")}: ${fmt(need - stock)}</span>` : `<span class="extra">${t("extra")}: ${fmt(stock - need)}</span>`;
-      const rows = skillRows.filter((row) => row.tar > row.cur).map((row) => `<div class="break-row"><strong>${row.name} Lv ${row.cur} → ${row.tar}</strong><span>${t("manuscripts")} ${fmt(row.manuscripts)} · ${t("xp")} ${fmt(row.xp)} · ${t("powerGain")} ${fmt(row.power)}</span></div>`).join("") || `<p class="note">No skill upgrades selected.</p>`;
+      const rows = skillRows.filter((row) => row.tar > row.cur).map((row) => `<div class="break-row"><strong>${imageWrap(skillImage(m, row.skill), row.name, shortFallback(row.name), "skill-img")}<span>${row.name} Lv ${row.cur} → ${row.tar}</span></strong><span>${t("manuscripts")} ${fmt(row.manuscripts)} · ${t("xp")} ${fmt(row.xp)} · ${t("powerGain")} ${fmt(row.power)}</span></div>`).join("") || `<p class="note">${t("noSkillSelection")}</p>`;
       $("results").innerHTML = `
-        <div class="result-card"><span class="result-title">${imageWrap(MATERIAL_IMAGES.affinity, t("affinity"), "AF")}<span>${t("affinity")}</span></span><strong>${fmt(affinity)}</strong>${gap(affinity, stockAffinity)}</div>
-        <div class="result-card"><span class="result-title">${imageWrap(MATERIAL_IMAGES.emblems, t("emblems"), "EM")}<span>${t("emblems")}</span></span><strong>${fmt(emblems)}</strong>${gap(emblems, stockEmblems)}</div>
-        <div class="result-card"><span class="result-title">${imageWrap(MATERIAL_IMAGES.manuscripts, t("manuscripts"), "MS")}<span>${t("manuscripts")}</span></span><strong>${fmt(manuscripts)}</strong>${gap(manuscripts, stockManuscripts)}</div>
-        <div class="result-card"><span class="result-title">${imageWrap(MATERIAL_IMAGES.time, t("time"), "T")}<span>${t("time")}</span></span><strong>${timeText(xp)}</strong><span>${fmt(xp)} ${t("xp")}</span></div>
-        <div class="result-card"><span class="result-title">${imageWrap(MATERIAL_IMAGES.power, t("powerGain"), "P")}<span>${t("powerGain")}</span></span><strong>+${fmt(basePower)}</strong></div>
-        <div class="result-card"><span class="result-title">${imageWrap(MATERIAL_IMAGES.buff, t("buffGain"), "B")}<span>${t("buffGain")}</span></span><strong>+${fmt(buffGain, 2)}%</strong></div>
+        <div class="result-card"><span class="result-title">${imageWrap(materialImage("affinity"), t("affinity"), "AF")}<span>${t("affinity")}</span></span><strong>${fmt(affinity)}</strong>${gap(affinity, stockAffinity)}</div>
+        <div class="result-card"><span class="result-title">${imageWrap(materialImage("emblems"), t("emblems"), "EM")}<span>${t("emblems")}</span></span><strong>${fmt(emblems)}</strong>${gap(emblems, stockEmblems)}</div>
+        <div class="result-card"><span class="result-title">${imageWrap(materialImage("manuscripts"), t("manuscripts"), "MS")}<span>${t("manuscripts")}</span></span><strong>${fmt(manuscripts)}</strong>${gap(manuscripts, stockManuscripts)}</div>
+        <div class="result-card"><span class="result-title">${imageWrap(materialImage("time"), t("time"), "T")}<span>${t("time")}</span></span><strong>${timeText(xp)}</strong><span>${fmt(xp)} ${t("xp")}</span></div>
+        <div class="result-card"><span class="result-title">${imageWrap(materialImage("power"), t("powerGain"), "P")}<span>${t("powerGain")}</span></span><strong>+${fmt(basePower)}</strong></div>
+        <div class="result-card"><span class="result-title">${imageWrap(materialImage("buff"), t("buffGain"), "B")}<span>${t("buffGain")}</span></span><strong>+${fmt(buffGain, 2)}%</strong></div>
         <div class="result-card"><span>${t("skillBreakdown")}</span><div class="breakdown">${rows}</div></div>
       `;
       bindImageFallback($("results"));
