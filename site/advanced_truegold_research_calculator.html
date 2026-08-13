@@ -105,6 +105,7 @@
     .panel-body { padding: 14px; }
     .field { margin-bottom: 12px; }
     label { display: block; color: var(--muted); font-size: 12px; font-weight: 800; margin-bottom: 6px; }
+    .label-line { display: flex; align-items: center; gap: 7px; }
     input, select {
       width: 100%;
       min-height: 40px;
@@ -150,6 +151,7 @@
       box-shadow: none;
       background: linear-gradient(145deg, rgba(255,255,255,.075), rgba(255,255,255,.025)), var(--panel2);
     }
+    .tech-title { display: grid; grid-template-columns: 42px minmax(0, 1fr); gap: 10px; align-items: center; }
     .tech-card h3 { margin: 0; font-size: 15px; line-height: 1.25; }
     .tech-card .desc { color: var(--muted); font-size: 12px; line-height: 1.45; min-height: 34px; margin: 5px 0 9px; }
     .chipline { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
@@ -167,6 +169,30 @@
     }
     .result-card span { display: block; color: var(--muted); font-size: 12px; }
     .result-card strong { display: block; margin-top: 3px; color: var(--text); font-size: 20px; overflow-wrap: anywhere; }
+    .result-title { display: flex !important; align-items: center; gap: 8px; }
+    .image-wrap {
+      width: 28px;
+      height: 28px;
+      flex: 0 0 28px;
+      border-radius: 10px;
+      display: inline-grid;
+      place-items: center;
+      border: 1px solid rgba(246,207,114,.24);
+      background: rgba(255,255,255,.055);
+      overflow: hidden;
+      vertical-align: middle;
+    }
+    .image-wrap.tech {
+      width: 42px;
+      height: 42px;
+      flex-basis: 42px;
+      border-radius: 14px;
+      background: radial-gradient(circle, rgba(246,207,114,.2), rgba(111,231,255,.07));
+    }
+    .image-wrap img { width: 100%; height: 100%; object-fit: contain; padding: 3px; }
+    .image-fallback { display: none; color: var(--gold); font-size: 10px; font-weight: 950; letter-spacing: .02em; text-align: center; }
+    .image-wrap.missing img { display: none; }
+    .image-wrap.missing .image-fallback { display: grid; place-items: center; }
     .need { color: var(--red) !important; }
     .extra { color: var(--green) !important; }
     .breakdown { display: grid; gap: 8px; max-height: 320px; overflow: auto; }
@@ -291,6 +317,16 @@
       stone: "Stone",
       iron: "Iron"
     };
+    const IMAGE_ROOT = "https://kingshot.net/images";
+    const RESOURCE_IMAGES = {
+      truegold_dust: `${IMAGE_ROOT}/advanced-truegold/truegold-dust.png`,
+      tempered_truegold: `${IMAGE_ROOT}/advanced-truegold/tempered-truegold.png`,
+      gold: `${IMAGE_ROOT}/resources/gold.png`,
+      bread: `${IMAGE_ROOT}/resources/bread.png`,
+      wood: `${IMAGE_ROOT}/resources/wood.png`,
+      stone: `${IMAGE_ROOT}/resources/stone.png`,
+      iron: `${IMAGE_ROOT}/resources/iron.png`
+    };
     const BASE_CURVE = [0, 1200000, 1600000, 2300000, 3100000, 4100000, 5600000, 7500000, 10000000, 13000000, 18000000];
     const DUST_CURVE = [0, 51, 68, 94, 127, 170, 229, 306, 418, 561, 765];
     const TIME_CURVE = [0, 1500, 2025, 2775, 3750, 5025, 6750, 9000, 12300, 16500, 22500];
@@ -387,6 +423,16 @@
       return `${m}m`;
     };
     const levelOptions = (max, selected) => Array.from({ length: max + 1 }, (_, n) => `<option value="${n}" ${n === selected ? "selected" : ""}>${t("level")} ${n}</option>`).join("");
+    const imageWrap = (src, alt, fallback, cls = "") => `<span class="image-wrap ${cls}"><img src="${src}" alt="${alt}" loading="lazy" data-fallback="${fallback}"><span class="image-fallback">${fallback}</span></span>`;
+    const shortFallback = (text) => String(text || "TG").split(/\s+/).map((part) => part[0]).join("").slice(0, 3).toUpperCase();
+    const techImage = (tech) => `${IMAGE_ROOT}/advanced-truegold/${tech.id.replace(/-\d+$/, "")}.png`;
+    const bindImageFallback = (root = document) => {
+      root.querySelectorAll("img[data-fallback]").forEach((img) => {
+        if (img.dataset.boundFallback) return;
+        img.dataset.boundFallback = "1";
+        img.addEventListener("error", () => img.closest(".image-wrap")?.classList.add("missing"), { once: true });
+      });
+    };
 
     function costForLevel(tech, level) {
       const phaseScale = 1 + (tech.phase - 1) * 0.34;
@@ -415,7 +461,8 @@
       $("calcLink").href = `./troop_training_ui.html?lang=${encodeURIComponent(lang)}`;
       $("academyLevel").innerHTML = Array.from({ length: 8 }, (_, i) => `<option value="${i + 1}">Truegold ${i + 1}</option>`).join("");
       $("typeFilter").innerHTML = `<option value="all">${t("allTypes")}</option>` + ["economy", "infantry", "cavalry", "archer", "squad"].map((type) => `<option value="${type}">${type}</option>`).join("");
-      $("inventoryGrid").innerHTML = RESOURCE_KEYS.map((key) => `<div><label for="stock_${key}">${RESOURCE_LABELS[key]}</label><input id="stock_${key}" value="0" inputmode="decimal"></div>`).join("");
+      $("inventoryGrid").innerHTML = RESOURCE_KEYS.map((key) => `<div><label class="label-line" for="stock_${key}">${imageWrap(RESOURCE_IMAGES[key], RESOURCE_LABELS[key], shortFallback(RESOURCE_LABELS[key]))}<span>${RESOURCE_LABELS[key]}</span></label><input id="stock_${key}" value="0" inputmode="decimal"></div>`).join("");
+      bindImageFallback($("inventoryGrid"));
     }
 
     function renderTechs() {
@@ -424,8 +471,10 @@
       const filtered = TECHS.filter((tech) => (type === "all" || tech.type === type) && (!query || `${tech.name} ${tech.bonus} ${tech.type}`.toLowerCase().includes(query)));
       $("techList").innerHTML = filtered.map((tech) => `
         <article class="tech-card" data-tech="${tech.id}">
-          <h3>${tech.name}</h3>
-          <div class="desc">${tech.bonus}</div>
+          <div class="tech-title">
+            ${imageWrap(techImage(tech), tech.name, shortFallback(tech.name), "tech")}
+            <div><h3>${tech.name}</h3><div class="desc">${tech.bonus}</div></div>
+          </div>
           <div class="chipline"><span class="chip gold">${t("phase")} ${tech.phase}</span><span class="chip">${tech.type}</span><span class="chip">Max ${tech.max}</span></div>
           <div class="levels">
             <div class="mini"><label>${t("current")}</label><select data-current="${tech.id}">${levelOptions(tech.max, 0)}</select></div>
@@ -439,6 +488,7 @@
         const targetEl = document.querySelector(`[data-target="${id}"]`);
         if (Number(targetEl.value) < current) targetEl.value = current;
       }));
+      bindImageFallback($("techList"));
     }
 
     function calculate() {
@@ -464,7 +514,7 @@
       const modifiedTime = totals.time / (1 + speed / 100);
       const resourceCards = RESOURCE_KEYS.map((key) => {
         const need = totals[key] - stock[key];
-        return `<div class="result-card"><span>${RESOURCE_LABELS[key]} · ${t("required")} ${fmt(totals[key])}</span><strong class="${need > 0 ? "need" : "extra"}">${need > 0 ? t("stillNeed") : t("extra")}: ${fmt(Math.abs(need))}</strong></div>`;
+        return `<div class="result-card"><span class="result-title">${imageWrap(RESOURCE_IMAGES[key], RESOURCE_LABELS[key], shortFallback(RESOURCE_LABELS[key]))}<span>${RESOURCE_LABELS[key]} · ${t("required")} ${fmt(totals[key])}</span></span><strong class="${need > 0 ? "need" : "extra"}">${need > 0 ? t("stillNeed") : t("extra")}: ${fmt(Math.abs(need))}</strong></div>`;
       }).join("");
       const selectedRows = selected.length ? selected.map(({ tech, current, target, line, bonusFrom, bonusTo }) => `
         <div class="break-row"><strong>${tech.name} · ${current} → ${target}</strong><span>${tech.bonus}: ${fmt(bonusFrom, 2)}${tech.unit === "percent" ? "%" : ""} → ${fmt(bonusTo, 2)}${tech.unit === "percent" ? "%" : ""} · ${RESOURCE_LABELS.truegold_dust} ${fmt(line.truegold_dust)} · ${t("powerGain")} ${fmt(line.power)}</span></div>
@@ -476,6 +526,7 @@
         ${resourceCards}
         <div class="result-card"><span>${t("selected")}</span><div class="breakdown">${selectedRows}</div></div>
       `;
+      bindImageFallback($("resultsPanel"));
     }
 
     function maxEverything() {

@@ -12,6 +12,8 @@ Included files:
 What changed:
 - Added a local Advanced Truegold Research Calculator.
 - Added a local Master Calculator.
+- Added Kingshot.net source image links for Advanced Truegold resources, research icons, Master portraits, skill icons, and result materials.
+- Added text fallbacks so broken/blocked images do not leave empty boxes.
 - Added both calculators to the main hub and calculator hub.
 - Added both pages to sitemap lists.
 - No Supabase SQL or PuTTY daemon restart is required for these calculator pages.

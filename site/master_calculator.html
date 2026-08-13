@@ -130,7 +130,9 @@
       color: var(--gold);
       font-weight: 950;
       border: 1px solid rgba(246,207,114,.35);
+      overflow: hidden;
     }
+    .avatar img { width: 100%; height: 100%; object-fit: cover; }
     .master-card strong { display: block; font-size: 16px; }
     .master-card span { display: block; color: var(--muted); font-size: 12px; margin-top: 4px; line-height: 1.35; }
     .badge { display: inline-flex !important; color: #08111b !important; background: linear-gradient(135deg, var(--gold), #ffb13d); border-radius: 999px; padding: 4px 8px; margin-top: 9px !important; font-weight: 900; }
@@ -155,7 +157,7 @@
       background: rgba(255,255,255,.045);
       padding: 12px;
     }
-    .skill-head { display: flex; justify-content: space-between; gap: 10px; align-items: start; margin-bottom: 9px; }
+    .skill-head { display: grid; grid-template-columns: 38px minmax(0, 1fr) auto; gap: 10px; align-items: start; margin-bottom: 9px; }
     .skill-head strong { font-size: 14px; }
     .skill-head span { color: var(--muted); font-size: 12px; }
     .btns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
@@ -179,6 +181,24 @@
     }
     .result-card span { display: block; color: var(--muted); font-size: 12px; }
     .result-card strong { display: block; margin-top: 3px; font-size: 21px; overflow-wrap: anywhere; }
+    .result-title { display: flex !important; align-items: center; gap: 8px; }
+    .image-wrap {
+      width: 30px;
+      height: 30px;
+      flex: 0 0 30px;
+      border-radius: 10px;
+      display: inline-grid;
+      place-items: center;
+      border: 1px solid rgba(246,207,114,.24);
+      background: rgba(255,255,255,.055);
+      overflow: hidden;
+      vertical-align: middle;
+    }
+    .image-wrap.skill-img { width: 38px; height: 38px; flex-basis: 38px; border-radius: 13px; }
+    .image-wrap img { width: 100%; height: 100%; object-fit: contain; padding: 3px; }
+    .avatar .image-fallback, .image-fallback { display: none; color: var(--gold); font-size: 10px; font-weight: 950; letter-spacing: .02em; text-align: center; }
+    .image-wrap.missing img, .avatar.missing img { display: none; }
+    .image-wrap.missing .image-fallback, .avatar.missing .image-fallback { display: grid; place-items: center; }
     .need { color: var(--red); }
     .extra { color: var(--green); }
     .breakdown { display: grid; gap: 8px; max-height: 280px; overflow: auto; }
@@ -287,6 +307,15 @@
 
   <script>
     const CLASSES = ["Stranger", "Familiar Face", "Acquaintance 1", "Acquaintance 2", "Acquaintance 3", "Casual 1", "Casual 2", "Confidant", "Close Ally", "Trusted Friend", "Kindred Soul"];
+    const IMAGE_ROOT = "https://kingshot.net/images";
+    const MATERIAL_IMAGES = {
+      affinity: `${IMAGE_ROOT}/masters/affinity.png`,
+      emblems: `${IMAGE_ROOT}/masters/emblem.png`,
+      manuscripts: `${IMAGE_ROOT}/masters/manuscript.png`,
+      time: `${IMAGE_ROOT}/icons/time.png`,
+      power: `${IMAGE_ROOT}/icons/power.png`,
+      buff: `${IMAGE_ROOT}/icons/buff.png`
+    };
     const BASE_SKILLS = [
       { name: "Skill I", max: 10, manuscripts: 3150, xp: 162000, power: 30000 },
       { name: "Skill II", max: 5, manuscripts: 6000, xp: 345000, power: 65000 },
@@ -295,10 +324,10 @@
     ];
     const MASTERS = [
       { id: "valora", name: "Valora", role: "Bear Hunter", buff: 15, power: 1741000, affinity: 170690, emblems: 275, manuscripts: 21150, initials: "VA", skills: [
-        { name: "Dance of the Hunt", max: 10, manuscripts: 3150, xp: 162000, power: 30000 },
-        { name: "Leader By Example", max: 5, manuscripts: 6000, xp: 345000, power: 65000 },
-        { name: "Weapon Obsession", max: 5, manuscripts: 7500, xp: 540000, power: 100000 },
-        { name: "Savage Advantage", max: 10, manuscripts: 4500, xp: 462917, power: 70000 }
+        { name: "Dance of the Hunt", max: 10, manuscripts: 3150, xp: 162000, power: 30000, image: "dance-of-the-hunt.png" },
+        { name: "Leader By Example", max: 5, manuscripts: 6000, xp: 345000, power: 65000, image: "leader-by-example.png" },
+        { name: "Weapon Obsession", max: 5, manuscripts: 7500, xp: 540000, power: 100000, image: "weapon-obsession.png" },
+        { name: "Savage Advantage", max: 10, manuscripts: 4500, xp: 462917, power: 70000, image: "savage-advantage.png" }
       ] },
       { id: "pan", name: "Pan", role: "Palace Administrator", buff: 15, power: 1741000, affinity: 170690, emblems: 275, manuscripts: 21150, initials: "PA" },
       { id: "roman", name: "Roman", role: "Arena Champion", buff: 15, power: 1741000, affinity: 170690, emblems: 275, manuscripts: 21150, initials: "RO" },
@@ -346,6 +375,17 @@
     const t = (key) => I18N[lang]?.[key] || I18N.en[key] || key;
     const locale = () => ({ ko: "ko-KR", ja: "ja-JP", en: "en-US", fr: "fr-FR", de: "de-DE", "zh-CN": "zh-CN", "zh-TW": "zh-TW", th: "th-TH", id: "id-ID" }[lang] || "en-US");
     const fmt = (value, digits = 0) => Number(value || 0).toLocaleString(locale(), { maximumFractionDigits: digits });
+    const imageWrap = (src, alt, fallback, cls = "") => `<span class="image-wrap ${cls}"><img src="${src}" alt="${alt}" loading="lazy" data-fallback="${fallback}"><span class="image-fallback">${fallback}</span></span>`;
+    const shortFallback = (text) => String(text || "M").split(/\s+/).map((part) => part[0]).join("").slice(0, 3).toUpperCase();
+    const masterImage = (item) => `${IMAGE_ROOT}/masters/${item.id}/${item.id}.png`;
+    const skillImage = (item, skill) => skill.image ? `${IMAGE_ROOT}/masters/${item.id}/${skill.image}` : masterImage(item);
+    const bindImageFallback = (root = document) => {
+      root.querySelectorAll("img[data-fallback]").forEach((img) => {
+        if (img.dataset.boundFallback) return;
+        img.dataset.boundFallback = "1";
+        img.addEventListener("error", () => img.closest(".image-wrap,.avatar")?.classList.add("missing"), { once: true });
+      });
+    };
     const parseAmount = (value) => {
       const raw = String(value || "0").trim().replace(/,/g, "").toLowerCase();
       const match = raw.match(/^(-?\d+(?:\.\d+)?)([kmb])?$/);
@@ -385,7 +425,7 @@
     function renderMasters() {
       $("masters").innerHTML = MASTERS.map((item) => `
         <button type="button" class="master-card ${item.id === activeMaster ? "active" : ""}" data-master="${item.id}">
-          <span class="avatar">${item.initials}</span>
+          <span class="avatar"><img src="${masterImage(item)}" alt="${item.name}" loading="lazy" data-fallback="${item.initials}"><span class="image-fallback">${item.initials}</span></span>
           <strong>${item.name}</strong>
           <span>${item.role}</span>
           <span class="badge">+${fmt(item.buff, 2)}%</span>
@@ -397,11 +437,13 @@
         renderSkills();
         calculate();
       }));
+      bindImageFallback($("masters"));
     }
     function renderSkills() {
+      const m = master();
       $("skills").innerHTML = master().skills.map((skill, index) => `
         <div class="skill" data-skill="${index}">
-          <div class="skill-head"><strong>${skill.name}</strong><span>Max ${skill.max} · ${fmt(skill.manuscripts)}</span></div>
+          <div class="skill-head">${imageWrap(skillImage(m, skill), skill.name, shortFallback(skill.name), "skill-img")}<strong>${skill.name}</strong><span>Max ${skill.max} · ${fmt(skill.manuscripts)}</span></div>
           <div class="form-grid">
             <div class="field"><label>${t("current")}</label><input id="skill_${index}_current" type="number" min="0" max="${skill.max}" value="0"></div>
             <div class="field"><label>${t("target")}</label><input id="skill_${index}_target" type="number" min="0" max="${skill.max}" value="${skill.max}"></div>
@@ -410,6 +452,7 @@
         </div>
       `).join("");
       bindInputs();
+      bindImageFallback($("skills"));
     }
     function bindInputs() {
       document.querySelectorAll("input,select").forEach((el) => {
@@ -457,14 +500,15 @@
       const gap = (need, stock) => need > stock ? `<span class="need">${t("stillNeed")}: ${fmt(need - stock)}</span>` : `<span class="extra">${t("extra")}: ${fmt(stock - need)}</span>`;
       const rows = skillRows.filter((row) => row.tar > row.cur).map((row) => `<div class="break-row"><strong>${row.name} Lv ${row.cur} → ${row.tar}</strong><span>${t("manuscripts")} ${fmt(row.manuscripts)} · ${t("xp")} ${fmt(row.xp)} · ${t("powerGain")} ${fmt(row.power)}</span></div>`).join("") || `<p class="note">No skill upgrades selected.</p>`;
       $("results").innerHTML = `
-        <div class="result-card"><span>${t("affinity")}</span><strong>${fmt(affinity)}</strong>${gap(affinity, stockAffinity)}</div>
-        <div class="result-card"><span>${t("emblems")}</span><strong>${fmt(emblems)}</strong>${gap(emblems, stockEmblems)}</div>
-        <div class="result-card"><span>${t("manuscripts")}</span><strong>${fmt(manuscripts)}</strong>${gap(manuscripts, stockManuscripts)}</div>
-        <div class="result-card"><span>${t("time")}</span><strong>${timeText(xp)}</strong><span>${fmt(xp)} ${t("xp")}</span></div>
-        <div class="result-card"><span>${t("powerGain")}</span><strong>+${fmt(basePower)}</strong></div>
-        <div class="result-card"><span>${t("buffGain")}</span><strong>+${fmt(buffGain, 2)}%</strong></div>
+        <div class="result-card"><span class="result-title">${imageWrap(MATERIAL_IMAGES.affinity, t("affinity"), "AF")}<span>${t("affinity")}</span></span><strong>${fmt(affinity)}</strong>${gap(affinity, stockAffinity)}</div>
+        <div class="result-card"><span class="result-title">${imageWrap(MATERIAL_IMAGES.emblems, t("emblems"), "EM")}<span>${t("emblems")}</span></span><strong>${fmt(emblems)}</strong>${gap(emblems, stockEmblems)}</div>
+        <div class="result-card"><span class="result-title">${imageWrap(MATERIAL_IMAGES.manuscripts, t("manuscripts"), "MS")}<span>${t("manuscripts")}</span></span><strong>${fmt(manuscripts)}</strong>${gap(manuscripts, stockManuscripts)}</div>
+        <div class="result-card"><span class="result-title">${imageWrap(MATERIAL_IMAGES.time, t("time"), "T")}<span>${t("time")}</span></span><strong>${timeText(xp)}</strong><span>${fmt(xp)} ${t("xp")}</span></div>
+        <div class="result-card"><span class="result-title">${imageWrap(MATERIAL_IMAGES.power, t("powerGain"), "P")}<span>${t("powerGain")}</span></span><strong>+${fmt(basePower)}</strong></div>
+        <div class="result-card"><span class="result-title">${imageWrap(MATERIAL_IMAGES.buff, t("buffGain"), "B")}<span>${t("buffGain")}</span></span><strong>+${fmt(buffGain, 2)}%</strong></div>
         <div class="result-card"><span>${t("skillBreakdown")}</span><div class="breakdown">${rows}</div></div>
       `;
+      bindImageFallback($("results"));
     }
     function maxTargets() {
       $("currentExpert").value = 1;
