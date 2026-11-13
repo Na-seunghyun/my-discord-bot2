@@ -3642,6 +3642,7 @@ async function claimRedeemJobs(request, env) {
 
   const cfg = autoRedeemConfig(env);
   if (!cfg.enabled) return json({ ok: false, skipped: "AUTO_REDEEM_ENABLED is off.", jobs: [] });
+  await refreshPublicRedeemCodesIfAllowed(env, 5 * 60 * 1000).catch(() => null);
 
   const url = new URL(request.url);
   const parsed = await readJsonBodyOrResponse(request, maxBodyBytesForPath("/api/redeem/claim"));
