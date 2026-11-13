@@ -2455,46 +2455,57 @@ function collectKingshotNetGiftCodes(text, source, url) {
   const lines = textLinesFromHtmlStrict(text);
   const seen = new Set();
   const rows = [];
-  const activeStart = lines.findIndex((line) => /^ACTIVE\s+GIFT\s+CODES$/i.test(line));
-  const expiredStart = lines.findIndex((line) => /^EXPIRED\s+GIFT\s+CODES$/i.test(line));
-  const howToStart = lines.findIndex((line) => /^HOW\s+TO\s+REDEEM\s+GIFT\s+CODES$/i.test(line));
-  const sections = [];
-  if (activeStart >= 0) sections.push({ status: "active", start: activeStart + 1, end: expiredStart > activeStart ? expiredStart : lines.length });
-  if (expiredStart >= 0) sections.push({ status: "expired", start: expiredStart + 1, end: howToStart > expiredStart ? howToStart : lines.length });
+  const activeStart = lines.findIndex((line) => /^ACTIVE\s+GIFT\s+CODES(?:\s*\(\s*\d+\s*\))?$/i.test(line));
+  if (activeStart < 0) return rows;
 
-  const ignored = (line) => /^(ACTIVE|EXPIRED|COPY CODE|COPY|SIGN IN TO REDEEM|SIGN IN|SHARE LINK|VIEW IMAGE|EXPIRES:?|LAST CHECKED:?|NOT SPECIFIED YET)$/i.test(line)
-    || /^EXPIRES:/i.test(line)
+  // Active Gift Codes section only. Never scan the separate expired-code section.
+  const sectionEnd = lines.findIndex((line, index) => index > activeStart && (
+    /^EXPIRED\s+(?:GIFT\s+)?CODES?(?:\s*\(\s*\d+\s*\))?(?:\s*SHOW)?$/i.test(line)
+    || /^HOW\s+TO\s+REDEEM\s+GIFT\s+CODES$/i.test(line)
+  ));
+  const activeLines = lines.slice(activeStart + 1, sectionEnd >= 0 ? sectionEnd : lines.length);
+  let waitingForCode = true;
+
+  const ignored = (line) => /^(?:ACTIVE\s+GIFT\s+CODES|EXPIRED\s+(?:GIFT\s+)?CODES?|COPY(?:\s+CODE)?|SHARE|REDEEM|SIGN\s+IN(?:\s+TO\s+REDEEM)?|VIEW\s+IMAGE|NO\s+EXPIRY\s+ANNOUNCED|EXPIRES(?:\s+IN)?\s*:?.*)$/i.test(line)
+    || /^(?:REWARD\s+NOT\s+LISTED\s+YET|NOT\s+SPECIFIED\s+YET)$/i.test(line)
     || /^[\s\-:?.\d]+$/.test(line);
 
-  const push = (candidate, status, context) => {
+  const push = (candidate, context) => {
     const code = normalizeGiftCode(candidate);
-    if (!isLikelyGiftCodeValue(code) || seen.has(code)) return;
+    if (!isLikelyGiftCodeValue(code) || seen.has(code)) return false;
+
     seen.add(code);
     rows.push({
       code,
       source: `trusted-public:${source}`,
-      status,
-      isActive: status === "active",
+      status: "active",
+      isActive: true,
       discoveredAt: Date.now(),
       updatedAt: Date.now(),
-      raw: { source: `trusted-public:${source}`, url, context: cleanText(context, 220) },
+      raw: {
+        source: `trusted-public:${source}`,
+        url,
+        context: cleanText(context, 220),
+      },
     });
+    return true;
   };
 
-  for (const section of sections) {
-    for (let i = section.start; i < section.end; i += 1) {
-      if (!/^(ACTIVE|EXPIRED)$/i.test(lines[i])) continue;
-      const localStatus = /^EXPIRED$/i.test(lines[i]) ? "expired" : section.status;
-      for (let j = i + 1; j < Math.min(section.end, i + 8); j += 1) {
-        const candidate = lines[j];
-        if (ignored(candidate)) continue;
-        const context = lines.slice(i, Math.min(section.end, j + 6)).join(" ");
-        if (!/COPY\s+CODE|SIGN\s+IN\s+TO\s+REDEEM|SHARE\s+LINK|EXPIRES:/i.test(context)) continue;
-        push(candidate, localStatus, context);
-        break;
-      }
+  for (let i = 0; i < activeLines.length; i += 1) {
+    const line = activeLines[i];
+
+    if (/\b(?:COPY(?:\s+CODE)?|SHARE|REDEEM)\b/i.test(line)) {
+      waitingForCode = true;
+      continue;
+    }
+
+    if (!waitingForCode || ignored(line)) continue;
+
+    if (push(line, activeLines.slice(i, Math.min(activeLines.length, i + 8)).join(" "))) {
+      waitingForCode = false;
     }
   }
+
   return rows;
 }
 
